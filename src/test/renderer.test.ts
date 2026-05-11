@@ -12,7 +12,8 @@ vi.mock("@/server/ffmpeg/probe", () => ({ probeVideo: mockProbeVideo }));
 vi.mock("@/server/ffmpeg/binaries", () => ({ getFFmpegPath: vi.fn(() => "ffmpeg") }));
 vi.mock("node:fs", async (importOriginal) => {
   const original = await importOriginal<typeof import("node:fs")>();
-  return { ...original, existsSync: mockExistsSync };
+  const mocked = { ...original, existsSync: mockExistsSync };
+  return { ...mocked, default: mocked };
 });
 
 function makeProbeResult(durationSec: number): ProbeResult {
