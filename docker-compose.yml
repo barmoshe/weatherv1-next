@@ -1,0 +1,21 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: weatherv1-next:latest
+    container_name: weatherv1-next
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    volumes:
+      # Catalog + media tree. Read-write because /api/catalog/videos
+      # writes catalog.json and uploads new clips.
+      - ../v1Drive:/app/v1Drive
+      # Per-job state, uploads, rendered outputs, poster/preview caches.
+      - ./runtime:/app/weatherV1-next/runtime
