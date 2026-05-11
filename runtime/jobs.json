@@ -1,0 +1,24 @@
+{
+  "f48ad440439f45059721c92034ab4067": {
+    "job_id": "f48ad440439f45059721c92034ab4067",
+    "status": "draft",
+    "audio_filename": "1760c46cfe154297947ae97b6d067246.mp3",
+    "created_at": "2026-05-11T17:09:27.474Z"
+  },
+  "6ca4438b3dac4f2780704c18be8fbc39": {
+    "job_id": "6ca4438b3dac4f2780704c18be8fbc39",
+    "status": "completed",
+    "audio_filename": "d80770d47da24e7da427455904c84c33.mp3",
+    "created_at": "2026-05-11T17:10:33.911Z",
+    "output_url": "forecast_6ca4438b3dac4f2780704c18be8fbc39.mp4",
+    "error": null
+  },
+  "7cd0f4e7abc946ef863f74260c8376c5": {
+    "job_id": "7cd0f4e7abc946ef863f74260c8376c5",
+    "status": "completed",
+    "audio_filename": "e867aa2fbddb4febb4dd769ae5398877.mp3",
+    "created_at": "2026-05-11T20:51:33.871Z",
+    "output_url": "forecast_7cd0f4e7abc946ef863f74260c8376c5.mp4",
+    "error": null
+  }
+}

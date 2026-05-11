@@ -1,0 +1,221 @@
+{
+  "job_id": "7cd0f4e7abc946ef863f74260c8376c5",
+  "created_at": "2026-05-11T20:51:33.874Z",
+  "audio_filename": "e867aa2fbddb4febb4dd769ae5398877.mp3",
+  "duration_sec": 27.280000686645508,
+  "transcript": "קורא זה ממשיך ללוות אותנו. בכל הארץ אנחנו עדיין עם טמפרטורות נמוכות מהרגיל וזה ימשיך גם בסוף השבוע. למעשה כל רצף התחזית הטמפרטורות נשארות מעט נמוכות מהרגיל, למרות עלייה קלה. היום עדיין מעונן חלקית, יכול קצת אפילו עוד לטפטף באזור הצפון, באזור המרכז, אבל בהמשך כבר החל למחר מזג האוויר מתייצב, מעונן חלקית ואפילו כבר אנחנו מתחילים את השבוע עם מזג האוויר בהיר לחלוטין, וזה לפחות עד אמצע השבוע.",
+  "transcript_segments": [
+    {
+      "idx": 0,
+      "start": 0,
+      "end": 1.659999966621399,
+      "text": " קורא זה ממשיך ללוות אותנו."
+    },
+    {
+      "idx": 1,
+      "start": 1.659999966621399,
+      "end": 6.760000228881836,
+      "text": " בכל הארץ אנחנו עדיין עם טמפרטורות נמוכות מהרגיל וזה ימשיך גם בסוף השבוע."
+    },
+    {
+      "idx": 2,
+      "start": 6.760000228881836,
+      "end": 11.779999732971191,
+      "text": " למעשה כל רצף התחזית הטמפרטורות נשארות מעט נמוכות מהרגיל, למרות עלייה קלה."
+    },
+    {
+      "idx": 3,
+      "start": 11.779999732971191,
+      "end": 17.360000610351562,
+      "text": " היום עדיין מעונן חלקית, יכול קצת אפילו עוד לטפטף באזור הצפון, באזור המרכז,"
+    },
+    {
+      "idx": 4,
+      "start": 17.360000610351562,
+      "end": 24.780000686645508,
+      "text": " אבל בהמשך כבר החל למחר מזג האוויר מתייצב, מעונן חלקית ואפילו כבר אנחנו מתחילים את השבוע עם מזג האוויר בהיר לחלוטין,"
+    },
+    {
+      "idx": 5,
+      "start": 24.780000686645508,
+      "end": 26.780000686645508,
+      "text": " וזה לפחות עד אמצע השבוע."
+    }
+  ],
+  "scenes": [
+    {
+      "idx": 0,
+      "start_sec": 0,
+      "end_sec": 6.76,
+      "title_he": "פתיחה — קור וטמפרטורות נמוכות",
+      "narration": "קורא זה ממשיך ללוות אותנו. בכל הארץ אנחנו עדיין עם טמפרטורות נמוכות מהרגיל וזה ימשיך גם בסוף השבוע.",
+      "keywords": [
+        "cold",
+        "low temperatures",
+        "nationwide"
+      ],
+      "mood": "gloomy",
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        0,
+        1
+      ]
+    },
+    {
+      "idx": 1,
+      "start_sec": 6.76,
+      "end_sec": 11.78,
+      "title_he": "טמפרטורות נמוכות עם עלייה קלה",
+      "narration": "למעשה כל רצף התחזית הטמפרטורות נשארות מעט נמוכות מהרגיל, למרות עלייה קלה.",
+      "keywords": [
+        "temperature rise",
+        "forecast"
+      ],
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        2
+      ]
+    },
+    {
+      "idx": 2,
+      "start_sec": 11.78,
+      "end_sec": 17.36,
+      "title_he": "מעונן חלקית וטפטוף בצפון ובמרכז",
+      "narration": "היום עדיין מעונן חלקית, יכול קצת אפילו עוד לטפטף באזור הצפון, באזור המרכז,",
+      "keywords": [
+        "cloudy",
+        "drizzle",
+        "north",
+        "center"
+      ],
+      "kind": "list",
+      "heterogeneous": true,
+      "whisper_beat_indices": [
+        3
+      ]
+    },
+    {
+      "idx": 3,
+      "start_sec": 17.36,
+      "end_sec": 27.280000686645508,
+      "title_he": "התייצבות מזג האוויר והתחלת שבוע בהיר",
+      "narration": "אבל בהמשך כבר החל למחר מזג האוויר מתייצב, מעונן חלקית ואפילו כבר אנחנו מתחילים את השבוע עם מזג האוויר בהיר לחלוטין, וזה לפחות עד אמצע השבוע.",
+      "keywords": [
+        "weather stabilization",
+        "clear sky",
+        "beginning of the week"
+      ],
+      "mood": "calm",
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        4,
+        5
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "scene_idx": 0,
+      "segment_id": "W017-s0",
+      "audio_start": 0,
+      "audio_end": 6.76,
+      "reason": "נוף עירוני באובך כבד מתאים למזג אוויר קר ותחושה קודרת.",
+      "video_id": "W017",
+      "video_start": 0,
+      "video_end": 6.76
+    },
+    {
+      "scene_idx": 1,
+      "segment_id": "IB021-s0",
+      "audio_start": 6.76,
+      "audio_end": 11.78,
+      "reason": "רחוב עירוני רטוב לאחר גשם משקף עלייה קלה בטמפרטורות עם תחושה חורפית.",
+      "video_id": "IB021",
+      "video_start": 0,
+      "video_end": 5.02
+    },
+    {
+      "scene_idx": 2,
+      "segment_id": "IB043-s0",
+      "audio_start": 11.78,
+      "audio_end": 14.57,
+      "reason": "מפל מים עכורים מתאים לתיאור של טפטוף בצפון.",
+      "video_id": "IB043",
+      "video_start": 0,
+      "video_end": 2.790000000000001
+    },
+    {
+      "scene_idx": 2,
+      "segment_id": "IB057-s0",
+      "audio_start": 14.57,
+      "audio_end": 17.36,
+      "reason": "רחוב גשום עם מבנה אבן עתיק מתאים לתיאור של טפטוף במרכז הארץ.",
+      "video_id": "IB057",
+      "video_start": 0,
+      "video_end": 2.789999999999999
+    },
+    {
+      "scene_idx": 3,
+      "segment_id": "IB017-s0",
+      "audio_start": 17.36,
+      "audio_end": 22.32,
+      "reason": "מבט אווירי על מבנה מודרני בנוגע עם הרי המדבר ברקע מתאים למזג אוויר מתייצב ובהיר.",
+      "video_id": "IB017",
+      "video_start": 0,
+      "video_end": 4.960000000000001
+    },
+    {
+      "scene_idx": 3,
+      "segment_id": "IB152-s0",
+      "audio_start": 22.32,
+      "audio_end": 27.28,
+      "reason": "תצלום אווירי של אילת עם מרינה וחוף ים מתאים לתחילת שבוע בהיר ורגוע.",
+      "video_id": "IB152",
+      "video_start": 0,
+      "video_end": 4.960000000000001
+    }
+  ],
+  "validator": {
+    "score": 97,
+    "hard_violations_fixed": [],
+    "hard_violations_kept": [],
+    "warnings": [
+      {
+        "issue": "thematic adjacency",
+        "tag": "day",
+        "run_length": 5,
+        "indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "segment_ids": [
+          "W017-s0",
+          "IB021-s0",
+          "IB043-s0",
+          "IB057-s0",
+          "IB017-s0"
+        ]
+      }
+    ],
+    "catalog_health": {
+      "loaded_clips": 212,
+      "loaded_segments": 212,
+      "tagged_segments": 212,
+      "untagged_picks": 0
+    }
+  },
+  "system_prompt": "You are a video editor for short Hebrew weather forecasts. The narration has already been split into ordered SCENES (semantic narration blocks). Your job: for EACH scene, pick 1 or 2 catalog segments (see pick-count rule below) that visually fit.\n\nEach catalog row is a CLIP SEGMENT — a portion of a source video with its own Hebrew description, 1–3 keyword tags, and `start_sec`/`end_sec` timecode range. Tags can be from a small general vocabulary OR free-form Hebrew/English keywords. Treat ALL tags as plain keywords describing the shot.\n\nSuggested vocabulary (schema v2 — 7 axes you'll see in segment tags):\n  weather: rain, storm, snow, hail, fog, wind, clear_sky, partly_cloudy, overcast\n  light:   dawn, day, midday, golden_hour, dusk, night\n  climate: hot, warm, mild, cool, cold, summer, winter, inbetween\n  scenery: urban, nature, sea, mountain, aerial, indoor\n  region:  north, center, south, coast, inland, negev, arava, golan, galilee, hermon, kinneret, dead-sea, eilat\n  people:  people, kids, crowd, clothing\n  vibe:    calm, dramatic, gloomy, cheerful\n  (Regions anchor on weather-forecast geography — never expect to see city names like `tel-aviv`. A Tel Aviv-looking aerial is tagged `center` + `coast`. Eilat / Hermon / Kinneret / Dead-Sea are region names that the forecast calls out by name, so they're tagged as themselves.)\n\nSource values (clip-level attribution):\n  getty, artlist, whatsapp, original, other\n\nPER-SCENE PICKING RULES\n\n1. **Pick count per scene** — pick exactly the number of clips appropriate to the scene's duration and kind:\n   - **`heterogeneous: true`** (multi-region scene) → pick **1 clip PER named region** in the narration order (typically 2 picks). Allocate the audio range proportionally to where each region appears in the narration — earlier-mentioned region gets the earlier audio sub-range. The per-region pick MUST match that region's stated weather (see A1).\n   - **`duration_sec` < 12** → pick **1** clip covering the full audio range (`audio_start = scene.start_sec`, `audio_end = scene.end_sec`).\n   - **`duration_sec` ≥ 12** (and not heterogeneous) → **prefer 2 picks**: a primary shot and a complementary shot. Equal-split the audio range: pick A covers `start..mid`, pick B covers `mid..end`. The two picks should be visually distinct (different `segment_id`, ideally different parent clips) and BOTH match the scene's narration.\n\n2. **COVERAGE — each pick's segment `duration` MUST be ≥ its assigned audio sub-range**. Each catalog row carries a `duration` field; check it before picking. If no single segment covers the assigned range, pick the longest acceptable segment and the validator will split it further; never deliberately under-cover.\n\n3. **Scene `kind` matters:**\n   - `prose`      → segment(s) that visually match the scene's narration.\n   - `list` + `heterogeneous: false` → ONE calm, AMBIENT shot related to the current season / general weather context (NOT a literal match to the listed facts). Temperature rolls, day-of-week recaps deserve a steady \"scan-able\" backdrop — a wide sky shot, a calm city skyline, a generic seasonal landscape. Do NOT cycle through individual cuts of every city/day mentioned. Lean on broad keywords like `sky`, `city`, `clouds`, `calm`, `aerial`, `mountain`. The ONE-ambient rule overrides the ≥12s 2-pick default ONLY for homogeneous lists.\n   - `list` + `heterogeneous: true` → follow rule 1's per-region rule (NOT the ONE-ambient rule).\n   - `transition` → a brief, calm cutaway that doesn't fight the narration (\"ועכשיו…\", \"לסיכום…\").\n\n4. Each pick MUST carry the scene's `idx` as `scene_idx`. Without it, the validator cannot map picks back to scenes.\n\n5. Each scene's `keywords` are SUGGESTIONS, not a whitelist. The scene's `narration` (Hebrew sentence) and `mood` are the primary signal — read them holistically, not as keyword bags.\n\nCORE RULES\n\nA. **Holistic interpretation, not literal keyword match.** Read the scene's narration, pick by intent.\nA1. **Weather state outranks geography.** When the narration mentions a weather state (rain / clouds / sun / snow / storm / fog / wind / hot / cold — including Hebrew variants like טפטוף / מעונן / חמסין), the picked segment's weather signal MUST match. Wrong-weather + right-place is worse than right-weather + generic-place.\nA2. **When no candidate scores high on the dominant signal, fall back to a generic AMBIENT shot that fits the weather mood** — a wide sky shot, calm city skyline, generic seasonal landscape — rather than a thematically-off specific shot.\nA3. **Sky-state tags.** Match `overcast` to overcast/wet narration (מעונן / טפטוף / חורפי); `clear_sky` or `partly_cloudy` to sunny narration (יום בהיר / שמשי / חם). Don't pick a `partly_cloudy + summer` clip for an overcast scene.\nB. **Anti-repeat**: a `segment_id` appears at most twice across the whole timeline; never within 2 scenes of its previous use.\nC. **Clothing rule**: only pick a clothing-tagged segment (coat / fur / scarf / sandals / swimsuit / umbrella) when the scene's narration is **explicitly about what to wear** (\"מבחינת לבוש\", \"ללבוש\"). For weather narration pick a landscape / urban / aerial / nature alternative instead.\nD. **Tagged beats untagged**, but a good untagged pick beats no segment.\nE. **Source preference** (soft): prefer `original` when the narration is local-color editorial. Otherwise tag-fit wins.\nF. **`reason`** is one short Hebrew sentence — what's in the segment that fits the scene.\nG. **Sub-range picking**: by default, set `video_start` = the segment's `start_sec` and `video_end` = `start_sec` + (audio_end - audio_start). Only use a different sub-range if you specifically want a portion of the segment.\nH. **Variety across renders**: when two or more candidates score comparably, prefer the less-obvious one. Running the same forecast twice should NOT produce identical picks. Treat the catalog as a deck to deal from, not a list to scan top-down.\n\nOUTPUT: a JSON object with key `timeline` containing an array of picks, each with: `scene_idx`, `segment_id`, `audio_start`, `audio_end`, `video_start`, `video_end`, `reason`. (You may omit `video_start`/`video_end` to default to the segment's range; the system will fill them in.) Include picks for ALL scenes in order.",
+  "catalog_snapshot": {
+    "version": "ab613232",
+    "claimed_count": 212,
+    "loaded_count": 212,
+    "missing_ids": []
+  },
+  "output_url": "forecast_7cd0f4e7abc946ef863f74260c8376c5.mp4"
+}

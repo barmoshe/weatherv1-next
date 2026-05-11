@@ -1,0 +1,138 @@
+import { NextRequest, NextResponse } from "next/server";
+import { pickSegments } from "@/server/pipeline/picker";
+import { validateAndSwap, type MutablePick } from "@/server/pipeline/validator";
+import type { Scene } from "@/shared/types";
+import { readCatalog } from "@/server/catalog/storage";
+import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/parser";
+import { updatePlanBundle } from "@/server/jobs/plan-bundle";
+
+function openaiErrorResponse(err: unknown): [Record<string, unknown>, number] | null {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (["insufficient_quota", "exceeded your current quota"].some((m) => msg.includes(m))) {
+    return [{ success: false, error: "אזל מאגר ה-OpenAI tokens.", error_code: "openai_quota_exceeded", console_url: "https://platform.openai.com/account/billing" }, 402];
+  }
+  if (msg.includes("invalid_api_key") || msg.includes("Incorrect API key")) {
+    return [{ success: false, error: "מפתח OpenAI לא תקין.", error_code: "openai_invalid_key" }, 401];
+  }
+  return null;
+}
+
+function buildReplanAvoidSet(
+  otherPicks: Record<string, unknown>[],
+  oldPicksForScene: Record<string, unknown>[],
+  segmentMap: Record<string, { clip: Record<string, unknown>; segment: Record<string, unknown> }>,
+): Set<string> {
+  const avoid = new Set<string>();
+
+  for (const c of otherPicks) {
+    if (c.segment_id) avoid.add(c.segment_id as string);
+  }
+
+  const oldSegIds = new Set<string>();
+  for (const c of oldPicksForScene) {
+    if (c.segment_id) {
+      avoid.add(c.segment_id as string);
+      oldSegIds.add(c.segment_id as string);
+    }
+  }
+
+  const oldVideoIds = new Set<string>();
+  const oldFirstTags = new Set<string>();
+  for (const oldId of oldSegIds) {
+    const entry = segmentMap[oldId];
+    if (!entry) continue;
+    const clipId = (entry.clip?.id as string) || "";
+    if (clipId) oldVideoIds.add(clipId);
+    const tags = (entry.segment?.tags as string[]) ?? [];
+    if (tags.length) {
+      const first = String(tags[0]).trim().toLowerCase();
+      if (first) oldFirstTags.add(first);
+    }
+  }
+
+  for (const [sid, e] of Object.entries(segmentMap)) {
+    const clipId = (e.clip?.id as string) || "";
+    if (oldVideoIds.has(clipId)) avoid.add(sid);
+    const tags = (e.segment?.tags as string[]) ?? [];
+    if (tags.length && oldFirstTags.has(String(tags[0]).trim().toLowerCase())) avoid.add(sid);
+  }
+
+  avoid.delete("");
+  return avoid;
+}
+
+export async function POST(req: NextRequest) {
+  const data = (await req.json()) as Record<string, unknown>;
+  const scenes = (data.scenes ?? []) as Record<string, unknown>[];
+  const fullTimeline = (data.timeline ?? []) as Record<string, unknown>[];
+  const jobId = data.job_id as string | undefined;
+  const sceneIdxRaw = data.scene_idx;
+  const pickerPrompt = data.picker_prompt as string | undefined;
+
+  if (sceneIdxRaw == null || isNaN(Number(sceneIdxRaw))) {
+    return NextResponse.json({ success: false, error: "Missing scene_idx" }, { status: 400 });
+  }
+  const sceneIdx = Number(sceneIdxRaw);
+  if (!scenes.length) return NextResponse.json({ success: false, error: "Missing scenes[]" }, { status: 400 });
+  if (!jobId) return NextResponse.json({ success: false, error: "Missing job_id" }, { status: 400 });
+
+  const target = scenes.find((s) => Number(s.idx) === sceneIdx);
+  if (!target) return NextResponse.json({ success: false, error: `Unknown scene_idx ${sceneIdx}` }, { status: 400 });
+
+  const otherPicks = fullTimeline.filter((c) => c.scene_idx != null && Number(c.scene_idx) !== sceneIdx);
+  const oldPicksForScene = fullTimeline.filter((c) => c.scene_idx != null && Number(c.scene_idx) === sceneIdx);
+
+  try {
+    const catalog = readCatalog();
+    const videos = parseCatalog(catalog);
+    const segmentMap = buildSegmentMap(videos);
+    const videoMap = buildVideoMap(videos);
+
+    const avoidSet = buildReplanAvoidSet(
+      otherPicks as Record<string, unknown>[],
+      oldPicksForScene as Record<string, unknown>[],
+      segmentMap as unknown as Record<string, { clip: Record<string, unknown>; segment: Record<string, unknown> }>,
+    );
+
+    const audioDuration = Number(target.end_sec ?? 0) - Number(target.start_sec ?? 0);
+    const newPicksRaw = await pickSegments("", videos, audioDuration, {
+      customPrompt: pickerPrompt,
+      transcriptSegments: [],
+      scenes: [target as unknown as Scene],
+      avoidSegmentIds: avoidSet,
+    });
+
+    const newPicks: MutablePick[] = newPicksRaw.map((p) => ({ ...p, scene_idx: sceneIdx }));
+
+    const merged: MutablePick[] = [
+      ...(otherPicks as unknown as MutablePick[]),
+      ...newPicks,
+    ].sort((a, b) => {
+      const as_ = a.audio_start ?? 0;
+      const bs_ = b.audio_start ?? 0;
+      return as_ !== bs_ ? as_ - bs_ : (a.scene_idx ?? 0) - (b.scene_idx ?? 0);
+    });
+
+    const validatorResult = validateAndSwap(merged, {
+      beats: [],
+      videoMap,
+      segmentMap,
+      scenes: scenes as unknown as Scene[],
+    });
+
+    updatePlanBundle(jobId, { timeline: merged, validator: validatorResult });
+
+    return NextResponse.json({
+      success: true,
+      scene_idx: sceneIdx,
+      picks: merged.filter((c) => c.scene_idx === sceneIdx),
+      timeline: merged,
+      validator: validatorResult,
+    });
+  } catch (err) {
+    const handled = openaiErrorResponse(err);
+    if (handled) return NextResponse.json(handled[0], { status: handled[1] });
+    console.error("[replan_scene]", err);
+    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+  }
+}
