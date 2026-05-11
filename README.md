@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# weatherV1-next
 
-## Getting Started
+Next.js 16 / TypeScript port of the weather forecast video generator. Accepts an audio
+recording of a weather narration, transcribes it via Whisper, plans a scene-aware clip
+sequence from the local video catalog, and renders a 9:16 MP4 forecast video using ffmpeg.
 
-First, run the development server:
+## Docs
+
+- [Production deploy on Oracle Cloud](docs/DEPLOY_ORACLE_CLOUD.md)
+- [Architecture & deployment rationale](docs/DESIGN_DEPLOYMENT.md)
+
+## Local dev
+
+**Prerequisites:** Node 20+, ffmpeg on PATH, a `v1Drive/` media tree.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # paste OPENAI_API_KEY (and GEMINI_API_KEY if available)
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The server reads `process.cwd()/../v1Drive/weather/` for the catalog and video files.
+In dev that means `v1Drive/` must be a sibling directory next to this repo clone.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tests
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test
+```
 
-## Learn More
+## Docker
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+docker compose up -d --build
+```

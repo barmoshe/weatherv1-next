@@ -86,7 +86,10 @@ export async function buildRendererArgs(
   inputFiles.push(audioPath);
 
   let bgMusicInputIdx: number | null = null;
-  const bgMusicPath = opts.bgMusicPath ?? path.join(process.cwd(), "..", "app", "music", "מוזיקת אנדר לתחזית.mp3");
+  const bgMusicPath =
+    opts.bgMusicPath ??
+    process.env.BG_MUSIC_PATH ??
+    path.join(process.cwd(), "..", "v1Drive", "weather", "music", "מוזיקת אנדר לתחזית.mp3");
   if (fs.existsSync(bgMusicPath)) {
     args.push("-stream_loop", "-1", "-i", bgMusicPath);
     bgMusicInputIdx = resolved.length + 1;

@@ -10,8 +10,8 @@ The companion design doc is `DESIGN_DEPLOYMENT.md`.
 2. Launch a `VM.Standard.A1.Flex` instance — 4 OCPU / 24 GB RAM, Ubuntu 24.04 (ARM), 200 GB boot volume.
 3. Open ports 80/443 in the VCN security list **and** the host iptables.
 4. Install Docker.
-5. Clone the repo to `/opt/weatherV1`; rsync the `v1Drive/` media tree from your laptop.
-6. `cd weatherV1-next && cp .env.example .env && nano .env && docker compose up -d --build`.
+5. Clone the repo to `/opt/weather/weatherv1-next`; rsync the `v1Drive/` media tree as a sibling at `/opt/weather/v1Drive/`.
+6. `cd /opt/weather/weatherv1-next && cp .env.example .env && nano .env && docker compose up -d --build`.
 7. Caddy reverse-proxy `:443` → `localhost:3000` for HTTPS (optional, if you have a domain).
 
 Total cost: **$0/month forever** as long as the account stays in the Always Free envelope.
@@ -96,29 +96,29 @@ docker run --rm hello-world
 ## 5. Clone the repo and place the media tree
 
 ```bash
-sudo mkdir -p /opt/weatherV1
-sudo chown ubuntu:ubuntu /opt/weatherV1
-cd /opt/weatherV1
-git clone https://github.com/barmoshe/weatherv1.git .
+sudo mkdir -p /opt/weather
+sudo chown ubuntu:ubuntu /opt/weather
+cd /opt/weather
+git clone https://github.com/barmoshe/weatherv1-next.git weatherv1-next
 ```
 
 Then, from your laptop, push the media tree:
 
 ```bash
-rsync -avh --progress v1Drive/ ubuntu@<your-vm-public-ip>:/opt/weatherV1/v1Drive/
+rsync -avh --progress v1Drive/ ubuntu@<your-vm-public-ip>:/opt/weather/v1Drive/
 ```
 
 Verify on the VM:
 
 ```bash
-ls /opt/weatherV1/v1Drive/weather/
+ls /opt/weather/v1Drive/weather/
 # expected: audio  music  notouch!  videos
 ```
 
 ## 6. Configure environment and start the app
 
 ```bash
-cd /opt/weatherV1/weatherV1-next
+cd /opt/weather/weatherv1-next
 cp .env.example .env
 nano .env   # paste OPENAI_API_KEY (and GEMINI_API_KEY if you have one)
 
@@ -133,7 +133,7 @@ The first build takes a few minutes (ffmpeg + Next compile). When the log shows 
 If you're building the image somewhere other than the Oracle ARM VM (e.g. on an x86 laptop) and want to pre-bake it for ARM:
 
 ```bash
-docker buildx build --platform linux/arm64 -t weatherv1-next:arm64 weatherV1-next/
+docker buildx build --platform linux/arm64 -t weatherv1-next:arm64 .
 ```
 
 The `Dockerfile`'s `--platform=$BUILDPLATFORM` lines support cross-compilation on Apple Silicon and amd64 hosts.
@@ -159,9 +159,8 @@ Caddy auto-provisions a Let's Encrypt cert and starts serving HTTPS on `:443`. N
 ### Updating to a new commit
 
 ```bash
-cd /opt/weatherV1
+cd /opt/weather/weatherv1-next
 git pull
-cd weatherV1-next
 docker compose up -d --build
 ```
 
@@ -175,8 +174,8 @@ docker compose logs -f --tail=200
 
 Persistent state lives in two places on the host:
 
-- `/opt/weatherV1/v1Drive/` — catalog + media
-- `/opt/weatherV1/weatherV1-next/runtime/` — jobs.json, uploads, outputs, caches
+- `/opt/weather/v1Drive/` — catalog + media
+- `/opt/weather/weatherv1-next/runtime/` — jobs.json, uploads, outputs, caches
 
 The Always Free tier includes **5 free incremental block-volume backups**. Set up a weekly policy in **Block Storage → Backup Policies**. For irreplaceable data (your catalog), also `rclone` nightly to Cloudflare R2 or Backblaze B2 — both have free tiers larger than the catalog plus a comfort margin.
 

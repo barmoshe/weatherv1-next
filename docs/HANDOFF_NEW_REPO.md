@@ -205,3 +205,20 @@ weatherv1-next/
 ```
 
 Nothing else from the monorepo travels with it. The Flask `app/`, the canonical `v1Drive/` media tree, `archive/`, and `original_zips/` all stay in the parent.
+
+## Status (as of pre-extraction pass)
+
+The following items from this guide are **done** and committed to the monorepo:
+
+- **Step 1 — Cross-repo path fix**: `renderer.ts:89` updated to `../v1Drive/weather/music/…` with `BG_MUSIC_PATH` env override.
+- **Step 5 — README**: `README.md` rewritten (project description, dev quickstart, doc links).
+- **Step 5 — CI workflow**: `.github/workflows/ci.yml` added (lint/typecheck, test, Docker multi-arch on tags).
+- **Step 6 — Deploy guide URLs**: `docs/DEPLOY_ORACLE_CLOUD.md` updated to new `/opt/weather/` layout and `barmoshe/weatherv1-next` clone URL.
+
+**Remaining** (to be done in the extraction iteration):
+
+- Step 2: Tag `pre-extract-weatherV1-next` in the monorepo.
+- Step 3: `git subtree split --prefix=weatherV1-next -b weatherv1-next-extracted`.
+- Step 4: Create `barmoshe/weatherv1-next` on GitHub and push.
+- Step 8: Tombstone `weatherV1-next/` in the parent monorepo.
+- Step 9: Run the full verification checklist from a fresh clone.
