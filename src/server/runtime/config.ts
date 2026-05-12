@@ -13,6 +13,16 @@ export interface WeatherRuntimeConfig {
   ffmpegPath?: string;
   ffprobePath?: string;
   bgMusicPath: string;
+  googleDrive: {
+    enabled: boolean;
+    clientId?: string;
+    clientSecret?: string;
+    refreshToken?: string;
+    accessToken?: string;
+    rootFolderId?: string;
+    catalogFileId?: string;
+    statePath?: string;
+  };
 }
 
 let cachedConfig: WeatherRuntimeConfig | null = null;
@@ -72,6 +82,16 @@ export function getRuntimeConfig(): WeatherRuntimeConfig {
     bgMusicPath:
       resolveFrom(projectRoot, process.env.BG_MUSIC_PATH) ??
       path.join(musicDir, "מוזיקת אנדר לתחזית.mp3"),
+    googleDrive: {
+      enabled: process.env.GOOGLE_DRIVE_CATALOG === "1",
+      clientId: normalizeOptional(process.env.GOOGLE_CLIENT_ID),
+      clientSecret: normalizeOptional(process.env.GOOGLE_CLIENT_SECRET),
+      refreshToken: normalizeOptional(process.env.GOOGLE_REFRESH_TOKEN),
+      accessToken: normalizeOptional(process.env.GOOGLE_ACCESS_TOKEN),
+      rootFolderId: normalizeOptional(process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID),
+      catalogFileId: normalizeOptional(process.env.GOOGLE_DRIVE_CATALOG_FILE_ID),
+      statePath: resolveFrom(projectRoot, process.env.GOOGLE_DRIVE_STATE_PATH),
+    },
   };
 
   return cachedConfig;

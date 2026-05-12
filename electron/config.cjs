@@ -26,6 +26,7 @@ let _settings = null;
 
 function setUserDataDir(dir) {
   _userDataDir = dir;
+  _settings = null;
 }
 
 function getUserDataDir() {
@@ -44,11 +45,19 @@ function defaultSettings() {
     ffprobePath: null,
     // Stored as { scheme, data } objects (or null). `scheme` is "safe-storage"
     // for OS-keychain-encrypted values, "plaintext" otherwise.
-    keys: { openai: null, anthropic: null, gemini: null },
+    keys: { openai: null, anthropic: null, gemini: null, googleDriveRefreshToken: null },
     // Plain-text user preference. "auto" lets the server pick from configured keys.
     llmProvider: "auto", // "auto" | "anthropic" | "openai"
     transcriptionProvider: "auto", // "auto" | "local-whispercpp" | "openai-cloud"
     encryption: "none", // "safe-storage" | "none"
+    googleDrive: {
+      enabled: false,
+      clientId: null,
+      rootFolderId: null,
+      catalogFileId: null,
+      lastKnownModifiedTime: null,
+      lastKnownMd5Checksum: null,
+    },
   };
 }
 
@@ -61,7 +70,12 @@ function readSettings() {
   }
   try {
     const raw = JSON.parse(fs.readFileSync(p, "utf8"));
-    _settings = { ...defaultSettings(), ...raw, keys: { ...defaultSettings().keys, ...(raw.keys || {}) } };
+    _settings = {
+      ...defaultSettings(),
+      ...raw,
+      keys: { ...defaultSettings().keys, ...(raw.keys || {}) },
+      googleDrive: { ...defaultSettings().googleDrive, ...(raw.googleDrive || {}) },
+    };
     return _settings;
   } catch {
     _settings = defaultSettings();
@@ -71,7 +85,13 @@ function readSettings() {
 
 function writeSettings(next) {
   fs.mkdirSync(getUserDataDir(), { recursive: true });
-  const merged = { ...readSettings(), ...next, keys: { ...readSettings().keys, ...(next.keys || {}) } };
+  const current = readSettings();
+  const merged = {
+    ...current,
+    ...next,
+    keys: { ...current.keys, ...(next.keys || {}) },
+    googleDrive: { ...current.googleDrive, ...(next.googleDrive || {}) },
+  };
   const tmp = `${settingsPath()}.tmp.${process.pid}`;
   fs.writeFileSync(tmp, JSON.stringify(merged, null, 2), "utf8");
   fs.renameSync(tmp, settingsPath());
@@ -128,6 +148,9 @@ function buildChildEnv(args) {
   const openai = decryptSecret(settings.keys.openai, { safeStorage: args.safeStorage });
   const anthropic = decryptSecret(settings.keys.anthropic, { safeStorage: args.safeStorage });
   const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
+  const googleDriveRefreshToken = decryptSecret(settings.keys.googleDriveRefreshToken, {
+    safeStorage: args.safeStorage,
+  });
 
   const env = {
     ...process.env,
@@ -144,6 +167,16 @@ function buildChildEnv(args) {
   if (openai) env.OPENAI_API_KEY = openai;
   if (anthropic) env.ANTHROPIC_API_KEY = anthropic;
   if (gemini) env.GEMINI_API_KEY = gemini;
+
+  env.WEATHER_USER_DATA_DIR = getUserDataDir();
+  if (settings.googleDrive.enabled && settings.googleDrive.clientId && googleDriveRefreshToken) {
+    env.GOOGLE_DRIVE_CATALOG = "1";
+    env.GOOGLE_CLIENT_ID = settings.googleDrive.clientId;
+    env.GOOGLE_REFRESH_TOKEN = googleDriveRefreshToken;
+    env.GOOGLE_DRIVE_STATE_PATH = path.join(getUserDataDir(), "google-drive-catalog-state.json");
+    if (settings.googleDrive.rootFolderId) env.GOOGLE_DRIVE_ROOT_FOLDER_ID = settings.googleDrive.rootFolderId;
+    if (settings.googleDrive.catalogFileId) env.GOOGLE_DRIVE_CATALOG_FILE_ID = settings.googleDrive.catalogFileId;
+  }
 
   // Provider preferences. "auto" leaves the env var unset so the server-side
   // selection falls through to the key-based default.

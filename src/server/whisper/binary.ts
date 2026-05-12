@@ -8,12 +8,16 @@
 //      electron/bin/whisper/...`. The `asarUnpack` entry in forge.config.cjs
 //      makes the unpacked path real on disk; we rewrite `app.asar →
 //      app.asar.unpacked` at call time the same way ffmpeg-verify does.
-//   3. System PATH (`whisper-cli`, then `whisper.cpp`, then `main` as a
+//   3. Workspace cache under `<cacheDir>/whisper-bin/<platform>-<arch>/`.
+//      This is the writable slot used by the in-app downloader so Windows
+//      users (where there is no `brew install whisper-cpp`) can get a working
+//      binary without rebuilding the installer.
+//   4. System PATH (`whisper-cli`, then `whisper.cpp`, then `main` as a
 //      legacy whisper.cpp name).
 //
 // Vendor instructions for the bundled binaries (one-time, per release):
 //   - macOS arm64: download whisper.cpp release `whisper-cli` built with
-//     `-DWHISPER_METAL=1` from https://github.com/ggerganov/whisper.cpp/releases
+//     `-DWHISPER_METAL=1` from https://github.com/ggml-org/whisper.cpp/releases
 //     and copy to `electron/bin/whisper/darwin-arm64/whisper-cli`.
 //   - macOS x64:   `electron/bin/whisper/darwin-x64/whisper-cli`.
 //   - Windows x64: `electron/bin/whisper/win32-x64/whisper-cli.exe`.
@@ -23,12 +27,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { getRuntimePaths } from "@/server/runtime/paths";
 
 const execFileAsync = promisify(execFile);
 
 export interface WhisperBinaryResolution {
   path: string;
-  source: "env" | "bundled" | "path";
+  source: "env" | "bundled" | "workspace" | "path";
 }
 
 const PROJECT_ROOT = path.resolve(__dirname, "..", "..", "..");
@@ -42,6 +47,17 @@ export function bundledBinaryDir(): string {
 /** Path that bundled models live at — same packaging pattern as binaries. */
 export function bundledModelsDir(): string {
   return path.join(PROJECT_ROOT, "electron", "bin", "whisper", "models");
+}
+
+/**
+ * Writable per-workspace location for downloaded whisper.cpp binaries.
+ * `<cache>/whisper-bin/<platform>-<arch>/whisper-cli[.exe]`.
+ * Used by the in-app downloader so non-bundled platforms (Windows out of
+ * the box) can install whisper.cpp without rebuilding the installer.
+ */
+export function workspaceBinaryDir(): string {
+  const platformArch = `${process.platform}-${process.arch}`;
+  return path.join(getRuntimePaths().cacheDir, "whisper-bin", platformArch);
 }
 
 function unpackAsarPath(p: string): string {
@@ -64,6 +80,16 @@ function tryEnvOverride(): WhisperBinaryResolution | null {
 function tryBundled(): WhisperBinaryResolution | null {
   const candidate = unpackAsarPath(path.join(bundledBinaryDir(), binaryName()));
   if (fs.existsSync(candidate)) return { path: candidate, source: "bundled" };
+  return null;
+}
+
+function tryWorkspaceCache(): WhisperBinaryResolution | null {
+  try {
+    const candidate = path.join(workspaceBinaryDir(), binaryName());
+    if (fs.existsSync(candidate)) return { path: candidate, source: "workspace" };
+  } catch {
+    // workspace not configured yet (e.g. during first launch); silently skip.
+  }
   return null;
 }
 
@@ -92,7 +118,7 @@ function tryPath(): WhisperBinaryResolution | null {
  * error so the UI can prompt the user to download/install.
  */
 export function resolveWhisperBinary(): WhisperBinaryResolution | null {
-  return tryEnvOverride() ?? tryBundled() ?? tryPath();
+  return tryEnvOverride() ?? tryBundled() ?? tryWorkspaceCache() ?? tryPath();
 }
 
 /** Run `<binary> --version`. Used by /api/desktop/status to confirm health. */

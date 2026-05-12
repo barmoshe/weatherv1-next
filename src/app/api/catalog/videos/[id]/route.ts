@@ -81,8 +81,10 @@ export async function PATCH(
     invalidateCatalogCache();
     return NextResponse.json({ success: true, video: entry });
   } catch (err) {
+    invalidateCatalogCache();
     const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    const status = err instanceof Error && err.name === "CatalogConflictError" ? 409 : 500;
+    return NextResponse.json({ success: false, error: msg }, { status });
   }
 }
 
@@ -113,7 +115,9 @@ export async function DELETE(
     invalidateCatalogCache();
     return NextResponse.json({ success: true });
   } catch (err) {
+    invalidateCatalogCache();
     const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    const status = err instanceof Error && err.name === "CatalogConflictError" ? 409 : 500;
+    return NextResponse.json({ success: false, error: msg }, { status });
   }
 }

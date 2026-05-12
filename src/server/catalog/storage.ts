@@ -1,30 +1,29 @@
-import fs from "node:fs";
-import path from "node:path";
-import { createHash } from "node:crypto";
-import lockfile from "proper-lockfile";
 import type { Catalog } from "@/shared/types";
-import { CatalogSchema } from "@/shared/types";
 import { getAssetSource } from "@/server/assets/source";
+import {
+  getCatalogStore,
+  resetCatalogStoreForTests,
+  type CatalogStoreStatus,
+} from "./stores";
 
 export function getCatalogPath(): string {
-  return getAssetSource().getCatalogPath();
+  return getCatalogStore().getCatalogPath();
 }
 
 export function getVideosDir(): string {
   return getAssetSource().getVideosDir();
 }
 
-let _catalogCache: { catalog: Catalog; mtime: number } | null = null;
+let _catalogCache: { catalog: Catalog; version: string } | null = null;
 
 export function readCatalog(): Catalog {
-  const catalogPath = getCatalogPath();
-  const stat = fs.statSync(catalogPath);
-  if (_catalogCache && _catalogCache.mtime === stat.mtimeMs) {
+  const store = getCatalogStore();
+  const version = store.version();
+  if (_catalogCache && _catalogCache.version === version) {
     return _catalogCache.catalog;
   }
-  const raw = fs.readFileSync(catalogPath, "utf8");
-  const parsed = CatalogSchema.parse(JSON.parse(raw));
-  _catalogCache = { catalog: parsed, mtime: stat.mtimeMs };
+  const parsed = store.read();
+  _catalogCache = { catalog: parsed, version };
   return parsed;
 }
 
@@ -32,28 +31,28 @@ export function invalidateCatalogCache(): void {
   _catalogCache = null;
 }
 
+export function resetCatalogStorageForTests(): void {
+  invalidateCatalogCache();
+  resetCatalogStoreForTests();
+}
+
 export function catalogVersion(): string {
-  try {
-    const raw = fs.readFileSync(getCatalogPath(), "utf8");
-    return createHash("sha1").update(raw).digest("hex").slice(0, 8);
-  } catch {
-    return "unknown";
-  }
+  return getCatalogStore().version();
+}
+
+export function catalogStoreStatus(): CatalogStoreStatus {
+  return getCatalogStore().status();
+}
+
+export async function pullCatalogFromDrive(): Promise<CatalogStoreStatus> {
+  const store = getCatalogStore();
+  if (!store.pullRemoteToLocal) return store.status();
+  const status = await store.pullRemoteToLocal();
+  invalidateCatalogCache();
+  return status;
 }
 
 export async function writeCatalog(catalog: Catalog): Promise<void> {
-  const catalogPath = getCatalogPath();
-  // Ensure the directory exists
-  fs.mkdirSync(path.dirname(catalogPath), { recursive: true });
-
-  let release: (() => Promise<void>) | null = null;
-  try {
-    release = await lockfile.lock(catalogPath, { retries: 5 });
-    const tmp = `${catalogPath}.tmp.${process.pid}`;
-    fs.writeFileSync(tmp, JSON.stringify(catalog, null, 2), "utf8");
-    fs.renameSync(tmp, catalogPath);
-    invalidateCatalogCache();
-  } finally {
-    if (release) await release();
-  }
+  await getCatalogStore().write(catalog);
+  invalidateCatalogCache();
 }

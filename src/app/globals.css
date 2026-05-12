@@ -1067,6 +1067,55 @@
             gap: 0.4rem;
             margin-top: 0.25rem;
         }
+        .settings-binary-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.6rem;
+        }
+        .settings-binary-card__row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .settings-binary-card__actions {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+        .settings-binary-card__progress {
+            position: relative;
+            flex: 1 1 200px;
+            min-width: 200px;
+            background: rgb(0 0 0 / .08);
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .settings-binary-card__progress-bar {
+            position: absolute;
+            inset-inline-start: 0;
+            top: 0;
+            bottom: 0;
+            background: var(--v1-coral);
+            transition: width 200ms ease;
+        }
+        .settings-binary-card__progress span {
+            position: absolute;
+            inset: 0;
+            transform: translateY(14px);
+            font-size: 0.78rem;
+            color: var(--v1-ink-muted);
+            font-variant-numeric: tabular-nums;
+        }
+        .settings-binary-card__error {
+            color: var(--v1-danger);
+            font-size: 0.85rem;
+        }
+        .settings-binary-card--installed {
+            flex-direction: row;
+            align-items: center;
+        }
         .catalog-card {
             background: var(--v1-cream); border-radius: var(--radius-sm);
             padding: 0.7rem 0.85rem; display: flex; align-items: center; gap: 0.6rem;

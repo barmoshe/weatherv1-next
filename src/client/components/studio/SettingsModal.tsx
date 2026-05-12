@@ -55,6 +55,16 @@ interface DesktopStatus {
     ffprobe_path: string | null;
     bg_music_path: string;
   };
+  catalog_store?: {
+    kind: "local" | "google-drive";
+    enabled: boolean;
+    ready: boolean;
+    rootFolderId?: string;
+    catalogFileId?: string;
+    lastKnownModifiedTime?: string;
+    lastSyncAt?: string;
+    error?: string;
+  };
 }
 
 type WhisperModelId = "small" | "medium" | "large-v3";
@@ -121,6 +131,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
+  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleDriveEnabled, setGoogleDriveEnabled] = useState(false);
   const [llmProvider, setLlmProvider] = useState<LlmProviderPreference>("auto");
   const [transcriptionProvider, setTranscriptionProvider] =
     useState<TranscriptionProviderPreference>("auto");
@@ -134,7 +146,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     bytesDownloaded: number;
     bytesTotal: number;
   } | null>(null);
+  const [binaryDownload, setBinaryDownload] = useState<{
+    supported: boolean;
+    platform: string;
+    asset?: string;
+    release: string;
+    sizeBytes?: number;
+  } | null>(null);
+  const [binaryInstalling, setBinaryInstalling] = useState(false);
+  const [binaryProgress, setBinaryProgress] = useState<{
+    bytesDownloaded: number;
+    bytesTotal: number;
+  } | null>(null);
+  const [binaryError, setBinaryError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [connectingDrive, setConnectingDrive] = useState(false);
+  const [syncingDrive, setSyncingDrive] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const loadHealth = useCallback(async () => {
@@ -176,6 +203,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         setLlmProvider(status.providers.llm_pref);
         setTranscriptionProvider(status.providers.transcription_pref);
       }
+      setGoogleDriveEnabled(Boolean(status.catalog_store?.enabled));
     } catch (e) {
       setDesktopError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -187,17 +215,102 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setWhisperLoading(true);
     setWhisperError(null);
     try {
-      const r = await fetch("/api/whisper/models");
-      const data = (await r.json()) as WhisperModelsResponse;
-      if (!r.ok || !data.success) throw new Error(`HTTP ${r.status}`);
-      setWhisperModels(data.models);
-      setWhisperBinaryReady(data.binary_ready);
+      const [modelsRes, binaryRes] = await Promise.all([
+        fetch("/api/whisper/models"),
+        fetch("/api/whisper/binary"),
+      ]);
+      const modelsData = (await modelsRes.json()) as WhisperModelsResponse;
+      if (!modelsRes.ok || !modelsData.success) throw new Error(`HTTP ${modelsRes.status}`);
+      setWhisperModels(modelsData.models);
+      setWhisperBinaryReady(modelsData.binary_ready);
+      if (binaryRes.ok) {
+        const binaryData = (await binaryRes.json()) as {
+          success: boolean;
+          installed: boolean;
+          binary: { path: string | null; source: string | null };
+          download: {
+            platform: string;
+            supported: boolean;
+            asset?: string;
+            release: string;
+            sizeBytes?: number;
+          };
+        };
+        if (binaryData.success) {
+          setBinaryDownload({
+            platform: binaryData.download.platform,
+            supported: binaryData.download.supported,
+            asset: binaryData.download.asset,
+            release: binaryData.download.release,
+            sizeBytes: binaryData.download.sizeBytes,
+          });
+        }
+      }
     } catch (e) {
       setWhisperError(e instanceof Error ? e.message : String(e));
     } finally {
       setWhisperLoading(false);
     }
   }, []);
+
+  const installWhisperBinary = useCallback(async () => {
+    if (binaryInstalling) return;
+    setBinaryInstalling(true);
+    setBinaryProgress({ bytesDownloaded: 0, bytesTotal: 0 });
+    setBinaryError(null);
+    try {
+      const res = await fetch("/api/whisper/binary", { method: "POST" });
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split("\n\n");
+        buffer = frames.pop() ?? "";
+        for (const frame of frames) {
+          if (frame.startsWith("event: error")) {
+            const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
+            const payload = dataLine ? JSON.parse(dataLine.slice(5).trim()) : { error: "unknown" };
+            throw new Error(String((payload as { error?: unknown }).error ?? "download failed"));
+          }
+          if (frame.startsWith("event: done")) continue;
+          const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
+          if (!dataLine) continue;
+          const payload = JSON.parse(dataLine.slice(5).trim()) as {
+            bytesDownloaded: number;
+            bytesTotal: number;
+          };
+          setBinaryProgress({
+            bytesDownloaded: payload.bytesDownloaded,
+            bytesTotal: payload.bytesTotal,
+          });
+        }
+      }
+      await loadWhisperModels();
+      await loadDesktopStatus();
+    } catch (e) {
+      setBinaryError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBinaryInstalling(false);
+      setBinaryProgress(null);
+    }
+  }, [binaryInstalling, loadDesktopStatus, loadWhisperModels]);
+
+  const removeInstalledWhisperBinary = useCallback(async () => {
+    setBinaryError(null);
+    try {
+      const r = await fetch("/api/whisper/binary", { method: "DELETE" });
+      const data = (await r.json()) as { success: boolean; error?: string };
+      if (!data.success) throw new Error(data.error ?? "remove failed");
+      await loadWhisperModels();
+      await loadDesktopStatus();
+    } catch (e) {
+      setBinaryError(e instanceof Error ? e.message : String(e));
+    }
+  }, [loadDesktopStatus, loadWhisperModels]);
 
   const downloadWhisperModel = useCallback(
     async (id: WhisperModelId) => {
@@ -289,6 +402,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (openaiKey.trim()) update.openaiKey = openaiKey.trim();
       if (anthropicKey.trim()) update.anthropicKey = anthropicKey.trim();
       if (geminiKey.trim()) update.geminiKey = geminiKey.trim();
+      if (googleClientId.trim()) update.googleClientId = googleClientId.trim();
+      update.googleDriveEnabled = googleDriveEnabled;
       update.llmProvider = llmProvider;
       update.transcriptionProvider = transcriptionProvider;
 
@@ -310,6 +425,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     ffmpegPath,
     ffprobePath,
     geminiKey,
+    googleClientId,
+    googleDriveEnabled,
     llmProvider,
     loadDesktopStatus,
     loadHealth,
@@ -318,6 +435,45 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     transcriptionProvider,
     workspaceDir,
   ]);
+
+  const connectGoogleDrive = useCallback(async () => {
+    if (!desktop) return;
+    setConnectingDrive(true);
+    setDesktopError(null);
+    try {
+      if (googleClientId.trim()) {
+        await desktop.saveSettings({
+          googleClientId: googleClientId.trim(),
+          googleDriveEnabled: true,
+        });
+      }
+      await desktop.connectGoogleDrive();
+      await loadDesktopStatus();
+      await loadHealth();
+      setGoogleDriveEnabled(true);
+      setSaved(true);
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setConnectingDrive(false);
+    }
+  }, [googleClientId, loadDesktopStatus, loadHealth]);
+
+  const syncCatalogFromDrive = useCallback(async () => {
+    setSyncingDrive(true);
+    setDesktopError(null);
+    try {
+      const r = await fetch("/api/catalog/sync", { method: "POST" });
+      const data = (await r.json()) as { success: boolean; error?: string };
+      if (!r.ok || !data.success) throw new Error(data.error ?? `HTTP ${r.status}`);
+      await loadDesktopStatus();
+      await loadHealth();
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSyncingDrive(false);
+    }
+  }, [loadDesktopStatus, loadHealth]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -480,6 +636,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <span>עדכונים</span>
                   <span>{updateState ? updateState.status : "טוען..."}</span>
                 </div>
+                <div className="settings-status-row">
+                  <StatusDot ok={Boolean(desktopStatus?.catalog_store?.ready)} />
+                  <span>Google Drive</span>
+                  <span>
+                    {desktopStatus?.catalog_store?.kind === "google-drive"
+                      ? `מחובר · ${desktopStatus.catalog_store.lastSyncAt ? "סונכרן" : "ממתין לסנכרון"}`
+                      : "לא פעיל"}
+                  </span>
+                </div>
               </div>
             )}
           </section>
@@ -507,6 +672,62 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               {desktopStatus && desktopStatus.workspace.missing.length > 0 && (
                 <p className="settings-hint">
                   חסרים ב-workspace: {desktopStatus.workspace.missing.join(", ")}
+                </p>
+              )}
+            </section>
+          )}
+
+          {isDesktop && (
+            <section className="settings-section">
+              <div className="settings-section-header">
+                <h3>Google Drive Catalog</h3>
+                <button
+                  type="button"
+                  className="settings-link"
+                  onClick={() => void syncCatalogFromDrive()}
+                  disabled={syncingDrive || !desktopStatus?.catalog_store?.enabled}
+                >
+                  {syncingDrive ? "מסנכרן…" : "משוך קטלוג"}
+                </button>
+              </div>
+              <p className="settings-hint">
+                הקטלוג מסתנכרן ל-WeatherV1/catalog.json בדרייב. קבצי וידאו נשארים מקומיים בשלב הזה.
+              </p>
+              <label className="settings-field">
+                <span>OAuth Client ID</span>
+                <input
+                  value={googleClientId}
+                  onChange={(e) => {
+                    setGoogleClientId(e.target.value);
+                    setSaved(false);
+                  }}
+                  placeholder="Google Desktop OAuth client ID"
+                />
+              </label>
+              <label className="settings-radio">
+                <input
+                  type="checkbox"
+                  checked={googleDriveEnabled}
+                  onChange={(e) => {
+                    setGoogleDriveEnabled(e.target.checked);
+                    setSaved(false);
+                  }}
+                />
+                <span>הפעל סנכרון קטלוג ל-Google Drive</span>
+              </label>
+              <div className="settings-model-row__actions">
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  onClick={() => void connectGoogleDrive()}
+                  disabled={connectingDrive || saving}
+                >
+                  {connectingDrive ? "מתחבר…" : "חבר Google Drive"}
+                </button>
+              </div>
+              {desktopStatus?.catalog_store?.catalogFileId && (
+                <p className="settings-hint">
+                  catalog.json: {desktopStatus.catalog_store.catalogFileId}
                 </p>
               )}
             </section>
@@ -635,12 +856,64 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </button>
               </div>
               {!whisperBinaryReady && (
-                <div className="catalog-card">
-                  <span className="dot is-missing" />
-                  <span>
-                    תוכנת whisper.cpp לא נמצאה. אפשר להגדיר WHISPER_CLI_PATH או לבצע
-                    fall-back לתמלול בענן.
-                  </span>
+                <div className="catalog-card settings-binary-card">
+                  <div className="settings-binary-card__row">
+                    <span className="dot is-missing" />
+                    <span>
+                      תוכנת whisper.cpp לא נמצאה.
+                      {binaryDownload?.supported
+                        ? ` ניתן להתקין אותה כאן (גרסה ${binaryDownload.release}, כ-${formatBytes(binaryDownload.sizeBytes ?? 0)}).`
+                        : binaryDownload
+                          ? ` אין חבילה מוכנה ל-${binaryDownload.platform}; התקן ידנית (למשל brew install whisper-cpp) או הגדר WHISPER_CLI_PATH.`
+                          : " אפשר להגדיר WHISPER_CLI_PATH או לעבור לתמלול בענן."}
+                    </span>
+                  </div>
+                  {binaryDownload?.supported && (
+                    <div className="settings-binary-card__actions">
+                      <button
+                        type="button"
+                        className="btn btn--primary"
+                        onClick={() => void installWhisperBinary()}
+                        disabled={binaryInstalling}
+                      >
+                        {binaryInstalling ? "מתקין…" : "התקן whisper.cpp"}
+                      </button>
+                      {binaryInstalling && binaryProgress && (
+                        <div className="settings-binary-card__progress">
+                          <div
+                            className="settings-binary-card__progress-bar"
+                            style={{
+                              width:
+                                binaryProgress.bytesTotal > 0
+                                  ? `${Math.min(100, Math.floor((binaryProgress.bytesDownloaded / binaryProgress.bytesTotal) * 100))}%`
+                                  : "0%",
+                            }}
+                          />
+                          <span>
+                            {formatBytes(binaryProgress.bytesDownloaded)} /{" "}
+                            {formatBytes(binaryProgress.bytesTotal || binaryDownload.sizeBytes || 0)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {binaryError && (
+                    <div className="settings-binary-card__error">{binaryError}</div>
+                  )}
+                </div>
+              )}
+              {whisperBinaryReady && binaryDownload?.supported && (
+                <div className="settings-binary-card settings-binary-card--installed">
+                  <span className="dot is-healthy" />
+                  <span>whisper.cpp מותקן ב-workspace. ניתן להחליף גרסה במידת הצורך.</span>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => void removeInstalledWhisperBinary()}
+                    disabled={binaryInstalling}
+                  >
+                    הסר
+                  </button>
                 </div>
               )}
               {whisperError && (

@@ -44,6 +44,7 @@ const { verifyFFmpeg } = require("./ffmpeg-verify.cjs");
 const cfg = require("./config.cjs");
 const { createServerManager } = require("./server-manager.cjs");
 const { isLoadableOrigin } = require("./window-utils.cjs");
+const { runGoogleDriveOAuth } = require("./google-drive-oauth.cjs");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const IS_DEV = !app.isPackaged;
@@ -260,6 +261,55 @@ ipcMain.handle("desktop:getAppInfo", async () => ({
 
 ipcMain.handle("desktop:getUpdateState", async () => state.updateState);
 
+async function restartChildWithCurrentSettings() {
+  const env = cfg.buildChildEnv({
+    port: cfg.DEFAULT_PORT,
+    token: state.token,
+    ffmpeg: { ffmpegPath: state.ffmpeg.ffmpegPath, ffprobePath: state.ffmpeg.ffprobePath },
+    safeStorage,
+  });
+  await state.manager.restart(env);
+  if (state.window && !state.window.isDestroyed()) {
+    const nextOrigin = state.manager.origin;
+    if (isLoadableOrigin(nextOrigin)) {
+      state.origin = nextOrigin;
+      state.window.loadURL(nextOrigin);
+    } else {
+      console.warn(`[main] restart finished without a valid origin: ${nextOrigin}`);
+    }
+  }
+}
+
+ipcMain.handle("desktop:connectGoogleDrive", async () => {
+  const settings = cfg.readSettings();
+  const clientId =
+    (settings.googleDrive && settings.googleDrive.clientId) ||
+    process.env.GOOGLE_CLIENT_ID ||
+    null;
+  if (!clientId) {
+    throw new Error("Set a Google OAuth desktop client ID before connecting Drive");
+  }
+
+  const tokens = await runGoogleDriveOAuth({
+    clientId,
+    openExternal: (url) => shell.openExternal(url),
+  });
+  if (!tokens.refresh_token) {
+    throw new Error("Google did not return a refresh token. Revoke app access and try connecting again.");
+  }
+
+  cfg.writeSettings({
+    googleDrive: { enabled: true, clientId },
+    keys: {
+      googleDriveRefreshToken: cfg.encryptSecret(tokens.refresh_token, { safeStorage }),
+    },
+    encryption: safeStorage.isEncryptionAvailable() ? "safe-storage" : "none",
+  });
+
+  await restartChildWithCurrentSettings();
+  return { success: true };
+});
+
 ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   const patch = {};
   if (update && typeof update.workspaceDir === "string") patch.workspaceDir = update.workspaceDir;
@@ -277,6 +327,18 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
     transcriptionProviders.has(update.transcriptionProvider)
   ) {
     patch.transcriptionProvider = update.transcriptionProvider;
+  }
+  if (update && typeof update.googleClientId === "string") {
+    patch.googleDrive = {
+      ...(patch.googleDrive || {}),
+      clientId: update.googleClientId.trim() || null,
+    };
+  }
+  if (update && typeof update.googleDriveEnabled === "boolean") {
+    patch.googleDrive = {
+      ...(patch.googleDrive || {}),
+      enabled: update.googleDriveEnabled,
+    };
   }
 
   const keyUpdates = {};
@@ -299,22 +361,7 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
 
   // Restart the child with the new env. The renderer is expected to show a
   // brief "Reloading…" overlay while the new instance comes up.
-  const env = cfg.buildChildEnv({
-    port: cfg.DEFAULT_PORT,
-    token: state.token,
-    ffmpeg: { ffmpegPath: state.ffmpeg.ffmpegPath, ffprobePath: state.ffmpeg.ffprobePath },
-    safeStorage,
-  });
-  await state.manager.restart(env);
-  if (state.window && !state.window.isDestroyed()) {
-    const nextOrigin = state.manager.origin;
-    if (isLoadableOrigin(nextOrigin)) {
-      state.origin = nextOrigin;
-      state.window.loadURL(nextOrigin);
-    } else {
-      console.warn(`[main] restart finished without a valid origin: ${nextOrigin}`);
-    }
-  }
+  await restartChildWithCurrentSettings();
 
   return { success: true };
 });

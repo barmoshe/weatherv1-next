@@ -124,7 +124,8 @@ export function mapProviderError(err: unknown): MappedErrorResponse | null {
         status: 409,
         body: {
           success: false,
-          error: "תוכנת whisper.cpp לא נמצאה באפליקציה. הגדר OPENAI_API_KEY או התקן whisper.cpp.",
+          error:
+            "תוכנת whisper.cpp לא נמצאה. פתח את ההגדרות והתקן אותה, או הגדר OPENAI_API_KEY כתמלול מגיבוי.",
           error_code: "transcription_binary_missing",
           provider: err.provider,
         },

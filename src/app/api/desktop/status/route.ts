@@ -3,6 +3,7 @@ import { getAssetSource } from "@/server/assets/source";
 import { getRuntimeConfig } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { assertDesktopAuth } from "@/server/runtime/auth";
+import { catalogStoreStatus } from "@/server/catalog/storage";
 import { resolveWhisperBinary } from "@/server/whisper/binary";
 import { pickActiveModel, listInstalledModels } from "@/server/whisper/models";
 
@@ -87,5 +88,6 @@ export async function GET(req: NextRequest) {
       ffprobe_path: config.ffprobePath ?? null,
       bg_music_path: config.bgMusicPath,
     },
+    catalog_store: catalogStoreStatus(),
   });
 }

@@ -6,6 +6,9 @@ import { DESKTOP_AUTH_HEADER, assertDesktopAuth } from "@/server/runtime/auth";
 import { getRuntimeConfig, resetRuntimeConfigForTests } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { getAssetSource, resetAssetSourceForTests } from "@/server/assets/source";
+import { resetCatalogStoreForTests } from "@/server/catalog/stores";
+
+const electronConfig = require("../../electron/config.cjs") as any;
 
 const ENV_KEYS = [
   "DESKTOP_MODE",
@@ -19,6 +22,10 @@ const ENV_KEYS = [
   "FFMPEG_PATH",
   "FFPROBE_PATH",
   "BG_MUSIC_PATH",
+  "GOOGLE_DRIVE_CATALOG",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_REFRESH_TOKEN",
+  "GOOGLE_DRIVE_STATE_PATH",
 ] as const;
 
 let originalEnv: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>>;
@@ -27,6 +34,7 @@ let tempDirs: string[] = [];
 function resetRuntimeState() {
   resetRuntimeConfigForTests();
   resetAssetSourceForTests();
+  resetCatalogStoreForTests();
 }
 
 function makeTempDir(name: string) {
@@ -125,5 +133,47 @@ describe("desktop auth", () => {
       headers: new Headers({ [DESKTOP_AUTH_HEADER]: "secret" }),
     });
     expect(allowed).toBeNull();
+  });
+});
+
+describe("electron config Google Drive settings", () => {
+  it("persists Drive IDs and injects Drive env without exposing tokens to renderer settings", () => {
+    const userData = makeTempDir("electron-config");
+    electronConfig.setUserDataDir(userData);
+
+    electronConfig.writeSettings({
+      googleDrive: {
+        enabled: true,
+        clientId: "desktop-client-id",
+        rootFolderId: "folder-1",
+        catalogFileId: "catalog-1",
+        lastKnownModifiedTime: "2026-05-12T00:00:00.000Z",
+        lastKnownMd5Checksum: "md5-a",
+      },
+      keys: {
+        googleDriveRefreshToken: electronConfig.encryptSecret("refresh-token", {}),
+      },
+    });
+
+    const settings = electronConfig.readSettings();
+    expect(settings.googleDrive).toMatchObject({
+      enabled: true,
+      clientId: "desktop-client-id",
+      rootFolderId: "folder-1",
+      catalogFileId: "catalog-1",
+    });
+
+    const env = electronConfig.buildChildEnv({
+      port: 3765,
+      token: "desktop-token",
+      ffmpeg: { ffmpegPath: null, ffprobePath: null },
+    });
+
+    expect(env.GOOGLE_DRIVE_CATALOG).toBe("1");
+    expect(env.GOOGLE_CLIENT_ID).toBe("desktop-client-id");
+    expect(env.GOOGLE_REFRESH_TOKEN).toBe("refresh-token");
+    expect(env.GOOGLE_DRIVE_ROOT_FOLDER_ID).toBe("folder-1");
+    expect(env.GOOGLE_DRIVE_CATALOG_FILE_ID).toBe("catalog-1");
+    expect(env.GOOGLE_DRIVE_STATE_PATH).toBe(path.join(userData, "google-drive-catalog-state.json"));
   });
 });

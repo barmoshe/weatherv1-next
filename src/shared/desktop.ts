@@ -42,6 +42,8 @@ export interface DesktopSettingsUpdate {
   ffprobePath?: string;
   llmProvider?: LlmProviderPreference;
   transcriptionProvider?: TranscriptionProviderPreference;
+  googleClientId?: string;
+  googleDriveEnabled?: boolean;
 }
 
 export interface DesktopBridge {
@@ -52,4 +54,5 @@ export interface DesktopBridge {
   getAppInfo(): Promise<DesktopAppInfo>;
   getUpdateState(): Promise<DesktopUpdateState>;
   saveSettings(update: DesktopSettingsUpdate): Promise<{ success: true }>;
+  connectGoogleDrive(): Promise<{ success: true }>;
 }

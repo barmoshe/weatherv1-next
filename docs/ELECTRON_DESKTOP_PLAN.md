@@ -6,7 +6,7 @@
 - Keep the current Next.js App Router UI and `/api/*` flows.
 - Run the app inside Electron with a bundled local Next server.
 - Target `macOS + Windows` first.
-- Keep assets local in v1, but isolate asset access behind a provider boundary so Google Drive can replace the local source later.
+- Keep media assets local in v1, but support optional Google Drive sync for `catalog.json` through a catalog-store boundary.
 - Ship installers from GitHub Actions on `v*` tags, attach stable-named assets to GitHub Releases, and publish a simple download page from GitHub Pages.
 
 ## Repo Facts Driving The Design
@@ -87,7 +87,7 @@
 
 - Introduce a server-side asset provider abstraction.
 - Implement `LocalWorkspaceAssetSource` now.
-- Leave the provider interface ready for a future `GoogleDriveAssetSource`.
+- Leave media access local-first; Google Drive v1 syncs only catalog JSON, not video/music files.
 - The provider should resolve:
   - catalog path
   - videos dir
@@ -95,6 +95,15 @@
   - resolved video paths
   - resolved music/background paths
   - validation of expected workspace layout
+
+### 6.5. Google Drive Catalog Sync
+
+- Keep `readCatalog()`/`writeCatalog()` as the stable route-facing API, but route them through a `CatalogStore` boundary.
+- `LocalCatalogStore` preserves the current filesystem catalog behavior.
+- `GoogleDriveCatalogStore` reads and writes the same `Catalog` JSON using a local cache plus `WeatherV1/catalog.json` in the user's Drive.
+- Store Google refresh tokens in Electron `safeStorage`; pass only child-process env needed for server-side Drive sync.
+- Use narrow scopes only: `drive.file` and `drive.appdata`. Do not request `drive` or `drive.readonly` in v1.
+- Conflict policy v1: if the remote Drive catalog changed since the last known sync, reject the overwrite and require a pull/replace decision.
 
 ### 7. Workspace Setup
 
@@ -195,6 +204,7 @@
 | 7. Desktop-aware UI | ✅ | `src/client/lib/desktop.ts` provides SSR-safe bridge access. `SettingsModal` now shows desktop workspace validation, ffmpeg status, OpenAI/Gemini key presence, app version, update state, editable workspace/ffmpeg paths, API key entry, and a save/restart overlay. `UploadCard` uses `window.desktop.pickAudioFile()` when available and posts `{ desktop_file_path }` JSON to `/api/transcribe`; browser upload still uses multipart. `CatalogPanel` uses `window.desktop.importCatalogVideo()` when available and falls back to a browser file input; both paths post to `/api/catalog/videos` and invalidate catalog/tag queries. | Settings save only sends non-empty key fields, so blank password boxes do not clear stored keys. The real native picker round-trip still needs an Electron launch smoke test. |
 | 8. Tests | ✅ | Added `src/test/runtime-desktop.test.ts` for runtime env resolution, asset workspace scaffolding, and desktop auth. Added `src/test/server-manager.test.ts` for standalone/dev entrypoint resolution. Full suite is now 49/49. | Socket-bound server-manager tests hit `EPERM` in the local sandbox, so this pass kept server-manager coverage to pure unit checks. Full spawn/restart behavior should be covered in CI or a less restricted harness. |
 | 9. Desktop CI + release delivery | ✅ | Added `.github/workflows/desktop.yml` with a macOS + Windows Node 22 matrix: `npm ci`, `tsc`, `npm test`, unsigned `electron:build` on PRs, `electron:make` on `v*` tags, and artifact upload from `out/**`. Added `.github/workflows/desktop-publish-release.yml` to attach stable-named release assets (`WeatherV1-macOS.zip`, `WeatherV1-Setup.exe`) after a successful Desktop tag run. Added `.github/workflows/pages.yml` plus `docs/download-page/index.html.template` so GitHub Pages can publish a simple install/download page. `forge.config.cjs` now gates macOS signing on an imported CI certificate, uses `notarytool`, and expects decoded Windows cert files via `WIN_CERT_FILE`. | GitHub Releases publishing is handled by workflow orchestration rather than the commented Forge publisher block. Signed public releases still depend on the secrets and repository Pages settings being configured in GitHub. |
+| 10. Google Drive catalog sync | ✅ | `src/server/catalog/{storage,stores,google-drive-client}.ts`, `src/app/api/catalog/sync/route.ts`, Electron Google OAuth callback flow, encrypted refresh-token settings, child env injection, and Settings UI controls for Drive catalog sync. | Media remains local-first. Existing Drive catalog conflicts return 409 until the user pulls or intentionally replaces remote state. |
 
 ## Quick start for the next agent
 
@@ -337,7 +347,7 @@ Adding the Electron / Forge / ffmpeg deps in Step 6 broke `npm ci` in the existi
 
 ## Out Of Scope For V1
 
-- Google Drive asset browsing or syncing.
+- Google Drive media asset browsing or syncing.
 - Rewriting the app into a pure IPC-native renderer.
 - Replacing existing `/api/*` contracts.
 - `next-electron-rsc`-style in-process request interception (no loopback port). Worth a v2 evaluation; not v1.

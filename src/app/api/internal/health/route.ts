@@ -3,6 +3,7 @@ import { getRuntimeConfig } from "@/server/runtime/config";
 import { getAssetSource } from "@/server/assets/source";
 import { verifyFFmpegAtBoot } from "@/server/ffmpeg/binaries";
 import { assertDesktopAuth } from "@/server/runtime/auth";
+import { catalogStoreStatus } from "@/server/catalog/storage";
 
 export async function GET(req: NextRequest) {
   const denied = assertDesktopAuth(req);
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
     ok: workspace.ready && ffmpeg.ok,
     desktopMode: cfg.desktopMode,
     workspace,
+    catalogStore: catalogStoreStatus(),
     ffmpeg,
   });
 }
