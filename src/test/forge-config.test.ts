@@ -12,4 +12,11 @@ describe("forge packaging config", () => {
     expect(unpack).toContain("**/.next/standalone/**");
     expect(unpack).toContain("**/.next/standalone/.next/**");
   });
+
+  it("unpacks onnxruntime-node native libraries so local Whisper can load them", () => {
+    const unpack = forgeConfig.packagerConfig?.asar?.unpack ?? "";
+
+    expect(unpack).toContain("**/node_modules/onnxruntime-node/**");
+    expect(unpack).toContain("**/node_modules/@huggingface/transformers/**");
+  });
 });

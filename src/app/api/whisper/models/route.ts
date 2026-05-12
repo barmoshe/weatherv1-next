@@ -19,8 +19,8 @@ import {
   deleteModel,
   pickActiveModel,
   modelsCacheDir,
+  isLocalWhisperPlatformSupported,
 } from "@/server/whisper/models";
-import { resolveWhisperBinary } from "@/server/whisper/binary";
 
 function isModelId(value: unknown): value is WhisperModelId {
   return typeof value === "string" && value in WHISPER_MODELS;
@@ -32,14 +32,13 @@ export async function GET(req: NextRequest) {
 
   const statuses = listInstalledModels();
   const active = pickActiveModel();
-  const binary = resolveWhisperBinary();
 
   const models = (Object.values(WHISPER_MODELS) as Array<typeof WHISPER_MODELS[WhisperModelId]>).map(
     (m) => {
       const status = statuses.find((s) => s.id === m.id);
       return {
         id: m.id,
-        filename: m.filename,
+        repo: m.repo,
         size_bytes: m.sizeBytes,
         description_he: m.descriptionHe,
         quality_he: m.qualityHe,
@@ -55,10 +54,6 @@ export async function GET(req: NextRequest) {
     success: true,
     models,
     cache_dir: modelsCacheDir(),
-    binary: binary
-      ? { path: binary.path, source: binary.source }
-      : { path: null, source: null },
-    binary_ready: Boolean(binary),
     active_model_id: active?.id ?? null,
   });
 }
@@ -77,6 +72,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { success: false, error: `Unknown model_id: ${String(body.model_id)}` },
       { status: 400 },
+    );
+  }
+  if (!isLocalWhisperPlatformSupported()) {
+    // Don't even attempt the download — `@huggingface/transformers` would
+    // throw at import time on darwin/x64 because onnxruntime-node doesn't
+    // ship a binding for that slot.
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Local Whisper isn't supported on ${process.platform}/${process.arch} in this build.`,
+      },
+      { status: 409 },
     );
   }
   const modelId = body.model_id;

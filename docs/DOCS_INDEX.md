@@ -29,7 +29,7 @@ The same product can run in two modes:
    - desktop architecture: [ELECTRON_DESKTOP_PLAN.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_PLAN.md)
    - desktop operational state: [ELECTRON_DESKTOP_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_HANDOFF.md)
    - desktop UX guidance: [ELECTRON_UXUI_RESEARCH.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_UXUI_RESEARCH.md)
-   - LLM + transcription providers (Anthropic/OpenAI + local whisper.cpp): [PROVIDERS.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/PROVIDERS.md)
+   - LLM + transcription providers (Anthropic/OpenAI + local Whisper ONNX via transformers.js): [PROVIDERS.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/PROVIDERS.md)
    - server/cloud deployment: [DESIGN_DEPLOYMENT.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/DESIGN_DEPLOYMENT.md), [DEPLOY_ORACLE_CLOUD.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/DEPLOY_ORACLE_CLOUD.md)
    - repo history / extraction context: [HANDOFF_NEW_REPO.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/HANDOFF_NEW_REPO.md)
 
@@ -57,8 +57,8 @@ The same product can run in two modes:
 | `src/server/ffmpeg/` | Probe, binary resolution, preview/poster generation, render pipeline |
 | `src/server/jobs/` | Job queue, store, worker lifecycle |
 | `src/server/pipeline/` | Planning and scene-selection logic (delegates LLM + transcription to providers) |
-| `src/server/providers/` | Pluggable LLM (Anthropic/OpenAI) and transcription (local whisper.cpp/OpenAI cloud) providers + unified error mapping |
-| `src/server/whisper/` | whisper.cpp binary resolver and model registry/download for local transcription |
+| `src/server/providers/` | Pluggable LLM (Anthropic/OpenAI) and transcription (Whisper ONNX via transformers.js / OpenAI cloud) providers + unified error mapping |
+| `src/server/whisper/` | Whisper model registry/downloader backed by transformers.js cache (`@huggingface/transformers`) |
 | `src/server/runtime/` | Runtime config, derived paths, desktop auth |
 | `src/shared/` | Cross-boundary types shared by preload and renderer |
 | `electron/` | Electron main/preload/config/server-manager/ffmpeg verify |

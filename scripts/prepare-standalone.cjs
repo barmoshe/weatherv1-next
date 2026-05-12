@@ -60,6 +60,27 @@ function main() {
   console.log(`[prepare-standalone] copy ${staticSrc} -> ${staticDst}`);
   copyDir(staticSrc, staticDst);
 
+  // Native deps required by the local Whisper provider. Next.js standalone
+  // tracing copies the JS surface of `@huggingface/transformers` but can
+  // miss `onnxruntime-node`'s platform-specific `.node`/`.dylib`/`.dll`
+  // siblings (they're loaded via dynamic require at runtime). Copy the full
+  // package directories so packaging is deterministic across OSes.
+  const nativeModules = [
+    "@huggingface/transformers",
+    "onnxruntime-node",
+    "wavefile",
+  ];
+  for (const mod of nativeModules) {
+    const src = path.join(PROJECT_ROOT, "node_modules", mod);
+    const dst = path.join(STANDALONE_DIR, "node_modules", mod);
+    if (!fs.existsSync(src)) {
+      console.warn(`[prepare-standalone] ${mod} not installed; skipping native copy`);
+      continue;
+    }
+    console.log(`[prepare-standalone] copy ${src} -> ${dst}`);
+    copyDir(src, dst);
+  }
+
   console.log("[prepare-standalone] done");
 }
 

@@ -2,14 +2,13 @@
 //
 // Selection rules (first match wins):
 //   1. Explicit pin via `TRANSCRIPTION_PROVIDER` env. Errors if its
-//      prerequisites aren't met (no model installed / no API key).
-//   2. Auto: prefer local whisper.cpp if a binary + at least one model is
-//      available, otherwise fall back to OpenAI cloud if a key is set.
-//   3. Nothing usable → throw with an actionable message.
+//      prerequisites aren't met (no local model installed / no API key).
+//   2. Auto: prefer local Whisper ONNX if at least one model is cached on
+//      disk, otherwise fall back to OpenAI cloud if a key is set.
+//   3. Nothing usable → throw with an actionable Hebrew message.
 
-import { resolveWhisperBinary } from "@/server/whisper/binary";
-import { pickActiveModel } from "@/server/whisper/models";
-import { createLocalWhisperProvider } from "./whispercpp-local";
+import { isLocalWhisperPlatformSupported, pickActiveModel } from "@/server/whisper/models";
+import { createLocalWhisperProvider } from "./whisper-onnx";
 import { createOpenAiTranscriptionProvider } from "./openai-cloud";
 import {
   type TranscriptionProvider,
@@ -36,7 +35,7 @@ export function getTranscriptionProvider(
   const cfg: TranscriptionProviderConfig = config ?? configFromEnv();
   const preferred = cfg.preferred ?? "auto";
 
-  if (preferred === "local-whispercpp") {
+  if (preferred === "local-whisper-onnx") {
     requireLocalReady();
     return createLocalWhisperProvider();
   }
@@ -60,28 +59,28 @@ export function getTranscriptionProvider(
 
   throw new TranscriptionProviderError(
     "No transcription provider available. Download a local Whisper model in Settings, or set OPENAI_API_KEY.",
-    "transcription_binary_missing",
-    "local-whispercpp",
+    "transcription_no_model",
+    "local-whisper-onnx",
   );
 }
 
 function isLocalReady(): boolean {
-  return Boolean(resolveWhisperBinary()) && Boolean(pickActiveModel());
+  return isLocalWhisperPlatformSupported() && Boolean(pickActiveModel());
 }
 
 function requireLocalReady(): void {
-  if (!resolveWhisperBinary()) {
+  if (!isLocalWhisperPlatformSupported()) {
     throw new TranscriptionProviderError(
-      "TRANSCRIPTION_PROVIDER=local-whispercpp but whisper-cli is not available",
-      "transcription_binary_missing",
-      "local-whispercpp",
+      "Local Whisper isn't supported on this platform/arch in v0.1.x. Use OPENAI_API_KEY for cloud transcription.",
+      "transcription_no_model",
+      "local-whisper-onnx",
     );
   }
   if (!pickActiveModel()) {
     throw new TranscriptionProviderError(
-      "TRANSCRIPTION_PROVIDER=local-whispercpp but no Whisper model is installed",
+      "TRANSCRIPTION_PROVIDER=local-whisper-onnx but no Whisper model is installed",
       "transcription_no_model",
-      "local-whispercpp",
+      "local-whisper-onnx",
     );
   }
 }
@@ -89,7 +88,7 @@ function requireLocalReady(): void {
 function configFromEnv(): TranscriptionProviderConfig {
   const preferredRaw = process.env.TRANSCRIPTION_PROVIDER?.trim().toLowerCase();
   const preferred: TranscriptionProviderConfig["preferred"] =
-    preferredRaw === "local-whispercpp" || preferredRaw === "openai-cloud"
+    preferredRaw === "local-whisper-onnx" || preferredRaw === "openai-cloud"
       ? preferredRaw
       : "auto";
   return {

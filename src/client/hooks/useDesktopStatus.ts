@@ -14,13 +14,15 @@ export interface DesktopStatusResponse {
     transcription_pref: string;
     llm_active: "anthropic" | "openai" | null;
     llm_model: string | null;
-    transcription_active: "local-whispercpp" | "openai-cloud" | null;
+    transcription_active: "local-whisper-onnx" | "openai-cloud" | null;
   };
   whisper: {
-    binary_ready: boolean;
     active_model: string | null;
     installed_models: string[];
     local_ready: boolean;
+    local_supported: boolean;
+    platform: string;
+    arch: string;
   };
 }
 

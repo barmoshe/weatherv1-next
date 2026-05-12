@@ -48,7 +48,7 @@ function defaultSettings() {
     keys: { openai: null, anthropic: null, gemini: null, googleDriveRefreshToken: null },
     // Plain-text user preference. "auto" lets the server pick from configured keys.
     llmProvider: "auto", // "auto" | "anthropic" | "openai"
-    transcriptionProvider: "auto", // "auto" | "local-whispercpp" | "openai-cloud"
+    transcriptionProvider: "auto", // "auto" | "local-whisper-onnx" | "openai-cloud"
     encryption: "none", // "safe-storage" | "none"
     googleDrive: {
       enabled: false,
@@ -76,6 +76,10 @@ function readSettings() {
       keys: { ...defaultSettings().keys, ...(raw.keys || {}) },
       googleDrive: { ...defaultSettings().googleDrive, ...(raw.googleDrive || {}) },
     };
+    // Migrate legacy transcription provider id from the whisper.cpp era.
+    if (_settings.transcriptionProvider === "local-whispercpp") {
+      _settings.transcriptionProvider = "local-whisper-onnx";
+    }
     return _settings;
   } catch {
     _settings = defaultSettings();

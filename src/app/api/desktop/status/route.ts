@@ -4,8 +4,11 @@ import { getRuntimeConfig } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { catalogStoreStatus } from "@/server/catalog/storage";
-import { resolveWhisperBinary } from "@/server/whisper/binary";
-import { pickActiveModel, listInstalledModels } from "@/server/whisper/models";
+import {
+  pickActiveModel,
+  listInstalledModels,
+  isLocalWhisperPlatformSupported,
+} from "@/server/whisper/models";
 
 const DEFAULT_CLAUDE_MODEL = "claude-sonnet-4-6";
 const DEFAULT_OPENAI_MODEL = "gpt-4o";
@@ -30,11 +33,11 @@ function pickActiveLlmModel(): string | null {
 
 function pickActiveTranscription(
   localReady: boolean,
-): "local-whispercpp" | "openai-cloud" | null {
+): "local-whisper-onnx" | "openai-cloud" | null {
   const pref = process.env.TRANSCRIPTION_PROVIDER?.trim().toLowerCase();
-  if (pref === "local-whispercpp") return localReady ? "local-whispercpp" : null;
+  if (pref === "local-whisper-onnx") return localReady ? "local-whisper-onnx" : null;
   if (pref === "openai-cloud") return process.env.OPENAI_API_KEY ? "openai-cloud" : null;
-  if (localReady) return "local-whispercpp";
+  if (localReady) return "local-whisper-onnx";
   if (process.env.OPENAI_API_KEY) return "openai-cloud";
   return null;
 }
@@ -47,11 +50,14 @@ export async function GET(req: NextRequest) {
   const runtime = getRuntimePaths();
   const workspace = getAssetSource().validateWorkspace();
 
-  const whisperBinary = resolveWhisperBinary();
-  const activeModel = pickActiveModel();
-  const installedModels = listInstalledModels()
-    .filter((m) => m.installed)
-    .map((m) => m.id);
+  const localSupported = isLocalWhisperPlatformSupported();
+  const activeModel = localSupported ? pickActiveModel() : null;
+  const installedModels = localSupported
+    ? listInstalledModels()
+        .filter((m) => m.installed)
+        .map((m) => m.id)
+    : [];
+  const localReady = Boolean(activeModel);
 
   return NextResponse.json({
     success: true,
@@ -73,15 +79,17 @@ export async function GET(req: NextRequest) {
       transcription_pref: process.env.TRANSCRIPTION_PROVIDER ?? "auto",
       llm_active: pickActiveLlm(),
       llm_model: pickActiveLlmModel(),
-      transcription_active: pickActiveTranscription(Boolean(whisperBinary && activeModel)),
+      transcription_active: pickActiveTranscription(localSupported && localReady),
     },
     whisper: {
-      binary_ready: Boolean(whisperBinary),
-      binary_path: whisperBinary?.path ?? null,
-      binary_source: whisperBinary?.source ?? null,
       active_model: activeModel?.id ?? null,
       installed_models: installedModels,
-      local_ready: Boolean(whisperBinary && activeModel),
+      local_ready: localReady,
+      // false on platforms without an onnxruntime-node prebuild (today: darwin/x64).
+      // The UI uses this to hide the local-model controls and force cloud mode.
+      local_supported: localSupported,
+      platform: process.platform,
+      arch: process.arch,
     },
     ffmpeg: {
       ffmpeg_path: config.ffmpegPath ?? null,

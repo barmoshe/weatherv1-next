@@ -390,7 +390,7 @@
             border-color: #4f9d7e;
             color: #1f5a44;
         }
-        .hero-model-pill.is-tx.is-local-whispercpp {
+        .hero-model-pill.is-tx.is-local-whisper-onnx {
             background: #e9eefb;
             border-color: #5b7fd6;
             color: #2b4685;
@@ -1008,6 +1008,8 @@
             cursor: pointer;
         }
         .settings-radio input { accent-color: var(--v1-coral); }
+        .settings-radio.is-disabled { opacity: 0.45; cursor: not-allowed; }
+        .settings-radio.is-disabled input { cursor: not-allowed; }
         .settings-models {
             list-style: none;
             padding: 0;

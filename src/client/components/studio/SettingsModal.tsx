@@ -43,12 +43,12 @@ interface DesktopStatus {
     transcription_pref: TranscriptionProviderPreference;
   };
   whisper?: {
-    binary_ready: boolean;
-    binary_path: string | null;
-    binary_source: string | null;
     active_model: WhisperModelId | null;
     installed_models: WhisperModelId[];
     local_ready: boolean;
+    local_supported: boolean;
+    platform: string;
+    arch: string;
   };
   ffmpeg: {
     ffmpeg_path: string | null;
@@ -67,11 +67,11 @@ interface DesktopStatus {
   };
 }
 
-type WhisperModelId = "small" | "medium" | "large-v3";
+type WhisperModelId = "small" | "medium" | "large-v3-turbo";
 
 interface WhisperModelEntry {
   id: WhisperModelId;
-  filename: string;
+  repo: string;
   size_bytes: number;
   description_he: string;
   quality_he: string;
@@ -84,8 +84,7 @@ interface WhisperModelEntry {
 interface WhisperModelsResponse {
   success: boolean;
   models: WhisperModelEntry[];
-  binary_ready: boolean;
-  binary: { path: string | null; source: string | null };
+  cache_dir: string;
   active_model_id: WhisperModelId | null;
 }
 
@@ -137,28 +136,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [transcriptionProvider, setTranscriptionProvider] =
     useState<TranscriptionProviderPreference>("auto");
   const [whisperModels, setWhisperModels] = useState<WhisperModelEntry[]>([]);
-  const [whisperBinaryReady, setWhisperBinaryReady] = useState(false);
   const [whisperLoading, setWhisperLoading] = useState(false);
   const [whisperError, setWhisperError] = useState<string | null>(null);
+  const [whisperCacheDir, setWhisperCacheDir] = useState<string | null>(null);
   const [downloadingModel, setDownloadingModel] = useState<WhisperModelId | null>(null);
   const [downloadProgress, setDownloadProgress] = useState<{
     modelId: WhisperModelId;
     bytesDownloaded: number;
     bytesTotal: number;
   } | null>(null);
-  const [binaryDownload, setBinaryDownload] = useState<{
-    supported: boolean;
-    platform: string;
-    asset?: string;
-    release: string;
-    sizeBytes?: number;
-  } | null>(null);
-  const [binaryInstalling, setBinaryInstalling] = useState(false);
-  const [binaryProgress, setBinaryProgress] = useState<{
-    bytesDownloaded: number;
-    bytesTotal: number;
-  } | null>(null);
-  const [binaryError, setBinaryError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [connectingDrive, setConnectingDrive] = useState(false);
   const [syncingDrive, setSyncingDrive] = useState(false);
@@ -215,102 +201,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setWhisperLoading(true);
     setWhisperError(null);
     try {
-      const [modelsRes, binaryRes] = await Promise.all([
-        fetch("/api/whisper/models"),
-        fetch("/api/whisper/binary"),
-      ]);
+      const modelsRes = await fetch("/api/whisper/models");
       const modelsData = (await modelsRes.json()) as WhisperModelsResponse;
       if (!modelsRes.ok || !modelsData.success) throw new Error(`HTTP ${modelsRes.status}`);
       setWhisperModels(modelsData.models);
-      setWhisperBinaryReady(modelsData.binary_ready);
-      if (binaryRes.ok) {
-        const binaryData = (await binaryRes.json()) as {
-          success: boolean;
-          installed: boolean;
-          binary: { path: string | null; source: string | null };
-          download: {
-            platform: string;
-            supported: boolean;
-            asset?: string;
-            release: string;
-            sizeBytes?: number;
-          };
-        };
-        if (binaryData.success) {
-          setBinaryDownload({
-            platform: binaryData.download.platform,
-            supported: binaryData.download.supported,
-            asset: binaryData.download.asset,
-            release: binaryData.download.release,
-            sizeBytes: binaryData.download.sizeBytes,
-          });
-        }
-      }
+      setWhisperCacheDir(modelsData.cache_dir ?? null);
     } catch (e) {
       setWhisperError(e instanceof Error ? e.message : String(e));
     } finally {
       setWhisperLoading(false);
     }
   }, []);
-
-  const installWhisperBinary = useCallback(async () => {
-    if (binaryInstalling) return;
-    setBinaryInstalling(true);
-    setBinaryProgress({ bytesDownloaded: 0, bytesTotal: 0 });
-    setBinaryError(null);
-    try {
-      const res = await fetch("/api/whisper/binary", { method: "POST" });
-      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const frames = buffer.split("\n\n");
-        buffer = frames.pop() ?? "";
-        for (const frame of frames) {
-          if (frame.startsWith("event: error")) {
-            const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
-            const payload = dataLine ? JSON.parse(dataLine.slice(5).trim()) : { error: "unknown" };
-            throw new Error(String((payload as { error?: unknown }).error ?? "download failed"));
-          }
-          if (frame.startsWith("event: done")) continue;
-          const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
-          if (!dataLine) continue;
-          const payload = JSON.parse(dataLine.slice(5).trim()) as {
-            bytesDownloaded: number;
-            bytesTotal: number;
-          };
-          setBinaryProgress({
-            bytesDownloaded: payload.bytesDownloaded,
-            bytesTotal: payload.bytesTotal,
-          });
-        }
-      }
-      await loadWhisperModels();
-      await loadDesktopStatus();
-    } catch (e) {
-      setBinaryError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBinaryInstalling(false);
-      setBinaryProgress(null);
-    }
-  }, [binaryInstalling, loadDesktopStatus, loadWhisperModels]);
-
-  const removeInstalledWhisperBinary = useCallback(async () => {
-    setBinaryError(null);
-    try {
-      const r = await fetch("/api/whisper/binary", { method: "DELETE" });
-      const data = (await r.json()) as { success: boolean; error?: string };
-      if (!data.success) throw new Error(data.error ?? "remove failed");
-      await loadWhisperModels();
-      await loadDesktopStatus();
-    } catch (e) {
-      setBinaryError(e instanceof Error ? e.message : String(e));
-    }
-  }, [loadDesktopStatus, loadWhisperModels]);
 
   const downloadWhisperModel = useCallback(
     async (id: WhisperModelId) => {
@@ -614,11 +515,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <StatusDot ok={Boolean(desktopStatus?.whisper?.local_ready)} />
                   <span>Whisper מקומי</span>
                   <span>
-                    {desktopStatus?.whisper?.local_ready
-                      ? `מוכן · ${desktopStatus.whisper.active_model ?? ""}`
-                      : desktopStatus?.whisper?.binary_ready
-                        ? "התקן מודל"
-                        : "לא זמין"}
+                    {desktopStatus?.whisper?.local_supported === false
+                      ? "לא נתמך בגרסה הזו"
+                      : desktopStatus?.whisper?.local_ready
+                        ? `מוכן · ${desktopStatus.whisper.active_model ?? ""}`
+                        : "הורד מודל בהגדרות"}
                   </span>
                 </div>
                 <div className="settings-status-row">
@@ -820,29 +721,48 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 {(
                   [
                     ["auto", "אוטומטי — Whisper מקומי אם מותקן, אחרת OpenAI"],
-                    ["local-whispercpp", "Whisper מקומי (whisper.cpp)"],
+                    ["local-whisper-onnx", "Whisper מקומי (ONNX — ללא התקנה)"],
                     ["openai-cloud", "OpenAI Whisper (ענן)"],
                   ] as Array<[TranscriptionProviderPreference, string]>
-                ).map(([id, label]) => (
-                  <label key={id} className="settings-radio">
-                    <input
-                      type="radio"
-                      name="transcription-provider"
-                      value={id}
-                      checked={transcriptionProvider === id}
-                      onChange={() => {
-                        setTranscriptionProvider(id);
-                        setSaved(false);
-                      }}
-                    />
-                    <span>{label}</span>
-                  </label>
-                ))}
+                ).map(([id, label]) => {
+                  // Disable the local option on platforms without an
+                  // onnxruntime-node prebuild (today: macOS x64 build under
+                  // Rosetta). Auto stays available but will fall through to
+                  // cloud automatically; the hint below explains why.
+                  const localDisabled =
+                    id === "local-whisper-onnx" &&
+                    desktopStatus?.whisper?.local_supported === false;
+                  return (
+                    <label
+                      key={id}
+                      className={`settings-radio${localDisabled ? " is-disabled" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="transcription-provider"
+                        value={id}
+                        checked={transcriptionProvider === id}
+                        disabled={localDisabled}
+                        onChange={() => {
+                          setTranscriptionProvider(id);
+                          setSaved(false);
+                        }}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  );
+                })}
+                {desktopStatus?.whisper?.local_supported === false && (
+                  <p className="settings-hint">
+                    Whisper מקומי לא נתמך בגרסת ה-Mac הנוכחית ({desktopStatus.whisper.platform}/
+                    {desktopStatus.whisper.arch}). השתמש ב-OpenAI Whisper בענן.
+                  </p>
+                )}
               </fieldset>
             </section>
           )}
 
-          {isDesktop && (
+          {isDesktop && desktopStatus?.whisper?.local_supported !== false && (
             <section className="settings-section">
               <div className="settings-section-header">
                 <h3>מודלי Whisper מקומיים</h3>
@@ -855,67 +775,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   רענן
                 </button>
               </div>
-              {!whisperBinaryReady && (
-                <div className="catalog-card settings-binary-card">
-                  <div className="settings-binary-card__row">
-                    <span className="dot is-missing" />
-                    <span>
-                      תוכנת whisper.cpp לא נמצאה.
-                      {binaryDownload?.supported
-                        ? ` ניתן להתקין אותה כאן (גרסה ${binaryDownload.release}, כ-${formatBytes(binaryDownload.sizeBytes ?? 0)}).`
-                        : binaryDownload
-                          ? ` אין חבילה מוכנה ל-${binaryDownload.platform}; התקן ידנית (למשל brew install whisper-cpp) או הגדר WHISPER_CLI_PATH.`
-                          : " אפשר להגדיר WHISPER_CLI_PATH או לעבור לתמלול בענן."}
-                    </span>
-                  </div>
-                  {binaryDownload?.supported && (
-                    <div className="settings-binary-card__actions">
-                      <button
-                        type="button"
-                        className="btn btn--primary"
-                        onClick={() => void installWhisperBinary()}
-                        disabled={binaryInstalling}
-                      >
-                        {binaryInstalling ? "מתקין…" : "התקן whisper.cpp"}
-                      </button>
-                      {binaryInstalling && binaryProgress && (
-                        <div className="settings-binary-card__progress">
-                          <div
-                            className="settings-binary-card__progress-bar"
-                            style={{
-                              width:
-                                binaryProgress.bytesTotal > 0
-                                  ? `${Math.min(100, Math.floor((binaryProgress.bytesDownloaded / binaryProgress.bytesTotal) * 100))}%`
-                                  : "0%",
-                            }}
-                          />
-                          <span>
-                            {formatBytes(binaryProgress.bytesDownloaded)} /{" "}
-                            {formatBytes(binaryProgress.bytesTotal || binaryDownload.sizeBytes || 0)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {binaryError && (
-                    <div className="settings-binary-card__error">{binaryError}</div>
-                  )}
-                </div>
-              )}
-              {whisperBinaryReady && binaryDownload?.supported && (
-                <div className="settings-binary-card settings-binary-card--installed">
-                  <span className="dot is-healthy" />
-                  <span>whisper.cpp מותקן ב-workspace. ניתן להחליף גרסה במידת הצורך.</span>
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    onClick={() => void removeInstalledWhisperBinary()}
-                    disabled={binaryInstalling}
-                  >
-                    הסר
-                  </button>
-                </div>
-              )}
               {whisperError && (
                 <div className="catalog-card">
                   <span className="dot is-missing" />
@@ -923,8 +782,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
               )}
               <p className="settings-hint">
-                בחר מודל לפי תקציב דיסק וכוח עיבוד. עברית עובדת מ-small ומעלה; medium הוא הברירה
-                המומלצת. הקבצים נשמרים בתיקיית ה-cache של ה-workspace.
+                התמלול המקומי רץ דרך transformers.js (ONNX) — לא צריך להתקין שום תוכנה. בחר מודל
+                לפי תקציב דיסק וכוח עיבוד. עברית עובדת מ-small ומעלה; medium הוא הברירה המומלצת.
+                {whisperCacheDir ? ` הקבצים נשמרים תחת ${shortPath(whisperCacheDir)}.` : null}
               </p>
               <ul className="settings-models">
                 {whisperModels.map((m) => {
@@ -965,7 +825,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             type="button"
                             className="btn btn--ghost"
                             onClick={() => void downloadWhisperModel(m.id)}
-                            disabled={Boolean(downloadingModel) || !whisperBinaryReady}
+                            disabled={Boolean(downloadingModel)}
                           >
                             {isDownloading ? "מוריד…" : "הורד"}
                           </button>

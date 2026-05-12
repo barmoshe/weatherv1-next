@@ -19,6 +19,26 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
 
+  // `@huggingface/transformers` ships an `onnxruntime-node` import for the
+  // Node entry. Webpack must not bundle that native module — keep it as an
+  // external require. `sharp` is the same shape (optional image preprocessor
+  // that some pipelines pull in).
+  serverExternalPackages: ["@huggingface/transformers", "onnxruntime-node", "sharp", "wavefile"],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Belt-and-suspenders for any code path that ends up traced into the
+      // client bundle (none currently — the provider is server-only — but
+      // this matches the upstream transformers.js Next.js recipe).
+      config.resolve = config.resolve || {};
+      config.resolve.alias = {
+        ...(config.resolve.alias || {}),
+        "onnxruntime-node$": false,
+        sharp$: false,
+      };
+    }
+    return config;
+  },
+
   // instrumentation.ts is auto-detected in Next.js 16 (no experimental flag needed)
   // Serve rendered videos and plan bundles from runtime/
   async rewrites() {

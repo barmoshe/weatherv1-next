@@ -30,7 +30,7 @@ export interface DesktopAppInfo {
 export type LlmProviderPreference = "auto" | "anthropic" | "openai";
 export type TranscriptionProviderPreference =
   | "auto"
-  | "local-whispercpp"
+  | "local-whisper-onnx"
   | "openai-cloud";
 
 export interface DesktopSettingsUpdate {

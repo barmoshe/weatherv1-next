@@ -113,20 +113,23 @@ export function mapProviderError(err: unknown): MappedErrorResponse | null {
         status: 409,
         body: {
           success: false,
-          error: "אין מודל Whisper מקומי מותקן. הורד מודל מתוך ההגדרות.",
+          error:
+            "אין מודל Whisper מקומי מותקן. פתח את ההגדרות והורד מודל, או הגדר OPENAI_API_KEY כגיבוי.",
           error_code: "transcription_no_model",
           provider: err.provider,
         },
       };
     }
     if (err.code === "transcription_binary_missing") {
+      // Legacy code from the whisper.cpp era — kept for backward compatibility
+      // with any old error responses cached in the UI. New code paths emit
+      // `transcription_no_model` instead.
       return {
         status: 409,
         body: {
           success: false,
-          error:
-            "תוכנת whisper.cpp לא נמצאה. פתח את ההגדרות והתקן אותה, או הגדר OPENAI_API_KEY כתמלול מגיבוי.",
-          error_code: "transcription_binary_missing",
+          error: "אין מודל Whisper מקומי מותקן. פתח את ההגדרות והורד מודל.",
+          error_code: "transcription_no_model",
           provider: err.provider,
         },
       };

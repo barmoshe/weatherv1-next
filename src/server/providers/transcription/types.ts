@@ -6,7 +6,7 @@
 
 import type { WhisperSegment } from "@/shared/types";
 
-export type TranscriptionProviderId = "local-whispercpp" | "openai-cloud";
+export type TranscriptionProviderId = "local-whisper-onnx" | "openai-cloud";
 
 export interface TranscriptionResult {
   text: string;
@@ -19,7 +19,7 @@ export interface TranscriptionProvider {
   /**
    * Transcribe an audio file from disk. The file is expected to live inside
    * the runtime uploads dir so the implementation can reuse it for ffmpeg
-   * preprocessing (16 kHz mono WAV conversion for whisper.cpp).
+   * preprocessing (16 kHz mono WAV conversion for the local ONNX runner).
    */
   transcribe(audioPath: string): Promise<TranscriptionResult>;
 }
