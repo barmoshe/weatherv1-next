@@ -6,6 +6,7 @@ const serverManager = require("../../electron/server-manager.cjs") as {
   __internal: {
     resolveDevNextBinary: (projectRoot: string) => string | null;
     resolveStandaloneServer: (projectRoot: string) => string;
+    unpackAsarPath: (p: string) => string;
   };
 };
 
@@ -15,6 +16,23 @@ describe("server-manager", () => {
 
     expect(serverManager.__internal.resolveStandaloneServer(projectRoot)).toBe(
       path.join(projectRoot, ".next", "standalone", "server.js"),
+    );
+  });
+
+  it("resolves packaged standalone server from app.asar.unpacked", () => {
+    const projectRoot = path.join("WeatherV1.app", "Contents", "Resources", "app.asar");
+
+    expect(serverManager.__internal.resolveStandaloneServer(projectRoot)).toBe(
+      path.join("WeatherV1.app", "Contents", "Resources", "app.asar.unpacked", ".next", "standalone", "server.js"),
+    );
+  });
+
+  it("rewrites app.asar paths to app.asar.unpacked", () => {
+    expect(serverManager.__internal.unpackAsarPath("/tmp/WeatherV1.app/Contents/Resources/app.asar")).toBe(
+      "/tmp/WeatherV1.app/Contents/Resources/app.asar.unpacked",
+    );
+    expect(serverManager.__internal.unpackAsarPath("/tmp/WeatherV1.app/Contents/Resources/app.asar/.next")).toBe(
+      "/tmp/WeatherV1.app/Contents/Resources/app.asar.unpacked/.next",
     );
   });
 

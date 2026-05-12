@@ -105,7 +105,22 @@ function resolveDevNextBinary(projectRoot) {
 function resolveStandaloneServer(projectRoot) {
   // Next emits the standalone tree at `.next/standalone/`. The entrypoint is
   // `server.js` at the standalone root.
-  return path.join(projectRoot, ".next", "standalone", "server.js");
+  return path.join(unpackAsarPath(projectRoot), ".next", "standalone", "server.js");
+}
+
+function unpackAsarPath(p) {
+  if (typeof p !== "string" || !p) return p;
+  return p.replace(/([\/\\])app\.asar([\/\\]?)/, "$1app.asar.unpacked$2");
+}
+
+function resolveNodeRuntime() {
+  if (process.env.NODE_RUNTIME) {
+    return { command: process.env.NODE_RUNTIME, env: {} };
+  }
+  if (process.versions && process.versions.electron && process.execPath) {
+    return { command: process.execPath, env: { ELECTRON_RUN_AS_NODE: "1" } };
+  }
+  return { command: "node", env: {} };
 }
 
 function createServerManager({ projectRoot, mode, token, env, onExit }) {
@@ -135,10 +150,10 @@ function createServerManager({ projectRoot, mode, token, env, onExit }) {
       // Run with system node (or ELECTRON_RUN_AS_NODE on the Electron binary
       // — main is expected to set NODE_RUNTIME accordingly before passing env
       // through). The standalone dir is the cwd, per Next's docs.
-      const nodeBin = process.env.NODE_RUNTIME || "node";
-      child = spawn(nodeBin, [serverJs], {
+      const nodeRuntime = resolveNodeRuntime();
+      child = spawn(nodeRuntime.command, [serverJs], {
         cwd: path.dirname(serverJs),
-        env: currentEnv,
+        env: { ...currentEnv, ...nodeRuntime.env },
         stdio: "inherit",
       });
     }
@@ -197,5 +212,5 @@ module.exports = {
   pickPort,
   pollHealth,
   // Exported for tests:
-  __internal: { probePort, resolveDevNextBinary, resolveStandaloneServer },
+  __internal: { probePort, resolveDevNextBinary, resolveStandaloneServer, unpackAsarPath, resolveNodeRuntime },
 };
