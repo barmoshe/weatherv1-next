@@ -343,6 +343,11 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   if (update && typeof update.geminiKey === "string") {
     keyUpdates.gemini = cfg.encryptSecret(update.geminiKey, { safeStorage });
   }
+  if (update && Array.isArray(update.clearKeys)) {
+    if (update.clearKeys.includes("openai")) keyUpdates.openai = null;
+    if (update.clearKeys.includes("anthropic")) keyUpdates.anthropic = null;
+    if (update.clearKeys.includes("gemini")) keyUpdates.gemini = null;
+  }
   if (Object.keys(keyUpdates).length > 0) patch.keys = keyUpdates;
 
   // Reflect the encryption scheme actually used so the renderer can show

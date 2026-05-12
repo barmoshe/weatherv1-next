@@ -21,7 +21,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const net = require("node:net");
-const { spawn } = require("node:child_process");
+const { spawn, fork } = require("node:child_process");
 const http = require("node:http");
 
 const { DEFAULT_PORT, FALLBACK_PORTS, FIXED_HOST } = require("./config.cjs");
@@ -153,6 +153,19 @@ function resolveNodeRuntime() {
   return { command: "node", env: {} };
 }
 
+// Prefer fork() when the manager is itself running inside Electron's main
+// process. spawn(process.execPath, ...) with ELECTRON_RUN_AS_NODE=1 launches
+// the *main* app bundle a second time, which on macOS produces a separate,
+// bouncing "exec" dock tile. fork() routes through the Electron Helper bundle
+// (LSUIElement=true in its Info.plist), so no extra dock icon appears, and
+// fork() automatically sets ELECTRON_RUN_AS_NODE=1 for us. An explicit
+// NODE_RUNTIME override still wins so tests / external Node setups can opt
+// out.
+function shouldUseElectronFork() {
+  if (process.env.NODE_RUNTIME) return false;
+  return Boolean(process.versions && process.versions.electron);
+}
+
 function createServerManager({ projectRoot, mode, token, env, onExit, logPath }) {
   let child = null;
   let port = null;
@@ -177,18 +190,35 @@ function createServerManager({ projectRoot, mode, token, env, onExit, logPath })
       if (!fs.existsSync(serverJs)) {
         throw new Error(`server-manager: standalone server.js not found at ${serverJs} — did you run \`next build\` and \`scripts/prepare-standalone.cjs\`?`);
       }
-      // Run with system node (or ELECTRON_RUN_AS_NODE on the Electron binary
-      // — main is expected to set NODE_RUNTIME accordingly before passing env
-      // through). The standalone dir is the cwd, per Next's docs.
-      const nodeRuntime = resolveNodeRuntime();
-      child = spawn(nodeRuntime.command, [serverJs], {
-        cwd: path.dirname(serverJs),
-        env: { ...currentEnv, ...nodeRuntime.env },
-        stdio: logPath ? ["ignore", "pipe", "pipe"] : "inherit",
-      });
+      const cwd = path.dirname(serverJs);
+      let spawnCommand;
+      if (shouldUseElectronFork()) {
+        // fork() under Electron uses the Helper bundle (LSUIElement=true), so
+        // the child does not get its own Dock entry. The standalone dir is
+        // the cwd, per Next's docs.
+        child = fork(serverJs, [], {
+          cwd,
+          env: currentEnv,
+          stdio: logPath
+            ? ["ignore", "pipe", "pipe", "ipc"]
+            : ["inherit", "inherit", "inherit", "ipc"],
+        });
+        spawnCommand = `fork(${process.execPath})`;
+      } else {
+        // Run with system node (or whatever NODE_RUNTIME points at). Used in
+        // tests and any non-Electron host. The standalone dir is the cwd,
+        // per Next's docs.
+        const nodeRuntime = resolveNodeRuntime();
+        child = spawn(nodeRuntime.command, [serverJs], {
+          cwd,
+          env: { ...currentEnv, ...nodeRuntime.env },
+          stdio: logPath ? ["ignore", "pipe", "pipe"] : "inherit",
+        });
+        spawnCommand = nodeRuntime.command;
+      }
       if (logPath) {
         fs.mkdirSync(path.dirname(logPath), { recursive: true });
-        fs.writeFileSync(logPath, `[main] spawned ${nodeRuntime.command} ${serverJs}\n[main] cwd=${path.dirname(serverJs)}\n`, "utf8");
+        fs.writeFileSync(logPath, `[main] spawned ${spawnCommand} ${serverJs}\n[main] cwd=${cwd}\n`, "utf8");
         child.stdout?.on("data", (chunk) => appendLogLine(logPath, "stdout", chunk));
         child.stderr?.on("data", (chunk) => appendLogLine(logPath, "stderr", chunk));
       }
@@ -266,5 +296,13 @@ module.exports = {
   pickPort,
   pollHealth,
   // Exported for tests:
-  __internal: { probePort, resolveDevNextBinary, unpackAsarPath, resolveNodeRuntime, resolveStandaloneServer, readLogTail },
+  __internal: {
+    probePort,
+    resolveDevNextBinary,
+    unpackAsarPath,
+    resolveNodeRuntime,
+    resolveStandaloneServer,
+    readLogTail,
+    shouldUseElectronFork,
+  },
 };

@@ -193,6 +193,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     workspaceDir,
   ]);
 
+  const clearKey = useCallback(async (provider: "openai" | "anthropic" | "gemini") => {
+    if (!desktop) return;
+    setSaving(true);
+    setDesktopError(null);
+    try {
+      await desktop.saveSettings({ clearKeys: [provider] });
+      if (provider === "openai") setOpenaiKey("");
+      if (provider === "anthropic") setAnthropicKey("");
+      if (provider === "gemini") setGeminiKey("");
+      await loadDesktopStatus();
+      await loadHealth();
+      setSaved(true);
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
+    }
+  }, [loadDesktopStatus, loadHealth]);
+
   const connectGoogleDrive = useCallback(async () => {
     if (!desktop) return;
     setConnectingDrive(true);
@@ -489,45 +508,69 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </p>
               <label className="settings-field">
                 <span>ANTHROPIC_API_KEY</span>
-                <input
-                  type="password"
-                  value={anthropicKey}
-                  onChange={(e) => {
-                    setAnthropicKey(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder={
-                    desktopStatus?.keys.anthropic_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"
-                  }
-                />
+                <div style={{ display: "flex", gap: "8px", flex: 1 }}>
+                  <input
+                    type="password"
+                    style={{ flex: 1 }}
+                    value={anthropicKey}
+                    onChange={(e) => {
+                      setAnthropicKey(e.target.value);
+                      setSaved(false);
+                    }}
+                    placeholder={
+                      desktopStatus?.keys.anthropic_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"
+                    }
+                  />
+                  {desktopStatus?.keys.anthropic_configured && (
+                    <button type="button" className="btn btn--ghost" onClick={() => clearKey("anthropic")} disabled={saving}>
+                      נקה
+                    </button>
+                  )}
+                </div>
               </label>
               <label className="settings-field">
                 <span>OPENAI_API_KEY</span>
-                <input
-                  type="password"
-                  value={openaiKey}
-                  onChange={(e) => {
-                    setOpenaiKey(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder={
-                    desktopStatus?.keys.openai_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"
-                  }
-                />
+                <div style={{ display: "flex", gap: "8px", flex: 1 }}>
+                  <input
+                    type="password"
+                    style={{ flex: 1 }}
+                    value={openaiKey}
+                    onChange={(e) => {
+                      setOpenaiKey(e.target.value);
+                      setSaved(false);
+                    }}
+                    placeholder={
+                      desktopStatus?.keys.openai_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"
+                    }
+                  />
+                  {desktopStatus?.keys.openai_configured && (
+                    <button type="button" className="btn btn--ghost" onClick={() => clearKey("openai")} disabled={saving}>
+                      נקה
+                    </button>
+                  )}
+                </div>
               </label>
               <label className="settings-field">
                 <span>GEMINI_API_KEY</span>
-                <input
-                  type="password"
-                  value={geminiKey}
-                  onChange={(e) => {
-                    setGeminiKey(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder={
-                    desktopStatus?.keys.gemini_configured ? "מוגדר — הקלד כדי להחליף" : "אופציונלי"
-                  }
-                />
+                <div style={{ display: "flex", gap: "8px", flex: 1 }}>
+                  <input
+                    type="password"
+                    style={{ flex: 1 }}
+                    value={geminiKey}
+                    onChange={(e) => {
+                      setGeminiKey(e.target.value);
+                      setSaved(false);
+                    }}
+                    placeholder={
+                      desktopStatus?.keys.gemini_configured ? "מוגדר — הקלד כדי להחליף" : "אופציונלי"
+                    }
+                  />
+                  {desktopStatus?.keys.gemini_configured && (
+                    <button type="button" className="btn btn--ghost" onClick={() => clearKey("gemini")} disabled={saving}>
+                      נקה
+                    </button>
+                  )}
+                </div>
               </label>
             </section>
           )}

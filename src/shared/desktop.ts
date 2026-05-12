@@ -34,6 +34,7 @@ export interface DesktopSettingsUpdate {
   openaiKey?: string;
   anthropicKey?: string;
   geminiKey?: string;
+  clearKeys?: ("openai" | "anthropic" | "gemini")[];
   ffmpegPath?: string;
   ffprobePath?: string;
   llmProvider?: LlmProviderPreference;
