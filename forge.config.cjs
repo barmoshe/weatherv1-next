@@ -85,6 +85,14 @@ module.exports = {
       // tip Squirrel's Windows installer over MAX_PATH = 260 chars during
       // .nuspec staging. They're not needed at runtime.
       /^\/node_modules\/@huggingface\/transformers\/(src|types)(\/|$)/,
+      // `onnxruntime-web` is a transitive dep of @huggingface/transformers
+      // for browser/WebGPU code paths. The Node bundle
+      // (`dist/transformers.node.cjs`) only references it via dynamic CDN
+      // strings, never via `require()`, so we can drop it from the desktop
+      // build. Its `lib/onnxjs/ort-schema/flatbuffers/...` tree is the
+      // single deepest path in the package and the main MAX_PATH offender
+      // after we trimmed transformers.js itself.
+      /^\/node_modules\/onnxruntime-web(\/|$)/,
     ],
     osxSign: haveMacSigning
       ? {

@@ -48,13 +48,39 @@ jobs:
 
       - run: npm test
 
+      # Windows MAX_PATH = 260 chars trips Squirrel's NuGet packing on deep
+      # transformers.js / onnxruntime trees. Enabling long-path support at
+      # the OS + git layers is cheap insurance even though NuGet's own
+      # System.IO calls don't always honor it.
+      - name: Enable long path support (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force | Out-Null
+
       - name: Package unsigned desktop app
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: npm run build && npm run standalone:prep && npx electron-forge package --arch=${{ matrix.arch }}
 
-      - name: Make release artifacts
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      # On macOS, output stays at the default `./out` so the upload step
+      # below picks it up. On Windows we redirect to `C:\m` to chop ~35
+      # chars off every staged file path; otherwise Squirrel's `.tmp\<guid>\
+      # lib\net45\WeatherV1-win32-x64\resources\app.asar.unpacked\` prefix
+      # plus onnxruntime-node's deep `bin/napi-v6/...` paths cross 260 chars.
+      - name: Make release artifacts (macOS)
+        if: ${{ startsWith(github.ref, 'refs/tags/') && runner.os == 'macOS' }}
         run: npm run build && npm run standalone:prep && npx electron-forge make --arch=${{ matrix.arch }}
+
+      - name: Make release artifacts (Windows)
+        if: ${{ startsWith(github.ref, 'refs/tags/') && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          npm run build
+          npm run standalone:prep
+          npx electron-forge make --arch=${{ matrix.arch }} --outDir=C:\m
+          New-Item -ItemType Directory -Path out -Force | Out-Null
+          Copy-Item -Recurse -Force C:\m\* out\
 
       # Canonical tag name for desktop-publish-release.yml (workflow_run exposes
       # github.event.workflow_run.head_branch as the tag for tag-triggered runs;
