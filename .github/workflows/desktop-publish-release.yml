@@ -1,6 +1,9 @@
-# Runs from the default branch workflow definition (not the tagged commit), so
-# installer publishing keeps working even when the tag points at an older SHA
-# that did not yet include a `release` job in desktop.yml.
+# Publishes installers after "Desktop" completes. This file must live on the
+# default branch — workflow_run only fires when a matching workflow exists on
+# default (see GitHub docs: "Events that trigger workflows" → workflow_run).
+# Cross-run artifact download requires github-token + run-id (actions/download-artifact v4 README).
+# Tag identity: github.event.workflow_run.head_branch is the tag for tag-triggered runs
+# (community + SO); we also upload release-ref from Desktop for a canonical name.
 name: Desktop publish release
 
 on:
@@ -20,6 +23,17 @@ jobs:
       actions: read
       contents: write
     steps:
+      - name: Download tag ref (optional)
+        id: tagref
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: release-ref
+          path: meta
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
       - uses: actions/download-artifact@v4
         with:
           name: desktop-macos-latest
@@ -59,9 +73,33 @@ jobs:
           cp "$WIN_EXE" dist/WeatherV1-Setup.exe
           ls -la dist
 
+      - name: Resolve release tag
+        id: reltag
+        env:
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          set -euo pipefail
+          TAG=""
+          TAGFILE=""
+          if [[ -d meta ]]; then
+            TAGFILE="$(find meta -type f -name tag 2>/dev/null | head -n 1 || true)"
+          fi
+          if [[ -n "$TAGFILE" ]]; then
+            TAG="$(tr -d '\n\r ' < "$TAGFILE")"
+          fi
+          if [[ -z "$TAG" && -n "${HEAD_BRANCH:-}" ]]; then
+            TAG="${HEAD_BRANCH#refs/tags/}"
+          fi
+          if [[ ! "$TAG" =~ ^v[0-9] ]]; then
+            echo "Could not resolve tag (release-ref and head_branch). head_branch=${HEAD_BRANCH:-<empty>}"
+            exit 1
+          fi
+          echo "Resolved tag: $TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.workflow_run.head_branch }}
+          tag_name: ${{ steps.reltag.outputs.tag }}
           draft: false
           prerelease: false
           make_latest: true

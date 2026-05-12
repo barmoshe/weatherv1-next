@@ -46,6 +46,19 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: npm run electron:make
 
+      # Canonical tag name for desktop-publish-release.yml (workflow_run exposes
+      # github.event.workflow_run.head_branch as the tag for tag-triggered runs;
+      # this file avoids edge cases where head_branch is empty).
+      - name: Record tag for release workflow
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'macos-latest' }}
+        run: mkdir -p .release && printf '%s\n' "${{ github.ref_name }}" > .release/tag
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'macos-latest' }}
+        with:
+          name: release-ref
+          path: .release/tag
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
