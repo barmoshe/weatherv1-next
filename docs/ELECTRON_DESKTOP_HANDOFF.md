@@ -1,212 +1,122 @@
-# Electron Desktop Handoff Report
+# Electron Desktop Handoff
 
-## Status
+This is the "what's running, what's left, where the landmines are" doc for whoever picks up the work next. The architecture / design contract lives in `ELECTRON_DESKTOP_PLAN.md`; this doc is the operational handoff.
 
-- Electron implementation has started on the server/runtime side.
-- This report captures the current repo findings, the completed groundwork, and the remaining work order for the next implementation pass.
+## TL;DR
 
-## Current Repo Snapshot
+Steps 1–6 of the plan are landed. The runtime/auth/asset boundary is done, every mutating route is gated, the Electron shell scaffold is in place, and the Forge packaging config (sign/notarize/makers) is written. Tests + typecheck + `next build` all pass on the host. **The Electron app has not been launched yet** because the Electron + Forge + ffmpeg packages aren't installed — `package.json` pins them but `npm install` hasn't been run with the new deps.
 
-- Project root: `/Users/barmoshe/claude-creative-stack/weatherv1-next`
-- Current local runtime discovered during research:
-  - `node`: `v20.19.3`
-  - `npm`: `11.7.0`
-  - `npx node@22`: available and resolves to `v22.22.2`
-- Current app stack:
-  - `next`: `16.2.6`
-  - `react`: `19.2.4`
-  - `vitest`: `2.x`
+Steps 7–9 remain: desktop-aware UI wiring (renderer side), the test suite for runtime/auth/server-manager, and the desktop CI workflow.
 
-## Key Technical Findings
+## Snapshot
 
-### Next.js-Specific
+- Project root: `/Users/barmoshe/claude-creative-stack/weatherv1-next` (child repo with its own `.git`)
+- Stack: Next 16.2.6 (App Router, `proxy.ts` is the renamed middleware), React 19.2.4, Vitest 2.x
+- Local toolchain on the host: Node 20.19 by default, Node 22 LTS available via `npx node@22`. `next build` works fine on Node 20; Electron 33 ships its own Node 22 anyway.
+- Latest verified state: `tsc --noEmit` clean, `npm test` 43/43, `next build` emits `.next/standalone/server.js`, `scripts/prepare-standalone.cjs` populates the standalone tree.
 
-- The repo includes an explicit warning in `AGENTS.md` to consult local Next docs before changing conventions.
-- The bundled docs confirm:
-  - `output: "standalone"` is the right fit for packaging a minimal Node server.
-  - `custom server` should not be combined with standalone output.
-  - In Next 16, `middleware` has been renamed to `proxy`.
+## How to run things
 
-Relevant docs inspected in-repo:
+```
+npm install            # one-time: materializes the new electron / forge / ffmpeg deps
+npx tsc --noEmit       # typecheck
+npm test               # vitest, 43 tests across 5 files
+npm run dev            # plain Next dev (no Electron)
+node_modules/.bin/next build && node scripts/prepare-standalone.cjs  # produce the standalone tree
+npm run electron:dev   # Electron + next dev (needs `npm install` to have run)
+npm run electron:build # next build + standalone:prep + electron-forge package
+npm run electron:make  # …+ electron-forge make (ZIP / Squirrel installers)
+```
 
-- `node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/output.md`
-- `node_modules/next/dist/docs/01-app/02-guides/custom-server.md`
-- `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`
+Until you run `npm install`, the new Electron requires won't resolve and `electron:*` scripts can't run. Everything else works as-is because the new requires in `electron/main.cjs` (`update-electron-app`, `electron-squirrel-startup`) are wrapped in try/catch.
 
-### Server / Runtime
+## File map
 
-- The app is not a static frontend.
-- It depends on:
-  - route handlers under `src/app/api/**`
-  - on-disk runtime state
-  - FFmpeg child processes
-  - an in-process queue worker started from `instrumentation.ts`
+Backend / runtime:
 
-Files that make this clear:
+| Path | Role |
+| --- | --- |
+| `src/server/runtime/config.ts` | Single source of truth for env-driven paths (workspace, runtime, ffmpeg, bg music). Cached singleton + `resetRuntimeConfigForTests()`. |
+| `src/server/runtime/paths.ts` | Derives uploads/outputs/cache/posters/previews/segment_posters from `runtimeDir`. |
+| `src/server/runtime/auth.ts` | `DESKTOP_AUTH_HEADER`, `isDesktopMode()`, `isDesktopRequestAuthorized()`, `assertDesktopAuth(req)` (returns `NextResponse \| null`). `timingSafeEqual` for the comparison. |
+| `src/server/assets/source.ts` | `LocalWorkspaceAssetSource` (provider interface ready for a future `GoogleDriveAssetSource`). Cached singleton + reset hook. |
+| `src/proxy.ts` | Token guard. Matchers: `/api/:path*`, `/outputs/:path*`, `/videos/:path*`. No-ops outside desktop mode. |
+| `src/app/api/internal/health/route.ts` | Boot probe for the Electron supervisor. Auth-gated; returns workspace + ffmpeg readiness. |
+| `src/app/api/desktop/status/route.ts` | Auth-gated GET surfacing runtime/workspace/key state to the (future) settings UI. |
+| `src/shared/desktop.ts` | `DesktopBridge` interface — the contract between preload and renderer. |
+| `src/types/desktop.d.ts` | `Window.desktop` ambient declaration. |
 
-- `instrumentation.ts`
-- `src/server/jobs/worker.ts`
-- `src/server/jobs/store.ts`
-- `src/server/jobs/plan-bundle.ts`
-- `src/server/ffmpeg/binaries.ts`
-- `src/server/ffmpeg/renderer.ts`
-- `src/server/ffmpeg/probe.ts`
+Electron / packaging:
 
-### Path Assumptions That Must Be Refactored
+| Path | Role |
+| --- | --- |
+| `electron/main.cjs` | Lifecycle: ffmpeg verify → session token gen → env build → spawn → health poll → BrowserWindow pinned to `persist:weatherv1` → `webRequest.onBeforeSendHeaders` token injection → `desktop:*` IPC handlers → `update-electron-app` for packaged builds. `electron-squirrel-startup` short-circuit at the top. |
+| `electron/preload.cjs` | `contextBridge.exposeInMainWorld("desktop", { ... })` matching `DesktopBridge`. |
+| `electron/server-manager.cjs` | Port pick (3765 → 3766 → 3767 → 3768; never ephemeral), dev/prod spawn, `pollHealth(origin, token)`, `restart(env)`. Pure-Node; no electron import. |
+| `electron/config.cjs` | userData-backed `settings.json`; `safeStorage` for API keys with documented plaintext fallback; env builder; session-token generator. Pure-Node API; electron objects passed in as args. |
+| `electron/ffmpeg-verify.cjs` | env → bundled → PATH resolution; `app.asar` → `app.asar.unpacked` rewrite; structured `{ ok, ffmpegPath, ffprobePath, ffmpegSource, ffprobeSource, errors, warnings }`; never throws. |
+| `forge.config.cjs` | Packager + `asarUnpack` for ffmpeg packages + `.next/standalone/**`; osxSign (with `signatureFlags: "library"` for nested binaries); osxNotarize from env; makers (ZIP + Squirrel); auto-unpack-natives plugin; commented GitHub publisher. |
+| `build/entitlements.mac.plist` | Hardened-runtime entitlements. Includes `allow-jit`, `disable-library-validation`, `allow-dyld-environment-variables`. Explicitly NOT `allow-unsigned-executable-memory`. |
+| `scripts/prepare-standalone.cjs` | Copies `public/` and `.next/static/` into `.next/standalone/` after `next build`. |
 
-- Current catalog and media paths still depend on repo-relative filesystem layout:
-  - `src/server/catalog/storage.ts`
-  - `src/server/ffmpeg/renderer.ts`
-- Runtime files still assume `process.cwd()/runtime/...`:
-  - `src/server/jobs/store.ts`
-  - `src/server/jobs/plan-bundle.ts`
-  - `src/server/jobs/worker.ts`
-  - `src/app/api/transcribe/route.ts`
-  - `src/app/api/outputs/[filename]/route.ts`
-  - `src/app/api/catalog/poster/[vidId]/route.ts`
-  - `src/app/api/catalog/preview/[vidId]/route.ts`
-  - `src/server/ffmpeg/segment-posters.ts`
+Config / lockfile-adjacent:
 
-### UI Entry Points Affected
+| Path | Role |
+| --- | --- |
+| `next.config.ts` | `output: "standalone"` + `turbopack.root: __dirname` (mandatory — see Sharp Edges). Existing `/outputs` / `/videos` rewrites kept. |
+| `vitest.config.ts` | Excludes `**/.next/**` (mandatory — see Sharp Edges). |
+| `package.json` | `"main": "electron/main.cjs"`. Pins `electron@^33`, `@electron-forge/cli@^7` + 4 forge sub-packages, `ffmpeg-static@^5`, `ffprobe-static@^3`, `update-electron-app@^3`, `electron-squirrel-startup@^1`. New scripts: `standalone:prep`, `electron:dev`, `electron:build`, `electron:make`. |
+| `instrumentation.ts` | Soft (warning-only, dev-only) ffmpeg check for `next dev` parity. Skipped when `DESKTOP_MODE=1`. **Not** the authoritative ffmpeg gate. |
 
-- Settings modal is currently catalog-health only:
-  - `src/client/components/studio/SettingsModal.tsx`
-- Audio upload is HTML input / drag-drop based:
-  - `src/client/components/studio/UploadCard.tsx`
-- Catalog upload button exists in UI but is not wired to a desktop-native action:
-  - `src/client/components/catalog/CatalogPanel.tsx`
+## Sharp edges
 
-## Approved Direction
+1. **`turbopack.root` must be pinned.** The host repo (`claude-creative-stack`) has its own `package-lock.json` one level above this project. Without `turbopack: { root: __dirname }` in `next.config.ts`, Next infers the workspace root from that lockfile and emits `.next/standalone/claude-creative-stack/weatherv1-next/server.js` — breaking `electron/server-manager.cjs`'s standalone resolution. Don't remove the pin.
+2. **Vitest must exclude `.next`.** `output: "standalone"` copies `src/test/**` into the standalone tree. Without `exclude: [..., "**/.next/**"]`, every test runs twice and `npm test` reports 86 tests instead of 43.
+3. **`instrumentation.ts` is not the ffmpeg gate.** Under `node .next/standalone/server.js`, Next 16 silently skips `register()` (vercel/next.js#89377). The authoritative ffmpeg check lives in `electron/ffmpeg-verify.cjs` and runs in Electron main *before* the child spawns. Don't move it into the Next side.
+4. **Proxy is a perimeter, not a guarantee.** Server Actions in Next 16 POST to the route file that declares them. A new Server Action introduced in a route without proxy coverage would bypass the perimeter. Every mutating handler must call `assertDesktopAuth(req)` itself.
+5. **ffmpeg/ffprobe can't run from inside `app.asar`.** `forge.config.cjs` lists them in `asarUnpack`; `electron/ffmpeg-verify.cjs` rewrites paths at call time. The unpacked binaries must be re-signed under the host's Developer ID on macOS — the `signatureFlags: "library"` setting in `osxSign` handles that.
+6. **Auto-update needs signing on both platforms.** `update-electron-app` is wired in `main.cjs` but it requires a signed `.app` on macOS *and* a signed Windows installer. There is no skip-signing-ship-updates path. Don't promise an auto-update demo before signing is wired in CI.
+7. **Ports stay deterministic.** The server-manager tries 3765 → 3766 → 3767 → 3768 only. Never an ephemeral high port — that would orphan `localStorage` on every restart. The BrowserWindow is pinned to `session.fromPartition("persist:weatherv1")` so storage is keyed by partition, not origin, and survives port fallback.
+8. **Settings changes restart the child.** No hot-swap of env in the running Next child. `electron/server-manager.cjs` exposes `restart(env)`; the renderer is expected to show a "Reloading…" overlay until `/api/internal/health` returns green.
+9. **`safeStorage` has a plaintext fallback.** On platforms without an OS keychain (typically headless Linux without a keyring), `electron/config.cjs` records `encryption: "none"` and stores the key as plaintext. The settings UI should surface this so the user knows.
 
-- Electron wraps the current Next app.
-- Next remains the UI and API layer.
-- A bundled standalone Next server runs locally behind Electron.
-- A workspace folder replaces repo-relative media assumptions.
-- Desktop-only actions move through preload.
-- Assets remain local in v1.
-- Google Drive is deferred, but the asset-provider boundary should be created now.
+## Remaining work
 
-## Current Implementation Progress
+### Step 7 — Desktop-aware UI
 
-- Runtime/config groundwork is in place:
-  - `src/server/runtime/config.ts`
-  - `src/server/runtime/paths.ts`
-  - `src/server/runtime/auth.ts`
-  - `src/server/assets/source.ts`
-- Server-side path refactors are in place across catalog, jobs, ffmpeg, outputs, and transcribe route code paths.
-- Desktop request perimeter is in place:
-  - `src/proxy.ts`
-  - `src/app/api/internal/health/route.ts` (auth-gated GET)
-  - handler-level `assertDesktopAuth(req)` checks in every mutating route handler
-- Desktop-aware route support is partially implemented:
-  - `POST /api/transcribe` supports browser multipart and desktop JSON `desktop_file_path`
-  - `POST /api/catalog/videos` supports browser multipart and desktop JSON `desktop_file_path`
-  - `src/app/api/desktop/status/route.ts` exposes runtime/workspace/key-path status for a future settings surface
-- Shared bridge typing groundwork is present:
-  - `src/shared/desktop.ts`
-  - `src/types/desktop.d.ts`
-- FFmpeg verification gate is in place:
-  - `electron/ffmpeg-verify.cjs` (env → bundled → PATH resolution, asar→asar.unpacked rewrite, structured result; never throws)
-  - `instrumentation.ts` keeps a soft warning-only check for `next dev` parity (non-authoritative)
-- Electron shell is in place but not yet runnable (no `electron`/`electron-forge` installed):
-  - `electron/main.cjs` (lifecycle, BrowserWindow pinned to `persist:weatherv1`, token injection via `webRequest.onBeforeSendHeaders`, sandboxed renderer, `desktop:*` IPC handlers)
-  - `electron/preload.cjs` (contextBridge `window.desktop` matching `DesktopBridge`)
-  - `electron/server-manager.cjs` (port {3765,3766,3767,3768}, dev/prod spawn, health polling, managed `restart(env)`)
-  - `electron/config.cjs` (userData settings JSON, `safeStorage` keys with plaintext fallback, child env builder, session-token generator)
-  - `scripts/prepare-standalone.cjs` (copies `public/` + `.next/static/` into `.next/standalone/`)
-  - `next.config.ts` now sets `output: "standalone"` **and** pins `turbopack.root: __dirname` so the standalone tree lands at `.next/standalone/server.js` instead of being nested under the host repo's lockfile-inferred workspace root
-  - `vitest.config.ts` excludes `**/.next/**` so the test/run doesn't double-pick the tests Next copies into the standalone tree
-  - `package.json` gains `"main": "electron/main.cjs"` and scripts `standalone:prep`, `electron:dev`, `electron:build`, `electron:make`
-- Smoke-test verification on the host: `next build` succeeds end to end; `node scripts/prepare-standalone.cjs` populates `public/` and `.next/static/` under the standalone tree.
-- Not started yet:
-  - Forge config + signing/notarization wiring (`forge.config.cjs`)
-  - Bundled ffmpeg/ffprobe install (`ffmpeg-static` etc.)
-  - `electron` and `electron-forge` dev-dependency install
-  - Desktop UI wiring (`SettingsModal`, `UploadCard`, `CatalogPanel`)
-  - Electron supervision tests
-  - CI packaging smoke coverage
+Renderer-only changes. Routes already accept the desktop JSON shape; preload bridge already exposes the right surface.
 
-## File / Module State
+- `src/client/components/studio/SettingsModal.tsx` — show workspace path + validation, ffmpeg status, OpenAI/Gemini key presence, app version, updater state. Save button calls `window.desktop.saveSettings(...)`; show a "Reloading…" overlay until `/api/internal/health` is green.
+- `src/client/components/studio/UploadCard.tsx` — prefer `window.desktop.pickAudioFile()` when the bridge exists, then POST `{ desktop_file_path }` JSON to `/api/transcribe`. Fall back to the current multipart flow otherwise.
+- `src/client/components/catalog/CatalogPanel.tsx` — prefer `window.desktop.importCatalogVideo()`, then POST `{ desktop_file_path, metadata }` JSON to `/api/catalog/videos`.
+- Add a small `src/client/lib/desktop.ts` helper so SSR access stays safe.
 
-### Implemented Now
+### Step 8 — Tests
 
-- `src/server/runtime/config.ts`
-- `src/server/runtime/paths.ts`
-- `src/server/runtime/auth.ts`
-- `src/server/assets/source.ts`
-- `src/app/api/internal/health/route.ts`
-- `src/app/api/desktop/status/route.ts`
-- `src/proxy.ts`
-- `src/shared/desktop.ts`
-- `src/types/desktop.d.ts`
-- `electron/ffmpeg-verify.cjs`
-- `electron/config.cjs`
-- `electron/server-manager.cjs`
-- `electron/preload.cjs`
-- `electron/main.cjs`
-- `scripts/prepare-standalone.cjs`
-- `next.config.ts` (now `output: "standalone"`)
-- `package.json` (now `"main": "electron/main.cjs"` + electron scripts)
+See the plan doc for the full suggested list. Suggested files: `runtime-config.test.ts`, `asset-source.test.ts`, `desktop-auth.test.ts`, `proxy.test.ts`, `server-manager.test.ts`, `prepare-standalone.test.ts`. The server-manager test is the most involved — mock `child_process.spawn` and `http.request`, exercise the EADDRINUSE fallback, the health-poll loop, and `restart(env)`.
 
-### Still Pending
+### Step 9 — Desktop CI
 
-- `forge.config.cjs`
-- `electron` + `electron-forge` + ffmpeg-static dev-dependency install (Step 6)
-- Settings/Upload/Catalog UI wiring (Step 7)
-- Test suite for runtime/auth/server-manager (Step 8)
-- Desktop CI (Step 9)
+`.github/workflows/desktop.yml` matrix on `macos-latest` + `windows-latest`:
 
-## Risks To Watch
+- PR CI: install → typecheck → test → unsigned `electron-forge package`. Upload artifacts.
+- Release CI (tag push): same, plus secrets for signing/notarization (`APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`, `WIN_CERT_FILE`, `WIN_CERT_PASSWORD`), then `electron-forge publish` once the GitHub publisher block in `forge.config.cjs` is uncommented.
 
-### 1. Running The Bundled Next Server In Packaged Electron
+## Verification checklist for the next pass
 
-- This is the trickiest implementation detail.
-- The plan assumes Electron main launches the standalone `server.js` as a managed local process in packaged builds.
-- Verify early that the packaged runtime can execute the server entrypoint with access to traced files and modules.
+- [x] `npm test` 43/43
+- [x] `tsc --noEmit` clean
+- [x] `next build` produces `.next/standalone/server.js` at the correct path
+- [x] `scripts/prepare-standalone.cjs` populates `public/` + `.next/static/`
+- [x] `electron/ffmpeg-verify.cjs` returns `{ ok: true }` against system ffmpeg
+- [x] `forge.config.cjs` loads cleanly
+- [ ] `npm install` succeeds with the new pins (untested — defer to the next agent)
+- [ ] `npm run electron:dev` boots, Settings modal opens
+- [ ] Audio upload via native picker round-trips
+- [ ] Catalog video import via native picker round-trips
+- [ ] Render pipeline runs end to end with a user-chosen workspace
+- [ ] `npm run electron:make` produces signed artifacts in CI
 
-### 2. Secure Credential Storage
+## Stop point
 
-- The current web app reads API keys from process env.
-- Desktop settings must persist them outside `localStorage`.
-- The implementation should keep secrets entirely on the Electron side and only inject them into the child server process at launch.
-
-### 3. FFmpeg Packaging
-
-- Desktop builds should prefer bundled FFmpeg/FFprobe binaries.
-- Dev should continue to allow `PATH` fallback.
-- Validate the packaged binary paths before wiring updater/release work.
-
-### 4. Settings Mutability
-
-- Some settings changes, especially workspace and credentials, likely require a child server restart.
-- Plan for restart/reload behavior instead of trying to hot-swap server env in place.
-
-## Suggested Implementation Sequence
-
-1. Refactor path resolution and runtime config first.
-2. Introduce the asset provider boundary.
-3. Add the proxy auth and internal health route.
-4. Wire FFmpeg verification into Electron main startup.
-5. Add Electron process management and preload bridge.
-6. Finish settings/upload/import desktop-aware UI wiring.
-7. Add Forge packaging and GitHub update config.
-8. Add tests and CI last.
-
-## Verification Checklist For The Next Pass
-
-- `npm test`
-- `tsc --noEmit`
-- `next build` with standalone output
-- desktop dev boot through Electron
-- desktop settings workflow
-- audio upload through native picker
-- catalog video import through native picker
-- render pipeline with local workspace
-- packaged build smoke test
-
-## Stop Point
-
-- This pass is paused after the Electron shell scaffold is in place (main/preload/server-manager/config + prepare-standalone) but before any Electron-runnable build has been attempted.
-- `electron` and `electron-forge` are intentionally not installed yet. The shell files compile but cannot be exercised until `npm install --save-dev electron electron-forge` (and the bundled ffmpeg packages) lands in Step 6.
-- The next active step is Step 6: Forge packaging config (`forge.config.cjs`), `@electron-forge/plugin-auto-unpack-natives`, `asarUnpack` entries for the bundled ffmpeg/ffprobe binaries, makers for macOS ZIP + Windows Squirrel, and signing/notarization config wired to env vars.
-- After Step 6 the first runnable smoke test is `npm run electron:dev` (verifies the spawn / token / health-poll path against `next dev`).
+After Step 6. The Electron shell + Forge packaging config are complete on paper; nothing has actually been launched in Electron because dependencies aren't installed. The first runnable smoke test for the next agent is `npm install && npm run electron:dev`. The first packaging smoke test is `npm run electron:make` — which will be unsigned locally and signed only on CI with the secrets above.
