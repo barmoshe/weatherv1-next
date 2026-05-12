@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { readCatalog, writeCatalog, VIDEOS_DIR, invalidateCatalogCache } from "@/server/catalog/storage";
+import { readCatalog, writeCatalog, getVideosDir, invalidateCatalogCache } from "@/server/catalog/storage";
 import { isValidSource, SOURCE_VALUES } from "@/server/tag-vocab";
+import { assertDesktopAuth } from "@/server/runtime/auth";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = assertDesktopAuth(req);
+  if (denied) return denied;
+
   const { id: vidId } = await params;
   const data = (await req.json()) as Record<string, unknown>;
 
@@ -86,6 +90,9 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = assertDesktopAuth(req);
+  if (denied) return denied;
+
   const { id: vidId } = await params;
   const deleteFile = req.nextUrl.searchParams.get("delete_file") === "1";
 
@@ -97,7 +104,7 @@ export async function DELETE(
     }
 
     if (deleteFile && entry.filename) {
-      const filePath = path.join(VIDEOS_DIR, entry.filename);
+      const filePath = path.join(getVideosDir(), entry.filename);
       try { fs.unlinkSync(filePath); } catch { /* ignore */ }
     }
 

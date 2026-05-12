@@ -1,9 +1,10 @@
 import fs from "node:fs";
-import path from "node:path";
 import { spawnFFmpeg } from "./spawn";
 import { probeVideo } from "./probe";
 import { getFFmpegPath } from "./binaries";
 import type { ResolvedPick, ParsedVideo } from "@/shared/types";
+import { getAssetSource } from "@/server/assets/source";
+import { getRuntimeConfig } from "@/server/runtime/config";
 
 const PAD_THRESHOLD_SEC = 0.04;
 
@@ -88,8 +89,8 @@ export async function buildRendererArgs(
   let bgMusicInputIdx: number | null = null;
   const bgMusicPath =
     opts.bgMusicPath ??
-    process.env.BG_MUSIC_PATH ??
-    path.join(process.cwd(), "..", "v1Drive", "weather", "music", "מוזיקת אנדר לתחזית.mp3");
+    getRuntimeConfig().bgMusicPath ??
+    getAssetSource().getDefaultBgMusicPath();
   if (fs.existsSync(bgMusicPath)) {
     args.push("-stream_loop", "-1", "-i", bgMusicPath);
     bgMusicInputIdx = resolved.length + 1;

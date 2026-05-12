@@ -9,7 +9,7 @@ import type {
   SegmentMapEntry,
   CatalogFileHealth,
 } from "@/shared/types";
-import { CATALOG_PATH, VIDEOS_DIR, readCatalog } from "./storage";
+import { getCatalogPath, getVideosDir, readCatalog } from "./storage";
 
 // Module-level health state (mirrors Python's LAST_HEALTH)
 export let lastHealth: CatalogFileHealth = {
@@ -74,13 +74,13 @@ function normaliseSegments(
 
 export function parseCatalog(
   catalog?: Catalog,
-  videosDir: string = VIDEOS_DIR
+  videosDir: string = getVideosDir()
 ): ParsedVideo[] {
   const cat = catalog ?? readCatalog();
 
   let version = "unknown";
   try {
-    const raw = fs.readFileSync(CATALOG_PATH, "utf8");
+    const raw = fs.readFileSync(getCatalogPath(), "utf8");
     version = createHash("sha1").update(raw).digest("hex").slice(0, 8);
   } catch {
     // ignore

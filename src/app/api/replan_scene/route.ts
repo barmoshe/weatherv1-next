@@ -5,6 +5,7 @@ import type { Scene } from "@/shared/types";
 import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/parser";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
+import { assertDesktopAuth } from "@/server/runtime/auth";
 
 function openaiErrorResponse(err: unknown): [Record<string, unknown>, number] | null {
   const msg = err instanceof Error ? err.message : String(err);
@@ -62,6 +63,9 @@ function buildReplanAvoidSet(
 }
 
 export async function POST(req: NextRequest) {
+  const denied = assertDesktopAuth(req);
+  if (denied) return denied;
+
   const data = (await req.json()) as Record<string, unknown>;
   const scenes = (data.scenes ?? []) as Record<string, unknown>[];
   const fullTimeline = (data.timeline ?? []) as Record<string, unknown>[];

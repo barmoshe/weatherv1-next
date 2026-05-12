@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
-import { readCatalog, writeCatalog, VIDEOS_DIR, invalidateCatalogCache } from "@/server/catalog/storage";
+import { readCatalog, writeCatalog, getVideosDir, invalidateCatalogCache } from "@/server/catalog/storage";
+import { getRuntimePaths } from "@/server/runtime/paths";
+import { assertDesktopAuth } from "@/server/runtime/auth";
 import { parseCatalog } from "@/server/catalog/parser";
 import { probeVideo } from "@/server/ffmpeg/probe";
 import { generatePoster } from "@/server/ffmpeg/posters";
@@ -19,13 +21,70 @@ function slugify(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData();
-  const file = formData.get("file");
-  if (!file || typeof file === "string") {
-    return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
+  const denied = assertDesktopAuth(req);
+  if (denied) return denied;
+  const videosDir = getVideosDir();
+  fs.mkdirSync(videosDir, { recursive: true });
+  const contentType = req.headers.get("content-type") ?? "";
+
+  let fileName = "";
+  let metadata: Record<string, unknown> = {};
+  let tmpPath = "";
+
+  if (contentType.includes("application/json")) {
+    const data = (await req.json()) as {
+      desktop_file_path?: string;
+      metadata?: Record<string, unknown>;
+    };
+    const desktopFilePath = data.desktop_file_path?.trim();
+    if (!desktopFilePath) {
+      return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
+    }
+
+    fileName = path.basename(desktopFilePath);
+    metadata = data.metadata ?? {};
+
+    const ext = path.extname(fileName).toLowerCase();
+    if (![".mp4", ".mov"].includes(ext)) {
+      return NextResponse.json(
+        { success: false, error: `Unsupported extension ${ext}` },
+        { status: 400 }
+      );
+    }
+
+    const tmpName = `_pending_${uuidv4().replace(/-/g, "")}${ext}`;
+    tmpPath = path.join(videosDir, tmpName);
+    fs.copyFileSync(desktopFilePath, tmpPath);
+  } else {
+    const formData = await req.formData();
+    const file = formData.get("file");
+    if (!file || typeof file === "string") {
+      return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
+    }
+
+    fileName = (file as File).name;
+    const ext = path.extname(fileName).toLowerCase();
+    if (![".mp4", ".mov"].includes(ext)) {
+      return NextResponse.json(
+        { success: false, error: `Unsupported extension ${ext}` },
+        { status: 400 }
+      );
+    }
+
+    const tmpName = `_pending_${uuidv4().replace(/-/g, "")}${ext}`;
+    tmpPath = path.join(videosDir, tmpName);
+
+    const bytes = await (file as File).arrayBuffer();
+    fs.writeFileSync(tmpPath, Buffer.from(bytes));
+
+    const metaRaw = formData.get("metadata");
+    try {
+      if (typeof metaRaw === "string") metadata = JSON.parse(metaRaw);
+    } catch {
+      // ignore
+    }
   }
 
-  const fileName = (file as File).name;
   const ext = path.extname(fileName).toLowerCase();
   if (![".mp4", ".mov"].includes(ext)) {
     return NextResponse.json(
@@ -34,23 +93,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const tmpName = `_pending_${uuidv4().replace(/-/g, "")}${ext}`;
-  const tmpPath = path.join(VIDEOS_DIR, tmpName);
-
-  const bytes = await (file as File).arrayBuffer();
-  fs.writeFileSync(tmpPath, Buffer.from(bytes));
-
   const probe = await probeVideo(tmpPath);
   const durationSec = probe.durationSec;
   const orientation = probe.orientation;
-
-  const metaRaw = formData.get("metadata");
-  let metadata: Record<string, unknown> = {};
-  try {
-    if (typeof metaRaw === "string") metadata = JSON.parse(metaRaw);
-  } catch {
-    // ignore
-  }
 
   const description = String(metadata.description ?? "");
   const incomingTags = (metadata.tags as Record<string, string>) ?? {};
@@ -74,12 +119,12 @@ export async function POST(req: NextRequest) {
 
     const slug = slugify(description) || slugify(path.basename(fileName, ext));
     const finalName = slug ? `${newId}_${slug}${ext}` : `${newId}${ext}`;
-    let finalPath = path.join(VIDEOS_DIR, finalName);
+    let finalPath = path.join(videosDir, finalName);
     let resolvedName = finalName;
     let i = 2;
     while (fs.existsSync(finalPath)) {
       resolvedName = `${path.basename(finalName, ext)}-${i}${ext}`;
-      finalPath = path.join(VIDEOS_DIR, resolvedName);
+      finalPath = path.join(videosDir, resolvedName);
       i++;
     }
     fs.renameSync(tmpPath, finalPath);
@@ -110,8 +155,7 @@ export async function POST(req: NextRequest) {
 
     // Generate poster eagerly (non-fatal)
     try {
-      const POSTERS_DIR = path.join(process.cwd(), "runtime", "cache", "posters");
-      await generatePoster(finalPath, newId, POSTERS_DIR);
+      await generatePoster(finalPath, newId, getRuntimePaths().postersDir);
     } catch (e) {
       console.warn(`Poster generation failed for ${newId}:`, e);
     }

@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 import { transcribeAudio } from "@/server/pipeline/picker";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { upsertJob } from "@/server/jobs/store";
-
-const UPLOADS_DIR = path.join(process.cwd(), "runtime", "uploads");
+import { getRuntimePaths } from "@/server/runtime/paths";
+import { assertDesktopAuth } from "@/server/runtime/auth";
 
 function openaiErrorResponse(err: unknown): [Record<string, unknown>, number] | null {
   const msg = err instanceof Error ? err.message : String(err);
@@ -21,21 +21,41 @@ function openaiErrorResponse(err: unknown): [Record<string, unknown>, number] | 
 }
 
 export async function POST(req: NextRequest) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  const denied = assertDesktopAuth(req);
+  if (denied) return denied;
 
-  const formData = await req.formData();
-  const file = formData.get("audio");
-  if (!file || typeof file === "string") {
-    return NextResponse.json({ success: false, error: "No audio file provided" }, { status: 400 });
+  const { uploadsDir } = getRuntimePaths();
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  const contentType = req.headers.get("content-type") ?? "";
+
+  let savedName = "";
+  let savedPath = "";
+
+  if (contentType.includes("application/json")) {
+    const data = (await req.json()) as { desktop_file_path?: string };
+    const desktopFilePath = data.desktop_file_path?.trim();
+    if (!desktopFilePath) {
+      return NextResponse.json({ success: false, error: "No audio file provided" }, { status: 400 });
+    }
+    const ext = path.extname(desktopFilePath) || ".mp3";
+    savedName = `${uuidv4().replace(/-/g, "")}${ext}`;
+    savedPath = path.join(uploadsDir, savedName);
+    fs.copyFileSync(desktopFilePath, savedPath);
+  } else {
+    const formData = await req.formData();
+    const file = formData.get("audio");
+    if (!file || typeof file === "string") {
+      return NextResponse.json({ success: false, error: "No audio file provided" }, { status: 400 });
+    }
+
+    const fileName = (file as File).name || "audio.mp3";
+    const ext = path.extname(fileName) || ".mp3";
+    savedName = `${uuidv4().replace(/-/g, "")}${ext}`;
+    savedPath = path.join(uploadsDir, savedName);
+
+    const bytes = await (file as File).arrayBuffer();
+    fs.writeFileSync(savedPath, Buffer.from(bytes));
   }
-
-  const fileName = (file as File).name || "audio.mp3";
-  const ext = path.extname(fileName) || ".mp3";
-  const savedName = `${uuidv4().replace(/-/g, "")}${ext}`;
-  const savedPath = path.join(UPLOADS_DIR, savedName);
-
-  const bytes = await (file as File).arrayBuffer();
-  fs.writeFileSync(savedPath, Buffer.from(bytes));
 
   try {
     const { text, segments, duration } = await transcribeAudio(savedPath);

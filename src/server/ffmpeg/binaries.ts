@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { getRuntimeConfig } from "@/server/runtime/config";
 
 let _ffmpegPath: string | null = null;
 let _ffprobePath: string | null = null;
@@ -15,12 +16,12 @@ function resolveBinary(name: string): string {
 }
 
 export function getFFmpegPath(): string {
-  if (!_ffmpegPath) _ffmpegPath = process.env.FFMPEG_PATH || resolveBinary("ffmpeg");
+  if (!_ffmpegPath) _ffmpegPath = getRuntimeConfig().ffmpegPath || resolveBinary("ffmpeg");
   return _ffmpegPath;
 }
 
 export function getFFprobePath(): string {
-  if (!_ffprobePath) _ffprobePath = process.env.FFPROBE_PATH || resolveBinary("ffprobe");
+  if (!_ffprobePath) _ffprobePath = getRuntimeConfig().ffprobePath || resolveBinary("ffprobe");
   return _ffprobePath;
 }
 
@@ -32,7 +33,7 @@ export function verifyFFmpegAtBoot(): void {
     _verified = true;
   } catch (err) {
     throw new Error(
-      `ffmpeg/ffprobe not found on PATH. Install ffmpeg and ensure it is accessible. ` +
+      `ffmpeg/ffprobe not found or not executable. Install ffmpeg or configure explicit paths. ` +
         `Underlying error: ${err instanceof Error ? err.message : String(err)}`
     );
   }

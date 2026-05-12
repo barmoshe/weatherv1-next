@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { VIDEOS_DIR } from "@/server/catalog/storage";
+import { getVideosDir } from "@/server/catalog/storage";
 
 export async function GET(
   _req: NextRequest,
@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const { filename } = await params;
   const safe = path.basename(filename);
-  const filePath = path.join(VIDEOS_DIR, safe);
+  const filePath = path.join(getVideosDir(), safe);
 
   if (!fs.existsSync(filePath)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

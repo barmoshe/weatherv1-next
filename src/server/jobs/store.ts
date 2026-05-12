@@ -7,6 +7,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { getRuntimePaths } from "@/server/runtime/paths";
 
 export type JobStatus = "draft" | "queued" | "processing" | "completed" | "failed";
 
@@ -19,32 +20,36 @@ export interface JobRecord {
   audio_filename?: string;
 }
 
-const JOBS_PATH = path.join(process.cwd(), "runtime", "jobs.json");
+function getJobsPath(): string {
+  return path.join(getRuntimePaths().runtimeDir, "jobs.json");
+}
 
 // In-memory store (single source of truth at runtime)
 const store = new Map<string, JobRecord>();
 let initialized = false;
 
 function ensureDir(): void {
-  const dir = path.dirname(JOBS_PATH);
+  const dir = path.dirname(getJobsPath());
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
 function save(): void {
+  const jobsPath = getJobsPath();
   ensureDir();
-  const tmp = `${JOBS_PATH}.tmp.${process.pid}`;
+  const tmp = `${jobsPath}.tmp.${process.pid}`;
   const data = JSON.stringify(Object.fromEntries(store), null, 2);
   fs.writeFileSync(tmp, data, "utf8");
-  fs.renameSync(tmp, JOBS_PATH);
+  fs.renameSync(tmp, jobsPath);
 }
 
 function load(): void {
   if (initialized) return;
   initialized = true;
   ensureDir();
-  if (!fs.existsSync(JOBS_PATH)) return;
+  const jobsPath = getJobsPath();
+  if (!fs.existsSync(jobsPath)) return;
   try {
-    const raw = JSON.parse(fs.readFileSync(JOBS_PATH, "utf8")) as Record<string, unknown>;
+    const raw = JSON.parse(fs.readFileSync(jobsPath, "utf8")) as Record<string, unknown>;
     for (const [id, job] of Object.entries(raw)) {
       if (job && typeof job === "object") store.set(id, job as JobRecord);
     }

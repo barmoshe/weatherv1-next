@@ -9,11 +9,14 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { getRuntimePaths } from "@/server/runtime/paths";
 
-const OUTPUTS_DIR = path.join(process.cwd(), "runtime", "outputs");
+function getOutputsDir(): string {
+  return getRuntimePaths().outputsDir;
+}
 
 export function planBundlePath(jobId: string): string {
-  return path.join(OUTPUTS_DIR, `forecast_${jobId}.plan.json`);
+  return path.join(getOutputsDir(), `forecast_${jobId}.plan.json`);
 }
 
 export function readPlanBundle(jobId: string): Record<string, unknown> {
@@ -30,7 +33,7 @@ export function updatePlanBundle(
   jobId: string,
   fields: Record<string, unknown>,
 ): Record<string, unknown> {
-  fs.mkdirSync(OUTPUTS_DIR, { recursive: true });
+  fs.mkdirSync(getOutputsDir(), { recursive: true });
   const bundle = readPlanBundle(jobId);
   bundle.job_id = jobId;
   Object.assign(bundle, fields);
