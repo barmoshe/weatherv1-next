@@ -14,9 +14,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macos-latest may be Apple Silicon. Keep the public macOS artifact on
-        # Intel so it opens on Intel Macs; Apple Silicon can run it via Rosetta.
-        os: [macos-13, windows-latest]
+        include:
+          # Force an x64 macOS build so the public ZIP opens on Intel Macs;
+          # Apple Silicon can run it via Rosetta. This avoids long macos-13
+          # Intel runner queues while still targeting Intel binaries.
+          - os: macos-latest
+            arch: x64
+            artifact: desktop-macos-latest
+          - os: windows-latest
+            arch: x64
+            artifact: desktop-windows-latest
 
     env:
       APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -25,6 +32,7 @@ jobs:
       OSX_SIGN_IDENTITY: ${{ secrets.OSX_SIGN_IDENTITY }}
       WIN_CERT_FILE: ${{ secrets.WIN_CERT_FILE }}
       WIN_CERT_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
+      npm_config_arch: ${{ matrix.arch }}
 
     steps:
       - uses: actions/checkout@v5
@@ -42,11 +50,11 @@ jobs:
 
       - name: Package unsigned desktop app
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: npm run electron:build
+        run: next build && npm run standalone:prep && electron-forge package --arch=${{ matrix.arch }}
 
       - name: Make release artifacts
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        run: npm run electron:make
+        run: next build && npm run standalone:prep && electron-forge make --arch=${{ matrix.arch }}
 
       # Canonical tag name for desktop-publish-release.yml (workflow_run exposes
       # github.event.workflow_run.head_branch as the tag for tag-triggered runs;
@@ -64,7 +72,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: desktop-${{ matrix.os }}
+          name: ${{ matrix.artifact }}
           path: |
             out/**
             !out/**/node_modules/**
