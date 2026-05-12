@@ -18,9 +18,12 @@
 //     can flip them on with secrets while local dev never accidentally tries
 //     to notarize (which would block on missing Apple credentials).
 //
-// Required release-CI env vars (macOS): APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD,
-//   APPLE_TEAM_ID, OSX_SIGN_IDENTITY (or a default Developer ID in the keychain).
-// Required release-CI env vars (Windows): WIN_CERT_FILE, WIN_CERT_PASSWORD.
+// Required release-CI secrets (macOS): MAC_CERTIFICATE_BASE64,
+//   MAC_CERTIFICATE_PASSWORD, KEYCHAIN_PASSWORD, APPLE_ID,
+//   APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID, OSX_SIGN_IDENTITY (optional if
+//   the imported keychain has a single Developer ID Application identity).
+// Required release-CI secrets (Windows): WIN_CERTIFICATE_BASE64,
+//   WIN_CERT_PASSWORD. The workflow decodes this to WIN_CERT_FILE for Forge.
 
 "use strict";
 
@@ -33,7 +36,12 @@ const OSX_SIGN_IDENTITY = process.env.OSX_SIGN_IDENTITY;
 const WIN_CERT_FILE = process.env.WIN_CERT_FILE;
 const WIN_CERT_PASSWORD = process.env.WIN_CERT_PASSWORD;
 
-const haveMacSigning = Boolean(APPLE_ID && APPLE_APP_SPECIFIC_PASSWORD && APPLE_TEAM_ID);
+const haveMacSigning = Boolean(
+  APPLE_ID &&
+    APPLE_APP_SPECIFIC_PASSWORD &&
+    APPLE_TEAM_ID &&
+    (process.env.MAC_CERTIFICATE_IMPORTED === "1" || !process.env.GITHUB_ACTIONS)
+);
 const haveWinSigning = Boolean(WIN_CERT_FILE && WIN_CERT_PASSWORD);
 
 /** @type {import('@electron-forge/shared-types').ForgeConfig} */
@@ -85,6 +93,7 @@ module.exports = {
       : undefined,
     osxNotarize: haveMacSigning
       ? {
+          tool: "notarytool",
           appleId: APPLE_ID,
           appleIdPassword: APPLE_APP_SPECIFIC_PASSWORD,
           teamId: APPLE_TEAM_ID,
