@@ -1,7 +1,8 @@
-import OpenAI from "openai";
 import { z } from "zod";
 import { fallbackSingleScene } from "./scene-planner";
 import { SOURCE_VALUES } from "@/server/tag-vocab";
+import { getLlmProvider, LlmProviderError } from "@/server/providers/llm";
+import { getTranscriptionProvider } from "@/server/providers/transcription";
 import type { Scene, WhisperSegment, TimelinePick, ParsedVideo } from "@/shared/types";
 
 // ---------------------------------------------------------------------------
@@ -182,10 +183,7 @@ export async function pickSegments(
   durationSec: number,
   opts: PickerOptions = {}
 ): Promise<TimelinePick[]> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY is required");
-
-  const client = new OpenAI({ apiKey });
+  const provider = getLlmProvider();
 
   const catalog = prepareCatalog(videos);
   // Shuffle to neutralize transformer position bias
@@ -215,41 +213,40 @@ export async function pickSegments(
   };
 
   try {
-    const response = await client.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: JSON.stringify(payload, null, 2) },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
+    const data = await provider.completeJson({
+      systemPrompt,
+      userPayload: JSON.stringify(payload, null, 2),
+      schema: PickResponseSchema,
+      schemaName: "timeline_pick_response",
+      schemaDescription:
+        "Ordered timeline of catalog segment picks, one to two per scene, that visually fit the narration.",
+      options: {
+        temperature: 0.7,
+        cacheSystemPrompt: !opts.customPrompt && !opts.avoidSegmentIds?.size,
+      },
     });
 
-    const content = response.choices[0]?.message?.content ?? "{}";
-    const raw = JSON.parse(content);
-
-    // Zod-validate (Risk A5)
-    const parsed = PickResponseSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.error("picker: LLM response failed zod validation:", parsed.error.format());
-      console.error("raw response:", JSON.stringify(raw, null, 2));
-      return [];
-    }
-
-    const timeline = parsed.data.timeline as TimelinePick[];
+    const timeline = data.timeline as TimelinePick[];
     backfillSceneIdx(timeline, scenes);
     return timeline;
   } catch (err) {
+    // Bubble auth/quota so route handlers can translate to actionable HTTP
+    // responses; swallow other failures so the pipeline can fall back to
+    // the deterministic single-scene timeline.
+    if (err instanceof LlmProviderError) {
+      if (err.code === "llm_invalid_key" || err.code === "llm_quota_exceeded") throw err;
+      console.warn(`pickSegments: LLM call failed: ${err.message}`);
+      return [];
+    }
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("invalid_api_key") || msg.includes("authentication")) throw err;
-    if (msg.includes("insufficient_quota") || msg.includes("exceeded_quota")) throw err;
     console.warn(`pickSegments: LLM call failed: ${msg}`);
     return [];
   }
 }
 
 // ---------------------------------------------------------------------------
-// Whisper transcription
+// Transcription (delegated to the active TranscriptionProvider — local
+// whisper.cpp or cloud OpenAI Whisper, see src/server/providers/transcription)
 // ---------------------------------------------------------------------------
 
 export interface TranscriptionResult {
@@ -259,40 +256,6 @@ export interface TranscriptionResult {
 }
 
 export async function transcribeAudio(audioPath: string): Promise<TranscriptionResult> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY is required");
-
-  const { WHISPER_HE_PROMPT, fixTranscript } = await import("./transcript-fixes");
-  const client = new OpenAI({ apiKey });
-  const fs = await import("node:fs");
-
-  const audioStream = fs.createReadStream(audioPath);
-  const transcript = await client.audio.transcriptions.create({
-    model: "whisper-1",
-    file: audioStream,
-    response_format: "verbose_json",
-    language: "he",
-    prompt: WHISPER_HE_PROMPT,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
-
-  const raw = transcript as unknown as {
-    text: string;
-    segments?: Array<{ start: number; end: number; text: string }>;
-    duration?: number;
-  };
-
-  const fixedText = fixTranscript(raw.text ?? "");
-  const segments: WhisperSegment[] = (raw.segments ?? []).map((s, i) => ({
-    idx: i,
-    start: s.start,
-    end: s.end,
-    text: fixTranscript(s.text ?? ""),
-  }));
-
-  const duration =
-    raw.duration ??
-    (segments.length ? segments[segments.length - 1].end : 0);
-
-  return { text: fixedText, segments, duration };
+  const provider = getTranscriptionProvider();
+  return provider.transcribe(audioPath);
 }

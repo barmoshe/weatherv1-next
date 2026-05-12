@@ -266,9 +266,25 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   if (update && typeof update.ffmpegPath === "string") patch.ffmpegPath = update.ffmpegPath;
   if (update && typeof update.ffprobePath === "string") patch.ffprobePath = update.ffprobePath;
 
+  const llmProviders = new Set(["auto", "anthropic", "openai"]);
+  const transcriptionProviders = new Set(["auto", "local-whispercpp", "openai-cloud"]);
+  if (update && typeof update.llmProvider === "string" && llmProviders.has(update.llmProvider)) {
+    patch.llmProvider = update.llmProvider;
+  }
+  if (
+    update &&
+    typeof update.transcriptionProvider === "string" &&
+    transcriptionProviders.has(update.transcriptionProvider)
+  ) {
+    patch.transcriptionProvider = update.transcriptionProvider;
+  }
+
   const keyUpdates = {};
   if (update && typeof update.openaiKey === "string") {
     keyUpdates.openai = cfg.encryptSecret(update.openaiKey, { safeStorage });
+  }
+  if (update && typeof update.anthropicKey === "string") {
+    keyUpdates.anthropic = cfg.encryptSecret(update.anthropicKey, { safeStorage });
   }
   if (update && typeof update.geminiKey === "string") {
     keyUpdates.gemini = cfg.encryptSecret(update.geminiKey, { safeStorage });

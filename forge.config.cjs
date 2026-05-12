@@ -65,7 +65,7 @@ module.exports = {
       // app.asar.unpacked and then fails with "Could not find a production
       // build in './.next'".
       unpack:
-        "{**/node_modules/ffmpeg-static/**,**/node_modules/ffprobe-static/**,**/node_modules/@ffmpeg-installer/**,**/node_modules/@ffprobe-installer/**,**/.next/standalone/**,**/.next/standalone/.next/**}",
+        "{**/node_modules/ffmpeg-static/**,**/node_modules/ffprobe-static/**,**/node_modules/@ffmpeg-installer/**,**/node_modules/@ffprobe-installer/**,**/.next/standalone/**,**/.next/standalone/.next/**,**/electron/bin/whisper/**}",
     },
     // Ship the standalone Next tree + scripts that Electron main + the spawn
     // child actually need. Forge defaults to packaging the entire project

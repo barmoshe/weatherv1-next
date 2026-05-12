@@ -6,17 +6,7 @@ import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/parser";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { assertDesktopAuth } from "@/server/runtime/auth";
-
-function openaiErrorResponse(err: unknown): [Record<string, unknown>, number] | null {
-  const msg = err instanceof Error ? err.message : String(err);
-  if (["insufficient_quota", "exceeded your current quota"].some((m) => msg.includes(m))) {
-    return [{ success: false, error: "אזל מאגר ה-OpenAI tokens.", error_code: "openai_quota_exceeded", console_url: "https://platform.openai.com/account/billing" }, 402];
-  }
-  if (msg.includes("invalid_api_key") || msg.includes("Incorrect API key")) {
-    return [{ success: false, error: "מפתח OpenAI לא תקין.", error_code: "openai_invalid_key" }, 401];
-  }
-  return null;
-}
+import { mapProviderError } from "@/server/providers/errors";
 
 function buildReplanAvoidSet(
   otherPicks: Record<string, unknown>[],
@@ -134,8 +124,8 @@ export async function POST(req: NextRequest) {
       validator: validatorResult,
     });
   } catch (err) {
-    const handled = openaiErrorResponse(err);
-    if (handled) return NextResponse.json(handled[0], { status: handled[1] });
+    const handled = mapProviderError(err);
+    if (handled) return NextResponse.json(handled.body, { status: handled.status });
     console.error("[replan_scene]", err);
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
   }

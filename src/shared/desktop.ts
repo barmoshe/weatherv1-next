@@ -27,12 +27,21 @@ export interface DesktopAppInfo {
   ffmpeg: DesktopFfmpegInfo;
 }
 
+export type LlmProviderPreference = "auto" | "anthropic" | "openai";
+export type TranscriptionProviderPreference =
+  | "auto"
+  | "local-whispercpp"
+  | "openai-cloud";
+
 export interface DesktopSettingsUpdate {
   workspaceDir?: string;
   openaiKey?: string;
+  anthropicKey?: string;
   geminiKey?: string;
   ffmpegPath?: string;
   ffprobePath?: string;
+  llmProvider?: LlmProviderPreference;
+  transcriptionProvider?: TranscriptionProviderPreference;
 }
 
 export interface DesktopBridge {

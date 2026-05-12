@@ -1,37 +1,48 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fallbackSingleScene, planScenes } from "@/server/pipeline/scene-planner";
 import type { WhisperSegment } from "@/shared/types";
 
-vi.mock("openai", () => {
-  const mockCreate = vi.fn();
+// Mock the LLM provider boundary, not the raw OpenAI client. The pipeline now
+// asks `getLlmProvider().completeJson()` for structured JSON; tests only need
+// to control what that returns.
+vi.mock("@/server/providers/llm", async () => {
+  const mockCompleteJson = vi.fn();
   return {
-    default: vi.fn(() => ({
-      chat: { completions: { create: mockCreate } },
+    getLlmProvider: vi.fn(() => ({
+      id: "anthropic",
+      completeJson: mockCompleteJson,
     })),
-    mockCreate, // exported for tests to access
+    LlmProviderError: class extends Error {
+      constructor(
+        message: string,
+        public readonly code: string,
+        public readonly provider: string,
+      ) {
+        super(message);
+      }
+    },
+    mockCompleteJson,
   };
 });
 
-async function getMockCreate() {
-  const mod = await import("openai");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (mod as any).mockCreate as ReturnType<typeof vi.fn>;
+async function getMockCompleteJson() {
+  const mod = await import("@/server/providers/llm");
+  return (mod as unknown as { mockCompleteJson: ReturnType<typeof vi.fn> })
+    .mockCompleteJson;
 }
 
 function segs(n: number, step = 3.0): WhisperSegment[] {
   return Array.from({ length: n }, (_, i) => ({
-    idx: i, start: i * step, end: (i + 1) * step, text: `s${i}`,
+    idx: i,
+    start: i * step,
+    end: (i + 1) * step,
+    text: `s${i}`,
   }));
 }
 
-function fakeCompletion(scenes: unknown[]) {
-  return {
-    choices: [{ message: { content: JSON.stringify({ scenes }) } }],
-  };
-}
-
 beforeEach(() => {
-  process.env.OPENAI_API_KEY = "test-key";
+  process.env.ANTHROPIC_API_KEY = "test-key";
 });
 
 // ---------------------------------------------------------------------------
@@ -61,20 +72,19 @@ describe("fallbackSingleScene", () => {
 });
 
 // ---------------------------------------------------------------------------
-// planScenes — post-processing via mocked LLM response
+// planScenes — post-processing via mocked LlmProvider response
 // ---------------------------------------------------------------------------
 
 describe("planScenes", () => {
   it("snaps scene boundaries to Whisper segment ends", async () => {
-    const mockCreate = await getMockCreate();
-    // Whisper boundaries: 0, 3, 6, 9, 12
-    const whisper = segs(4, 3.0);
+    const mockCompleteJson = await getMockCompleteJson();
+    const whisper = segs(4, 3.0); // boundaries: 0, 3, 6, 9, 12
     const rawScenes = [
       { start_sec: 0.0, end_sec: 3.2, title_he: "א", kind: "prose" },
       { start_sec: 3.2, end_sec: 5.9, title_he: "ב", kind: "prose" },
       { start_sec: 5.9, end_sec: 12.0, title_he: "ג", kind: "prose" },
     ];
-    mockCreate.mockResolvedValueOnce(fakeCompletion(rawScenes));
+    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
 
     const out = await planScenes("transcript", whisper, 12.0);
     const validBoundaries = new Set([0, 3, 6, 9, 12]);
@@ -85,15 +95,14 @@ describe("planScenes", () => {
   });
 
   it("merges sub-minimum scenes (< 3s) into neighbors", async () => {
-    const mockCreate = await getMockCreate();
-    // Whisper: boundaries at 0,2,4,6,8,10
+    const mockCompleteJson = await getMockCompleteJson();
     const whisper = segs(5, 2.0);
     const rawScenes = [
-      { start_sec: 0.0, end_sec: 2.0, title_he: "short", kind: "prose" }, // 2s — too short
-      { start_sec: 2.0, end_sec: 6.0, title_he: "med", kind: "prose" },   // 4s — ok
-      { start_sec: 6.0, end_sec: 10.0, title_he: "end", kind: "prose" },  // 4s — ok
+      { start_sec: 0.0, end_sec: 2.0, title_he: "short", kind: "prose" },
+      { start_sec: 2.0, end_sec: 6.0, title_he: "med", kind: "prose" },
+      { start_sec: 6.0, end_sec: 10.0, title_he: "end", kind: "prose" },
     ];
-    mockCreate.mockResolvedValueOnce(fakeCompletion(rawScenes));
+    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
 
     const out = await planScenes("transcript", whisper, 10.0);
     for (const s of out) {
@@ -103,36 +112,34 @@ describe("planScenes", () => {
   });
 
   it("preserves heterogeneous flag through post-processing", async () => {
-    const mockCreate = await getMockCreate();
+    const mockCompleteJson = await getMockCompleteJson();
     const whisper = segs(4, 3.0);
     const rawScenes = [
       { start_sec: 0.0, end_sec: 6.0, title_he: "multi-region", kind: "list", heterogeneous: true },
       { start_sec: 6.0, end_sec: 12.0, title_he: "rest", kind: "prose" },
     ];
-    mockCreate.mockResolvedValueOnce(fakeCompletion(rawScenes));
+    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
 
     const out = await planScenes("transcript", whisper, 12.0);
     expect(out[0].heterogeneous).toBe(true);
     expect(out[1].heterogeneous).toBe(false);
   });
 
-  it("returns empty array when LLM response has no scenes key", async () => {
-    const mockCreate = await getMockCreate();
-    mockCreate.mockResolvedValueOnce({
-      choices: [{ message: { content: JSON.stringify({ result: "no scenes" }) } }],
-    });
+  it("returns empty array when LLM response has no scenes", async () => {
+    const mockCompleteJson = await getMockCompleteJson();
+    mockCompleteJson.mockResolvedValueOnce({ scenes: [] });
     const out = await planScenes("transcript", segs(3), 9.0);
     expect(out).toHaveLength(0);
   });
 
   it("assigns sequential idx values starting at 0", async () => {
-    const mockCreate = await getMockCreate();
+    const mockCompleteJson = await getMockCompleteJson();
     const whisper = segs(4, 3.0);
     const rawScenes = [
       { start_sec: 0.0, end_sec: 6.0, title_he: "א", kind: "prose" },
       { start_sec: 6.0, end_sec: 12.0, title_he: "ב", kind: "prose" },
     ];
-    mockCreate.mockResolvedValueOnce(fakeCompletion(rawScenes));
+    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
 
     const out = await planScenes("transcript", whisper, 12.0);
     out.forEach((s, i) => expect(s.idx).toBe(i));

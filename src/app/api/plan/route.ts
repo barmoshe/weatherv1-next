@@ -6,18 +6,8 @@ import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/parser";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { assertDesktopAuth } from "@/server/runtime/auth";
+import { mapProviderError } from "@/server/providers/errors";
 import type { Scene } from "@/shared/types";
-
-function openaiErrorResponse(err: unknown): [Record<string, unknown>, number] | null {
-  const msg = err instanceof Error ? err.message : String(err);
-  if (["insufficient_quota", "exceeded your current quota"].some((m) => msg.includes(m))) {
-    return [{ success: false, error: "אזל מאגר ה-OpenAI tokens.", error_code: "openai_quota_exceeded", console_url: "https://platform.openai.com/account/billing" }, 402];
-  }
-  if (msg.includes("invalid_api_key") || msg.includes("Incorrect API key")) {
-    return [{ success: false, error: "מפתח OpenAI לא תקין.", error_code: "openai_invalid_key" }, 401];
-  }
-  return null;
-}
 
 export async function POST(req: NextRequest) {
   const denied = assertDesktopAuth(req);
@@ -47,7 +37,7 @@ export async function POST(req: NextRequest) {
       try {
         scenes = await planScenes(transcript, transcriptSegments, duration, customScenePrompt);
       } catch (e) {
-        const handled = openaiErrorResponse(e);
+        const handled = mapProviderError(e);
         if (handled) throw e; // bubble quota/auth errors
         console.warn("[plan] scene_planner failed, falling back:", e);
         scenes = [];
@@ -80,8 +70,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, scenes, timeline, validator: validatorResult });
   } catch (err) {
-    const handled = openaiErrorResponse(err);
-    if (handled) return NextResponse.json(handled[0], { status: handled[1] });
+    const handled = mapProviderError(err);
+    if (handled) return NextResponse.json(handled.body, { status: handled.status });
     console.error("[plan]", err);
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
   }

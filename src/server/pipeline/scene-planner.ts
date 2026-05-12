@@ -1,6 +1,7 @@
-import OpenAI from "openai";
+import { z } from "zod";
 import { TAG_VOCAB } from "@/server/tag-vocab";
 import { detectRegions } from "./hebrew-places";
+import { getLlmProvider, LlmProviderError } from "@/server/providers/llm";
 import type { Scene, WhisperSegment } from "@/shared/types";
 
 const MIN_SCENE_DURATION = 3.0;
@@ -284,6 +285,14 @@ export function fallbackSingleScene(
   ];
 }
 
+// Loose schema for the LLM's raw scene proposals. The downstream
+// `validateScenes` is the authoritative shape enforcement (snapping,
+// merging, idx assignment), so we accept any object payload here and
+// keep validation work in one place.
+const ScenePlanResponseSchema = z.object({
+  scenes: z.array(z.record(z.unknown())).default([]),
+});
+
 export async function planScenes(
   transcriptText: string,
   whisperSegments: WhisperSegment[],
@@ -292,10 +301,7 @@ export async function planScenes(
 ): Promise<Scene[]> {
   if (!transcriptText?.trim() || !durationSec) return [];
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY is required");
-
-  const client = new OpenAI({ apiKey });
+  const provider = getLlmProvider();
   const systemPrompt =
     customPrompt?.trim() ? customPrompt.trim() : DEFAULT_SCENE_PROMPT;
 
@@ -324,27 +330,28 @@ export async function planScenes(
   };
 
   try {
-    const response = await client.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: JSON.stringify(payload, null, 2) },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.3,
-      seed: 42,
+    const data = await provider.completeJson({
+      systemPrompt,
+      userPayload: JSON.stringify(payload, null, 2),
+      schema: ScenePlanResponseSchema,
+      schemaName: "scene_plan_response",
+      schemaDescription:
+        "Hebrew weather narration split into ordered scenes for a downstream clip picker.",
+      options: {
+        temperature: 0.3,
+        seed: 42,
+        cacheSystemPrompt: !customPrompt,
+      },
     });
 
-    const content = response.choices[0]?.message?.content ?? "{}";
-    const raw = JSON.parse(content) as Record<string, unknown>;
-    const rawScenes = Array.isArray(raw.scenes) ? (raw.scenes as unknown[]) : null;
-    if (!rawScenes) return [];
-    return validateScenes(rawScenes, whisperSegments, durationSec);
+    return validateScenes(data.scenes ?? [], whisperSegments, durationSec);
   } catch (err) {
-    // Re-throw auth/quota errors; swallow other failures
+    if (err instanceof LlmProviderError) {
+      if (err.code === "llm_invalid_key" || err.code === "llm_quota_exceeded") throw err;
+      console.warn(`planScenes: LLM call failed: ${err.message}`);
+      return [];
+    }
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("invalid_api_key") || msg.includes("authentication")) throw err;
-    if (msg.includes("insufficient_quota") || msg.includes("exceeded_quota")) throw err;
     console.warn(`planScenes: LLM call failed: ${msg}`);
     return [];
   }

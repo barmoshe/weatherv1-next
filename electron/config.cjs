@@ -42,7 +42,12 @@ function defaultSettings() {
     workspaceDir: null,
     ffmpegPath: null,
     ffprobePath: null,
-    keys: { openai: null, gemini: null }, // values are either base64 ciphertext or plaintext (see `encryption`)
+    // Stored as { scheme, data } objects (or null). `scheme` is "safe-storage"
+    // for OS-keychain-encrypted values, "plaintext" otherwise.
+    keys: { openai: null, anthropic: null, gemini: null },
+    // Plain-text user preference. "auto" lets the server pick from configured keys.
+    llmProvider: "auto", // "auto" | "anthropic" | "openai"
+    transcriptionProvider: "auto", // "auto" | "local-whispercpp" | "openai-cloud"
     encryption: "none", // "safe-storage" | "none"
   };
 }
@@ -121,6 +126,7 @@ function decryptSecret(stored, opts) {
 function buildChildEnv(args) {
   const settings = readSettings();
   const openai = decryptSecret(settings.keys.openai, { safeStorage: args.safeStorage });
+  const anthropic = decryptSecret(settings.keys.anthropic, { safeStorage: args.safeStorage });
   const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
 
   const env = {
@@ -136,7 +142,17 @@ function buildChildEnv(args) {
   if (args.ffmpeg.ffmpegPath) env.FFMPEG_PATH = args.ffmpeg.ffmpegPath;
   if (args.ffmpeg.ffprobePath) env.FFPROBE_PATH = args.ffmpeg.ffprobePath;
   if (openai) env.OPENAI_API_KEY = openai;
+  if (anthropic) env.ANTHROPIC_API_KEY = anthropic;
   if (gemini) env.GEMINI_API_KEY = gemini;
+
+  // Provider preferences. "auto" leaves the env var unset so the server-side
+  // selection falls through to the key-based default.
+  if (settings.llmProvider && settings.llmProvider !== "auto") {
+    env.LLM_PROVIDER = settings.llmProvider;
+  }
+  if (settings.transcriptionProvider && settings.transcriptionProvider !== "auto") {
+    env.TRANSCRIPTION_PROVIDER = settings.transcriptionProvider;
+  }
 
   return env;
 }
