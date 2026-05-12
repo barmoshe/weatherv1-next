@@ -7,6 +7,16 @@
 name: Desktop publish release
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish assets to, for example v0.1.1"
+        required: true
+        type: string
+      run_id:
+        description: "Desktop workflow run ID that uploaded desktop-macos-latest and desktop-windows-latest"
+        required: true
+        type: string
   workflow_run:
     workflows: [Desktop]
     types: [completed]
@@ -16,10 +26,11 @@ jobs:
     name: Attach installers to GitHub Release
     runs-on: ubuntu-latest
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      (startsWith(github.event.workflow_run.head_branch, 'refs/tags/v') ||
-       (startsWith(github.event.workflow_run.head_branch, 'v') && !contains(github.event.workflow_run.head_branch, '/')))
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       (startsWith(github.event.workflow_run.head_branch, 'refs/tags/v') ||
+        (startsWith(github.event.workflow_run.head_branch, 'v') && !contains(github.event.workflow_run.head_branch, '/'))))
     permissions:
       actions: read
       contents: write
@@ -33,7 +44,7 @@ jobs:
           path: meta
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -41,7 +52,7 @@ jobs:
           path: mac
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -49,15 +60,17 @@ jobs:
           path: win
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
 
       - name: Assemble stable asset names
+        env:
+          DESKTOP_RUN_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
         run: |
           set -euo pipefail
           mkdir -p dist
           MAC_ZIP="$(find mac -type f -name '*.zip' ! -path '*/node_modules/*' | head -n 1)"
           if [[ -z "$MAC_ZIP" ]]; then
-            echo "No macOS .zip in desktop-macos-latest for run ${{ github.event.workflow_run.id }}"
+            echo "No macOS .zip in desktop-macos-latest for run ${DESKTOP_RUN_ID}"
             find mac -type f 2>/dev/null | head -80 || true
             exit 1
           fi
@@ -67,7 +80,7 @@ jobs:
             WIN_EXE="$(find win -type f -path '*/squirrel.windows/*/*.exe' ! -path '*/node_modules/*' | head -n 1)"
           fi
           if [[ -z "$WIN_EXE" ]]; then
-            echo "No Windows setup .exe in desktop-windows-latest for run ${{ github.event.workflow_run.id }}"
+            echo "No Windows setup .exe in desktop-windows-latest for run ${DESKTOP_RUN_ID}"
             find win -type f 2>/dev/null | head -80 || true
             exit 1
           fi
@@ -77,10 +90,11 @@ jobs:
       - name: Resolve release tag
         id: reltag
         env:
+          INPUT_TAG: ${{ inputs.tag }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           set -euo pipefail
-          TAG=""
+          TAG="${INPUT_TAG:-}"
           TAGFILE=""
           if [[ -d meta ]]; then
             TAGFILE="$(find meta -type f -name tag 2>/dev/null | head -n 1 || true)"
@@ -91,6 +105,7 @@ jobs:
           if [[ -z "$TAG" && -n "${HEAD_BRANCH:-}" ]]; then
             TAG="${HEAD_BRANCH#refs/tags/}"
           fi
+          TAG="${TAG#refs/tags/}"
           if [[ ! "$TAG" =~ ^v[0-9] ]]; then
             echo "Could not resolve tag (release-ref and head_branch). head_branch=${HEAD_BRANCH:-<empty>}"
             exit 1
