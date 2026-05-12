@@ -106,6 +106,19 @@ weatherv1-next/
 └── package.json
 ```
 
+## AI-native navigation
+
+Agents and humans should start with:
+
+| Need | Start here |
+| --- | --- |
+| Current goal and success criteria | [`docs/PROJECT_GOAL.md`](docs/PROJECT_GOAL.md) |
+| Docs router and code map | [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md) |
+| Agent guardrails and verification commands | [`AGENTS.md`](AGENTS.md) |
+| Claude project goal skill | [`.claude/skills/weatherv1-goal/SKILL.md`](.claude/skills/weatherv1-goal/SKILL.md) |
+
+For larger Claude Code sessions, invoke `/weatherv1-goal` first, then set a built-in `/goal` condition using one of the templates in [`docs/PROJECT_GOAL.md`](docs/PROJECT_GOAL.md).
+
 ---
 
 ## Pick your runway

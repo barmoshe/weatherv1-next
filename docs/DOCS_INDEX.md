@@ -19,11 +19,13 @@ The same product can run in two modes:
 
 ## Read this first
 
-1. [README.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/README.md)
+1. [PROJECT_GOAL.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/PROJECT_GOAL.md)
+   For current product intent, engineering success criteria, invariants, and copy-ready `/goal` conditions.
+2. [README.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/README.md)
    For product overview, quick start, and the high-level repo map.
-2. [AGENTS.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/AGENTS.md)
+3. [AGENTS.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/AGENTS.md)
    For project-specific guardrails, especially around modern Next.js behavior.
-3. The doc for your task:
+4. The doc for your task:
    - desktop architecture: [ELECTRON_DESKTOP_PLAN.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_PLAN.md)
    - desktop operational state: [ELECTRON_DESKTOP_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_HANDOFF.md)
    - desktop UX guidance: [ELECTRON_UXUI_RESEARCH.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_UXUI_RESEARCH.md)
@@ -35,6 +37,7 @@ The same product can run in two modes:
 | If you need to... | Read this first | Then inspect code here |
 | --- | --- | --- |
 | Understand the product and run it locally | [README.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/README.md) | `src/app`, `src/client`, `src/server` |
+| Start a substantial agent task | [PROJECT_GOAL.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/PROJECT_GOAL.md) | `.claude/skills/weatherv1-goal/SKILL.md`, `AGENTS.md` |
 | Modify Electron behavior | [ELECTRON_DESKTOP_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_HANDOFF.md) | `electron/`, `forge.config.cjs`, `src/shared/desktop.ts` |
 | Understand why Electron was designed this way | [ELECTRON_DESKTOP_PLAN.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_PLAN.md) | `electron/`, `src/server/runtime`, `src/proxy.ts` |
 | Change desktop UI flows | [ELECTRON_UXUI_RESEARCH.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_UXUI_RESEARCH.md) | `src/client/components/**`, `src/client/lib/desktop.ts` |
@@ -58,6 +61,7 @@ The same product can run in two modes:
 | `electron/` | Electron main/preload/config/server-manager/ffmpeg verify |
 | `scripts/` | Standalone prep and Electron launch helpers |
 | `.github/workflows/` | CI, packaging, release publishing, Pages |
+| `.claude/skills/` | Project skills for goal routing and repeatable agent workflows |
 | `docs/` | Design, handoff, deployment, and release docs |
 
 ## Source-of-truth rules
@@ -69,18 +73,28 @@ The same product can run in two modes:
   - `DESIGN_DEPLOYMENT.md` is the architecture rationale.
   - `DEPLOY_ORACLE_CLOUD.md` is the operator playbook.
 - `README.md` should stay short enough to onboard a new reader quickly; deeper edge cases belong in the specialized docs.
+- `PROJECT_GOAL.md` is the active goal and invariants file. Update it when “done” changes.
+- `.claude/skills/weatherv1-goal/SKILL.md` is the project-specific goal router. Invoke it as `/weatherv1-goal` in Claude Code.
 
 ## Agent workflow
 
 When changing code here, the safest path is:
 
 1. read `AGENTS.md`
-2. read this index
-3. open the most relevant doc above
-4. inspect the exact code paths named by that doc
-5. only then change implementation
+2. read `docs/PROJECT_GOAL.md`
+3. read this index
+4. open the most relevant doc above
+5. inspect the exact code paths named by that doc
+6. only then change implementation
 
 For Next.js behavior, do not rely on memory alone. Read the relevant docs under `node_modules/next/dist/docs/` first, because this repo is on a newer Next line with breaking changes.
+
+## Research-backed agent conventions
+
+- Keep root instructions short and actionable; detailed procedures belong in skills or task docs.
+- Use skills for reusable multi-step workflows that should be discoverable on demand.
+- Use `/goal`-style completion conditions for substantial work with measurable proof.
+- Give agents verification commands, not only intent.
 
 ## Terms
 
