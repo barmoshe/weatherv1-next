@@ -3,8 +3,12 @@ import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { upsertJob, getJob } from "@/server/jobs/store";
 import { enqueueJob } from "@/server/jobs/worker";
 import { lastHealth } from "@/server/catalog/parser";
+import { assertDesktopAuth } from "@/server/runtime/auth";
 
 export async function POST(req: NextRequest) {
+  const denied = assertDesktopAuth(req);
+  if (denied) return denied;
+
   const data = (await req.json()) as Record<string, unknown>;
   const timeline = data.timeline as unknown[] | undefined;
   const audioFilename = data.audio_filename as string | undefined;

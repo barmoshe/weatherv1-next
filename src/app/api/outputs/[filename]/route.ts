@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-
-const OUTPUTS_DIR = path.join(process.cwd(), "runtime", "outputs");
+import { getRuntimePaths } from "@/server/runtime/paths";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ filename: string }> },
 ) {
   const { filename } = await params;
+  const { outputsDir } = getRuntimePaths();
   // Prevent directory traversal
   const safe = path.basename(filename);
-  const filePath = path.join(OUTPUTS_DIR, safe);
+  const filePath = path.join(outputsDir, safe);
 
   if (!fs.existsSync(filePath)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

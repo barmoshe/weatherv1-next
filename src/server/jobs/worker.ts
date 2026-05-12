@@ -16,9 +16,7 @@ import { renderVideo } from "@/server/ffmpeg/renderer";
 import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildVideoMap } from "@/server/catalog/parser";
 import type { ResolvedPick } from "@/shared/types";
-
-const UPLOADS_DIR = path.join(process.cwd(), "runtime", "uploads");
-const OUTPUTS_DIR = path.join(process.cwd(), "runtime", "outputs");
+import { getRuntimePaths } from "@/server/runtime/paths";
 
 const queue: string[] = [];
 let draining = false;
@@ -51,9 +49,10 @@ async function drain(): Promise<void> {
 }
 
 async function runJob(jobId: string, audioFilename: string): Promise<void> {
+  const { uploadsDir, outputsDir } = getRuntimePaths();
   updateJob(jobId, { status: "processing" });
-  const audioPath = path.join(UPLOADS_DIR, audioFilename);
-  const outputPath = path.join(OUTPUTS_DIR, `forecast_${jobId}.mp4`);
+  const audioPath = path.join(uploadsDir, audioFilename);
+  const outputPath = path.join(outputsDir, `forecast_${jobId}.mp4`);
 
   try {
     // Re-read plan bundle to get the finalized timeline

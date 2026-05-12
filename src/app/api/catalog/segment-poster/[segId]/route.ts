@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import { parseCatalog, buildVideoMap } from "@/server/catalog/parser";
-import { VIDEOS_DIR } from "@/server/catalog/storage";
+import { getVideosDir } from "@/server/catalog/storage";
 import { generateSegmentPoster } from "@/server/ffmpeg/segment-posters";
 
 export async function GET(
@@ -11,7 +11,7 @@ export async function GET(
   const { segId } = await params;
   const force = req.nextUrl.searchParams.get("force") === "1";
 
-  const videos = parseCatalog(undefined, VIDEOS_DIR);
+  const videos = parseCatalog(undefined, getVideosDir());
   const videoMap = buildVideoMap(videos);
 
   const posterFilePath = await generateSegmentPoster(segId, videoMap, force);

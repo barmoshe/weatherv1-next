@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
-import path from "node:path";
 import { parseCatalog, buildVideoMap } from "@/server/catalog/parser";
-import { VIDEOS_DIR } from "@/server/catalog/storage";
+import { getVideosDir } from "@/server/catalog/storage";
 import { generatePoster } from "@/server/ffmpeg/posters";
-
-const POSTERS_DIR = path.join(process.cwd(), "runtime", "cache", "posters");
+import { getRuntimePaths } from "@/server/runtime/paths";
 
 export async function GET(
   req: NextRequest,
@@ -13,15 +11,16 @@ export async function GET(
 ) {
   const { vidId } = await params;
   const force = req.nextUrl.searchParams.get("force") === "1";
+  const { postersDir } = getRuntimePaths();
 
-  const videos = parseCatalog(undefined, VIDEOS_DIR);
+  const videos = parseCatalog(undefined, getVideosDir());
   const videoMap = buildVideoMap(videos);
   const video = videoMap[vidId];
   if (!video) {
     return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
   }
 
-  const posterFilePath = await generatePoster(video.path, vidId, POSTERS_DIR, force);
+  const posterFilePath = await generatePoster(video.path, vidId, postersDir, force);
   if (!posterFilePath || !fs.existsSync(posterFilePath)) {
     return NextResponse.json({ success: false, error: "Poster generation failed" }, { status: 500 });
   }

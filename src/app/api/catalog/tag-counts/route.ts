@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { parseCatalog, computeTagCounts } from "@/server/catalog/parser";
-import { VIDEOS_DIR } from "@/server/catalog/storage";
+import { getVideosDir } from "@/server/catalog/storage";
 
 export async function GET() {
   try {
-    const videos = parseCatalog(undefined, VIDEOS_DIR);
+    const videos = parseCatalog(undefined, getVideosDir());
     const counts = computeTagCounts(videos);
     return NextResponse.json({ success: true, ...counts });
   } catch (err) {

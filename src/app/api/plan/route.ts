@@ -5,6 +5,7 @@ import { validateAndSwap, type MutablePick } from "@/server/pipeline/validator";
 import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/parser";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
+import { assertDesktopAuth } from "@/server/runtime/auth";
 import type { Scene } from "@/shared/types";
 
 function openaiErrorResponse(err: unknown): [Record<string, unknown>, number] | null {
@@ -19,6 +20,9 @@ function openaiErrorResponse(err: unknown): [Record<string, unknown>, number] | 
 }
 
 export async function POST(req: NextRequest) {
+  const denied = assertDesktopAuth(req);
+  if (denied) return denied;
+
   const data = (await req.json()) as Record<string, unknown>;
   const transcript = data.transcript as string | undefined;
   const duration = Number(data.duration ?? 0);
