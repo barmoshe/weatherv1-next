@@ -2,8 +2,8 @@
 
 ## Status
 
-- No Electron implementation has been started in this pass.
-- This report captures the current repo findings, the chosen architecture, and the work order for the next implementation pass.
+- Electron implementation has started on the server/runtime side.
+- This report captures the current repo findings, the completed groundwork, and the remaining work order for the next implementation pass.
 
 ## Current Repo Snapshot
 
@@ -86,27 +86,48 @@ Files that make this clear:
 - Assets remain local in v1.
 - Google Drive is deferred, but the asset-provider boundary should be created now.
 
-## Recommended File/Module Additions
+## Current Implementation Progress
 
-### New Runtime Modules
+- Runtime/config groundwork is in place:
+  - `src/server/runtime/config.ts`
+  - `src/server/runtime/paths.ts`
+  - `src/server/runtime/auth.ts`
+  - `src/server/assets/source.ts`
+- Server-side path refactors are in place across catalog, jobs, ffmpeg, outputs, and transcribe route code paths.
+- Desktop request perimeter is in place:
+  - `proxy.ts`
+  - `src/app/api/internal/health/route.ts`
+  - handler-level `assertDesktopAuth(req)` checks in mutating routes
+- Desktop-aware route support is partially implemented:
+  - `POST /api/transcribe` supports browser multipart and desktop JSON `desktop_file_path`
+  - `POST /api/catalog/videos` supports browser multipart and desktop JSON `desktop_file_path`
+  - `src/app/api/desktop/status/route.ts` exposes runtime/workspace/key-path status for a future settings surface
+- Shared bridge typing groundwork is present:
+  - `src/shared/desktop.ts`
+  - `src/types/desktop.d.ts`
+- Not started yet:
+  - Electron shell files
+  - standalone packaging flow
+  - Forge config
+  - desktop UI wiring
+  - Electron supervision tests
+  - CI packaging smoke coverage
+
+## File / Module State
+
+### Implemented Now
 
 - `src/server/runtime/config.ts`
-  - centralizes workspace/runtime/binary/env resolution
 - `src/server/runtime/paths.ts`
-  - centralizes uploads/outputs/cache directory paths
+- `src/server/runtime/auth.ts`
 - `src/server/assets/source.ts`
-  - provider interface
-- `src/server/assets/local-workspace.ts`
-  - local workspace implementation
-
-### New Next Entry Points
-
 - `src/app/api/internal/health/route.ts`
-  - desktop boot check route
+- `src/app/api/desktop/status/route.ts`
 - `proxy.ts`
-  - desktop token guard for `/api/*`
+- `src/shared/desktop.ts`
+- `src/types/desktop.d.ts`
 
-### New Electron Files
+### Still Pending
 
 - `electron/main.cjs`
 - `electron/preload.cjs`
@@ -114,12 +135,6 @@ Files that make this clear:
 - `electron/config.cjs`
 - `forge.config.cjs`
 - `scripts/prepare-standalone.cjs`
-
-### New Renderer Types / Helpers
-
-- `src/shared/desktop.ts`
-- `src/types/desktop.d.ts` or equivalent ambient declaration
-- optional helper for converting desktop-picked buffers into `File` objects
 
 ## Risks To Watch
 
@@ -151,9 +166,9 @@ Files that make this clear:
 1. Refactor path resolution and runtime config first.
 2. Introduce the asset provider boundary.
 3. Add the proxy auth and internal health route.
-4. Wire FFmpeg verification into startup.
+4. Wire FFmpeg verification into Electron main startup.
 5. Add Electron process management and preload bridge.
-6. Make upload/import/settings desktop-aware.
+6. Finish settings/upload/import desktop-aware UI wiring.
 7. Add Forge packaging and GitHub update config.
 8. Add tests and CI last.
 
@@ -171,5 +186,7 @@ Files that make this clear:
 
 ## Stop Point
 
-- This pass ends with documentation only.
-- No source implementation, dependency install, or packaging changes were applied.
+- This pass is paused after server-side groundwork and desktop-aware route support.
+- Electron main/preload/server-manager files are not present yet.
+- Packaging, standalone build flow, UI wiring, and CI still need to be implemented.
+- The next active step is Step 4: FFmpeg verification in Electron main, followed by child-process supervision for the standalone Next server.
