@@ -1,6 +1,8 @@
 {
   "name": "weatherv1-next",
   "version": "0.1.0",
+  "description": "WeatherV1 local desktop video production app",
+  "author": "Barmoshe",
   "private": true,
   "main": "electron/main.cjs",
   "scripts": {
