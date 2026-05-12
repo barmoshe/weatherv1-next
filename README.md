@@ -183,17 +183,6 @@ Template: [`.env.example`](.env.example).
 
 ---
 
-## Docs
-
-| Doc |  |
-| --- | --- |
-| [`docs/DEPLOY_ORACLE_CLOUD.md`](docs/DEPLOY_ORACLE_CLOUD.md) | Oracle Cloud deploy |
-| [`docs/DESIGN_DEPLOYMENT.md`](docs/DESIGN_DEPLOYMENT.md) | Architecture · VM vs serverless |
-| [`docs/ELECTRON_DESKTOP_PLAN.md`](docs/ELECTRON_DESKTOP_PLAN.md) | Desktop contract |
-| [`docs/ELECTRON_DESKTOP_HANDOFF.md`](docs/ELECTRON_DESKTOP_HANDOFF.md) | Handoff · CI · smoke |
-
----
-
 ## Tests
 
 ```bash
@@ -206,10 +195,10 @@ npm test
 
 **Author:** Barmoshe · `weatherv1-next` ([`package.json`](package.json)).
 
-README visuals live under [`docs/readme-assets/`](docs/readme-assets/) (SVG with subtle SMIL — friendly to GitHub’s image proxy). Doc structure inspired by the **claude-creative-stack** workspace (dense tables + one diagram + clear rails).
+README visuals live under [`docs/readme-assets/`](docs/readme-assets/) (SVG with subtle SMIL — friendly to GitHub’s image proxy). Structure inspired by the **claude-creative-stack** workspace (dense tables + one diagram + clear rails).
 
 ---
 
 <p align="center">
-  <sub><code>vertical video · horizontal docs · local-first media</code></sub>
+  <sub><code>vertical video · local-first media</code></sub>
 </p>
