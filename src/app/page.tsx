@@ -105,7 +105,7 @@ function AppInner() {
           onJobIdChange={setUrlJobId}
           onJobStatusChange={handleJobStatusChange}
         />
-        <ActivePanel hidden={tab !== "active"} jobs={history} onRestore={handleRestore} />
+        <ActivePanel hidden={tab !== "active"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} />
         <HistoryPanel hidden={tab !== "history"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} />
         {tab === "catalog" ? (
           <Suspense fallback={<div className="loading">טוען קטלוג…</div>}>

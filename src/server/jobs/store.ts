@@ -82,6 +82,13 @@ export function updateJob(jobId: string, patch: Partial<Omit<JobRecord, "job_id"
   save();
 }
 
+export function deleteJob(jobId: string): boolean {
+  load();
+  const deleted = store.delete(jobId);
+  if (deleted) save();
+  return deleted;
+}
+
 export function upsertJob(record: JobRecord): void {
   load();
   const existing = store.get(record.job_id);

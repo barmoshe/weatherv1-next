@@ -60,7 +60,7 @@ export function JobRow({ entry, lane, onRestore, onDelete }: JobRowProps) {
           </>
         )}
       </span>
-      {lane === "history" ? (
+      {onDelete ? (
         <button
           type="button"
           className="job-delete"

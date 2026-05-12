@@ -6,9 +6,10 @@ interface ActivePanelProps {
   hidden?: boolean;
   jobs: HistoryEntry[];
   onRestore?: (entry: HistoryEntry) => void;
+  onRemove?: (jobId: string) => void;
 }
 
-export function ActivePanel({ hidden, jobs, onRestore }: ActivePanelProps) {
+export function ActivePanel({ hidden, jobs, onRestore, onRemove }: ActivePanelProps) {
   const active = jobs.filter((j) => ACTIVE_JOB_STATUSES.has(j.status));
   return (
     <section
@@ -29,6 +30,7 @@ export function ActivePanel({ hidden, jobs, onRestore }: ActivePanelProps) {
               entry={j}
               lane="active"
               onRestore={onRestore}
+              onDelete={onRemove}
             />
           ))
         )}

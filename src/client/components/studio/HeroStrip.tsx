@@ -1,6 +1,7 @@
 "use client";
 import type { StudioPhase } from "./StudioPanel";
 import { formatDuration, formatRelativeTime } from "@/client/lib/format-time";
+import { useDesktopStatus } from "@/client/hooks/useDesktopStatus";
 
 interface HeroStripProps {
   jobId: string | null;
@@ -56,10 +57,60 @@ function ClockIcon() {
     </svg>
   );
 }
+function BrainIcon() {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 4a3 3 0 0 0-3 3v0a3 3 0 0 0-2 5.5A3 3 0 0 0 6 17v0a3 3 0 0 0 3 3h1V4H9z" />
+      <path d="M15 4a3 3 0 0 1 3 3v0a3 3 0 0 1 2 5.5A3 3 0 0 1 18 17v0a3 3 0 0 1-3 3h-1V4h1z" />
+    </svg>
+  );
+}
+function MicIcon() {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="9" y="3" width="6" height="12" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0" />
+      <path d="M12 18v3" />
+    </svg>
+  );
+}
+
+const LLM_LABELS: Record<string, { name: string; tooltip: string }> = {
+  anthropic: { name: "Claude", tooltip: "Anthropic Claude" },
+  openai: { name: "GPT", tooltip: "OpenAI GPT" },
+};
+
+const TRANSCRIPTION_LABELS: Record<string, { name: string; tooltip: string }> = {
+  "local-whispercpp": { name: "Whisper מקומי", tooltip: "whisper.cpp running locally" },
+  "openai-cloud": { name: "Whisper ענן", tooltip: "OpenAI Whisper cloud" },
+};
+
+function shortModelName(model: string | null): string | null {
+  if (!model) return null;
+  // claude-sonnet-4-6 → Sonnet 4.6 ; gpt-4o → 4o
+  const m = model.toLowerCase();
+  if (m.startsWith("claude-")) {
+    const rest = m.slice("claude-".length);
+    const parts = rest.split("-");
+    const family = parts[0] ? parts[0][0].toUpperCase() + parts[0].slice(1) : "";
+    const ver = parts.slice(1).join(".");
+    return ver ? `${family} ${ver}` : family;
+  }
+  if (m.startsWith("gpt-")) return m.slice("gpt-".length);
+  return model;
+}
 
 export function HeroStrip({ jobId, phase, phaseIndex, filename, duration, createdAt }: HeroStripProps) {
   const status = PHASE_TO_STATUS[phase];
   const label = STATUS_LABELS[status] ?? "—";
+
+  const { data: desktopStatus } = useDesktopStatus();
+  const llmActive = desktopStatus?.providers.llm_active ?? null;
+  const llmLabel = llmActive ? LLM_LABELS[llmActive] : null;
+  const llmModelShort = shortModelName(desktopStatus?.providers.llm_model ?? null);
+  const txActive = desktopStatus?.providers.transcription_active ?? null;
+  const txLabel = txActive ? TRANSCRIPTION_LABELS[txActive] : null;
+  const whisperModel = desktopStatus?.whisper.active_model ?? null;
 
   return (
     <header className="dash-hero" id="dash-hero" aria-label="פרטי ההפקה">
@@ -71,6 +122,36 @@ export function HeroStrip({ jobId, phase, phaseIndex, filename, duration, create
         <span className={`hero-status-pill is-${status}`} id="hero-status">
           {label}
         </span>
+        {llmLabel ? (
+          <span
+            className={`hero-model-pill is-llm is-${llmActive}`}
+            title={llmLabel.tooltip + (llmModelShort ? ` · ${desktopStatus?.providers.llm_model}` : "")}
+            data-testid="hero-pill-llm"
+          >
+            <BrainIcon />
+            <span className="hero-model-pill__provider">{llmLabel.name}</span>
+            {llmModelShort && (
+              <span className="hero-model-pill__model" dir="ltr">
+                {llmModelShort}
+              </span>
+            )}
+          </span>
+        ) : null}
+        {txLabel ? (
+          <span
+            className={`hero-model-pill is-tx is-${txActive}`}
+            title={txLabel.tooltip + (whisperModel && txActive === "local-whispercpp" ? ` · ${whisperModel}` : "")}
+            data-testid="hero-pill-transcription"
+          >
+            <MicIcon />
+            <span className="hero-model-pill__provider">{txLabel.name}</span>
+            {txActive === "local-whispercpp" && whisperModel && (
+              <span className="hero-model-pill__model" dir="ltr">
+                {whisperModel}
+              </span>
+            )}
+          </span>
+        ) : null}
       </div>
       <div className="hero-stats">
         <span id="hero-filename" className="hero-stat">

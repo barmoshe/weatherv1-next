@@ -41,5 +41,181 @@
       "end": 26.780000686645508,
       "text": " וזה לפחות עד אמצע השבוע."
     }
-  ]
+  ],
+  "scenes": [
+    {
+      "idx": 0,
+      "start_sec": 0,
+      "end_sec": 6.76,
+      "title_he": "פתיחה — קור בכל הארץ",
+      "narration": "קורא זה ממשיך ללוות אותנו. בכל הארץ אנחנו עדיין עם טמפרטורות נמוכות מהרגיל וזה ימשיך גם בסוף השבוע.",
+      "keywords": [
+        "cold",
+        "קור",
+        "כל הארץ",
+        "clouds"
+      ],
+      "mood": "gloomy",
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        0,
+        1
+      ]
+    },
+    {
+      "idx": 1,
+      "start_sec": 6.76,
+      "end_sec": 11.78,
+      "title_he": "טמפרטורות נמוכות לאורך כל התחזית",
+      "narration": "למעשה, כל רצף התחזית הטמפרטורות נשארות מעט נמוכות מהרגיל, למרות עלייה קלה.",
+      "keywords": [
+        "טמפרטורות נמוכות",
+        "עלייה קלה",
+        "thermometer",
+        "forecast"
+      ],
+      "mood": "calm",
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        2
+      ]
+    },
+    {
+      "idx": 2,
+      "start_sec": 11.78,
+      "end_sec": 17.36,
+      "title_he": "היום — עננים וטפטוף בצפון ובמרכז",
+      "narration": "היום עדיין מעונן חלקית, יכול קצת אפילו עוד לטפטף באזור הצפון, באזור המרכז,",
+      "keywords": [
+        "rain",
+        "clouds",
+        "צפון",
+        "מרכז"
+      ],
+      "mood": "gloomy",
+      "kind": "list",
+      "heterogeneous": true,
+      "whisper_beat_indices": [
+        3
+      ]
+    },
+    {
+      "idx": 3,
+      "start_sec": 17.36,
+      "end_sec": 27.280000686645508,
+      "title_he": "מחר והשבוע — התייצבות ושמש",
+      "narration": "אבל בהמשך כבר החל למחר מזג האוויר מתייצב, מעונן חלקית ואפילו כבר אנחנו מתחילים את השבוע עם מזג האוויר בהיר לחלוטין, וזה לפחות עד אמצע השבוע.",
+      "keywords": [
+        "sun",
+        "clear_sky",
+        "בהיר",
+        "התייצבות"
+      ],
+      "mood": "cheerful",
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        4,
+        5
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "scene_idx": 0,
+      "segment_id": "IB121-s0",
+      "audio_start": 0,
+      "audio_end": 6.76,
+      "video_start": 0,
+      "video_end": 6.76,
+      "reason": "כביש מהיר תחת שמיים אפורים מעוננים ביום חורפי קודר במרכז — מתאים לפתיחה על קור בכל הארץ.",
+      "video_id": "IB121"
+    },
+    {
+      "scene_idx": 1,
+      "segment_id": "IB124-s0",
+      "audio_start": 6.76,
+      "audio_end": 11.78,
+      "video_start": 0,
+      "video_end": 5.02,
+      "reason": "מטע על רקע שמיים אפורים מעוננים והרים — אווירה חורפית שקטה עם קור מתמשך, מתאים לנרטיב על טמפרטורות נמוכות לאורך התחזית.",
+      "video_id": "IB124"
+    },
+    {
+      "scene_idx": 2,
+      "segment_id": "IB140-s0",
+      "audio_start": 11.78,
+      "audio_end": 14.57,
+      "video_start": 0,
+      "video_end": 2.79,
+      "reason": "שפת הכינרת תחת שמיים אפרפרים — מייצג את אזור הצפון המעונן עם טפטוף.",
+      "video_id": "IB140"
+    },
+    {
+      "scene_idx": 2,
+      "segment_id": "IB045-s0",
+      "audio_start": 14.57,
+      "audio_end": 17.36,
+      "video_start": 0,
+      "video_end": 2.79,
+      "reason": "מבט אווירי על שכונה בערפל וגשם — מתאים לאזור המרכז המעונן עם טפטוף.",
+      "video_id": "IB045"
+    },
+    {
+      "scene_idx": 3,
+      "segment_id": "IB110-s0",
+      "audio_start": 17.36,
+      "audio_end": 22.32,
+      "video_start": 0,
+      "video_end": 4.96,
+      "reason": "עשבי בר עם שמיים כחולים-בהירים ועננים דקים — נוף חורפי שקט המבשר התייצבות ומעבר לבהירות.",
+      "video_id": "IB110"
+    },
+    {
+      "scene_idx": 3,
+      "segment_id": "vid_007-s0",
+      "audio_start": 22.32,
+      "audio_end": 27.28,
+      "video_start": 0,
+      "video_end": 4.96,
+      "reason": "שמיים כחולים בהירים עם עננים לבנים גדולים — מתאים לנרטיב על מזג אוויר בהיר לחלוטין בתחילת השבוע.",
+      "video_id": "vid_007"
+    }
+  ],
+  "validator": {
+    "score": 97,
+    "hard_violations_fixed": [],
+    "hard_violations_kept": [],
+    "warnings": [
+      {
+        "issue": "thematic adjacency",
+        "tag": "day",
+        "run_length": 6,
+        "indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "segment_ids": [
+          "IB121-s0",
+          "IB124-s0",
+          "IB140-s0",
+          "IB045-s0",
+          "IB110-s0",
+          "vid_007-s0"
+        ]
+      }
+    ],
+    "catalog_health": {
+      "loaded_clips": 212,
+      "loaded_segments": 212,
+      "tagged_segments": 212,
+      "untagged_picks": 0
+    }
+  }
 }
