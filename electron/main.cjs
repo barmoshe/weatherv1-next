@@ -1,0 +1,236 @@
+// Electron main entrypoint.
+//
+// Lifecycle:
+//   1. Verify ffmpeg/ffprobe using `electron/ffmpeg-verify.cjs`. We do this
+//      before spawning the Next child because instrumentation.ts is not a
+//      reliable boot gate under `node .next/standalone/server.js`
+//      (vercel/next.js#89377).
+//   2. Generate a per-launch 32-byte session token (never persisted).
+//   3. Build the env block for the child from `electron/config.cjs`, which
+//      pulls workspace path + decrypted API keys from `safeStorage`.
+//   4. Spawn the Next child via `electron/server-manager.cjs`. Port picks
+//      from {3765, 3766, 3767, 3768}; never an ephemeral port.
+//   5. Wait for `/api/internal/health` to return 200 with the token header.
+//   6. Open a BrowserWindow pinned to `session.fromPartition("persist:weatherv1")`.
+//      That partition stays stable across port fallbacks, so localStorage
+//      isn't orphaned.
+//   7. Intercept the partition's `webRequest.onBeforeSendHeaders` and inject
+//      the desktop token on requests to the loopback origin. The renderer
+//      never holds the token directly.
+//   8. Handle desktop:* IPC for the preload bridge (pickWorkspace,
+//      pickAudioFile, importCatalogVideo, openPath, getAppInfo,
+//      getUpdateState, saveSettings).
+
+"use strict";
+
+const path = require("node:path");
+const fs = require("node:fs");
+const { app, BrowserWindow, dialog, ipcMain, session, shell, safeStorage } = require("electron");
+
+const { verifyFFmpeg } = require("./ffmpeg-verify.cjs");
+const cfg = require("./config.cjs");
+const { createServerManager } = require("./server-manager.cjs");
+
+const PROJECT_ROOT = path.resolve(__dirname, "..");
+const IS_DEV = !app.isPackaged;
+
+const state = {
+  manager: null,
+  token: null,
+  origin: null,
+  window: null,
+  ffmpeg: null,
+  updateState: { status: "unavailable", detail: "auto-update is wired in Step 6" },
+};
+
+async function bootstrap() {
+  cfg.setUserDataDir(app.getPath("userData"));
+
+  state.ffmpeg = verifyFFmpeg();
+  // Don't hard-fail on missing ffmpeg yet — the renderer's settings UI is
+  // the right place to surface the error and let the user point us at a
+  // binary. The render endpoints will refuse to operate anyway.
+
+  state.token = cfg.generateSessionToken();
+
+  const env = cfg.buildChildEnv({
+    port: cfg.DEFAULT_PORT,
+    token: state.token,
+    ffmpeg: { ffmpegPath: state.ffmpeg.ffmpegPath, ffprobePath: state.ffmpeg.ffprobePath },
+    safeStorage,
+  });
+
+  state.manager = createServerManager({
+    projectRoot: PROJECT_ROOT,
+    mode: IS_DEV ? "dev" : "prod",
+    token: state.token,
+    env,
+    onExit: ({ code, signal }) => {
+      console.warn(`[main] Next child exited unexpectedly (code=${code} signal=${signal})`);
+      // If the window is still open, surface a clear dialog rather than
+      // leaving a blank renderer. v1 just notifies; auto-restart is a
+      // policy call for later.
+      if (state.window && !state.window.isDestroyed()) {
+        dialog.showErrorBox(
+          "Background server stopped",
+          "The local Next server exited unexpectedly. Restart the app.",
+        );
+      }
+    },
+  });
+
+  const { origin } = await state.manager.start();
+  state.origin = origin;
+
+  installAuthInterceptor();
+  openMainWindow();
+}
+
+function installAuthInterceptor() {
+  const sess = session.fromPartition(cfg.SESSION_PARTITION);
+  // Inject the token on every loopback request from the renderer. The token
+  // never leaves main; the renderer doesn't see it.
+  sess.webRequest.onBeforeSendHeaders((details, callback) => {
+    const requestHeaders = { ...details.requestHeaders };
+    if (state.token && details.url.startsWith(state.origin)) {
+      requestHeaders["x-weather-desktop-token"] = state.token;
+    }
+    callback({ requestHeaders });
+  });
+}
+
+function openMainWindow() {
+  state.window = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    show: false,
+    webPreferences: {
+      partition: cfg.SESSION_PARTITION,
+      preload: path.join(__dirname, "preload.cjs"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  state.window.once("ready-to-show", () => state.window.show());
+  state.window.webContents.setWindowOpenHandler(({ url }) => {
+    // Default: open external links in the user's default browser, never in
+    // a new Electron window. (Security checklist item 13.)
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+  state.window.loadURL(state.origin);
+}
+
+// ---- IPC handlers --------------------------------------------------------
+
+ipcMain.handle("desktop:pickWorkspace", async () => {
+  const result = await dialog.showOpenDialog(state.window, {
+    title: "Choose workspace folder",
+    properties: ["openDirectory", "createDirectory"],
+  });
+  if (result.canceled || !result.filePaths[0]) return null;
+  return { path: result.filePaths[0] };
+});
+
+ipcMain.handle("desktop:pickAudioFile", async () => {
+  const result = await dialog.showOpenDialog(state.window, {
+    title: "Choose audio file",
+    properties: ["openFile"],
+    filters: [{ name: "Audio", extensions: ["mp3", "wav", "m4a", "aac", "flac", "ogg"] }],
+  });
+  if (result.canceled || !result.filePaths[0]) return null;
+  return { path: result.filePaths[0], name: path.basename(result.filePaths[0]) };
+});
+
+ipcMain.handle("desktop:importCatalogVideo", async () => {
+  const result = await dialog.showOpenDialog(state.window, {
+    title: "Choose video file",
+    properties: ["openFile"],
+    filters: [{ name: "Video", extensions: ["mp4", "mov"] }],
+  });
+  if (result.canceled || !result.filePaths[0]) return null;
+  return { path: result.filePaths[0], name: path.basename(result.filePaths[0]) };
+});
+
+ipcMain.handle("desktop:openPath", async (_e, targetPath) => {
+  if (typeof targetPath !== "string") return "invalid-path";
+  if (!fs.existsSync(targetPath)) return "missing";
+  return shell.openPath(targetPath);
+});
+
+ipcMain.handle("desktop:getAppInfo", async () => ({
+  appVersion: app.getVersion(),
+  electronVersion: process.versions.electron,
+  nodeVersion: process.versions.node,
+  desktopMode: true,
+  ffmpeg: {
+    ok: state.ffmpeg?.ok ?? false,
+    ffmpegPath: state.ffmpeg?.ffmpegPath ?? null,
+    ffprobePath: state.ffmpeg?.ffprobePath ?? null,
+    error: state.ffmpeg && state.ffmpeg.errors.length > 0 ? state.ffmpeg.errors.join("\n") : undefined,
+  },
+}));
+
+ipcMain.handle("desktop:getUpdateState", async () => state.updateState);
+
+ipcMain.handle("desktop:saveSettings", async (_e, update) => {
+  const patch = {};
+  if (update && typeof update.workspaceDir === "string") patch.workspaceDir = update.workspaceDir;
+  if (update && typeof update.ffmpegPath === "string") patch.ffmpegPath = update.ffmpegPath;
+  if (update && typeof update.ffprobePath === "string") patch.ffprobePath = update.ffprobePath;
+
+  const keyUpdates = {};
+  if (update && typeof update.openaiKey === "string") {
+    keyUpdates.openai = cfg.encryptSecret(update.openaiKey, { safeStorage });
+  }
+  if (update && typeof update.geminiKey === "string") {
+    keyUpdates.gemini = cfg.encryptSecret(update.geminiKey, { safeStorage });
+  }
+  if (Object.keys(keyUpdates).length > 0) patch.keys = keyUpdates;
+
+  // Reflect the encryption scheme actually used so the renderer can show
+  // a "stored in OS keychain" vs "stored as plaintext" indicator.
+  patch.encryption = safeStorage.isEncryptionAvailable() ? "safe-storage" : "none";
+
+  cfg.writeSettings(patch);
+
+  // Restart the child with the new env. The renderer is expected to show a
+  // brief "Reloading…" overlay while the new instance comes up.
+  const env = cfg.buildChildEnv({
+    port: cfg.DEFAULT_PORT,
+    token: state.token,
+    ffmpeg: { ffmpegPath: state.ffmpeg.ffmpegPath, ffprobePath: state.ffmpeg.ffprobePath },
+    safeStorage,
+  });
+  await state.manager.restart(env);
+  if (state.window && !state.window.isDestroyed()) {
+    state.window.loadURL(state.manager.origin);
+  }
+
+  return { success: true };
+});
+
+// ---- App lifecycle -------------------------------------------------------
+
+app.whenReady().then(() => {
+  bootstrap().catch((err) => {
+    console.error("[main] bootstrap failed", err);
+    dialog.showErrorBox("Failed to start", err && err.message ? err.message : String(err));
+    app.quit();
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (state.manager) state.manager.kill();
+  if (process.platform !== "darwin") app.quit();
+});
+
+app.on("before-quit", () => {
+  if (state.manager) state.manager.kill();
+});
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) openMainWindow();
+});

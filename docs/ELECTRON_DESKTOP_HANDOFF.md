@@ -95,9 +95,9 @@ Files that make this clear:
   - `src/server/assets/source.ts`
 - Server-side path refactors are in place across catalog, jobs, ffmpeg, outputs, and transcribe route code paths.
 - Desktop request perimeter is in place:
-  - `proxy.ts`
-  - `src/app/api/internal/health/route.ts`
-  - handler-level `assertDesktopAuth(req)` checks in mutating routes
+  - `src/proxy.ts`
+  - `src/app/api/internal/health/route.ts` (auth-gated GET)
+  - handler-level `assertDesktopAuth(req)` checks in every mutating route handler
 - Desktop-aware route support is partially implemented:
   - `POST /api/transcribe` supports browser multipart and desktop JSON `desktop_file_path`
   - `POST /api/catalog/videos` supports browser multipart and desktop JSON `desktop_file_path`
@@ -105,11 +105,22 @@ Files that make this clear:
 - Shared bridge typing groundwork is present:
   - `src/shared/desktop.ts`
   - `src/types/desktop.d.ts`
+- FFmpeg verification gate is in place:
+  - `electron/ffmpeg-verify.cjs` (env → bundled → PATH resolution, asar→asar.unpacked rewrite, structured result; never throws)
+  - `instrumentation.ts` keeps a soft warning-only check for `next dev` parity (non-authoritative)
+- Electron shell is in place but not yet runnable (no `electron`/`electron-forge` installed):
+  - `electron/main.cjs` (lifecycle, BrowserWindow pinned to `persist:weatherv1`, token injection via `webRequest.onBeforeSendHeaders`, sandboxed renderer, `desktop:*` IPC handlers)
+  - `electron/preload.cjs` (contextBridge `window.desktop` matching `DesktopBridge`)
+  - `electron/server-manager.cjs` (port {3765,3766,3767,3768}, dev/prod spawn, health polling, managed `restart(env)`)
+  - `electron/config.cjs` (userData settings JSON, `safeStorage` keys with plaintext fallback, child env builder, session-token generator)
+  - `scripts/prepare-standalone.cjs` (copies `public/` + `.next/static/` into `.next/standalone/`)
+  - `next.config.ts` now sets `output: "standalone"`
+  - `package.json` gains `"main": "electron/main.cjs"` and scripts `standalone:prep`, `electron:dev`, `electron:build`, `electron:make`
 - Not started yet:
-  - Electron shell files
-  - standalone packaging flow
-  - Forge config
-  - desktop UI wiring
+  - Forge config + signing/notarization wiring (`forge.config.cjs`)
+  - Bundled ffmpeg/ffprobe install (`ffmpeg-static` etc.)
+  - `electron` and `electron-forge` dev-dependency install
+  - Desktop UI wiring (`SettingsModal`, `UploadCard`, `CatalogPanel`)
   - Electron supervision tests
   - CI packaging smoke coverage
 
@@ -123,18 +134,25 @@ Files that make this clear:
 - `src/server/assets/source.ts`
 - `src/app/api/internal/health/route.ts`
 - `src/app/api/desktop/status/route.ts`
-- `proxy.ts`
+- `src/proxy.ts`
 - `src/shared/desktop.ts`
 - `src/types/desktop.d.ts`
+- `electron/ffmpeg-verify.cjs`
+- `electron/config.cjs`
+- `electron/server-manager.cjs`
+- `electron/preload.cjs`
+- `electron/main.cjs`
+- `scripts/prepare-standalone.cjs`
+- `next.config.ts` (now `output: "standalone"`)
+- `package.json` (now `"main": "electron/main.cjs"` + electron scripts)
 
 ### Still Pending
 
-- `electron/main.cjs`
-- `electron/preload.cjs`
-- `electron/server-manager.cjs`
-- `electron/config.cjs`
 - `forge.config.cjs`
-- `scripts/prepare-standalone.cjs`
+- `electron` + `electron-forge` + ffmpeg-static dev-dependency install (Step 6)
+- Settings/Upload/Catalog UI wiring (Step 7)
+- Test suite for runtime/auth/server-manager (Step 8)
+- Desktop CI (Step 9)
 
 ## Risks To Watch
 
@@ -186,7 +204,7 @@ Files that make this clear:
 
 ## Stop Point
 
-- This pass is paused after server-side groundwork and desktop-aware route support.
-- Electron main/preload/server-manager files are not present yet.
-- Packaging, standalone build flow, UI wiring, and CI still need to be implemented.
-- The next active step is Step 4: FFmpeg verification in Electron main, followed by child-process supervision for the standalone Next server.
+- This pass is paused after the Electron shell scaffold is in place (main/preload/server-manager/config + prepare-standalone) but before any Electron-runnable build has been attempted.
+- `electron` and `electron-forge` are intentionally not installed yet. The shell files compile but cannot be exercised until `npm install --save-dev electron electron-forge` (and the bundled ffmpeg packages) lands in Step 6.
+- The next active step is Step 6: Forge packaging config (`forge.config.cjs`), `@electron-forge/plugin-auto-unpack-natives`, `asarUnpack` entries for the bundled ffmpeg/ffprobe binaries, makers for macOS ZIP + Windows Squirrel, and signing/notarization config wired to env vars.
+- After Step 6 the first runnable smoke test is `npm run electron:dev` (verifies the spawn / token / health-poll path against `next dev`).
