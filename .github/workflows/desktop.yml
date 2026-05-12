@@ -14,7 +14,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        # macos-latest may be Apple Silicon. Keep the public macOS artifact on
+        # Intel so it opens on Intel Macs; Apple Silicon can run it via Rosetta.
+        os: [macos-13, windows-latest]
 
     env:
       APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -50,11 +52,11 @@ jobs:
       # github.event.workflow_run.head_branch as the tag for tag-triggered runs;
       # this file avoids edge cases where head_branch is empty).
       - name: Record tag for release workflow
-        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'macos-latest' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(matrix.os, 'macos-') }}
         run: mkdir -p .release && printf '%s\n' "${{ github.ref_name }}" > .release/tag
 
       - uses: actions/upload-artifact@v4
-        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'macos-latest' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(matrix.os, 'macos-') }}
         with:
           name: release-ref
           path: .release/tag

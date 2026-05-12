@@ -48,7 +48,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: desktop-macos-latest
+          name: desktop-macos-13
           path: mac
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
@@ -70,7 +70,7 @@ jobs:
           mkdir -p dist
           MAC_ZIP="$(find mac -type f -name '*.zip' ! -path '*/node_modules/*' | head -n 1)"
           if [[ -z "$MAC_ZIP" ]]; then
-            echo "No macOS .zip in desktop-macos-latest for run ${DESKTOP_RUN_ID}"
+            echo "No macOS .zip in desktop-macos-13 for run ${DESKTOP_RUN_ID}"
             find mac -type f 2>/dev/null | head -80 || true
             exit 1
           fi
