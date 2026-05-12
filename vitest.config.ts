@@ -8,6 +8,10 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     globals: true,
+    // `next build` with `output: "standalone"` copies the entire source tree
+    // (including `src/test/**`) into `.next/standalone/`. Without this
+    // exclude, vitest discovers and runs every test twice.
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.next/**"],
   },
   resolve: {
     alias: {

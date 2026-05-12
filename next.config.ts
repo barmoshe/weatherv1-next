@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
   // server in the Next sense, it's an external supervisor.
   output: "standalone",
 
+  // Pin Next's tracing root to this project. Without this, Next auto-detects
+  // the workspace root by walking up looking for lockfiles, and lands on the
+  // host repo's package-lock.json one level up — which lands the standalone
+  // tree at `.next/standalone/<host-subpath>/server.js` instead of
+  // `.next/standalone/server.js`. That breaks `electron/server-manager.cjs`'s
+  // standalone resolution.
+  turbopack: {
+    root: __dirname,
+  },
+
   // instrumentation.ts is auto-detected in Next.js 16 (no experimental flag needed)
   // Serve rendered videos and plan bundles from runtime/
   async rewrites() {
