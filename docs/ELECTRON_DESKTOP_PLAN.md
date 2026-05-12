@@ -7,6 +7,7 @@
 - Run the app inside Electron with a bundled local Next server.
 - Target `macOS + Windows` first.
 - Keep assets local in v1, but isolate asset access behind a provider boundary so Google Drive can replace the local source later.
+- Ship installers from GitHub Actions on `v*` tags, attach stable-named assets to GitHub Releases, and publish a simple download page from GitHub Pages.
 
 ## Repo Facts Driving The Design
 
@@ -193,7 +194,7 @@
 | 6. Forge packaging | ✅ (config only — `npm install` deferred) | `forge.config.cjs` (asar + asarUnpack for ffmpeg packages and `.next/standalone/**`, osxSign with `signatureFlags: "library"`, osxNotarize from env, macOS ZIP + Windows Squirrel makers, `@electron-forge/plugin-auto-unpack-natives`, commented GitHub publisher). `build/entitlements.mac.plist` with `allow-jit`, `disable-library-validation`, `allow-dyld-environment-variables`; **not** `allow-unsigned-executable-memory`. `update-electron-app` + `autoUpdater` events wired in `main.cjs`. `electron-squirrel-startup` short-circuit at the top of `main.cjs`. Deps pinned: `electron@^33`, four `@electron-forge/*@^7` packages, `ffmpeg-static@^5`, `ffprobe-static@^3`, `update-electron-app@^3`, `electron-squirrel-startup@^1`. | Requires in `main.cjs` for the two new optional deps are wrapped in try/catch so the dev path doesn't break before `npm install`. |
 | 7. Desktop-aware UI | ✅ | `src/client/lib/desktop.ts` provides SSR-safe bridge access. `SettingsModal` now shows desktop workspace validation, ffmpeg status, OpenAI/Gemini key presence, app version, update state, editable workspace/ffmpeg paths, API key entry, and a save/restart overlay. `UploadCard` uses `window.desktop.pickAudioFile()` when available and posts `{ desktop_file_path }` JSON to `/api/transcribe`; browser upload still uses multipart. `CatalogPanel` uses `window.desktop.importCatalogVideo()` when available and falls back to a browser file input; both paths post to `/api/catalog/videos` and invalidate catalog/tag queries. | Settings save only sends non-empty key fields, so blank password boxes do not clear stored keys. The real native picker round-trip still needs an Electron launch smoke test. |
 | 8. Tests | ✅ | Added `src/test/runtime-desktop.test.ts` for runtime env resolution, asset workspace scaffolding, and desktop auth. Added `src/test/server-manager.test.ts` for standalone/dev entrypoint resolution. Full suite is now 49/49. | Socket-bound server-manager tests hit `EPERM` in the local sandbox, so this pass kept server-manager coverage to pure unit checks. Full spawn/restart behavior should be covered in CI or a less restricted harness. |
-| 9. Desktop CI | ✅ | Added `.github/workflows/desktop.yml` with a macOS + Windows Node 22 matrix: `npm ci`, `tsc`, `npm test`, unsigned `electron:build` on PRs, `electron:make` on `v*` tags, and artifact upload from `out/**`. Signing/notarization env vars are present only through GitHub secrets. | The GitHub publisher in `forge.config.cjs` remains commented until release publishing is intentionally enabled. |
+| 9. Desktop CI + release delivery | ✅ | Added `.github/workflows/desktop.yml` with a macOS + Windows Node 22 matrix: `npm ci`, `tsc`, `npm test`, unsigned `electron:build` on PRs, `electron:make` on `v*` tags, and artifact upload from `out/**`. Added `.github/workflows/desktop-publish-release.yml` to attach stable-named release assets (`WeatherV1-macOS.zip`, `WeatherV1-Setup.exe`) after a successful Desktop tag run. Added `.github/workflows/pages.yml` plus `docs/download-page/index.html.template` so GitHub Pages can publish a simple install/download page. `forge.config.cjs` now gates macOS signing on an imported CI certificate, uses `notarytool`, and expects decoded Windows cert files via `WIN_CERT_FILE`. | GitHub Releases publishing is handled by workflow orchestration rather than the commented Forge publisher block. Signed public releases still depend on the secrets and repository Pages settings being configured in GitHub. |
 
 ## Quick start for the next agent
 
@@ -218,6 +219,14 @@ The repo's tests + `tsc` + `next build` all pass *without* this install — the 
 | Launch the Electron dev shell (after `npm install`) | `npm run electron:dev` |
 | Package an unsigned local build | `npm run electron:build` |
 | Make installer artifacts (ZIP / Squirrel) | `npm run electron:make` |
+
+**Tag-based release flow:**
+
+| Goal | Command / action |
+| --- | --- |
+| Create release installers in CI | `git tag v0.1.x && git push origin v0.1.x` |
+| Attach stable installer names to the GitHub Release | automatic via `.github/workflows/desktop-publish-release.yml` after Desktop succeeds |
+| Publish/update the public download page | automatic via `.github/workflows/pages.yml` when `docs/download-page/**` changes and GitHub Pages is set to `GitHub Actions` |
 
 **Key file map:**
 
@@ -251,13 +260,15 @@ src/types/desktop.d.ts                 Window.desktop global ambient declaration
 
 ## Remaining Smoke Tests
 
-The implementation has reached the end of the planned code path, but the app still needs real desktop smoke testing:
+The implementation is complete; what remains is operational verification of the shipped flow:
 
-1. Pick/save a workspace path in Settings and confirm the restart overlay resolves.
+1. Pick/save a workspace path in Settings and confirm the restart overlay resolves cleanly.
 2. Enter an OpenAI key, save, and confirm `/api/desktop/status` reports `openai_configured: true`.
 3. Run audio transcription through the native picker and confirm the `{ desktop_file_path }` route path works end to end.
 4. Import a catalog video through the native picker and confirm catalog/tag queries refresh.
-5. Run `npm run electron:make` locally for unsigned artifacts, then validate signed release artifacts in CI once secrets are configured.
+5. Run a full render pipeline using a user-chosen workspace and confirm outputs/videos are served correctly through the desktop perimeter.
+6. Validate a tagged GitHub release end to end: Desktop workflow succeeds, release assets are attached with stable names, and the GitHub Pages download page points users at the current installers.
+7. After signing secrets are configured, validate signed/notarized installs on both macOS and Windows.
 
 ## Desktop CI Details
 

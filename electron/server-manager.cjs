@@ -28,6 +28,7 @@ const { DEFAULT_PORT, FALLBACK_PORTS, FIXED_HOST } = require("./config.cjs");
 
 const HEALTH_PATH = "/api/internal/health";
 const DESKTOP_AUTH_HEADER = "x-weather-desktop-token";
+const DEFAULT_HEALTH_TIMEOUT_MS = 90_000;
 
 function probePort(port) {
   return new Promise((resolve) => {
@@ -51,8 +52,31 @@ async function pickPort() {
   );
 }
 
-function pollHealth(origin, token, { timeoutMs = 30_000, intervalMs = 250 } = {}) {
+function readLogTail(logPath, maxChars = 4000) {
+  if (!logPath || !fs.existsSync(logPath)) return "";
+  try {
+    const content = fs.readFileSync(logPath, "utf8");
+    return content.slice(-maxChars).trim();
+  } catch {
+    return "";
+  }
+}
+
+function formatDiagnostic(logPath) {
+  const tail = readLogTail(logPath);
+  return tail ? `\n\nLast child log lines:\n${tail}` : "";
+}
+
+function appendLogLine(logPath, source, chunk) {
+  if (!logPath || !chunk) return;
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  const text = chunk.toString();
+  fs.appendFileSync(logPath, text.replace(/^/gm, `[${source}] `), "utf8");
+}
+
+function pollHealth(origin, token, { timeoutMs = DEFAULT_HEALTH_TIMEOUT_MS, intervalMs = 250, getDiagnostic } = {}) {
   const deadline = Date.now() + timeoutMs;
+  let lastFailure = "connection refused";
   return new Promise((resolve, reject) => {
     const attempt = () => {
       const url = new URL(HEALTH_PATH, origin);
@@ -77,19 +101,25 @@ function pollHealth(origin, token, { timeoutMs = 30_000, intervalMs = 250 } = {}
               }
             }
             if (Date.now() > deadline) {
-              reject(new Error(`health check failed: status=${res.statusCode}`));
+              const detail = body ? ` body=${body.slice(0, 500)}` : "";
+              reject(new Error(`health check failed: status=${res.statusCode}${detail}${getDiagnostic ? getDiagnostic() : ""}`));
               return;
             }
+            lastFailure = `status=${res.statusCode}`;
             setTimeout(attempt, intervalMs);
           });
         },
       );
       req.on("error", () => {
         if (Date.now() > deadline) {
-          reject(new Error("health check timed out before child became ready"));
+          reject(new Error(`health check timed out before child became ready (${lastFailure})${getDiagnostic ? getDiagnostic() : ""}`));
           return;
         }
         setTimeout(attempt, intervalMs);
+      });
+      req.setTimeout(5000, () => {
+        lastFailure = "request timed out";
+        req.destroy();
       });
       req.end();
     };
@@ -123,7 +153,7 @@ function resolveNodeRuntime() {
   return { command: "node", env: {} };
 }
 
-function createServerManager({ projectRoot, mode, token, env, onExit }) {
+function createServerManager({ projectRoot, mode, token, env, onExit, logPath }) {
   let child = null;
   let port = null;
   let origin = null;
@@ -154,8 +184,14 @@ function createServerManager({ projectRoot, mode, token, env, onExit }) {
       child = spawn(nodeRuntime.command, [serverJs], {
         cwd: path.dirname(serverJs),
         env: { ...currentEnv, ...nodeRuntime.env },
-        stdio: "inherit",
+        stdio: logPath ? ["ignore", "pipe", "pipe"] : "inherit",
       });
+      if (logPath) {
+        fs.mkdirSync(path.dirname(logPath), { recursive: true });
+        fs.writeFileSync(logPath, `[main] spawned ${nodeRuntime.command} ${serverJs}\n[main] cwd=${path.dirname(serverJs)}\n`, "utf8");
+        child.stdout?.on("data", (chunk) => appendLogLine(logPath, "stdout", chunk));
+        child.stderr?.on("data", (chunk) => appendLogLine(logPath, "stderr", chunk));
+      }
     }
 
     child.once("exit", (code, signal) => {
@@ -167,7 +203,25 @@ function createServerManager({ projectRoot, mode, token, env, onExit }) {
 
   async function start() {
     await spawnChild();
-    await pollHealth(origin, token);
+    const childAtStart = child;
+    await Promise.race([
+      pollHealth(origin, token, {
+        getDiagnostic: () => formatDiagnostic(logPath),
+      }),
+      new Promise((_, reject) => {
+        if (!childAtStart) return;
+        childAtStart.once("exit", (code, signal) => {
+          reject(
+            new Error(
+              `Next child exited before health check succeeded (code=${code} signal=${signal})${formatDiagnostic(logPath)}`,
+            ),
+          );
+        });
+        childAtStart.once("error", (err) => {
+          reject(new Error(`Next child failed to spawn: ${err && err.message ? err.message : String(err)}${formatDiagnostic(logPath)}`));
+        });
+      }),
+    ]);
     return { origin, port };
   }
 
@@ -212,5 +266,5 @@ module.exports = {
   pickPort,
   pollHealth,
   // Exported for tests:
-  __internal: { probePort, resolveDevNextBinary, resolveStandaloneServer, unpackAsarPath, resolveNodeRuntime },
+  __internal: { probePort, resolveDevNextBinary, unpackAsarPath, resolveNodeRuntime, resolveStandaloneServer, readLogTail },
 };

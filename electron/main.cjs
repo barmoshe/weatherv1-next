@@ -43,6 +43,7 @@ try {
 const { verifyFFmpeg } = require("./ffmpeg-verify.cjs");
 const cfg = require("./config.cjs");
 const { createServerManager } = require("./server-manager.cjs");
+const { isLoadableOrigin } = require("./window-utils.cjs");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const IS_DEV = !app.isPackaged;
@@ -53,6 +54,8 @@ const state = {
   origin: null,
   window: null,
   ffmpeg: null,
+  bootstrapPromise: null,
+  authInterceptorInstalled: false,
   updateState: { status: "unavailable", detail: "dev build — auto-update disabled" },
 };
 
@@ -117,6 +120,7 @@ async function bootstrap() {
     mode: IS_DEV ? "dev" : "prod",
     token: state.token,
     env,
+    logPath: IS_DEV ? null : path.join(app.getPath("userData"), "logs", "next-child.log"),
     onExit: ({ code, signal }) => {
       console.warn(`[main] Next child exited unexpectedly (code=${code} signal=${signal})`);
       // If the window is still open, surface a clear dialog rather than
@@ -139,20 +143,41 @@ async function bootstrap() {
   wireAutoUpdater();
 }
 
+function ensureBootstrapped() {
+  if (!state.bootstrapPromise) {
+    state.bootstrapPromise = bootstrap().catch((err) => {
+      state.bootstrapPromise = null;
+      throw err;
+    });
+  }
+  return state.bootstrapPromise;
+}
+
 function installAuthInterceptor() {
+  if (state.authInterceptorInstalled) return;
   const sess = session.fromPartition(cfg.SESSION_PARTITION);
   // Inject the token on every loopback request from the renderer. The token
   // never leaves main; the renderer doesn't see it.
   sess.webRequest.onBeforeSendHeaders((details, callback) => {
     const requestHeaders = { ...details.requestHeaders };
-    if (state.token && details.url.startsWith(state.origin)) {
+    if (state.token && isLoadableOrigin(state.origin) && details.url.startsWith(state.origin)) {
       requestHeaders["x-weather-desktop-token"] = state.token;
     }
     callback({ requestHeaders });
   });
+  state.authInterceptorInstalled = true;
 }
 
 function openMainWindow() {
+  if (state.window && !state.window.isDestroyed()) {
+    state.window.focus();
+    return;
+  }
+  if (!isLoadableOrigin(state.origin)) {
+    console.warn(`[main] refusing to open BrowserWindow without a valid origin: ${state.origin}`);
+    return;
+  }
+
   state.window = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -266,7 +291,13 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   });
   await state.manager.restart(env);
   if (state.window && !state.window.isDestroyed()) {
-    state.window.loadURL(state.manager.origin);
+    const nextOrigin = state.manager.origin;
+    if (isLoadableOrigin(nextOrigin)) {
+      state.origin = nextOrigin;
+      state.window.loadURL(nextOrigin);
+    } else {
+      console.warn(`[main] restart finished without a valid origin: ${nextOrigin}`);
+    }
   }
 
   return { success: true };
@@ -275,7 +306,7 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
 // ---- App lifecycle -------------------------------------------------------
 
 app.whenReady().then(() => {
-  bootstrap().catch((err) => {
+  ensureBootstrapped().catch((err) => {
     console.error("[main] bootstrap failed", err);
     dialog.showErrorBox("Failed to start", err && err.message ? err.message : String(err));
     app.quit();
@@ -283,8 +314,10 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
-  if (state.manager) state.manager.kill();
-  if (process.platform !== "darwin") app.quit();
+  if (process.platform !== "darwin") {
+    if (state.manager) state.manager.kill();
+    app.quit();
+  }
 });
 
 app.on("before-quit", () => {
@@ -292,5 +325,12 @@ app.on("before-quit", () => {
 });
 
 app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) openMainWindow();
+  if (BrowserWindow.getAllWindows().length === 0) {
+    ensureBootstrapped()
+      .then(() => openMainWindow())
+      .catch((err) => {
+        console.error("[main] activate failed", err);
+        dialog.showErrorBox("Failed to open", err && err.message ? err.message : String(err));
+      });
+  }
 });

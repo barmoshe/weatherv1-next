@@ -4,9 +4,9 @@ This is the "what's running, what's left, where the landmines are" doc for whoev
 
 ## TL;DR
 
-Steps 1–9 of the plan are implemented through code, tests, and CI config. The runtime/auth/asset boundary is done, every mutating route is gated, the Electron shell scaffold is in place, Forge packaging config is written, the renderer now uses the desktop bridge when available, and desktop CI has a macOS + Windows matrix. Tests + typecheck + `next build` all pass on the host, and `npm run electron:dev` boots the Electron shell with a healthy local Next child.
+Steps 1–9 of the plan are implemented through code, tests, and CI/release automation. The runtime/auth/asset boundary is done, every mutating route is gated, the Electron shell scaffold is in place, Forge packaging config is written, the renderer now uses the desktop bridge when available, the Desktop workflow builds installers on tags, a follow-up workflow attaches stable asset names to GitHub Releases, and GitHub Pages can publish a simple download page. Tests + typecheck + `next build` all pass on the host, and `npm run electron:dev` boots the Electron shell with a healthy local Next child.
 
-The remaining work is runtime smoke testing beyond boot: save settings, exercise native audio/video pickers deliberately, and produce unsigned/signed installer artifacts.
+The remaining work is operational smoke testing beyond boot: save settings, exercise native audio/video pickers deliberately, run a full render, and validate the signed public release path once GitHub secrets and repo settings are in place.
 
 ## Snapshot
 
@@ -14,6 +14,7 @@ The remaining work is runtime smoke testing beyond boot: save settings, exercise
 - Stack: Next 16.2.6 (App Router, `proxy.ts` is the renamed middleware), React 19.2.4, Vitest 2.x
 - Local toolchain on the host: Node 20.19 by default, Node 22 LTS available via `npx node@22`. `next build` works fine on Node 20; Electron 33 ships its own Node 22 anyway.
 - Latest verified state: `tsc --noEmit` clean, `npm test` 49/49, `npm run build` emits `.next/standalone/server.js`, `npm run standalone:prep` populates the standalone tree, `npm run electron:dev` boots on `127.0.0.1:3765` and `/api/internal/health` returns 200.
+- Release automation state: `v*` tags trigger `.github/workflows/desktop.yml`; successful tag runs can flow into `.github/workflows/desktop-publish-release.yml` to attach `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe`; `.github/workflows/pages.yml` publishes the download page from `docs/download-page/` when GitHub Pages is configured to use `GitHub Actions`.
 
 ## How to run things
 
@@ -59,6 +60,9 @@ Electron / packaging:
 | `build/entitlements.mac.plist` | Hardened-runtime entitlements. Includes `allow-jit`, `disable-library-validation`, `allow-dyld-environment-variables`. Explicitly NOT `allow-unsigned-executable-memory`. |
 | `scripts/prepare-standalone.cjs` | Copies `public/` and `.next/static/` into `.next/standalone/` after `next build`. |
 | `scripts/run-electron.cjs` | Dev launcher that removes inherited `ELECTRON_RUN_AS_NODE` before spawning Electron. Required in this Codex shell. |
+| `.github/workflows/desktop-publish-release.yml` | Downloads the tag build artifacts from Desktop, renames them to stable public asset names, and attaches them to the GitHub Release. |
+| `.github/workflows/pages.yml` | Publishes the templated download page from `docs/download-page/index.html.template` to GitHub Pages. |
+| `docs/download-page/index.html.template` | Simple public installer page template keyed by repository name. |
 
 Config / lockfile-adjacent:
 
@@ -94,6 +98,8 @@ Renderer / CI:
 9. **`safeStorage` has a plaintext fallback.** On platforms without an OS keychain (typically headless Linux without a keyring), `electron/config.cjs` records `encryption: "none"` and stores the key as plaintext. The settings UI should surface this so the user knows.
 10. **`npm ci` needs `package-lock.json` to match `package.json`.** Two CI runs (`25735788933`, `25736054166`) failed in this exact way when Step 6 added the Electron / Forge / ffmpeg deps without regenerating the lockfile. Fixed by committing the regenerated lockfile (`171a502`). Always run `npm install --package-lock-only --ignore-scripts` after touching `package.json` and commit both files together.
 11. **Some dev shells inherit `ELECTRON_RUN_AS_NODE=1`.** In this environment, raw `electron .` made `require("electron").app` undefined. Use `npm run electron:dev`, which calls `scripts/run-electron.cjs` and clears that variable before launching the Electron binary.
+12. **GitHub Pages must be set to `GitHub Actions`.** The workflow is in-repo, but the repository setting still has to be flipped once under Settings → Pages → Build and deployment → Source.
+13. **The signed-release path is separate from the unsigned path.** The current workflows are enough for internal unsigned testing right away. Public external distribution still depends on GitHub secrets for Apple notarization and Windows signing, plus a final install smoke test on clean machines.
 
 ## Remaining smoke tests
 
@@ -102,9 +108,10 @@ Renderer / CI:
 - Catalog video import via native picker round-trips.
 - Render pipeline runs end to end with a user-chosen workspace.
 - `npm run electron:make` produces unsigned local artifacts.
-- Signed release artifacts are validated in CI after signing secrets are configured and the GitHub publisher block is intentionally enabled.
+- A tagged GitHub release produces attached `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe` assets end to end.
+- Signed release artifacts are validated in CI after signing secrets are configured.
 
-**Public download page:** Tags matching `v*` trigger the Desktop workflow; [`.github/workflows/desktop-publish-release.yml`](.github/workflows/desktop-publish-release.yml) (runs from `main` via `workflow_run`) attaches `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe` with `softprops/action-gh-release`. Set **Settings → Pages → Build and deployment → Source: GitHub Actions** so [`.github/workflows/pages.yml`](.github/workflows/pages.yml) can publish the templated download page (`docs/download-page/index.html.template` → site root). If a release has only “Source code” assets, re-run **Desktop** for that tag after the publish workflow exists on `main`.
+**Public download page:** Tags matching `v*` trigger the Desktop workflow; [desktop-publish-release.yml](/Users/barmoshe/claude-creative-stack/weatherv1-next/.github/workflows/desktop-publish-release.yml) (runs from `main` via `workflow_run`) attaches `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe` with `softprops/action-gh-release`. Set **Settings → Pages → Build and deployment → Source: GitHub Actions** so [pages.yml](/Users/barmoshe/claude-creative-stack/weatherv1-next/.github/workflows/pages.yml) can publish the templated download page from [index.html.template](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/download-page/index.html.template). If a release has only “Source code” assets, re-run **Desktop** for that tag after the publish workflow exists on `main`.
 
 ## Verification checklist for the next pass
 
@@ -120,6 +127,7 @@ Renderer / CI:
 - [ ] Audio upload via native picker round-trips
 - [ ] Catalog video import via native picker round-trips
 - [ ] Render pipeline runs end to end with a user-chosen workspace
+- [ ] Tagged GitHub release attaches stable installer asset names end to end
 - [ ] `npm run electron:make` produces signed artifacts in CI
 
 ## App icon
@@ -137,4 +145,4 @@ To regenerate: drop a new `1024×1024 PNG` into `build/source-1024.png`, recreat
 
 ## Stop point
 
-After icon integration. The next smoke tests are settings save, deliberate native picker round-trips, and `npm run electron:make` — unsigned locally, signed only on CI with the secrets above.
+After release automation and signing-config refinement. The next pass is no longer architecture work; it is end-to-end product verification: settings save, deliberate native picker round-trips, render flow, tagged release asset attachment, and signed installs on clean macOS/Windows machines.
