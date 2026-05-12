@@ -81,7 +81,6 @@ const LLM_LABELS: Record<string, { name: string; tooltip: string }> = {
 };
 
 const TRANSCRIPTION_LABELS: Record<string, { name: string; tooltip: string }> = {
-  "local-whisper-onnx": { name: "Whisper מקומי", tooltip: "Whisper ONNX running locally (transformers.js)" },
   "openai-cloud": { name: "Whisper ענן", tooltip: "OpenAI Whisper cloud" },
 };
 
@@ -110,7 +109,6 @@ export function HeroStrip({ jobId, phase, phaseIndex, filename, duration, create
   const llmModelShort = shortModelName(desktopStatus?.providers.llm_model ?? null);
   const txActive = desktopStatus?.providers.transcription_active ?? null;
   const txLabel = txActive ? TRANSCRIPTION_LABELS[txActive] : null;
-  const whisperModel = desktopStatus?.whisper.active_model ?? null;
 
   return (
     <header className="dash-hero" id="dash-hero" aria-label="פרטי ההפקה">
@@ -140,16 +138,11 @@ export function HeroStrip({ jobId, phase, phaseIndex, filename, duration, create
         {txLabel ? (
           <span
             className={`hero-model-pill is-tx is-${txActive}`}
-            title={txLabel.tooltip + (whisperModel && txActive === "local-whisper-onnx" ? ` · ${whisperModel}` : "")}
+            title={txLabel.tooltip}
             data-testid="hero-pill-transcription"
           >
             <MicIcon />
             <span className="hero-model-pill__provider">{txLabel.name}</span>
-            {txActive === "local-whisper-onnx" && whisperModel && (
-              <span className="hero-model-pill__model" dir="ltr">
-                {whisperModel}
-              </span>
-            )}
           </span>
         ) : null}
       </div>

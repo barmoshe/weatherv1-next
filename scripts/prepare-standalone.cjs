@@ -60,49 +60,6 @@ function main() {
   console.log(`[prepare-standalone] copy ${staticSrc} -> ${staticDst}`);
   copyDir(staticSrc, staticDst);
 
-  // Native deps required by the local Whisper provider. Next.js standalone
-  // tracing copies the JS surface of `@huggingface/transformers` but can
-  // miss `onnxruntime-node`'s platform-specific `.node`/`.dylib`/`.dll`
-  // siblings (they're loaded via dynamic require at runtime).
-  //
-  // We copy selectively: transformers.js's `src/` and `types/` trees are
-  // dev-only and have 80-char nested paths (model class folders) that blow
-  // past Windows MAX_PATH = 260 chars once nested inside the Squirrel
-  // staging dir during installer creation. Only `dist/` and the package
-  // manifest are needed at runtime.
-  const nativeCopies = [
-    {
-      mod: "@huggingface/transformers",
-      // Skip `src/` and `types/` — runtime uses dist/transformers.node.cjs.
-      includeRoot: ["dist", "package.json", "LICENSE", "README.md"],
-    },
-    { mod: "onnxruntime-node" },
-    { mod: "wavefile" },
-  ];
-  for (const entry of nativeCopies) {
-    const src = path.join(PROJECT_ROOT, "node_modules", entry.mod);
-    const dst = path.join(STANDALONE_DIR, "node_modules", entry.mod);
-    if (!fs.existsSync(src)) {
-      console.warn(`[prepare-standalone] ${entry.mod} not installed; skipping native copy`);
-      continue;
-    }
-    if (entry.includeRoot) {
-      fs.mkdirSync(dst, { recursive: true });
-      for (const name of entry.includeRoot) {
-        const childSrc = path.join(src, name);
-        const childDst = path.join(dst, name);
-        if (!fs.existsSync(childSrc)) continue;
-        console.log(`[prepare-standalone] copy ${childSrc} -> ${childDst}`);
-        const stat = fs.statSync(childSrc);
-        if (stat.isDirectory()) copyDir(childSrc, childDst);
-        else fs.copyFileSync(childSrc, childDst);
-      }
-    } else {
-      console.log(`[prepare-standalone] copy ${src} -> ${dst}`);
-      copyDir(src, dst);
-    }
-  }
-
   console.log("[prepare-standalone] done");
 }
 

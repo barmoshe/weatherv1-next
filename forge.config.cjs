@@ -65,7 +65,7 @@ module.exports = {
       // app.asar.unpacked and then fails with "Could not find a production
       // build in './.next'".
       unpack:
-        "{**/node_modules/ffmpeg-static/**,**/node_modules/ffprobe-static/**,**/node_modules/@ffmpeg-installer/**,**/node_modules/@ffprobe-installer/**,**/.next/standalone/**,**/.next/standalone/.next/**,**/node_modules/onnxruntime-node/**,**/node_modules/@huggingface/transformers/**,**/node_modules/wavefile/**}",
+        "{**/node_modules/ffmpeg-static/**,**/node_modules/ffprobe-static/**,**/node_modules/@ffmpeg-installer/**,**/node_modules/@ffprobe-installer/**,**/.next/standalone/**,**/.next/standalone/.next/**}",
     },
     // Ship the standalone Next tree + scripts that Electron main + the spawn
     // child actually need. Forge defaults to packaging the entire project
@@ -79,20 +79,6 @@ module.exports = {
       /^\/src\/test(\/|$)/,
       /^\/coverage(\/|$)/,
       /\.test\.[jt]sx?$/,
-      // transformers.js ships `src/` (JS source) and `types/` (TS .d.ts)
-      // alongside the runtime `dist/`. The `src/models/*` and
-      // `types/models/*` folders contain 80-char model class paths that
-      // tip Squirrel's Windows installer over MAX_PATH = 260 chars during
-      // .nuspec staging. They're not needed at runtime.
-      /^\/node_modules\/@huggingface\/transformers\/(src|types)(\/|$)/,
-      // `onnxruntime-web` is a transitive dep of @huggingface/transformers
-      // for browser/WebGPU code paths. The Node bundle
-      // (`dist/transformers.node.cjs`) only references it via dynamic CDN
-      // strings, never via `require()`, so we can drop it from the desktop
-      // build. Its `lib/onnxjs/ort-schema/flatbuffers/...` tree is the
-      // single deepest path in the package and the main MAX_PATH offender
-      // after we trimmed transformers.js itself.
-      /^\/node_modules\/onnxruntime-web(\/|$)/,
     ],
     osxSign: haveMacSigning
       ? {

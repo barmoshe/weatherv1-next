@@ -245,8 +245,8 @@ export async function pickSegments(
 }
 
 // ---------------------------------------------------------------------------
-// Transcription (delegated to the active TranscriptionProvider — local
-// whisper.cpp or cloud OpenAI Whisper, see src/server/providers/transcription)
+// Transcription (delegated to the active TranscriptionProvider — OpenAI
+// Whisper cloud today, see src/server/providers/transcription)
 // ---------------------------------------------------------------------------
 
 export interface TranscriptionResult {

@@ -108,32 +108,6 @@ export function mapProviderError(err: unknown): MappedErrorResponse | null {
         },
       };
     }
-    if (err.code === "transcription_no_model") {
-      return {
-        status: 409,
-        body: {
-          success: false,
-          error:
-            "אין מודל Whisper מקומי מותקן. פתח את ההגדרות והורד מודל, או הגדר OPENAI_API_KEY כגיבוי.",
-          error_code: "transcription_no_model",
-          provider: err.provider,
-        },
-      };
-    }
-    if (err.code === "transcription_binary_missing") {
-      // Legacy code from the whisper.cpp era — kept for backward compatibility
-      // with any old error responses cached in the UI. New code paths emit
-      // `transcription_no_model` instead.
-      return {
-        status: 409,
-        body: {
-          success: false,
-          error: "אין מודל Whisper מקומי מותקן. פתח את ההגדרות והורד מודל.",
-          error_code: "transcription_no_model",
-          provider: err.provider,
-        },
-      };
-    }
     return {
       status: 500,
       body: {

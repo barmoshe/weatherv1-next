@@ -317,21 +317,8 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   if (update && typeof update.ffprobePath === "string") patch.ffprobePath = update.ffprobePath;
 
   const llmProviders = new Set(["auto", "anthropic", "openai"]);
-  const transcriptionProviders = new Set(["auto", "local-whisper-onnx", "openai-cloud"]);
   if (update && typeof update.llmProvider === "string" && llmProviders.has(update.llmProvider)) {
     patch.llmProvider = update.llmProvider;
-  }
-  if (update && typeof update.transcriptionProvider === "string") {
-    // Migrate the legacy whisper.cpp id so users upgrading from the
-    // native-binary build don't end up pinned to a provider that no
-    // longer exists.
-    const incoming =
-      update.transcriptionProvider === "local-whispercpp"
-        ? "local-whisper-onnx"
-        : update.transcriptionProvider;
-    if (transcriptionProviders.has(incoming)) {
-      patch.transcriptionProvider = incoming;
-    }
   }
   if (update && typeof update.googleClientId === "string") {
     patch.googleDrive = {

@@ -390,11 +390,6 @@
             border-color: #4f9d7e;
             color: #1f5a44;
         }
-        .hero-model-pill.is-tx.is-local-whisper-onnx {
-            background: #e9eefb;
-            border-color: #5b7fd6;
-            color: #2b4685;
-        }
         .hero-model-pill.is-tx.is-openai-cloud {
             background: #f4e9f7;
             border-color: #a86bbd;
@@ -1008,115 +1003,11 @@
             cursor: pointer;
         }
         .settings-radio input { accent-color: var(--v1-coral); }
-        .settings-radio.is-disabled { opacity: 0.45; cursor: not-allowed; }
-        .settings-radio.is-disabled input { cursor: not-allowed; }
-        .settings-models {
-            list-style: none;
-            padding: 0;
-            margin: 0.4rem 0 0;
-            display: grid;
-            gap: 0.55rem;
-        }
-        .settings-model-row {
-            background: var(--v1-cream);
-            border-radius: var(--radius-sm);
-            padding: 0.6rem 0.8rem;
-            display: grid;
-            gap: 0.35rem;
-        }
-        .settings-model-row__head {
-            display: flex;
-            align-items: center;
-            gap: 0.55rem;
-            font-size: 0.95rem;
-        }
-        .settings-model-row__quality {
-            font-size: 0.82rem;
-            color: var(--v1-ink-muted);
-            font-weight: 600;
-        }
-        .settings-model-row__desc {
-            font-size: 0.84rem;
-            color: var(--v1-ink-muted);
-        }
-        .settings-model-row__progress {
-            position: relative;
-            background: rgb(0 0 0 / .08);
-            border-radius: 4px;
-            height: 6px;
-            overflow: hidden;
-            margin-block: 0.2rem;
-        }
-        .settings-model-row__progress span {
-            position: absolute;
-            inset: 0;
-            display: block;
-            transform: translateY(10px);
-            font-size: 0.78rem;
-            color: var(--v1-ink-muted);
-            font-variant-numeric: tabular-nums;
-        }
-        .settings-model-row__progress-bar {
-            position: absolute;
-            inset-inline-start: 0;
-            top: 0;
-            bottom: 0;
-            background: var(--v1-coral);
-            transition: width 200ms ease;
-        }
+        /* Reused as a generic action row inside settings cards (e.g. Drive). */
         .settings-model-row__actions {
             display: flex;
             gap: 0.4rem;
             margin-top: 0.25rem;
-        }
-        .settings-binary-card {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 0.6rem;
-        }
-        .settings-binary-card__row {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-        .settings-binary-card__actions {
-            display: flex;
-            align-items: center;
-            gap: 0.7rem;
-            flex-wrap: wrap;
-        }
-        .settings-binary-card__progress {
-            position: relative;
-            flex: 1 1 200px;
-            min-width: 200px;
-            background: rgb(0 0 0 / .08);
-            border-radius: 4px;
-            height: 8px;
-            overflow: hidden;
-        }
-        .settings-binary-card__progress-bar {
-            position: absolute;
-            inset-inline-start: 0;
-            top: 0;
-            bottom: 0;
-            background: var(--v1-coral);
-            transition: width 200ms ease;
-        }
-        .settings-binary-card__progress span {
-            position: absolute;
-            inset: 0;
-            transform: translateY(14px);
-            font-size: 0.78rem;
-            color: var(--v1-ink-muted);
-            font-variant-numeric: tabular-nums;
-        }
-        .settings-binary-card__error {
-            color: var(--v1-danger);
-            font-size: 0.85rem;
-        }
-        .settings-binary-card--installed {
-            flex-direction: row;
-            align-items: center;
         }
         .catalog-card {
             background: var(--v1-cream); border-radius: var(--radius-sm);

@@ -13,10 +13,10 @@ describe("forge packaging config", () => {
     expect(unpack).toContain("**/.next/standalone/.next/**");
   });
 
-  it("unpacks onnxruntime-node native libraries so local Whisper can load them", () => {
+  it("unpacks ffmpeg/ffprobe binaries so spawn() can exec them outside the asar", () => {
     const unpack = forgeConfig.packagerConfig?.asar?.unpack ?? "";
 
-    expect(unpack).toContain("**/node_modules/onnxruntime-node/**");
-    expect(unpack).toContain("**/node_modules/@huggingface/transformers/**");
+    expect(unpack).toContain("**/node_modules/ffmpeg-static/**");
+    expect(unpack).toContain("**/node_modules/ffprobe-static/**");
   });
 });

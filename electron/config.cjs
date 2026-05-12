@@ -48,7 +48,6 @@ function defaultSettings() {
     keys: { openai: null, anthropic: null, gemini: null, googleDriveRefreshToken: null },
     // Plain-text user preference. "auto" lets the server pick from configured keys.
     llmProvider: "auto", // "auto" | "anthropic" | "openai"
-    transcriptionProvider: "auto", // "auto" | "local-whisper-onnx" | "openai-cloud"
     encryption: "none", // "safe-storage" | "none"
     googleDrive: {
       enabled: false,
@@ -76,10 +75,9 @@ function readSettings() {
       keys: { ...defaultSettings().keys, ...(raw.keys || {}) },
       googleDrive: { ...defaultSettings().googleDrive, ...(raw.googleDrive || {}) },
     };
-    // Migrate legacy transcription provider id from the whisper.cpp era.
-    if (_settings.transcriptionProvider === "local-whispercpp") {
-      _settings.transcriptionProvider = "local-whisper-onnx";
-    }
+    // Drop legacy fields from older releases (whisper.cpp / ONNX local transcription).
+    // We're cloud-only now; leaving them in env confuses the Next child.
+    if ("transcriptionProvider" in _settings) delete _settings.transcriptionProvider;
     return _settings;
   } catch {
     _settings = defaultSettings();
@@ -182,13 +180,11 @@ function buildChildEnv(args) {
     if (settings.googleDrive.catalogFileId) env.GOOGLE_DRIVE_CATALOG_FILE_ID = settings.googleDrive.catalogFileId;
   }
 
-  // Provider preferences. "auto" leaves the env var unset so the server-side
-  // selection falls through to the key-based default.
+  // LLM provider preference. "auto" leaves the env var unset so the server-side
+  // selection falls through to the key-based default. Transcription is cloud-only
+  // and selected entirely by OPENAI_API_KEY presence.
   if (settings.llmProvider && settings.llmProvider !== "auto") {
     env.LLM_PROVIDER = settings.llmProvider;
-  }
-  if (settings.transcriptionProvider && settings.transcriptionProvider !== "auto") {
-    env.TRANSCRIPTION_PROVIDER = settings.transcriptionProvider;
   }
 
   return env;

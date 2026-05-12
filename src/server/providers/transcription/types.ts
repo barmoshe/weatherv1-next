@@ -1,12 +1,12 @@
-// Transcription provider abstraction.
-//
-// Both providers (local whisper.cpp, cloud OpenAI Whisper) return the same
-// shape so the rest of the pipeline (plan-bundle storage, scene planner)
-// doesn't need to know which one ran.
+// Transcription provider abstraction. We currently ship one implementation —
+// OpenAI cloud Whisper — but keep the provider shape so the rest of the
+// pipeline (plan-bundle storage, scene planner) doesn't depend on the
+// concrete vendor. If we re-add a local engine later, drop a second
+// `TranscriptionProvider` impl behind a new id.
 
 import type { WhisperSegment } from "@/shared/types";
 
-export type TranscriptionProviderId = "local-whisper-onnx" | "openai-cloud";
+export type TranscriptionProviderId = "openai-cloud";
 
 export interface TranscriptionResult {
   text: string;
@@ -18,8 +18,7 @@ export interface TranscriptionProvider {
   readonly id: TranscriptionProviderId;
   /**
    * Transcribe an audio file from disk. The file is expected to live inside
-   * the runtime uploads dir so the implementation can reuse it for ffmpeg
-   * preprocessing (16 kHz mono WAV conversion for the local ONNX runner).
+   * the runtime uploads dir.
    */
   transcribe(audioPath: string): Promise<TranscriptionResult>;
 }
@@ -27,8 +26,6 @@ export interface TranscriptionProvider {
 export type TranscriptionErrorCode =
   | "transcription_invalid_key"
   | "transcription_quota_exceeded"
-  | "transcription_no_model"
-  | "transcription_binary_missing"
   | "transcription_failed";
 
 export class TranscriptionProviderError extends Error {

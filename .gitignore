@@ -47,6 +47,3 @@ next-env.d.ts
 /runtime/jobs.json
 /runtime/uploads/
 /runtime/outputs/
-
-# whisper.cpp vendored binaries were removed when we switched to ONNX. If
-# you bring them back as a packaging slot, restore the per-OS ignores here.

@@ -11,18 +11,9 @@ export interface DesktopStatusResponse {
   };
   providers: {
     llm_pref: string;
-    transcription_pref: string;
     llm_active: "anthropic" | "openai" | null;
     llm_model: string | null;
-    transcription_active: "local-whisper-onnx" | "openai-cloud" | null;
-  };
-  whisper: {
-    active_model: string | null;
-    installed_models: string[];
-    local_ready: boolean;
-    local_supported: boolean;
-    platform: string;
-    arch: string;
+    transcription_active: "openai-cloud" | null;
   };
 }
 

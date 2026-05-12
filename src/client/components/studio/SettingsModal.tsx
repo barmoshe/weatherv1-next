@@ -6,7 +6,6 @@ import type {
   DesktopSettingsUpdate,
   DesktopUpdateState,
   LlmProviderPreference,
-  TranscriptionProviderPreference,
 } from "@/shared/desktop";
 
 interface CatalogHealth {
@@ -40,15 +39,6 @@ interface DesktopStatus {
   };
   providers?: {
     llm_pref: LlmProviderPreference;
-    transcription_pref: TranscriptionProviderPreference;
-  };
-  whisper?: {
-    active_model: WhisperModelId | null;
-    installed_models: WhisperModelId[];
-    local_ready: boolean;
-    local_supported: boolean;
-    platform: string;
-    arch: string;
   };
   ffmpeg: {
     ffmpeg_path: string | null;
@@ -67,27 +57,6 @@ interface DesktopStatus {
   };
 }
 
-type WhisperModelId = "small" | "medium" | "large-v3-turbo";
-
-interface WhisperModelEntry {
-  id: WhisperModelId;
-  repo: string;
-  size_bytes: number;
-  description_he: string;
-  quality_he: string;
-  installed: boolean;
-  disk_bytes: number;
-  verified: boolean;
-  is_active: boolean;
-}
-
-interface WhisperModelsResponse {
-  success: boolean;
-  models: WhisperModelEntry[];
-  cache_dir: string;
-  active_model_id: WhisperModelId | null;
-}
-
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -101,18 +70,6 @@ function shortPath(value: string | null | undefined): string {
   if (!value) return "לא הוגדר";
   if (value.length <= 64) return value;
   return `…${value.slice(-61)}`;
-}
-
-function formatBytes(bytes: number): string {
-  if (!bytes) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  let n = bytes;
-  let i = 0;
-  while (n >= 1024 && i < units.length - 1) {
-    n /= 1024;
-    i++;
-  }
-  return `${n.toFixed(n >= 100 ? 0 : 1)} ${units[i]}`;
 }
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
@@ -133,18 +90,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [googleClientId, setGoogleClientId] = useState("");
   const [googleDriveEnabled, setGoogleDriveEnabled] = useState(false);
   const [llmProvider, setLlmProvider] = useState<LlmProviderPreference>("auto");
-  const [transcriptionProvider, setTranscriptionProvider] =
-    useState<TranscriptionProviderPreference>("auto");
-  const [whisperModels, setWhisperModels] = useState<WhisperModelEntry[]>([]);
-  const [whisperLoading, setWhisperLoading] = useState(false);
-  const [whisperError, setWhisperError] = useState<string | null>(null);
-  const [whisperCacheDir, setWhisperCacheDir] = useState<string | null>(null);
-  const [downloadingModel, setDownloadingModel] = useState<WhisperModelId | null>(null);
-  const [downloadProgress, setDownloadProgress] = useState<{
-    modelId: WhisperModelId;
-    bytesDownloaded: number;
-    bytesTotal: number;
-  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [connectingDrive, setConnectingDrive] = useState(false);
   const [syncingDrive, setSyncingDrive] = useState(false);
@@ -187,7 +132,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setFfprobePath(status.ffmpeg.ffprobe_path ?? "");
       if (status.providers) {
         setLlmProvider(status.providers.llm_pref);
-        setTranscriptionProvider(status.providers.transcription_pref);
       }
       setGoogleDriveEnabled(Boolean(status.catalog_store?.enabled));
     } catch (e) {
@@ -196,90 +140,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setDesktopLoading(false);
     }
   }, []);
-
-  const loadWhisperModels = useCallback(async () => {
-    setWhisperLoading(true);
-    setWhisperError(null);
-    try {
-      const modelsRes = await fetch("/api/whisper/models");
-      const modelsData = (await modelsRes.json()) as WhisperModelsResponse;
-      if (!modelsRes.ok || !modelsData.success) throw new Error(`HTTP ${modelsRes.status}`);
-      setWhisperModels(modelsData.models);
-      setWhisperCacheDir(modelsData.cache_dir ?? null);
-    } catch (e) {
-      setWhisperError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setWhisperLoading(false);
-    }
-  }, []);
-
-  const downloadWhisperModel = useCallback(
-    async (id: WhisperModelId) => {
-      if (downloadingModel) return;
-      setDownloadingModel(id);
-      setDownloadProgress({ modelId: id, bytesDownloaded: 0, bytesTotal: 0 });
-      setWhisperError(null);
-      try {
-        const res = await fetch("/api/whisper/models", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ model_id: id }),
-        });
-        if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          // SSE frames are separated by blank lines.
-          const frames = buffer.split("\n\n");
-          buffer = frames.pop() ?? "";
-          for (const frame of frames) {
-            if (frame.startsWith("event: error")) {
-              const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
-              const payload = dataLine ? JSON.parse(dataLine.slice(5).trim()) : { error: "unknown" };
-              throw new Error(String((payload as { error?: unknown }).error ?? "download failed"));
-            }
-            if (frame.startsWith("event: done")) continue;
-            const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
-            if (!dataLine) continue;
-            const payload = JSON.parse(dataLine.slice(5).trim()) as {
-              modelId: WhisperModelId;
-              bytesDownloaded: number;
-              bytesTotal: number;
-            };
-            setDownloadProgress(payload);
-          }
-        }
-        await loadWhisperModels();
-      } catch (e) {
-        setWhisperError(e instanceof Error ? e.message : String(e));
-      } finally {
-        setDownloadingModel(null);
-        setDownloadProgress(null);
-      }
-    },
-    [downloadingModel, loadWhisperModels],
-  );
-
-  const deleteWhisperModel = useCallback(
-    async (id: WhisperModelId) => {
-      try {
-        const r = await fetch(`/api/whisper/models?model_id=${encodeURIComponent(id)}`, {
-          method: "DELETE",
-        });
-        const data = (await r.json()) as { success: boolean; error?: string };
-        if (!data.success) throw new Error(data.error ?? "delete failed");
-        await loadWhisperModels();
-      } catch (e) {
-        setWhisperError(e instanceof Error ? e.message : String(e));
-      }
-    },
-    [loadWhisperModels],
-  );
 
   const pickWorkspace = useCallback(async () => {
     if (!desktop) return;
@@ -306,7 +166,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (googleClientId.trim()) update.googleClientId = googleClientId.trim();
       update.googleDriveEnabled = googleDriveEnabled;
       update.llmProvider = llmProvider;
-      update.transcriptionProvider = transcriptionProvider;
 
       await desktop.saveSettings(update);
       setOpenaiKey("");
@@ -314,7 +173,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setGeminiKey("");
       await loadDesktopStatus();
       await loadHealth();
-      await loadWhisperModels();
       setSaved(true);
     } catch (e) {
       setDesktopError(e instanceof Error ? e.message : String(e));
@@ -331,9 +189,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     llmProvider,
     loadDesktopStatus,
     loadHealth,
-    loadWhisperModels,
     openaiKey,
-    transcriptionProvider,
     workspaceDir,
   ]);
 
@@ -380,8 +236,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (!isOpen) return;
     void loadHealth();
     void loadDesktopStatus();
-    void loadWhisperModels();
-  }, [isOpen, loadDesktopStatus, loadHealth, loadWhisperModels]);
+  }, [isOpen, loadDesktopStatus, loadHealth]);
 
   if (!isOpen) return null;
 
@@ -512,17 +367,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <span>{desktopStatus?.keys.openai_configured ? "מוגדר" : "לא מוגדר"}</span>
                 </div>
                 <div className="settings-status-row">
-                  <StatusDot ok={Boolean(desktopStatus?.whisper?.local_ready)} />
-                  <span>Whisper מקומי</span>
-                  <span>
-                    {desktopStatus?.whisper?.local_supported === false
-                      ? "לא נתמך בגרסה הזו"
-                      : desktopStatus?.whisper?.local_ready
-                        ? `מוכן · ${desktopStatus.whisper.active_model ?? ""}`
-                        : "הורד מודל בהגדרות"}
-                  </span>
-                </div>
-                <div className="settings-status-row">
                   <StatusDot ok={Boolean(desktopStatus?.keys.gemini_configured)} />
                   <span>Gemini</span>
                   <span>{desktopStatus?.keys.gemini_configured ? "מוגדר" : "לא מוגדר"}</span>
@@ -640,7 +484,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <h3>מפתחות API</h3>
               </div>
               <p className="settings-hint">
-                הזן לפחות מפתח אחד מבין Anthropic או OpenAI. השרת בוחר ספק על פי מה שמוגדר; אפשר לכפות בחירה בחלונית למטה.
+                הזן לפחות מפתח אחד מבין Anthropic או OpenAI לתכנון. תמלול האודיו רץ דרך OpenAI Whisper
+                בענן, ולכן צריך OPENAI_API_KEY כדי לתמלל.
               </p>
               <label className="settings-field">
                 <span>ANTHROPIC_API_KEY</span>
@@ -690,7 +535,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {isDesktop && (
             <section className="settings-section">
               <div className="settings-section-header">
-                <h3>בחירת ספק</h3>
+                <h3>בחירת ספק LLM</h3>
               </div>
               <fieldset className="settings-field">
                 <legend>ספק LLM (תכנון סצנות וקליפים)</legend>
@@ -716,146 +561,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </label>
                 ))}
               </fieldset>
-              <fieldset className="settings-field">
-                <legend>ספק תמלול אודיו</legend>
-                {(
-                  [
-                    ["auto", "אוטומטי — Whisper מקומי אם מותקן, אחרת OpenAI"],
-                    ["local-whisper-onnx", "Whisper מקומי (ONNX — ללא התקנה)"],
-                    ["openai-cloud", "OpenAI Whisper (ענן)"],
-                  ] as Array<[TranscriptionProviderPreference, string]>
-                ).map(([id, label]) => {
-                  // Disable the local option on platforms without an
-                  // onnxruntime-node prebuild (today: macOS x64 build under
-                  // Rosetta). Auto stays available but will fall through to
-                  // cloud automatically; the hint below explains why.
-                  const localDisabled =
-                    id === "local-whisper-onnx" &&
-                    desktopStatus?.whisper?.local_supported === false;
-                  return (
-                    <label
-                      key={id}
-                      className={`settings-radio${localDisabled ? " is-disabled" : ""}`}
-                    >
-                      <input
-                        type="radio"
-                        name="transcription-provider"
-                        value={id}
-                        checked={transcriptionProvider === id}
-                        disabled={localDisabled}
-                        onChange={() => {
-                          setTranscriptionProvider(id);
-                          setSaved(false);
-                        }}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  );
-                })}
-                {desktopStatus?.whisper?.local_supported === false && (
-                  <p className="settings-hint">
-                    Whisper מקומי לא נתמך בגרסת ה-Mac הנוכחית ({desktopStatus.whisper.platform}/
-                    {desktopStatus.whisper.arch}). השתמש ב-OpenAI Whisper בענן.
-                  </p>
-                )}
-              </fieldset>
-            </section>
-          )}
-
-          {isDesktop && desktopStatus?.whisper?.local_supported !== false && (
-            <section className="settings-section">
-              <div className="settings-section-header">
-                <h3>מודלי Whisper מקומיים</h3>
-                <button
-                  type="button"
-                  className="settings-link"
-                  onClick={loadWhisperModels}
-                  disabled={whisperLoading}
-                >
-                  רענן
-                </button>
-              </div>
-              {whisperError && (
-                <div className="catalog-card">
-                  <span className="dot is-missing" />
-                  <span>שגיאה במודלים: {whisperError}</span>
-                </div>
-              )}
               <p className="settings-hint">
-                התמלול המקומי רץ דרך transformers.js (ONNX) — לא צריך להתקין שום תוכנה. בחר מודל
-                לפי תקציב דיסק וכוח עיבוד. עברית עובדת מ-small ומעלה; medium הוא הברירה המומלצת.
-                {whisperCacheDir ? ` הקבצים נשמרים תחת ${shortPath(whisperCacheDir)}.` : null}
+                תמלול האודיו רץ דרך OpenAI Whisper בענן (אין מודל מקומי בגרסה הזו).
               </p>
-              <ul className="settings-models">
-                {whisperModels.map((m) => {
-                  const isDownloading = downloadingModel === m.id;
-                  const progress =
-                    isDownloading && downloadProgress && downloadProgress.modelId === m.id
-                      ? downloadProgress
-                      : null;
-                  const pct =
-                    progress && progress.bytesTotal > 0
-                      ? Math.min(100, Math.floor((progress.bytesDownloaded / progress.bytesTotal) * 100))
-                      : 0;
-                  return (
-                    <li key={m.id} className="settings-model-row">
-                      <div className="settings-model-row__head">
-                        <StatusDot ok={m.installed} />
-                        <strong>{m.id}</strong>
-                        <span className="settings-model-row__quality">{m.quality_he}</span>
-                        {m.is_active && <span className="settings-saved-pill">פעיל</span>}
-                      </div>
-                      <div className="settings-model-row__desc">
-                        {m.description_he} · {formatBytes(m.size_bytes)}
-                      </div>
-                      {isDownloading && progress && (
-                        <div className="settings-model-row__progress">
-                          <div
-                            className="settings-model-row__progress-bar"
-                            style={{ width: `${pct}%` }}
-                          />
-                          <span>
-                            {pct}% · {formatBytes(progress.bytesDownloaded)} / {formatBytes(progress.bytesTotal || m.size_bytes)}
-                          </span>
-                        </div>
-                      )}
-                      <div className="settings-model-row__actions">
-                        {!m.installed && (
-                          <button
-                            type="button"
-                            className="btn btn--ghost"
-                            onClick={() => void downloadWhisperModel(m.id)}
-                            disabled={Boolean(downloadingModel)}
-                          >
-                            {isDownloading ? "מוריד…" : "הורד"}
-                          </button>
-                        )}
-                        {m.installed && !m.is_active && (
-                          <button
-                            type="button"
-                            className="btn btn--ghost"
-                            onClick={() => void deleteWhisperModel(m.id)}
-                            disabled={Boolean(downloadingModel)}
-                          >
-                            מחק
-                          </button>
-                        )}
-                        {m.installed && m.is_active && (
-                          <button
-                            type="button"
-                            className="btn btn--ghost"
-                            onClick={() => void deleteWhisperModel(m.id)}
-                            disabled={Boolean(downloadingModel)}
-                            title="מחיקת המודל הפעיל תאלץ את המערכת לבחור מודל אחר או לעבור לתמלול בענן"
-                          >
-                            מחק
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
             </section>
           )}
         </div>
