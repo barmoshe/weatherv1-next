@@ -18,7 +18,8 @@ jobs:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
-      (matches(github.event.workflow_run.head_branch, '^refs/tags/v[0-9]') || matches(github.event.workflow_run.head_branch, '^v[0-9]'))
+      (startsWith(github.event.workflow_run.head_branch, 'refs/tags/v') ||
+       (startsWith(github.event.workflow_run.head_branch, 'v') && !contains(github.event.workflow_run.head_branch, '/')))
     permissions:
       actions: read
       contents: write
