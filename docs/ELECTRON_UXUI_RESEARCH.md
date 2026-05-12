@@ -11,6 +11,33 @@ inside the renderer (component design, state, accessibility) still live in the
 existing `src/client/components/` tree and follow the project's normal Next.js
 conventions.
 
+## Implementation Map
+
+The runtime, auth, and asset-provider skeleton from `ELECTRON_DESKTOP_PLAN.md`
+has landed. Use this map to jump from a research recommendation to the file
+that already implements (or is the right place to extend) it. Everything
+below this section that says "we should…" should be read as "extend these
+files when implementing":
+
+| Concern                          | File                                                                 |
+| -------------------------------- | -------------------------------------------------------------------- |
+| Runtime config (`WEATHER_*` env) | `src/server/runtime/config.ts`                                       |
+| Runtime paths (uploads, cache)   | `src/server/runtime/paths.ts`                                        |
+| Desktop perimeter (proxy)        | `src/proxy.ts`                                                       |
+| Desktop auth helpers             | `src/server/runtime/auth.ts` (`DESKTOP_AUTH_HEADER`, `assertDesktopAuth`) |
+| Boot readiness for Electron      | `src/app/api/internal/health/route.ts`                               |
+| Settings panel status feed       | `src/app/api/desktop/status/route.ts`                                |
+| Asset provider boundary          | `src/server/assets/source.ts` (`LocalWorkspaceAssetSource`)          |
+| Preload bridge surface           | `src/shared/desktop.ts` (`DesktopBridge`)                            |
+| Renderer window typing           | `src/types/desktop.d.ts` (`window.desktop`)                          |
+
+Things **not yet landed** (forward-looking, but research applies):
+
+- Electron main / preload / server-manager (no `electron/` tree yet).
+- Tailwind v4 / Base UI primitives — no styling-framework code in repo yet.
+- `desktop.css` layer gated by `data-runtime="desktop"`.
+- macOS / Windows packaging via Forge.
+
 ## 1. Process Model And Security
 
 ### 1.1 Three-Process Mental Model
@@ -46,11 +73,24 @@ disables Chromium's process sandbox for that renderer — they go together.
 
 - The preload bridge is the **only** path from renderer → main. No `ipcRenderer`
   is exposed directly; expose **one named method per IPC message** via
-  `contextBridge` — only the methods listed in `ELECTRON_DESKTOP_PLAN.md` §10
-  are surfaced.
+  `contextBridge`. The bridge surface is typed in `src/shared/desktop.ts`
+  (`DesktopBridge`) — keep additions there, do not invent ad-hoc channels.
 - **IPC is the security boundary.** Treat every message from the renderer
   like an HTTP request from an untrusted client: validate inputs with `zod`
   (already a project dep), authorize the caller, sanitize before use.
+- HTTP perimeter: `src/proxy.ts` enforces the desktop session token across
+  `/api/:path*`, `/outputs/:path*`, and `/videos/:path*`. The token is
+  passed via the `x-weather-desktop-token` header
+  (`src/server/runtime/auth.ts:DESKTOP_AUTH_HEADER`) and compared with
+  `node:crypto.timingSafeEqual` to avoid timing leaks.
+- **Defense in depth — not optional.** Next 16 Server Actions are POSTed to
+  the route in which they are declared, so a matcher refactor or a future
+  Server Action can silently move a handler outside proxy coverage. The
+  plan's mitigation is to also call `assertDesktopAuth(req)` inside every
+  mutating route handler (`src/server/runtime/auth.ts`). The merged code
+  already wires this into the existing mutating routes; preserve that
+  pattern for any new route. Treat `proxy.ts` as a fast reject layer, not
+  the sole gate.
 - Block navigation away from the loopback origin via
   `webContents.on("will-navigate")` and `setWindowOpenHandler`. External links
   must open in the OS browser via `shell.openExternal` after URL allowlist
@@ -278,12 +318,16 @@ and resume on relaunch.
 
 ### 5.2 File Pickers
 
-- Always go through the preload bridge (`pickWorkspace`, `pickAudioFile`,
-  `importCatalogVideo`). Never use HTML `<input type="file">` for desktop
-  flows — it has no path, no folder picking, and confuses the user about
-  "where the file goes".
+- Always go through the preload bridge. The contract is defined in
+  `src/shared/desktop.ts:DesktopBridge`: `pickWorkspace`, `pickAudioFile`,
+  `importCatalogVideo`, plus `openPath`, `getAppInfo`, `getUpdateState`,
+  `saveSettings`. The renderer reads `window.desktop` (typed in
+  `src/types/desktop.d.ts`) and falls back to the existing browser flow
+  when the bridge is absent.
+- Never use HTML `<input type="file">` for desktop flows — it has no path,
+  no folder picking, and confuses the user about "where the file goes".
 - Cache the last-used directory under Electron config and pass it as
-  `defaultPath`.
+  `defaultPath` when invoking the OS dialog from main.
 
 ### 5.3 Long-Running Jobs
 
@@ -323,7 +367,11 @@ and resume on relaunch.
   by:
   - Showing the `BrowserWindow` with the right `backgroundColor` immediately
     and only loading the renderer URL after the local Next server reports
-    healthy on the internal health route.
+    healthy. The readiness route is already in place:
+    `src/app/api/internal/health/route.ts` — it gates on workspace
+    validation and FFmpeg verification, exactly what the supervisor needs.
+    Electron main should poll it (with the desktop token header) and only
+    call `loadURL` once `ok: true`.
   - `ready-to-show` event to defer first paint until the page has content.
 - Memory: each `BrowserWindow` is its own Chromium tab. Keep window count to
   one in v1. The Next child process is the bigger footprint; cap concurrent
@@ -403,7 +451,10 @@ Background reading (UX + styling, 2025–2026):
 - **Base UI** is the preferred headless primitive layer for new desktop UI;
   Radix kept where already used; no heavy component kit.
 - File interactions, theme detection, notifications, and progress all go
-  through the preload bridge — one method per IPC message — never raw
-  browser APIs.
+  through the preload bridge (`src/shared/desktop.ts:DesktopBridge`) — one
+  method per IPC message — never raw browser APIs.
+- Asset access goes through `src/server/assets/source.ts`
+  (`LocalWorkspaceAssetSource`). A future `GoogleDriveAssetSource` plugs in
+  behind the same interface — UI/UX should not reach past the provider.
 - Packaging requires real signing + notarization on macOS and EV signing on
   Windows; auto-update via `update-electron-app`.
