@@ -1,6 +1,6 @@
 "use client";
 import { JobRow } from "./JobRow";
-import type { HistoryEntry } from "@/client/hooks/useLocalHistory";
+import { HISTORY_JOB_STATUSES, type HistoryEntry } from "@/client/hooks/useLocalHistory";
 
 interface HistoryPanelProps {
   hidden?: boolean;
@@ -9,10 +9,8 @@ interface HistoryPanelProps {
   onRemove?: (jobId: string) => void;
 }
 
-const DONE_STATUSES = new Set(["completed", "failed"]);
-
 export function HistoryPanel({ hidden, jobs, onRestore, onRemove }: HistoryPanelProps) {
-  const done = jobs.filter((j) => DONE_STATUSES.has(j.status));
+  const done = jobs.filter((j) => HISTORY_JOB_STATUSES.has(j.status));
   const handleClearAll = () => {
     if (!onRemove) return;
     if (!window.confirm("לנקות את כל ההיסטוריה?")) return;

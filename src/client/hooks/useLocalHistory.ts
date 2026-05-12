@@ -13,6 +13,8 @@ export interface HistoryEntry {
 
 const KEY = "weatherv1.history";
 const MAX_ENTRIES = 50;
+export const ACTIVE_JOB_STATUSES = new Set(["draft", "queued", "processing"]);
+export const HISTORY_JOB_STATUSES = new Set(["completed", "failed", "lost"]);
 
 function load(): HistoryEntry[] {
   if (typeof window === "undefined") return [];

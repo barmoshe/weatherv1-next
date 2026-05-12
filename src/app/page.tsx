@@ -3,7 +3,12 @@
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTabFromUrl, useJobFromUrl, useUrlParams } from "@/client/hooks/useTabFromUrl";
-import { useLocalHistory, type HistoryEntry } from "@/client/hooks/useLocalHistory";
+import {
+  ACTIVE_JOB_STATUSES,
+  HISTORY_JOB_STATUSES,
+  useLocalHistory,
+  type HistoryEntry,
+} from "@/client/hooks/useLocalHistory";
 import { Masthead } from "@/client/components/Masthead";
 import { TabNav } from "@/client/components/TabNav";
 import { StudioPanel } from "@/client/components/studio/StudioPanel";
@@ -76,8 +81,8 @@ function AppInner() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [settingsOpen, handleNewJob]);
 
-  const activeCount = history.filter((j) => ["draft", "queued", "processing"].includes(j.status)).length;
-  const historyCount = history.filter((j) => ["completed", "failed"].includes(j.status)).length;
+  const activeCount = history.filter((j) => ACTIVE_JOB_STATUSES.has(j.status)).length;
+  const historyCount = history.filter((j) => HISTORY_JOB_STATUSES.has(j.status)).length;
 
   return (
     <>

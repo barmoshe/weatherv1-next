@@ -1035,7 +1035,8 @@
         }
         .job-status-dot.is-completed  { background: var(--v1-success); }
         .job-status-dot.is-processing { background: var(--v1-coral); animation: pulse-dot 1.4s ease-in-out infinite; }
-        .job-status-dot.is-failed     { background: var(--v1-danger); }
+        .job-status-dot.is-failed,
+        .job-status-dot.is-lost       { background: var(--v1-danger); }
         .job-status-dot.is-queued     { background: var(--v1-ink-muted); }
         .job-status-dot.is-draft      { background: var(--v1-ink-muted); opacity: 0.55; }
         @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }

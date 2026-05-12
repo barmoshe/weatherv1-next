@@ -1,6 +1,6 @@
 "use client";
 import { JobRow } from "./JobRow";
-import type { HistoryEntry } from "@/client/hooks/useLocalHistory";
+import { ACTIVE_JOB_STATUSES, type HistoryEntry } from "@/client/hooks/useLocalHistory";
 
 interface ActivePanelProps {
   hidden?: boolean;
@@ -8,10 +8,8 @@ interface ActivePanelProps {
   onRestore?: (entry: HistoryEntry) => void;
 }
 
-const ACTIVE_STATUSES = new Set(["draft", "queued", "processing"]);
-
 export function ActivePanel({ hidden, jobs, onRestore }: ActivePanelProps) {
-  const active = jobs.filter((j) => ACTIVE_STATUSES.has(j.status));
+  const active = jobs.filter((j) => ACTIVE_JOB_STATUSES.has(j.status));
   return (
     <section
       className="tab-panel"

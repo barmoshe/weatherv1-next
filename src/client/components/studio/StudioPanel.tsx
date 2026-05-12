@@ -91,7 +91,13 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
         ]);
         if (cancelled) return;
         if (!planRes.ok) {
-          setError(`Job ${restoreJobId.slice(0, 8)} not found`);
+          if (planRes.status === 404) {
+            onJobStatusChange?.(restoreJobId, "lost");
+            setPhase("failed");
+            setError(`Job ${restoreJobId.slice(0, 8)} not found`);
+            return;
+          }
+          setError(`Could not restore job ${restoreJobId.slice(0, 8)}`);
           return;
         }
         const planPayload = await planRes.json() as {
@@ -119,16 +125,20 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
 
         let liveStatus: string | null = null;
         let outputUrl: string | null = null;
-        if (statusRes.ok) {
+        if (statusRes.status === 404) {
+          liveStatus = "lost";
+        } else if (statusRes.ok) {
           const s = await statusRes.json() as { status?: string; output_url?: string | null };
           liveStatus = s.status ?? null;
           outputUrl = s.output_url ?? null;
         }
+        if (liveStatus) onJobStatusChange?.(restoreJobId, liveStatus, outputUrl);
 
         if (liveStatus === "completed") {
           setPhase("done");
           if (outputUrl) onJobCompleted?.(restoreJobId, outputUrl);
-        } else if (liveStatus === "failed") {
+        } else if (liveStatus === "failed" || liveStatus === "lost") {
+          if (liveStatus === "lost") setError(`Job ${restoreJobId.slice(0, 8)} not found`);
           setPhase("failed");
         } else if (liveStatus === "processing" || liveStatus === "queued") {
           setPhase("rendering");
@@ -160,7 +170,7 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
     if (jobStatus.status === "completed" && jobStatus.output_url) {
       setPhase("done");
       onJobCompleted?.(jobId, jobStatus.output_url);
-    } else if (jobStatus.status === "failed") {
+    } else if (jobStatus.status === "failed" || jobStatus.status === "lost") {
       setError(jobStatus.error ?? "Render failed");
       setPhase("failed");
     } else if (jobStatus.status === "processing" && phase !== "rendering") {

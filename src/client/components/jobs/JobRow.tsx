@@ -13,6 +13,9 @@ const STATUS_TAG_HE: Record<string, string> = {
   draft: "טיוטה",
   queued: "בתור",
   processing: "מרנדר",
+  completed: "הושלם",
+  failed: "נכשל",
+  lost: "לא נמצא",
 };
 
 export function JobRow({ entry, lane, onRestore, onDelete }: JobRowProps) {
