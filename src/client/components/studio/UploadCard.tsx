@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState, useCallback } from "react";
+import { desktop } from "@/client/lib/desktop";
 import type { StudioPhase } from "./StudioPanel";
 
 interface UploadCardProps {
@@ -19,6 +20,31 @@ export function UploadCard({ onSuccess, onError, onPhaseChange }: UploadCardProp
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const handleTranscribeResponse = useCallback(
+    async (res: Response, fallbackName: string) => {
+      const data = await res.json() as {
+        success: boolean;
+        error?: string;
+        job_id?: string;
+        transcript?: string;
+        duration?: number;
+        filename?: string;
+        segments?: Array<{ start: number; end: number; text: string }>;
+      };
+      if (!data.success || !data.job_id) {
+        throw new Error(data.error ?? "Transcription failed");
+      }
+      onSuccess({
+        job_id: data.job_id,
+        transcript: data.transcript ?? "",
+        duration: data.duration ?? 0,
+        filename: data.filename ?? fallbackName,
+        segments: data.segments ?? [],
+      });
+    },
+    [onSuccess],
+  );
+
   const processFile = useCallback(
     async (file: File) => {
       if (!file) return;
@@ -28,25 +54,7 @@ export function UploadCard({ onSuccess, onError, onPhaseChange }: UploadCardProp
         const fd = new FormData();
         fd.append("audio", file);
         const res = await fetch("/api/transcribe", { method: "POST", body: fd });
-        const data = await res.json() as {
-          success: boolean;
-          error?: string;
-          job_id?: string;
-          transcript?: string;
-          duration?: number;
-          filename?: string;
-          segments?: Array<{ start: number; end: number; text: string }>;
-        };
-        if (!data.success || !data.job_id) {
-          throw new Error(data.error ?? "Transcription failed");
-        }
-        onSuccess({
-          job_id: data.job_id,
-          transcript: data.transcript ?? "",
-          duration: data.duration ?? 0,
-          filename: data.filename ?? file.name,
-          segments: data.segments ?? [],
-        });
+        await handleTranscribeResponse(res, file.name);
       } catch (err) {
         onError(String(err));
         onPhaseChange("upload");
@@ -54,8 +62,34 @@ export function UploadCard({ onSuccess, onError, onPhaseChange }: UploadCardProp
         setLoading(false);
       }
     },
-    [onSuccess, onError, onPhaseChange],
+    [handleTranscribeResponse, onError, onPhaseChange],
   );
+
+  const processDesktopFile = useCallback(async () => {
+    if (!desktop) {
+      inputRef.current?.click();
+      return;
+    }
+
+    const picked = await desktop.pickAudioFile();
+    if (!picked) return;
+
+    setLoading(true);
+    onPhaseChange("transcribing");
+    try {
+      const res = await fetch("/api/transcribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ desktop_file_path: picked.path }),
+      });
+      await handleTranscribeResponse(res, picked.name);
+    } catch (err) {
+      onError(String(err));
+      onPhaseChange("upload");
+    } finally {
+      setLoading(false);
+    }
+  }, [handleTranscribeResponse, onError, onPhaseChange]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -107,7 +141,7 @@ export function UploadCard({ onSuccess, onError, onPhaseChange }: UploadCardProp
         className="btn upload-cta"
         type="button"
         disabled={loading}
-        onClick={() => inputRef.current?.click()}
+        onClick={processDesktopFile}
       >
         {loading ? "…" : "בחר קובץ"}
       </button>

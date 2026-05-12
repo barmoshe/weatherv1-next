@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { desktop } from "@/client/lib/desktop";
 import { useCatalog } from "@/client/hooks/useCatalog";
 import type { ParsedVideo } from "@/shared/types";
 import { CatalogFilters, type FilterState, type SortOrder } from "./CatalogFilters";
@@ -75,9 +77,13 @@ function sortVideos(videos: ParsedVideo[], sort: SortOrder): ParsedVideo[] {
 }
 
 export function CatalogPanel() {
+  const qc = useQueryClient();
   const { data: videos = [], isLoading, isError, error } = useCatalog();
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [selectedVideo, setSelectedVideo] = useState<ParsedVideo | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const patchFilters = useCallback((patch: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...patch }));
@@ -122,6 +128,72 @@ export function CatalogPanel() {
   const handleModalClose = useCallback(() => {
     setSelectedVideo(null);
   }, []);
+
+  const completeImport = useCallback(async (res: Response) => {
+    const data = await res.json() as { success: boolean; error?: string };
+    if (!res.ok || !data.success) {
+      throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    await qc.invalidateQueries({ queryKey: ["catalog"] });
+    await qc.invalidateQueries({ queryKey: ["tag-counts"] });
+  }, [qc]);
+
+  const handleImportClick = useCallback(async () => {
+    setImportError(null);
+    if (!desktop) {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    const picked = await desktop.importCatalogVideo();
+    if (!picked) return;
+
+    setImporting(true);
+    try {
+      const nameWithoutExt = picked.name.replace(/\.[^.]+$/, "");
+      const res = await fetch("/api/catalog/videos", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          desktop_file_path: picked.path,
+          metadata: {
+            description: nameWithoutExt,
+            source: "original",
+            tags: {},
+          },
+        }),
+      });
+      await completeImport(res);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setImporting(false);
+    }
+  }, [completeImport]);
+
+  const handleBrowserVideoChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setImportError(null);
+    setImporting(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("metadata", JSON.stringify({
+        description: file.name.replace(/\.[^.]+$/, ""),
+        source: "original",
+        tags: {},
+      }));
+      const res = await fetch("/api/catalog/videos", { method: "POST", body: fd });
+      await completeImport(res);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setImporting(false);
+    }
+  }, [completeImport]);
 
   return (
     <section
@@ -174,15 +246,34 @@ export function CatalogPanel() {
               <option value="name">מזהה (א-ת)</option>
             </optgroup>
           </select>
-          <button type="button" className="btn" id="add-video-btn">
+          <button
+            type="button"
+            className="btn"
+            id="add-video-btn"
+            disabled={importing}
+            onClick={handleImportClick}
+          >
             <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ marginInlineEnd: "0.3rem", verticalAlign: "-2px" }}>
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            העלה וידאו
+            {importing ? "מעלה…" : "העלה וידאו"}
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/mp4,video/quicktime,.mp4,.mov"
+            hidden
+            onChange={handleBrowserVideoChange}
+          />
         </div>
       </header>
+
+      {importError && (
+        <div className="error-banner" role="alert">
+          שגיאה בייבוא וידאו: {importError}
+        </div>
+      )}
 
       <div className="catalog-layout">
         <CatalogFilters

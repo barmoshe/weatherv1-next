@@ -787,6 +787,7 @@
             font-size: 0.88rem;
         }
         .modal-dialog { max-width: 560px; }
+        .modal-dialog--settings { max-width: 680px; }
         .settings-section { margin-block-end: 1.5rem; }
         .settings-section:last-child { margin-block-end: 0; }
         .settings-section-header {
@@ -816,6 +817,73 @@
         .settings-section-actions {
             display: flex; justify-content: flex-end; gap: 0.5rem;
             margin-block-start: 0.6rem;
+        }
+        .settings-status-grid {
+            display: grid;
+            gap: 0.45rem;
+        }
+        .settings-status-row {
+            background: var(--v1-cream);
+            border-radius: var(--radius-sm);
+            padding: 0.62rem 0.75rem;
+            display: grid;
+            grid-template-columns: auto minmax(5.5rem, 0.7fr) minmax(0, 1.6fr);
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.88rem;
+        }
+        .settings-status-row .dot,
+        .settings-reloading .dot {
+            width: 10px; height: 10px; border-radius: 50%; flex: none;
+        }
+        .settings-status-row .dot.is-healthy { background: var(--v1-success); }
+        .settings-status-row .dot.is-missing { background: var(--v1-danger); }
+        .settings-status-row code {
+            direction: ltr;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .settings-field {
+            display: grid;
+            grid-template-columns: minmax(7rem, 0.4fr) minmax(0, 1fr);
+            gap: 0.6rem;
+            align-items: center;
+            margin-block: 0.45rem;
+        }
+        .settings-field span {
+            font-weight: 800;
+            color: var(--v1-ink);
+            font-size: 0.86rem;
+        }
+        .settings-field input {
+            min-width: 0;
+            width: 100%;
+            border: 1px solid rgb(0 0 0 / .16);
+            border-radius: var(--radius-sm);
+            padding: 0.48rem 0.6rem;
+            background: #fff;
+            color: var(--v1-ink);
+            font: inherit;
+            direction: ltr;
+            text-align: left;
+        }
+        .settings-field input:focus {
+            outline: 2px solid var(--v1-coral);
+            outline-offset: 1px;
+        }
+        .settings-reloading {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: grid;
+            place-items: center;
+            background: rgb(255 250 241 / .88);
+            color: var(--v1-ink);
+            font-weight: 800;
+            text-align: center;
+            padding: 1rem;
         }
         .catalog-card {
             background: var(--v1-cream); border-radius: var(--radius-sm);

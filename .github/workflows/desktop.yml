@@ -1,0 +1,56 @@
+name: Desktop
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+jobs:
+  package:
+    name: ${{ matrix.os }} package
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      OSX_SIGN_IDENTITY: ${{ secrets.OSX_SIGN_IDENTITY }}
+      WIN_CERT_FILE: ${{ secrets.WIN_CERT_FILE }}
+      WIN_CERT_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npx tsc --noEmit
+
+      - run: npm test
+
+      - name: Package unsigned desktop app
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: npm run electron:build
+
+      - name: Make release artifacts
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: npm run electron:make
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-${{ matrix.os }}
+          path: |
+            out/**
+            !out/**/node_modules/**
+          if-no-files-found: ignore

@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "standalone:prep": "node scripts/prepare-standalone.cjs",
-    "electron:dev": "electron .",
+    "electron:dev": "node scripts/run-electron.cjs .",
     "electron:build": "next build && npm run standalone:prep && electron-forge package",
     "electron:make": "next build && npm run standalone:prep && electron-forge make"
   },
