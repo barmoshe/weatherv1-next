@@ -19,6 +19,12 @@ export async function GET(
   if (!video) {
     return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
   }
+  if (video.availability !== "local") {
+    return NextResponse.json(
+      { success: false, error: "Video must be downloaded before poster generation", availability: video.availability },
+      { status: 409 },
+    );
+  }
 
   const posterFilePath = await generatePoster(video.path, vidId, postersDir, force);
   if (!posterFilePath || !fs.existsSync(posterFilePath)) {

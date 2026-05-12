@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { desktop } from "@/client/lib/desktop";
-import { useCatalog } from "@/client/hooks/useCatalog";
+import { useCatalog, useR2SyncStatus } from "@/client/hooks/useCatalog";
 import type { ParsedVideo } from "@/shared/types";
 import { CatalogFilters, type FilterState, type SortOrder } from "./CatalogFilters";
 import { VideoGrid } from "./VideoGrid";
@@ -16,6 +16,22 @@ const DEFAULT_FILTERS: FilterState = {
   untaggedOnly: false,
   sort: "newest",
 };
+
+function CatalogSkeleton() {
+  return (
+    <div className="catalog-grid catalog-grid--skeleton" aria-hidden="true">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="video-card video-card--skeleton">
+          <div className="video-thumb skeleton-block" />
+          <div className="video-card-body">
+            <span className="skeleton-line" />
+            <span className="skeleton-line skeleton-line--short" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function hasAnySegmentTag(video: ParsedVideo): boolean {
   for (const seg of video.segments ?? []) {
@@ -79,14 +95,36 @@ function sortVideos(videos: ParsedVideo[], sort: SortOrder): ParsedVideo[] {
 export function CatalogPanel() {
   const qc = useQueryClient();
   const { data: videos = [], isLoading, isError, error } = useCatalog();
+  const { data: r2Status } = useR2SyncStatus();
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [searchText, setSearchText] = useState(DEFAULT_FILTERS.search);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedVideo, setSelectedVideo] = useState<ParsedVideo | null>(null);
   const [importing, setImporting] = useState(false);
+  const [materializingId, setMaterializingId] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const patchFilters = useCallback((patch: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => patchFilters({ search: searchText }), 180);
+    return () => window.clearTimeout(timer);
+  }, [patchFilters, searchText]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = document.activeElement?.tagName;
+      if (e.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   const filtered = useMemo(() => {
@@ -128,6 +166,26 @@ export function CatalogPanel() {
   const handleModalClose = useCallback(() => {
     setSelectedVideo(null);
   }, []);
+
+  const handleMaterialize = useCallback(async (video: ParsedVideo) => {
+    setMaterializingId(video.id);
+    setImportError(null);
+    try {
+      const res = await fetch("/api/sync/r2/materialize", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ video_id: video.id }),
+      });
+      const data = await res.json() as { success: boolean; error?: string };
+      if (!res.ok || !data.success) throw new Error(data.error ?? `HTTP ${res.status}`);
+      await qc.invalidateQueries({ queryKey: ["catalog"] });
+      await qc.invalidateQueries({ queryKey: ["r2-sync-status"] });
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setMaterializingId(null);
+    }
+  }, [qc]);
 
   const completeImport = useCallback(async (res: Response) => {
     const data = await res.json() as { success: boolean; error?: string };
@@ -214,19 +272,28 @@ export function CatalogPanel() {
         <div className="catalog-bar-left">
           <h2 className="catalog-title">קטלוג קליפים</h2>
           <span className="catalog-progress" id="catalog-progress">
-            {isLoading ? "טוען…" : `${filtered.length} מתוך ${videos.length}`}
+            {isLoading
+              ? "טוען…"
+              : r2Status?.enabled
+                ? `${filtered.length} מתוך ${videos.length} · מקומי ${r2Status.counts.local} · בענן ${r2Status.counts.cloudOnly}`
+                : `${filtered.length} מתוך ${videos.length}`}
           </span>
         </div>
         <div className="catalog-bar-right">
           <input
+            ref={searchInputRef}
             type="search"
             id="catalog-search"
             className="catalog-search"
             placeholder="חפש בקטלוג…"
             aria-label="חיפוש"
-            value={filters.search}
-            onChange={(e) => patchFilters({ search: e.target.value })}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
           />
+          <div className="catalog-view-toggle" role="group" aria-label="תצוגה">
+            <button type="button" className={viewMode === "grid" ? "is-active" : ""} onClick={() => setViewMode("grid")}>רשת</button>
+            <button type="button" className={viewMode === "list" ? "is-active" : ""} onClick={() => setViewMode("list")}>רשימה</button>
+          </div>
           <select
             id="catalog-sort"
             className="catalog-sort"
@@ -284,17 +351,31 @@ export function CatalogPanel() {
         />
 
         <div className="catalog-main">
+          {r2Status?.enabled && (
+            <div className={`catalog-sync-strip${r2Status.conflict ? " is-conflict" : ""}${r2Status.error ? " is-error" : ""}`}>
+              {r2Status.conflict
+                ? "הקטלוג המרוחק השתנה"
+                : r2Status.error
+                  ? r2Status.error
+                  : r2Status.counts.syncing > 0
+                    ? `מסנכרן ${r2Status.counts.syncing} קבצים`
+                    : r2Status.ready
+                      ? "כל הקבצים מסונכרנים"
+                      : "R2 לא מחובר"}
+              {materializingId && <span> · מוריד {materializingId}</span>}
+            </div>
+          )}
           <div className="active-filters" id="active-filters" hidden />
           <div className="grid-summary" id="grid-summary" hidden />
           <div className="sr-only" role="status" aria-live="polite" id="grid-announce" />
           {isLoading ? (
-            <div className="catalog-grid" id="catalog-grid">
-              <div className="catalog-loading">טוען קטלוג…</div>
-            </div>
+            <CatalogSkeleton />
           ) : (
             <VideoGrid
               videos={filtered}
               onVideoClick={handleVideoClick}
+              onMaterialize={handleMaterialize}
+              viewMode={viewMode}
             />
           )}
         </div>

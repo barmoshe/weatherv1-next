@@ -9,6 +9,7 @@ import { parseCatalog } from "@/server/catalog/parser";
 import { probeVideo } from "@/server/ffmpeg/probe";
 import { generatePoster } from "@/server/ffmpeg/posters";
 import { isValidSource, SOURCE_VALUES } from "@/server/tag-vocab";
+import { syncPostersForVideo, uploadVideoForEntry } from "@/server/sync/r2/service";
 import type { CatalogEntry } from "@/shared/types";
 
 function slugify(text: string): string {
@@ -159,6 +160,13 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.warn(`Poster generation failed for ${newId}:`, e);
     }
+
+    void uploadVideoForEntry(newId).catch((e) => {
+      console.warn(`R2 upload failed for ${newId}:`, e);
+    });
+    void syncPostersForVideo(newId).catch((e) => {
+      console.warn(`R2 poster sync failed for ${newId}:`, e);
+    });
 
     return NextResponse.json({ success: true, video: entry });
   } catch (err) {

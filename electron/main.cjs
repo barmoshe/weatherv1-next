@@ -44,7 +44,6 @@ const { verifyFFmpeg } = require("./ffmpeg-verify.cjs");
 const cfg = require("./config.cjs");
 const { createServerManager } = require("./server-manager.cjs");
 const { isLoadableOrigin } = require("./window-utils.cjs");
-const { runGoogleDriveOAuth } = require("./google-drive-oauth.cjs");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const IS_DEV = !app.isPackaged;
@@ -280,36 +279,6 @@ async function restartChildWithCurrentSettings() {
   }
 }
 
-ipcMain.handle("desktop:connectGoogleDrive", async () => {
-  const settings = cfg.readSettings();
-  const clientId =
-    (settings.googleDrive && settings.googleDrive.clientId) ||
-    process.env.GOOGLE_CLIENT_ID ||
-    null;
-  if (!clientId) {
-    throw new Error("Set a Google OAuth desktop client ID before connecting Drive");
-  }
-
-  const tokens = await runGoogleDriveOAuth({
-    clientId,
-    openExternal: (url) => shell.openExternal(url),
-  });
-  if (!tokens.refresh_token) {
-    throw new Error("Google did not return a refresh token. Revoke app access and try connecting again.");
-  }
-
-  cfg.writeSettings({
-    googleDrive: { enabled: true, clientId },
-    keys: {
-      googleDriveRefreshToken: cfg.encryptSecret(tokens.refresh_token, { safeStorage }),
-    },
-    encryption: safeStorage.isEncryptionAvailable() ? "safe-storage" : "none",
-  });
-
-  await restartChildWithCurrentSettings();
-  return { success: true };
-});
-
 ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   const patch = {};
   if (update && typeof update.workspaceDir === "string") patch.workspaceDir = update.workspaceDir;
@@ -320,17 +289,17 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   if (update && typeof update.llmProvider === "string" && llmProviders.has(update.llmProvider)) {
     patch.llmProvider = update.llmProvider;
   }
-  if (update && typeof update.googleClientId === "string") {
-    patch.googleDrive = {
-      ...(patch.googleDrive || {}),
-      clientId: update.googleClientId.trim() || null,
-    };
+  if (update && typeof update.r2Enabled === "boolean") {
+    patch.r2 = { ...(patch.r2 || {}), enabled: update.r2Enabled };
   }
-  if (update && typeof update.googleDriveEnabled === "boolean") {
-    patch.googleDrive = {
-      ...(patch.googleDrive || {}),
-      enabled: update.googleDriveEnabled,
-    };
+  if (update && typeof update.r2GatewayUrl === "string") {
+    patch.r2 = { ...(patch.r2 || {}), gatewayUrl: update.r2GatewayUrl.trim() || null };
+  }
+  if (update && typeof update.r2TenantId === "string") {
+    patch.r2 = { ...(patch.r2 || {}), tenantId: update.r2TenantId.trim() || null };
+  }
+  if (update && typeof update.r2BucketName === "string") {
+    patch.r2 = { ...(patch.r2 || {}), bucketName: update.r2BucketName.trim() || null };
   }
 
   const keyUpdates = {};
@@ -343,10 +312,14 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   if (update && typeof update.geminiKey === "string") {
     keyUpdates.gemini = cfg.encryptSecret(update.geminiKey, { safeStorage });
   }
+  if (update && typeof update.r2SessionToken === "string") {
+    keyUpdates.r2SessionToken = cfg.encryptSecret(update.r2SessionToken, { safeStorage });
+  }
   if (update && Array.isArray(update.clearKeys)) {
     if (update.clearKeys.includes("openai")) keyUpdates.openai = null;
     if (update.clearKeys.includes("anthropic")) keyUpdates.anthropic = null;
     if (update.clearKeys.includes("gemini")) keyUpdates.gemini = null;
+    if (update.clearKeys.includes("r2")) keyUpdates.r2SessionToken = null;
   }
   if (Object.keys(keyUpdates).length > 0) patch.keys = keyUpdates;
 

@@ -18,6 +18,12 @@ export async function GET(
   if (!video) {
     return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
   }
+  if (video.availability !== "local") {
+    return NextResponse.json(
+      { success: false, error: "Video must be downloaded before preview", availability: video.availability },
+      { status: 409 },
+    );
+  }
 
   const previewFilePath = await getPreviewPath(video.path, vidId, previewsDir);
   if (!previewFilePath || !fs.existsSync(previewFilePath)) {

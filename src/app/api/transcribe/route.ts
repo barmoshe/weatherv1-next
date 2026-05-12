@@ -8,6 +8,7 @@ import { upsertJob } from "@/server/jobs/store";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
+import { uploadRuntimeFile } from "@/server/sync/r2/service";
 
 export async function POST(req: NextRequest) {
   const denied = assertDesktopAuth(req);
@@ -63,6 +64,10 @@ export async function POST(req: NextRequest) {
       duration_sec: duration,
       transcript: text,
       transcript_segments: segments,
+    });
+
+    void uploadRuntimeFile(`voiceovers/${jobId}/${savedName}`, savedPath).catch((e) => {
+      console.warn(`R2 voiceover upload failed for ${jobId}:`, e);
     });
 
     return NextResponse.json({

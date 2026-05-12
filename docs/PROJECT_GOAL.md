@@ -5,7 +5,7 @@ Read it before large changes, release work, or any task where the desired end st
 
 ## Current Product Goal
 
-WeatherV1 is a local-first weather video production app. It turns recorded narration into a transcribed, scene-planned, ffmpeg-rendered 9:16 forecast video using a local media catalog, with optional Google Drive sync for the catalog JSON.
+WeatherV1 is a local-first weather video production app. It turns recorded narration into a transcribed, scene-planned, ffmpeg-rendered 9:16 forecast video using a local media catalog, with optional Cloudflare R2 sync for catalog/media assets.
 
 The project must stay useful in two runtimes:
 
@@ -29,8 +29,8 @@ Ship a reliable desktop alpha that a non-developer can install, open, point at a
 
 ## Non-Goals For Now
 
-- Google Drive-backed media asset provider implementation.
-- Full Drive media sync; video/music files remain local-first for ffmpeg in v1.
+- Browser-direct R2 uploads; desktop/server-side sync owns v1 uploads.
+- Multi-tenant hosted SaaS storage beyond the single-tenant prefix model.
 - Staged/delta updates.
 - Rewriting the Next renderer as a pure IPC-native app.
 - Public signed/notarized distribution before Apple and Windows signing secrets are configured.
@@ -39,7 +39,8 @@ Ship a reliable desktop alpha that a non-developer can install, open, point at a
 
 - Keep the existing `/api/*` renderer contract unless a task explicitly changes it.
 - Keep local media access behind the runtime config and asset-source boundary.
-- Keep Google Drive catalog sync behind the catalog-store boundary; do not request broad `drive` or `drive.readonly` scopes for v1.
+- Keep R2 sync as a sidecar around the local catalog; do not make ffmpeg depend on remote URLs.
+- Do not ship permanent R2 credentials in Electron. Use the Worker gateway to mint short-lived, tenant-scoped credentials.
 - Keep desktop session-token auth in both `src/proxy.ts` and mutating handlers.
 - Keep Electron renderer security settings locked down: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`.
 - Keep the desktop child server on deterministic loopback ports: `3765`, then `3766`, `3767`, `3768`.

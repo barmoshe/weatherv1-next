@@ -95,12 +95,9 @@ export function parseCatalog(
     claimedIds.push(entry.id);
 
     const filePath = path.join(videosDir, entry.filename);
-    if (!fs.existsSync(filePath)) {
-      console.warn(
-        `Catalog entry '${entry.id}' not found at ${filePath}; skipping`
-      );
+    const existsLocally = fs.existsSync(filePath);
+    if (!existsLocally) {
       missingIds.push(entry.id);
-      continue;
     }
 
     // Prefer catalog segments[] (AI-tagged), fall back to legacy MM:SS parsing
@@ -111,7 +108,15 @@ export function parseCatalog(
 
     const segments = normaliseSegments(entry, rawSegs);
 
-    videos.push({ ...entry, path: filePath, segments });
+    const remoteStatus = entry.remote?.status;
+    const availability =
+      existsLocally ? "local" :
+      remoteStatus === "syncing" || remoteStatus === "uploading" || remoteStatus === "downloading" ? "syncing" :
+      remoteStatus === "error" ? "error" :
+      entry.remote?.key ? "cloud_only" :
+      "error";
+
+    videos.push({ ...entry, path: filePath, availability, segments });
   }
 
   lastHealth = {

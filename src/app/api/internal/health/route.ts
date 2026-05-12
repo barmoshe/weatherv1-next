@@ -4,6 +4,7 @@ import { getAssetSource } from "@/server/assets/source";
 import { verifyFFmpegAtBoot } from "@/server/ffmpeg/binaries";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { catalogStoreStatus } from "@/server/catalog/storage";
+import { getR2SyncStatus } from "@/server/sync/r2/service";
 
 export async function GET(req: NextRequest) {
   const denied = assertDesktopAuth(req);
@@ -25,6 +26,7 @@ export async function GET(req: NextRequest) {
     desktopMode: cfg.desktopMode,
     workspace,
     catalogStore: catalogStoreStatus(),
+    r2: await getR2SyncStatus(),
     ffmpeg,
   });
 }

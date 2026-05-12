@@ -56,6 +56,16 @@ export const CatalogEntrySchema = z.object({
   segments: z.array(SegmentEntrySchema).optional().default([]),
   added_at: z.string().optional(),
   original_filename: z.string().optional(),
+  remote: z
+    .object({
+      key: z.string().optional(),
+      etag: z.string().optional(),
+      size: z.number().optional(),
+      uploadedAt: z.string().optional(),
+      status: z.enum(["local", "cloud_only", "uploading", "downloading", "syncing", "error"]).optional(),
+      error: z.string().optional(),
+    })
+    .optional(),
 });
 export type CatalogEntry = z.infer<typeof CatalogEntrySchema>;
 
@@ -76,6 +86,7 @@ export interface NormalisedSegment extends SegmentEntry {
 
 export interface ParsedVideo extends CatalogEntry {
   path: string; // absolute path to video file
+  availability: "local" | "cloud_only" | "syncing" | "error";
   segments: NormalisedSegment[];
 }
 

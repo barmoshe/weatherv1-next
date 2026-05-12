@@ -19,7 +19,6 @@ const bridge = {
   getAppInfo: () => ipcRenderer.invoke("desktop:getAppInfo"),
   getUpdateState: () => ipcRenderer.invoke("desktop:getUpdateState"),
   saveSettings: (update) => ipcRenderer.invoke("desktop:saveSettings", update),
-  connectGoogleDrive: () => ipcRenderer.invoke("desktop:connectGoogleDrive"),
 };
 
 contextBridge.exposeInMainWorld("desktop", bridge);

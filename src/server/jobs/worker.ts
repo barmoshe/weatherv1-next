@@ -17,6 +17,7 @@ import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildVideoMap } from "@/server/catalog/parser";
 import type { ResolvedPick } from "@/shared/types";
 import { getRuntimePaths } from "@/server/runtime/paths";
+import { materializeVideo, uploadRuntimeFile } from "@/server/sync/r2/service";
 
 const queue: string[] = [];
 let draining = false;
@@ -65,6 +66,10 @@ async function runJob(jobId: string, audioFilename: string): Promise<void> {
       return;
     }
 
+    for (const videoId of Array.from(new Set(timeline.map((pick) => pick.video_id)))) {
+      await materializeVideo(videoId);
+    }
+
     // Build video map from current catalog
     const catalog = readCatalog();
     const videos = parseCatalog(catalog);
@@ -77,6 +82,9 @@ async function runJob(jobId: string, audioFilename: string): Promise<void> {
         output_url: path.basename(outputPath),
       });
       updatePlanBundle(jobId, { output_url: path.basename(outputPath) });
+      void uploadRuntimeFile(`outputs/${jobId}/forecast.mp4`, outputPath).catch((e) => {
+        console.warn(`[worker] R2 output upload failed for ${jobId}:`, e);
+      });
     } else {
       updateJob(jobId, { status: "failed", error: "Renderer returned failure" });
     }

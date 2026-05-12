@@ -13,6 +13,14 @@ export async function GET(
 
   const videos = parseCatalog(undefined, getVideosDir());
   const videoMap = buildVideoMap(videos);
+  const clipId = segId.includes("-s") ? segId.slice(0, segId.lastIndexOf("-s")) : segId;
+  const clip = videoMap[clipId];
+  if (clip && clip.availability !== "local") {
+    return NextResponse.json(
+      { success: false, error: "Video must be downloaded before poster generation", availability: clip.availability },
+      { status: 409 },
+    );
+  }
 
   const posterFilePath = await generateSegmentPoster(segId, videoMap, force);
   if (!posterFilePath || !fs.existsSync(posterFilePath)) {

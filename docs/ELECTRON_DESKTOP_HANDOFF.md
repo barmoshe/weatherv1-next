@@ -40,10 +40,10 @@ Backend / runtime:
 | `src/server/runtime/config.ts` | Single source of truth for env-driven paths (workspace, runtime, ffmpeg, bg music). Cached singleton + `resetRuntimeConfigForTests()`. |
 | `src/server/runtime/paths.ts` | Derives uploads/outputs/cache/posters/previews/segment_posters from `runtimeDir`. |
 | `src/server/runtime/auth.ts` | `DESKTOP_AUTH_HEADER`, `isDesktopMode()`, `isDesktopRequestAuthorized()`, `assertDesktopAuth(req)` (returns `NextResponse \| null`). `timingSafeEqual` for the comparison. |
-| `src/server/assets/source.ts` | `LocalWorkspaceAssetSource` (provider interface ready for a future `GoogleDriveAssetSource`). Cached singleton + reset hook. |
-| `src/server/catalog/stores.ts` | `CatalogStore` boundary. `LocalCatalogStore` keeps filesystem behavior; `GoogleDriveCatalogStore` syncs the local catalog cache to `WeatherV1/catalog.json` in Drive. |
-| `src/server/catalog/google-drive-client.ts` | Dependency-light Drive REST client using `drive.file` + `drive.appdata` scopes. |
-| `src/app/api/catalog/sync/route.ts` | Catalog sync status and pull-from-Drive endpoint. |
+| `src/server/assets/source.ts` | `LocalWorkspaceAssetSource`. Cached singleton + reset hook. |
+| `src/server/catalog/stores.ts` | Local catalog store. R2 sync is a sidecar, not the hot path for `readCatalog()` / `writeCatalog()`. |
+| `src/server/sync/r2/*` | Cloudflare R2 sync client/state/service: temporary credentials, catalog push/pull, media materialization, videos, voiceovers, outputs, clip posters, segment posters. |
+| `src/app/api/sync/r2/*` | Auth-gated R2 sync endpoints for status, pull, push, materialize, retry, and replace remote. |
 | `src/proxy.ts` | Token guard. Matchers: `/api/:path*`, `/outputs/:path*`, `/videos/:path*`. No-ops outside desktop mode. |
 | `src/app/api/internal/health/route.ts` | Boot probe for the Electron supervisor. Auth-gated; returns workspace + ffmpeg readiness. |
 | `src/app/api/desktop/status/route.ts` | Auth-gated GET surfacing runtime/workspace/key state to the (future) settings UI. |
@@ -58,7 +58,6 @@ Electron / packaging:
 | `electron/preload.cjs` | `contextBridge.exposeInMainWorld("desktop", { ... })` matching `DesktopBridge`. |
 | `electron/server-manager.cjs` | Port pick (3765 → 3766 → 3767 → 3768; never ephemeral), dev/prod spawn, `pollHealth(origin, token)`, `restart(env)`. Pure-Node; no electron import. |
 | `electron/config.cjs` | userData-backed `settings.json`; `safeStorage` for API keys with documented plaintext fallback; env builder; session-token generator. Pure-Node API; electron objects passed in as args. |
-| `electron/google-drive-oauth.cjs` | Installed-app Google OAuth with PKCE, system browser, and fixed local callback fallback ports. |
 | `electron/ffmpeg-verify.cjs` | env → bundled → PATH resolution; `app.asar` → `app.asar.unpacked` rewrite; structured `{ ok, ffmpegPath, ffprobePath, ffmpegSource, ffprobeSource, errors, warnings }`; never throws. |
 | `forge.config.cjs` | Packager + `asarUnpack` for ffmpeg packages + `.next/standalone/**`; osxSign (with `signatureFlags: "library"` for nested binaries); osxNotarize from env; makers (ZIP + Squirrel); auto-unpack-natives plugin; commented GitHub publisher. |
 | `build/entitlements.mac.plist` | Hardened-runtime entitlements. Includes `allow-jit`, `disable-library-validation`, `allow-dyld-environment-variables`. Explicitly NOT `allow-unsigned-executable-memory`. |
@@ -104,8 +103,8 @@ Renderer / CI:
 11. **Some dev shells inherit `ELECTRON_RUN_AS_NODE=1`.** In this environment, raw `electron .` made `require("electron").app` undefined. Use `npm run electron:dev`, which calls `scripts/run-electron.cjs` and clears that variable before launching the Electron binary.
 12. **GitHub Pages must be set to `GitHub Actions`.** The workflow is in-repo, but the repository setting still has to be flipped once under Settings → Pages → Build and deployment → Source.
 13. **The signed-release path is separate from the unsigned path.** The current workflows are enough for internal unsigned testing right away. Public external distribution still depends on GitHub secrets for Apple notarization and Windows signing, plus a final install smoke test on clean machines.
-14. **Google Drive v1 syncs catalog JSON only.** Media stays local because ffmpeg needs stable filesystem paths. Use only `drive.file` and `drive.appdata`; broad `drive` / `drive.readonly` scopes are intentionally out of scope.
-15. **Drive catalog conflicts are explicit.** If Drive metadata/checksum differs from the last known sync state, catalog writes fail with a conflict instead of overwriting remote changes.
+14. **R2 sync is local-first.** Media can sync to Cloudflare R2, but ffmpeg still works from local files. Remote-only clips must be materialized before preview/render.
+15. **R2 catalog conflicts are explicit.** If the remote catalog ETag differs from the last known sync state, pushes fail with a conflict until the user pulls remote or intentionally replaces remote.
 
 ## Remaining smoke tests
 
@@ -113,7 +112,7 @@ Renderer / CI:
 - Audio upload via native picker round-trips.
 - Catalog video import via native picker round-trips.
 - Render pipeline runs end to end with a user-chosen workspace.
-- Google Drive catalog connect, pull, edit, and conflict flows are smoke-tested with a real OAuth client.
+- Cloudflare R2 connect, pull, push, materialize, poster sync, and conflict flows are smoke-tested against the Worker gateway.
 - `npm run electron:make` produces unsigned local artifacts.
 - A tagged GitHub release produces attached `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe` assets end to end.
 - Signed release artifacts are validated in CI after signing secrets are configured.

@@ -1,0 +1,6 @@
+name: weatherv1-cloudflare
+description: WeatherV1 Cloudflare R2 bucket and Worker gateway
+runtime:
+  name: nodejs
+  options:
+    typescript: true

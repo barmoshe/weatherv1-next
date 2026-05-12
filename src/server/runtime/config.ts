@@ -13,14 +13,13 @@ export interface WeatherRuntimeConfig {
   ffmpegPath?: string;
   ffprobePath?: string;
   bgMusicPath: string;
-  googleDrive: {
+  r2: {
     enabled: boolean;
-    clientId?: string;
-    clientSecret?: string;
-    refreshToken?: string;
-    accessToken?: string;
-    rootFolderId?: string;
-    catalogFileId?: string;
+    gatewayUrl?: string;
+    tenantId?: string;
+    sessionToken?: string;
+    accountId?: string;
+    bucketName?: string;
     statePath?: string;
   };
 }
@@ -82,15 +81,14 @@ export function getRuntimeConfig(): WeatherRuntimeConfig {
     bgMusicPath:
       resolveFrom(projectRoot, process.env.BG_MUSIC_PATH) ??
       path.join(musicDir, "מוזיקת אנדר לתחזית.mp3"),
-    googleDrive: {
-      enabled: process.env.GOOGLE_DRIVE_CATALOG === "1",
-      clientId: normalizeOptional(process.env.GOOGLE_CLIENT_ID),
-      clientSecret: normalizeOptional(process.env.GOOGLE_CLIENT_SECRET),
-      refreshToken: normalizeOptional(process.env.GOOGLE_REFRESH_TOKEN),
-      accessToken: normalizeOptional(process.env.GOOGLE_ACCESS_TOKEN),
-      rootFolderId: normalizeOptional(process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID),
-      catalogFileId: normalizeOptional(process.env.GOOGLE_DRIVE_CATALOG_FILE_ID),
-      statePath: resolveFrom(projectRoot, process.env.GOOGLE_DRIVE_STATE_PATH),
+    r2: {
+      enabled: process.env.R2_SYNC_ENABLED === "1",
+      gatewayUrl: normalizeOptional(process.env.R2_GATEWAY_URL),
+      tenantId: normalizeOptional(process.env.R2_TENANT_ID),
+      sessionToken: normalizeOptional(process.env.R2_SESSION_TOKEN),
+      accountId: normalizeOptional(process.env.R2_ACCOUNT_ID),
+      bucketName: normalizeOptional(process.env.R2_BUCKET_NAME),
+      statePath: resolveFrom(projectRoot, process.env.R2_STATE_PATH),
     },
   };
 

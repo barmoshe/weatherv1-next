@@ -34,12 +34,15 @@ export interface DesktopSettingsUpdate {
   openaiKey?: string;
   anthropicKey?: string;
   geminiKey?: string;
-  clearKeys?: ("openai" | "anthropic" | "gemini")[];
+  clearKeys?: ("openai" | "anthropic" | "gemini" | "r2")[];
   ffmpegPath?: string;
   ffprobePath?: string;
   llmProvider?: LlmProviderPreference;
-  googleClientId?: string;
-  googleDriveEnabled?: boolean;
+  r2Enabled?: boolean;
+  r2GatewayUrl?: string;
+  r2TenantId?: string;
+  r2BucketName?: string;
+  r2SessionToken?: string;
 }
 
 export interface DesktopBridge {
@@ -50,5 +53,4 @@ export interface DesktopBridge {
   getAppInfo(): Promise<DesktopAppInfo>;
   getUpdateState(): Promise<DesktopUpdateState>;
   saveSettings(update: DesktopSettingsUpdate): Promise<{ success: true }>;
-  connectGoogleDrive(): Promise<{ success: true }>;
 }

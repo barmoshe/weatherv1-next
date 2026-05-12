@@ -45,17 +45,15 @@ function defaultSettings() {
     ffprobePath: null,
     // Stored as { scheme, data } objects (or null). `scheme` is "safe-storage"
     // for OS-keychain-encrypted values, "plaintext" otherwise.
-    keys: { openai: null, anthropic: null, gemini: null, googleDriveRefreshToken: null },
+    keys: { openai: null, anthropic: null, gemini: null, r2SessionToken: null },
     // Plain-text user preference. "auto" lets the server pick from configured keys.
     llmProvider: "auto", // "auto" | "anthropic" | "openai"
     encryption: "none", // "safe-storage" | "none"
-    googleDrive: {
+    r2: {
       enabled: false,
-      clientId: null,
-      rootFolderId: null,
-      catalogFileId: null,
-      lastKnownModifiedTime: null,
-      lastKnownMd5Checksum: null,
+      gatewayUrl: null,
+      tenantId: null,
+      bucketName: null,
     },
   };
 }
@@ -73,7 +71,7 @@ function readSettings() {
       ...defaultSettings(),
       ...raw,
       keys: { ...defaultSettings().keys, ...(raw.keys || {}) },
-      googleDrive: { ...defaultSettings().googleDrive, ...(raw.googleDrive || {}) },
+      r2: { ...defaultSettings().r2, ...(raw.r2 || {}) },
     };
     // Drop legacy fields from older releases (whisper.cpp / ONNX local transcription).
     // We're cloud-only now; leaving them in env confuses the Next child.
@@ -92,7 +90,7 @@ function writeSettings(next) {
     ...current,
     ...next,
     keys: { ...current.keys, ...(next.keys || {}) },
-    googleDrive: { ...current.googleDrive, ...(next.googleDrive || {}) },
+    r2: { ...current.r2, ...(next.r2 || {}) },
   };
   const tmp = `${settingsPath()}.tmp.${process.pid}`;
   fs.writeFileSync(tmp, JSON.stringify(merged, null, 2), "utf8");
@@ -150,9 +148,7 @@ function buildChildEnv(args) {
   const openai = decryptSecret(settings.keys.openai, { safeStorage: args.safeStorage });
   const anthropic = decryptSecret(settings.keys.anthropic, { safeStorage: args.safeStorage });
   const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
-  const googleDriveRefreshToken = decryptSecret(settings.keys.googleDriveRefreshToken, {
-    safeStorage: args.safeStorage,
-  });
+  const r2SessionToken = decryptSecret(settings.keys.r2SessionToken, { safeStorage: args.safeStorage });
 
   const env = {
     ...process.env,
@@ -171,13 +167,13 @@ function buildChildEnv(args) {
   if (gemini) env.GEMINI_API_KEY = gemini;
 
   env.WEATHER_USER_DATA_DIR = getUserDataDir();
-  if (settings.googleDrive.enabled && settings.googleDrive.clientId && googleDriveRefreshToken) {
-    env.GOOGLE_DRIVE_CATALOG = "1";
-    env.GOOGLE_CLIENT_ID = settings.googleDrive.clientId;
-    env.GOOGLE_REFRESH_TOKEN = googleDriveRefreshToken;
-    env.GOOGLE_DRIVE_STATE_PATH = path.join(getUserDataDir(), "google-drive-catalog-state.json");
-    if (settings.googleDrive.rootFolderId) env.GOOGLE_DRIVE_ROOT_FOLDER_ID = settings.googleDrive.rootFolderId;
-    if (settings.googleDrive.catalogFileId) env.GOOGLE_DRIVE_CATALOG_FILE_ID = settings.googleDrive.catalogFileId;
+  if (settings.r2.enabled && settings.r2.gatewayUrl && settings.r2.tenantId && r2SessionToken) {
+    env.R2_SYNC_ENABLED = "1";
+    env.R2_GATEWAY_URL = settings.r2.gatewayUrl;
+    env.R2_TENANT_ID = settings.r2.tenantId;
+    env.R2_SESSION_TOKEN = r2SessionToken;
+    env.R2_STATE_PATH = path.join(getUserDataDir(), "r2-sync-state.json");
+    if (settings.r2.bucketName) env.R2_BUCKET_NAME = settings.r2.bucketName;
   }
 
   // LLM provider preference. "auto" leaves the env var unset so the server-side

@@ -44,14 +44,6 @@ export function catalogStoreStatus(): CatalogStoreStatus {
   return getCatalogStore().status();
 }
 
-export async function pullCatalogFromDrive(): Promise<CatalogStoreStatus> {
-  const store = getCatalogStore();
-  if (!store.pullRemoteToLocal) return store.status();
-  const status = await store.pullRemoteToLocal();
-  invalidateCatalogCache();
-  return status;
-}
-
 export async function writeCatalog(catalog: Catalog): Promise<void> {
   await getCatalogStore().write(catalog);
   invalidateCatalogCache();

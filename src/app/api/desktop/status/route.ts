@@ -4,6 +4,7 @@ import { getRuntimeConfig } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { catalogStoreStatus } from "@/server/catalog/storage";
+import { getR2SyncStatus } from "@/server/sync/r2/service";
 
 const DEFAULT_CLAUDE_MODEL = "claude-sonnet-4-6";
 const DEFAULT_OPENAI_MODEL = "gpt-4o";
@@ -34,6 +35,8 @@ export async function GET(req: NextRequest) {
   const runtime = getRuntimePaths();
   const workspace = getAssetSource().validateWorkspace();
 
+  const r2 = await getR2SyncStatus();
+
   return NextResponse.json({
     success: true,
     desktop_mode: config.desktopMode,
@@ -63,5 +66,6 @@ export async function GET(req: NextRequest) {
       bg_music_path: config.bgMusicPath,
     },
     catalog_store: catalogStoreStatus(),
+    r2,
   });
 }

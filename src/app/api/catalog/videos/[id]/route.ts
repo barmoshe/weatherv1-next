@@ -4,6 +4,7 @@ import path from "node:path";
 import { readCatalog, writeCatalog, getVideosDir, invalidateCatalogCache } from "@/server/catalog/storage";
 import { isValidSource, SOURCE_VALUES } from "@/server/tag-vocab";
 import { assertDesktopAuth } from "@/server/runtime/auth";
+import { pushCatalogToR2, syncPostersForVideo } from "@/server/sync/r2/service";
 
 export async function PATCH(
   req: NextRequest,
@@ -79,6 +80,12 @@ export async function PATCH(
 
     await writeCatalog(catalog);
     invalidateCatalogCache();
+    void pushCatalogToR2().catch((e) => {
+      console.warn(`R2 catalog push failed after updating ${vidId}:`, e);
+    });
+    void syncPostersForVideo(vidId).catch((e) => {
+      console.warn(`R2 poster sync failed after updating ${vidId}:`, e);
+    });
     return NextResponse.json({ success: true, video: entry });
   } catch (err) {
     invalidateCatalogCache();
@@ -113,6 +120,9 @@ export async function DELETE(
     catalog.videos = catalog.videos.filter((v) => v.id !== vidId);
     await writeCatalog(catalog);
     invalidateCatalogCache();
+    void pushCatalogToR2().catch((e) => {
+      console.warn(`R2 catalog push failed after deleting ${vidId}:`, e);
+    });
     return NextResponse.json({ success: true });
   } catch (err) {
     invalidateCatalogCache();

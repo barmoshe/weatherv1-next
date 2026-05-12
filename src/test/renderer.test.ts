@@ -23,6 +23,7 @@ function makeProbeResult(durationSec: number): ProbeResult {
 function vid(id: string): ParsedVideo {
   return {
     id, filename: `${id}.mp4`, path: `/videos/${id}.mp4`,
+    availability: "local",
     description: "", duration_sec: 30, orientation: "V", source: "original",
     tags: { main: "", secondary: "", third: "" }, segments: [],
   };

@@ -46,13 +46,20 @@ interface DesktopStatus {
     bg_music_path: string;
   };
   catalog_store?: {
-    kind: "local" | "google-drive";
+    kind: "local";
     enabled: boolean;
     ready: boolean;
-    rootFolderId?: string;
-    catalogFileId?: string;
-    lastKnownModifiedTime?: string;
+  };
+  r2?: {
+    enabled: boolean;
+    ready: boolean;
+    gatewayUrl?: string;
+    tenantId?: string;
+    bucketName?: string;
+    lastCatalogEtag?: string;
     lastSyncAt?: string;
+    conflict?: { remoteEtag: string; localHash: string; detectedAt: string };
+    counts: { local: number; cloudOnly: number; syncing: number; error: number };
     error?: string;
   };
 }
@@ -87,12 +94,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
-  const [googleClientId, setGoogleClientId] = useState("");
-  const [googleDriveEnabled, setGoogleDriveEnabled] = useState(false);
+  const [r2Enabled, setR2Enabled] = useState(false);
+  const [r2GatewayUrl, setR2GatewayUrl] = useState("");
+  const [r2TenantId, setR2TenantId] = useState("");
+  const [r2BucketName, setR2BucketName] = useState("");
+  const [r2SessionToken, setR2SessionToken] = useState("");
   const [llmProvider, setLlmProvider] = useState<LlmProviderPreference>("auto");
   const [saving, setSaving] = useState(false);
-  const [connectingDrive, setConnectingDrive] = useState(false);
-  const [syncingDrive, setSyncingDrive] = useState(false);
+  const [syncingR2, setSyncingR2] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const loadHealth = useCallback(async () => {
@@ -133,7 +142,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (status.providers) {
         setLlmProvider(status.providers.llm_pref);
       }
-      setGoogleDriveEnabled(Boolean(status.catalog_store?.enabled));
+      setR2Enabled(Boolean(status.r2?.enabled));
+      setR2GatewayUrl(status.r2?.gatewayUrl ?? "");
+      setR2TenantId(status.r2?.tenantId ?? "");
+      setR2BucketName(status.r2?.bucketName ?? "");
     } catch (e) {
       setDesktopError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -163,14 +175,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (openaiKey.trim()) update.openaiKey = openaiKey.trim();
       if (anthropicKey.trim()) update.anthropicKey = anthropicKey.trim();
       if (geminiKey.trim()) update.geminiKey = geminiKey.trim();
-      if (googleClientId.trim()) update.googleClientId = googleClientId.trim();
-      update.googleDriveEnabled = googleDriveEnabled;
+      update.r2Enabled = r2Enabled;
+      update.r2GatewayUrl = r2GatewayUrl.trim();
+      update.r2TenantId = r2TenantId.trim();
+      update.r2BucketName = r2BucketName.trim();
+      if (r2SessionToken.trim()) update.r2SessionToken = r2SessionToken.trim();
       update.llmProvider = llmProvider;
 
       await desktop.saveSettings(update);
       setOpenaiKey("");
       setAnthropicKey("");
       setGeminiKey("");
+      setR2SessionToken("");
       await loadDesktopStatus();
       await loadHealth();
       setSaved(true);
@@ -184,16 +200,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     ffmpegPath,
     ffprobePath,
     geminiKey,
-    googleClientId,
-    googleDriveEnabled,
     llmProvider,
     loadDesktopStatus,
     loadHealth,
     openaiKey,
+    r2BucketName,
+    r2Enabled,
+    r2GatewayUrl,
+    r2SessionToken,
+    r2TenantId,
     workspaceDir,
   ]);
 
-  const clearKey = useCallback(async (provider: "openai" | "anthropic" | "gemini") => {
+  const clearKey = useCallback(async (provider: "openai" | "anthropic" | "gemini" | "r2") => {
     if (!desktop) return;
     setSaving(true);
     setDesktopError(null);
@@ -202,6 +221,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (provider === "openai") setOpenaiKey("");
       if (provider === "anthropic") setAnthropicKey("");
       if (provider === "gemini") setGeminiKey("");
+      if (provider === "r2") setR2SessionToken("");
       await loadDesktopStatus();
       await loadHealth();
       setSaved(true);
@@ -212,34 +232,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [loadDesktopStatus, loadHealth]);
 
-  const connectGoogleDrive = useCallback(async () => {
-    if (!desktop) return;
-    setConnectingDrive(true);
+  const pullCatalogFromR2 = useCallback(async () => {
+    setSyncingR2(true);
     setDesktopError(null);
     try {
-      if (googleClientId.trim()) {
-        await desktop.saveSettings({
-          googleClientId: googleClientId.trim(),
-          googleDriveEnabled: true,
-        });
-      }
-      await desktop.connectGoogleDrive();
-      await loadDesktopStatus();
-      await loadHealth();
-      setGoogleDriveEnabled(true);
-      setSaved(true);
-    } catch (e) {
-      setDesktopError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setConnectingDrive(false);
-    }
-  }, [googleClientId, loadDesktopStatus, loadHealth]);
-
-  const syncCatalogFromDrive = useCallback(async () => {
-    setSyncingDrive(true);
-    setDesktopError(null);
-    try {
-      const r = await fetch("/api/catalog/sync", { method: "POST" });
+      const r = await fetch("/api/sync/r2/pull", { method: "POST" });
       const data = (await r.json()) as { success: boolean; error?: string };
       if (!r.ok || !data.success) throw new Error(data.error ?? `HTTP ${r.status}`);
       await loadDesktopStatus();
@@ -247,7 +244,23 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     } catch (e) {
       setDesktopError(e instanceof Error ? e.message : String(e));
     } finally {
-      setSyncingDrive(false);
+      setSyncingR2(false);
+    }
+  }, [loadDesktopStatus, loadHealth]);
+
+  const pushCatalogToR2 = useCallback(async (replaceRemote = false) => {
+    setSyncingR2(true);
+    setDesktopError(null);
+    try {
+      const r = await fetch(replaceRemote ? "/api/sync/r2/replace-remote" : "/api/sync/r2/push", { method: "POST" });
+      const data = (await r.json()) as { success: boolean; error?: string };
+      if (!r.ok || !data.success) throw new Error(data.error ?? `HTTP ${r.status}`);
+      await loadDesktopStatus();
+      await loadHealth();
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSyncingR2(false);
     }
   }, [loadDesktopStatus, loadHealth]);
 
@@ -401,12 +414,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <span>{updateState ? updateState.status : "טוען..."}</span>
                 </div>
                 <div className="settings-status-row">
-                  <StatusDot ok={Boolean(desktopStatus?.catalog_store?.ready)} />
-                  <span>Google Drive</span>
+                  <StatusDot ok={Boolean(desktopStatus?.r2?.ready)} />
+                  <span>Cloudflare R2</span>
                   <span>
-                    {desktopStatus?.catalog_store?.kind === "google-drive"
-                      ? `מחובר · ${desktopStatus.catalog_store.lastSyncAt ? "סונכרן" : "ממתין לסנכרון"}`
-                      : "לא פעיל"}
+                    {desktopStatus?.r2?.ready
+                      ? `מחובר · ${desktopStatus.r2.lastSyncAt ? "סונכרן" : "ממתין לסנכרון"}`
+                      : desktopStatus?.r2?.enabled ? "חסר קונפיגורציה" : "לא פעיל"}
                   </span>
                 </div>
               </div>
@@ -444,56 +457,110 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {isDesktop && (
             <section className="settings-section">
               <div className="settings-section-header">
-                <h3>Google Drive Catalog</h3>
+                <h3>Cloudflare R2 Sync</h3>
                 <button
                   type="button"
                   className="settings-link"
-                  onClick={() => void syncCatalogFromDrive()}
-                  disabled={syncingDrive || !desktopStatus?.catalog_store?.enabled}
+                  onClick={() => void pullCatalogFromR2()}
+                  disabled={syncingR2 || !desktopStatus?.r2?.ready}
                 >
-                  {syncingDrive ? "מסנכרן…" : "משוך קטלוג"}
+                  {syncingR2 ? "מסנכרן…" : "משוך קטלוג"}
                 </button>
               </div>
               <p className="settings-hint">
-                הקטלוג מסתנכרן ל-WeatherV1/catalog.json בדרייב. קבצי וידאו נשארים מקומיים בשלב הזה.
+                R2 משמש כשכבת סנכרון וגיבוי. רינדור, תצוגות מקדימות וקבצי עבודה נשארים מקומיים.
               </p>
               <label className="settings-field">
-                <span>OAuth Client ID</span>
+                <span>Gateway URL</span>
                 <input
-                  value={googleClientId}
+                  value={r2GatewayUrl}
                   onChange={(e) => {
-                    setGoogleClientId(e.target.value);
+                    setR2GatewayUrl(e.target.value);
                     setSaved(false);
                   }}
-                  placeholder="Google Desktop OAuth client ID"
+                  placeholder="https://weatherv1-r2-gateway.example.workers.dev"
                 />
+              </label>
+              <label className="settings-field">
+                <span>Tenant ID</span>
+                <input
+                  value={r2TenantId}
+                  onChange={(e) => {
+                    setR2TenantId(e.target.value);
+                    setSaved(false);
+                  }}
+                  placeholder="default"
+                />
+              </label>
+              <label className="settings-field">
+                <span>Bucket</span>
+                <input
+                  value={r2BucketName}
+                  onChange={(e) => {
+                    setR2BucketName(e.target.value);
+                    setSaved(false);
+                  }}
+                  placeholder="weatherv1-media"
+                />
+              </label>
+              <label className="settings-field">
+                <span>App Token</span>
+                <div style={{ display: "flex", gap: "8px", flex: 1 }}>
+                  <input
+                    type="password"
+                    style={{ flex: 1 }}
+                    value={r2SessionToken}
+                    onChange={(e) => {
+                      setR2SessionToken(e.target.value);
+                      setSaved(false);
+                    }}
+                    placeholder={desktopStatus?.r2?.ready ? "מוגדר — הקלד כדי להחליף" : "Worker app token"}
+                  />
+                  {desktopStatus?.r2?.ready && (
+                    <button type="button" className="btn btn--ghost" onClick={() => clearKey("r2")} disabled={saving}>
+                      נקה
+                    </button>
+                  )}
+                </div>
               </label>
               <label className="settings-radio">
                 <input
                   type="checkbox"
-                  checked={googleDriveEnabled}
+                  checked={r2Enabled}
                   onChange={(e) => {
-                    setGoogleDriveEnabled(e.target.checked);
+                    setR2Enabled(e.target.checked);
                     setSaved(false);
                   }}
                 />
-                <span>הפעל סנכרון קטלוג ל-Google Drive</span>
+                <span>הפעל סנכרון ל-R2</span>
               </label>
               <div className="settings-model-row__actions">
                 <button
                   type="button"
                   className="btn btn--ghost"
-                  onClick={() => void connectGoogleDrive()}
-                  disabled={connectingDrive || saving}
+                  onClick={() => void pushCatalogToR2(false)}
+                  disabled={syncingR2 || saving || !desktopStatus?.r2?.ready}
                 >
-                  {connectingDrive ? "מתחבר…" : "חבר Google Drive"}
+                  דחוף קטלוג
                 </button>
+                {desktopStatus?.r2?.conflict && (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => void pushCatalogToR2(true)}
+                    disabled={syncingR2 || saving || !desktopStatus?.r2?.ready}
+                  >
+                    החלף מרוחק
+                  </button>
+                )}
               </div>
-              {desktopStatus?.catalog_store?.catalogFileId && (
+              {desktopStatus?.r2 && (
                 <p className="settings-hint">
-                  catalog.json: {desktopStatus.catalog_store.catalogFileId}
+                  מקומי: {desktopStatus.r2.counts.local} · בענן בלבד: {desktopStatus.r2.counts.cloudOnly} · מסנכרן: {desktopStatus.r2.counts.syncing} · שגיאות: {desktopStatus.r2.counts.error}
                 </p>
               )}
+              {desktopStatus?.r2?.error && <p className="settings-hint">{desktopStatus.r2.error}</p>}
+              {desktopStatus?.r2?.conflict && <p className="settings-hint">הקטלוג המרוחק השתנה. משוך מרחוק או החלף את המרוחק.</p>}
             </section>
           )}
 

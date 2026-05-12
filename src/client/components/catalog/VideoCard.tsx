@@ -7,6 +7,7 @@ import { labelFor } from "@/client/lib/tag-labels";
 interface VideoCardProps {
   video: ParsedVideo;
   onClick: (video: ParsedVideo) => void;
+  onMaterialize?: (video: ParsedVideo) => void;
 }
 
 function topSegmentTags(video: ParsedVideo, limit: number): string[] {
@@ -38,7 +39,14 @@ function isVideoUntagged(video: ParsedVideo): boolean {
   return !(lt.main || lt.secondary || lt.third);
 }
 
-export function VideoCard({ video, onClick }: VideoCardProps) {
+function availabilityLabel(video: ParsedVideo): string {
+  if (video.availability === "local") return "מקומי";
+  if (video.availability === "cloud_only") return "בענן";
+  if (video.availability === "syncing") return "מסנכרן";
+  return "שגיאה";
+}
+
+export function VideoCard({ video, onClick, onMaterialize }: VideoCardProps) {
   const cardRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [posterVisible, setPosterVisible] = useState(false);
@@ -83,6 +91,10 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
   }, [hovered, videoSrc]);
 
   const handleClick = useCallback(() => onClick(video), [onClick, video]);
+  const handleMaterialize = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onMaterialize?.(video);
+  }, [onMaterialize, video]);
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" || e.key === " ") {
@@ -112,6 +124,7 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
       onKeyDown={handleKeyDown}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      data-availability={video.availability}
     >
       <div className="video-thumb" data-video-src={previewUrl}>
         {posterVisible && (
@@ -136,12 +149,20 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
           />
         )}
         <span className="orient-badge">{orientLabel}</span>
+        <span className={`cloud-badge cloud-badge--${video.availability}`}>
+          {availabilityLabel(video)}
+        </span>
         {dur && <span className="duration-badge">{dur}</span>}
         {untagged && <span className="untagged-badge">לא מתויג</span>}
         {video.source && (
           <span className="source-badge">
             {labelFor(video.source)}
           </span>
+        )}
+        {video.availability === "cloud_only" && (
+          <button type="button" className="thumb-download-btn" onClick={handleMaterialize}>
+            הורד
+          </button>
         )}
       </div>
       <div className="video-card-body">
