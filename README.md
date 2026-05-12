@@ -144,6 +144,8 @@ npm run electron:make         # out/ — .zip (macOS) · Squirrel (Windows)
 
 Icons: `build/icon.icns` · `build/icon.ico` · [regeneration](docs/ELECTRON_DESKTOP_HANDOFF.md#app-icon). Ops & boundaries: [`docs/ELECTRON_DESKTOP_HANDOFF.md`](docs/ELECTRON_DESKTOP_HANDOFF.md) · [`docs/ELECTRON_DESKTOP_PLAN.md`](docs/ELECTRON_DESKTOP_PLAN.md).
 
+**Published installers:** Push a tag matching `v*` (for example `v0.1.1`) so [`.github/workflows/desktop.yml`](.github/workflows/desktop.yml) runs `electron:make` on macOS and Windows, then the `release` job attaches **`WeatherV1-macOS.zip`** and **`WeatherV1-Setup.exe`** to a GitHub Release. Stable download URLs are `https://github.com/OWNER/REPO/releases/latest/download/WeatherV1-macOS.zip` and the same path with `WeatherV1-Setup.exe` (substitute your repo’s `OWNER/REPO`). Enable **GitHub Pages** with source **GitHub Actions** once in repo settings; [`.github/workflows/pages.yml`](.github/workflows/pages.yml) deploys a small download page from [`docs/download-page/index.html.template`](docs/download-page/index.html.template) to `https://OWNER.github.io/REPO/` on relevant pushes to `main`.
+
 ---
 
 ### Docker
