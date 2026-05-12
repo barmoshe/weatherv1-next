@@ -26,6 +26,19 @@ export function Masthead({ onNewJob, onOpenSettings }: MastheadProps) {
         מחולל תחזית<span className="sep">·</span>
         <span className="wordmark-sub">וידאו אנכי</span>
       </span>
+      <a
+        className="builder-credit"
+        dir="ltr"
+        href="https://barmoshe.github.io/bar-portfolio/"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Builder: Bar Moshe"
+        title="Open Bar Moshe portfolio"
+      >
+        <span className="builder-credit__label">Builder</span>
+        <span className="builder-credit__sep" aria-hidden="true">·</span>
+        <strong className="builder-credit__name">Bar Moshe</strong>
+      </a>
       <button
         className="settings-btn"
         type="button"

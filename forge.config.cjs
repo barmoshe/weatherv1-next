@@ -59,8 +59,13 @@ module.exports = {
       // `ffmpeg-verify.cjs` rewrites `app.asar → app.asar.unpacked` at call
       // time, but the rewritten file only exists if it's been unpacked here.
       // Patterns are glob, matched against paths inside the asar archive.
+      // The explicit `.next/standalone/.next/**` entry is intentional: some
+      // asar glob matching skips dot-directories inside the standalone tree,
+      // which leaves `BUILD_ID` packed in app.asar while `server.js` runs from
+      // app.asar.unpacked and then fails with "Could not find a production
+      // build in './.next'".
       unpack:
-        "{**/node_modules/ffmpeg-static/**,**/node_modules/ffprobe-static/**,**/node_modules/@ffmpeg-installer/**,**/node_modules/@ffprobe-installer/**,**/.next/standalone/**}",
+        "{**/node_modules/ffmpeg-static/**,**/node_modules/ffprobe-static/**,**/node_modules/@ffmpeg-installer/**,**/node_modules/@ffprobe-installer/**,**/.next/standalone/**,**/.next/standalone/.next/**}",
     },
     // Ship the standalone Next tree + scripts that Electron main + the spawn
     // child actually need. Forge defaults to packaging the entire project

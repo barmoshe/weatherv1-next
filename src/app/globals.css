@@ -82,6 +82,46 @@
             flex: 1;
         }
         .wordmark .sep { opacity: 0.55; margin-inline: 0.4rem; font-weight: 500; }
+        .builder-credit {
+            direction: ltr;
+            unicode-bidi: isolate;
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.32rem 0.7rem;
+            border: 1.5px solid var(--v1-ink);
+            border-radius: 999px;
+            background: rgb(255 255 255 / .26);
+            color: var(--v1-ink);
+            box-shadow: 2px 2px 0 var(--v1-ink);
+            text-decoration: none;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            line-height: 1;
+            white-space: nowrap;
+            transform: translateY(0);
+            cursor: pointer;
+            transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .builder-credit__label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.72;
+        }
+        .builder-credit__sep { opacity: 0.52; }
+        .builder-credit__name { font-weight: 900; }
+        .builder-credit:hover,
+        .builder-credit:focus-visible {
+            background: var(--v1-accent-yellow);
+            box-shadow: 3px 3px 0 var(--v1-ink);
+            outline: 3px solid var(--v1-paper);
+            outline-offset: 2px;
+            transform: translate(-1px, -1px);
+        }
         .settings-btn {
             background: transparent;
             color: var(--v1-ink);
@@ -1082,6 +1122,8 @@
             .skeleton-rows  span,
             .skeleton-block { animation: none; background: var(--v1-coral-soft); }
             .tile.is-revealing { animation: none; }
+            .builder-credit:hover,
+            .builder-credit:focus-visible { transform: none; }
         }
 
         /* ── Responsive — dashboard grid ───────────────────── */
@@ -1118,6 +1160,9 @@
             .masthead { padding: 0.65rem 0.85rem; gap: 0.5rem; }
             .wordmark { font-size: 0.98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
             .wordmark .sep, .wordmark-sub { display: none; }
+            .builder-credit { padding: 0.3rem 0.55rem; font-size: 0.72rem; }
+            .builder-credit__label,
+            .builder-credit__sep { display: none; }
             .settings-btn { padding: 0.35rem 0.65rem; font-size: 0.9rem; }
             .settings-btn--primary { padding: 0.35rem 0.55rem; }
             .settings-btn--primary .cta-glyph { font-size: 1.15em; }
@@ -1137,6 +1182,10 @@
             .brand-mark { width: 34px; height: 34px; font-size: 0.95rem; }
             .settings-btn--primary .cta-label { display: none; }
             .settings-btn:not(.settings-btn--primary) .settings-label { display: none; }
+            .builder-credit {
+                padding: 0.28rem 0.5rem;
+                box-shadow: 1.5px 1.5px 0 var(--v1-ink);
+            }
             .settings-btn:not(.settings-btn--primary) {
                 padding: 0.35rem 0.55rem;
             }
@@ -1147,6 +1196,7 @@
         /* Very narrow — drop the wordmark entirely so the chrome breathes */
         @media (max-width: 380px) {
             .wordmark { display: none; }
+            .builder-credit { font-size: 0.68rem; }
             .masthead { gap: 0.5rem; justify-content: space-between; }
             .tab-nav { top: 48px; }
         }
