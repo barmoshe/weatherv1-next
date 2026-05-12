@@ -79,6 +79,12 @@ module.exports = {
       /^\/src\/test(\/|$)/,
       /^\/coverage(\/|$)/,
       /\.test\.[jt]sx?$/,
+      // transformers.js ships `src/` (JS source) and `types/` (TS .d.ts)
+      // alongside the runtime `dist/`. The `src/models/*` and
+      // `types/models/*` folders contain 80-char model class paths that
+      // tip Squirrel's Windows installer over MAX_PATH = 260 chars during
+      // .nuspec staging. They're not needed at runtime.
+      /^\/node_modules\/@huggingface\/transformers\/(src|types)(\/|$)/,
     ],
     osxSign: haveMacSigning
       ? {
