@@ -25,7 +25,20 @@
 
 const path = require("node:path");
 const fs = require("node:fs");
-const { app, BrowserWindow, dialog, ipcMain, session, shell, safeStorage } = require("electron");
+const { app, BrowserWindow, autoUpdater, dialog, ipcMain, session, shell, safeStorage } = require("electron");
+
+// Windows Squirrel runs the installed app briefly during install/uninstall
+// to fire `--squirrel-install`, `--squirrel-updated`, etc. The app MUST
+// short-circuit on those flags or the installer hangs. No-op on macOS/Linux.
+// Must run before `app.whenReady()`.
+try {
+  // eslint-disable-next-line global-require
+  if (require("electron-squirrel-startup")) {
+    app.quit();
+  }
+} catch {
+  // electron-squirrel-startup isn't installed yet (Step 6 pins it). Skip.
+}
 
 const { verifyFFmpeg } = require("./ffmpeg-verify.cjs");
 const cfg = require("./config.cjs");
@@ -40,8 +53,47 @@ const state = {
   origin: null,
   window: null,
   ffmpeg: null,
-  updateState: { status: "unavailable", detail: "auto-update is wired in Step 6" },
+  updateState: { status: "unavailable", detail: "dev build — auto-update disabled" },
 };
+
+function wireAutoUpdater() {
+  // `update-electron-app` is a thin wrapper over Electron's `autoUpdater`
+  // that points the update feed at update.electronjs.org for
+  // GitHub-published apps. Requires a signed app on both macOS and Windows;
+  // no-ops on Linux.
+  if (!app.isPackaged) return;
+  let updateElectronApp;
+  try {
+    // eslint-disable-next-line global-require
+    ({ updateElectronApp } = require("update-electron-app"));
+  } catch {
+    state.updateState = { status: "unavailable", detail: "update-electron-app not installed" };
+    return;
+  }
+  try {
+    updateElectronApp({ logger: console });
+    state.updateState = { status: "configured" };
+  } catch (err) {
+    state.updateState = { status: "error", detail: err && err.message ? err.message : String(err) };
+    return;
+  }
+  // Track autoUpdater events so `desktop:getUpdateState` reflects real state.
+  autoUpdater.on("checking-for-update", () => {
+    state.updateState = { status: "checking" };
+  });
+  autoUpdater.on("update-available", () => {
+    state.updateState = { status: "available" };
+  });
+  autoUpdater.on("update-not-available", () => {
+    state.updateState = { status: "idle" };
+  });
+  autoUpdater.on("update-downloaded", (_event, _notes, releaseName) => {
+    state.updateState = { status: "downloaded", detail: releaseName };
+  });
+  autoUpdater.on("error", (err) => {
+    state.updateState = { status: "error", detail: err && err.message ? err.message : String(err) };
+  });
+}
 
 async function bootstrap() {
   cfg.setUserDataDir(app.getPath("userData"));
@@ -84,6 +136,7 @@ async function bootstrap() {
 
   installAuthInterceptor();
   openMainWindow();
+  wireAutoUpdater();
 }
 
 function installAuthInterceptor() {

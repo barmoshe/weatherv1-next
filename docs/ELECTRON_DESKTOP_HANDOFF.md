@@ -114,8 +114,10 @@ Files that make this clear:
   - `electron/server-manager.cjs` (port {3765,3766,3767,3768}, dev/prod spawn, health polling, managed `restart(env)`)
   - `electron/config.cjs` (userData settings JSON, `safeStorage` keys with plaintext fallback, child env builder, session-token generator)
   - `scripts/prepare-standalone.cjs` (copies `public/` + `.next/static/` into `.next/standalone/`)
-  - `next.config.ts` now sets `output: "standalone"`
+  - `next.config.ts` now sets `output: "standalone"` **and** pins `turbopack.root: __dirname` so the standalone tree lands at `.next/standalone/server.js` instead of being nested under the host repo's lockfile-inferred workspace root
+  - `vitest.config.ts` excludes `**/.next/**` so the test/run doesn't double-pick the tests Next copies into the standalone tree
   - `package.json` gains `"main": "electron/main.cjs"` and scripts `standalone:prep`, `electron:dev`, `electron:build`, `electron:make`
+- Smoke-test verification on the host: `next build` succeeds end to end; `node scripts/prepare-standalone.cjs` populates `public/` and `.next/static/` under the standalone tree.
 - Not started yet:
   - Forge config + signing/notarization wiring (`forge.config.cjs`)
   - Bundled ffmpeg/ffprobe install (`ffmpeg-static` etc.)
