@@ -1,0 +1,72 @@
+# Runs from the default branch workflow definition (not the tagged commit), so
+# installer publishing keeps working even when the tag points at an older SHA
+# that did not yet include a `release` job in desktop.yml.
+name: Desktop publish release
+
+on:
+  workflow_run:
+    workflows: [Desktop]
+    types: [completed]
+
+jobs:
+  publish:
+    name: Attach installers to GitHub Release
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      (matches(github.event.workflow_run.head_branch, '^refs/tags/v[0-9]') || matches(github.event.workflow_run.head_branch, '^v[0-9]'))
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-macos-latest
+          path: mac
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-windows-latest
+          path: win
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Assemble stable asset names
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          MAC_ZIP="$(find mac -type f -name '*.zip' ! -path '*/node_modules/*' | head -n 1)"
+          if [[ -z "$MAC_ZIP" ]]; then
+            echo "No macOS .zip in desktop-macos-latest for run ${{ github.event.workflow_run.id }}"
+            find mac -type f 2>/dev/null | head -80 || true
+            exit 1
+          fi
+          cp "$MAC_ZIP" dist/WeatherV1-macOS.zip
+          WIN_EXE="$(find win -type f -name 'WeatherV1-Setup.exe' ! -path '*/node_modules/*' | head -n 1)"
+          if [[ -z "$WIN_EXE" ]]; then
+            WIN_EXE="$(find win -type f -path '*/squirrel.windows/*/*.exe' ! -path '*/node_modules/*' | head -n 1)"
+          fi
+          if [[ -z "$WIN_EXE" ]]; then
+            echo "No Windows setup .exe in desktop-windows-latest for run ${{ github.event.workflow_run.id }}"
+            find win -type f 2>/dev/null | head -80 || true
+            exit 1
+          fi
+          cp "$WIN_EXE" dist/WeatherV1-Setup.exe
+          ls -la dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.workflow_run.head_branch }}
+          draft: false
+          prerelease: false
+          make_latest: true
+          generate_release_notes: false
+          fail_on_unmatched_files: true
+          files: |
+            dist/WeatherV1-macOS.zip
+            dist/WeatherV1-Setup.exe

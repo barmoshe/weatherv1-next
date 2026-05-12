@@ -104,7 +104,7 @@ Renderer / CI:
 - `npm run electron:make` produces unsigned local artifacts.
 - Signed release artifacts are validated in CI after signing secrets are configured and the GitHub publisher block is intentionally enabled.
 
-**Public download page:** Tags matching `v*` trigger the `release` job in `.github/workflows/desktop.yml`, which renames artifacts to `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe` and publishes them with `softprops/action-gh-release`. Set **Settings → Pages → Build and deployment → Source: GitHub Actions** so `.github/workflows/pages.yml` can publish the templated download page (`docs/download-page/index.html.template` → site root).
+**Public download page:** Tags matching `v*` trigger the Desktop workflow; [`.github/workflows/desktop-publish-release.yml`](.github/workflows/desktop-publish-release.yml) (runs from `main` via `workflow_run`) attaches `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe` with `softprops/action-gh-release`. Set **Settings → Pages → Build and deployment → Source: GitHub Actions** so [`.github/workflows/pages.yml`](.github/workflows/pages.yml) can publish the templated download page (`docs/download-page/index.html.template` → site root). If a release has only “Source code” assets, re-run **Desktop** for that tag after the publish workflow exists on `main`.
 
 ## Verification checklist for the next pass
 
