@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.dtd.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS hardened runtime entitlements for WeatherV1.
+
+  Required because:
+    - Hardened runtime is mandatory for notarization.
+    - Electron 12+ uses V8's JIT; without `com.apple.security.cs.allow-jit`,
+      the app crashes immediately on launch under hardened runtime.
+
+  Deliberately NOT included:
+    - `com.apple.security.cs.allow-unsigned-executable-memory` —
+      Electron 12+ doesn't need it; including it weakens the sandbox without
+      buying anything.
+
+  The ffmpeg/ffprobe binaries unpacked under app.asar.unpacked/ are signed
+  with the host's Developer ID via Forge's osxSign config
+  (`signatureFlags: "library"` + nested signing), so they don't need their
+  own entitlements file.
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <false/>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+  <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+  <true/>
+</dict>
+</plist>

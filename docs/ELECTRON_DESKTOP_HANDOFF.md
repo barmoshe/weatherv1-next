@@ -111,7 +111,7 @@ Renderer / CI:
 - [x] `npm run build` produces `.next/standalone/server.js` at the correct path
 - [x] `npm run standalone:prep` populates `public/` + `.next/static/`
 - [x] `electron/ffmpeg-verify.cjs` returns `{ ok: true }` against system ffmpeg
-- [x] `forge.config.cjs` loads cleanly
+- [x] `forge.config.cjs` loads cleanly with `packagerConfig.icon` + Squirrel `setupIcon` wired
 - [x] Desktop-aware Settings/Upload/Catalog renderer wiring is in place
 - [x] `.github/workflows/desktop.yml` is in place
 - [x] `npm run electron:dev` boots and `/api/internal/health` returns 200
@@ -120,6 +120,19 @@ Renderer / CI:
 - [ ] Render pipeline runs end to end with a user-chosen workspace
 - [ ] `npm run electron:make` produces signed artifacts in CI
 
+## App icon
+
+Icon assets live in `build/`:
+
+| File | How it was produced |
+| --- | --- |
+| `build/icon.icns` | `iconutil -c icns` from a 10-size `.iconset` built from `AppIcons.zip` |
+| `build/icon.ico` | Node.js ICO packer — 6 sizes (16, 32, 48, 64, 128, 256) embedded as PNG blobs |
+
+`forge.config.cjs` references both via `packagerConfig.icon: "build/icon"` (Forge appends `.icns`/`.ico` per platform) and `makers[Squirrel].config.setupIcon: "build/icon.ico"`. `electron/main.cjs` also sets `icon` on BrowserWindow for the dev-mode dock/taskbar icon.
+
+To regenerate: drop a new `1024×1024 PNG` into `build/source-1024.png`, recreate the `.iconset` folder with `sips -Z <size>` for each required size, run `iconutil -c icns`, and re-run the ICO packer script from this session's Bash history (or write a fresh `scripts/build-icons.cjs`).
+
 ## Stop point
 
-After Step 9 implementation plus Electron dev boot smoke. The next smoke tests are settings save, deliberate native picker round-trips, and `npm run electron:make` — unsigned locally, signed only on CI with the secrets above.
+After icon integration. The next smoke tests are settings save, deliberate native picker round-trips, and `npm run electron:make` — unsigned locally, signed only on CI with the secrets above.

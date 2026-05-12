@@ -157,6 +157,13 @@ function openMainWindow() {
     width: 1280,
     height: 800,
     show: false,
+    // Dock / taskbar icon. Forge bakes the icon into the .app / .exe bundle at
+    // package time, but setting it here makes the icon appear in the macOS
+    // Dock and Windows taskbar during `npm run electron:dev` too.
+    icon: path.join(
+      __dirname,
+      process.platform === "win32" ? "../build/icon.ico" : "../build/icon.icns",
+    ),
     webPreferences: {
       partition: cfg.SESSION_PARTITION,
       preload: path.join(__dirname, "preload.cjs"),

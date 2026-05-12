@@ -43,6 +43,9 @@ module.exports = {
     executableName: "weatherv1",
     appBundleId: "com.weatherv1.desktop",
     appCategoryType: "public.app-category.video",
+    // Forge appends the platform-correct extension (.icns on macOS, .ico on
+    // Windows) — supply the path without extension.
+    icon: path.join(__dirname, "build", "icon"),
     asar: {
       // Executables under these paths MUST live in `app.asar.unpacked`.
       // `ffmpeg-verify.cjs` rewrites `app.asar → app.asar.unpacked` at call
@@ -103,6 +106,7 @@ module.exports = {
       config: {
         name: "weatherv1",
         setupExe: "WeatherV1-Setup.exe",
+        setupIcon: path.join(__dirname, "build", "icon.ico"),
         ...(haveWinSigning
           ? { certificateFile: WIN_CERT_FILE, certificatePassword: WIN_CERT_PASSWORD }
           : {}),
