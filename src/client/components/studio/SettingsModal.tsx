@@ -469,43 +469,48 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
               <p className="settings-hint">
                 R2 משמש כשכבת סנכרון וגיבוי. רינדור, תצוגות מקדימות וקבצי עבודה נשארים מקומיים.
+                {appInfo?.packaged
+                  ? " בגרסת ההפצה החיבור ל-R2 קבוע; אם חסר App Token הוא יופיע ככרטיס מעל הסטודיו."
+                  : ""}
               </p>
-              <label className="settings-field">
-                <span>Gateway URL</span>
-                <input
-                  value={r2GatewayUrl}
-                  onChange={(e) => {
-                    setR2GatewayUrl(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder="https://weatherv1-r2-gateway.example.workers.dev"
-                />
-              </label>
-              <label className="settings-field">
-                <span>Tenant ID</span>
-                <input
-                  value={r2TenantId}
-                  onChange={(e) => {
-                    setR2TenantId(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder="default"
-                />
-              </label>
-              <label className="settings-field">
-                <span>Bucket</span>
-                <input
-                  value={r2BucketName}
-                  onChange={(e) => {
-                    setR2BucketName(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder="weatherv1-media"
-                />
-              </label>
-              <label className="settings-field">
-                <span>App Token</span>
-                <div style={{ display: "flex", gap: "8px", flex: 1 }}>
+              {!appInfo?.packaged && (
+                <>
+                  <label className="settings-field">
+                    <span>Gateway URL</span>
+                    <input
+                      value={r2GatewayUrl}
+                      onChange={(e) => {
+                        setR2GatewayUrl(e.target.value);
+                        setSaved(false);
+                      }}
+                      placeholder="https://weatherv1-r2-gateway.example.workers.dev"
+                    />
+                  </label>
+                  <label className="settings-field">
+                    <span>Tenant ID</span>
+                    <input
+                      value={r2TenantId}
+                      onChange={(e) => {
+                        setR2TenantId(e.target.value);
+                        setSaved(false);
+                      }}
+                      placeholder="default"
+                    />
+                  </label>
+                  <label className="settings-field">
+                    <span>Bucket</span>
+                    <input
+                      value={r2BucketName}
+                      onChange={(e) => {
+                        setR2BucketName(e.target.value);
+                        setSaved(false);
+                      }}
+                      placeholder="weatherv1-media"
+                    />
+                  </label>
+                  <label className="settings-field">
+                    <span>App Token</span>
+                    <div style={{ display: "flex", gap: "8px", flex: 1 }}>
                   <input
                     type="password"
                     style={{ flex: 1 }}
@@ -521,19 +526,21 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       נקה
                     </button>
                   )}
-                </div>
-              </label>
-              <label className="settings-radio">
-                <input
-                  type="checkbox"
-                  checked={r2Enabled}
-                  onChange={(e) => {
-                    setR2Enabled(e.target.checked);
-                    setSaved(false);
-                  }}
-                />
-                <span>הפעל סנכרון ל-R2</span>
-              </label>
+                    </div>
+                  </label>
+                  <label className="settings-radio">
+                    <input
+                      type="checkbox"
+                      checked={r2Enabled}
+                      onChange={(e) => {
+                        setR2Enabled(e.target.checked);
+                        setSaved(false);
+                      }}
+                    />
+                    <span>הפעל סנכרון ל-R2</span>
+                  </label>
+                </>
+              )}
               <div className="settings-model-row__actions">
                 <button
                   type="button"

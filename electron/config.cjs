@@ -20,6 +20,12 @@ const DEFAULT_PORT = 3765;
 const FALLBACK_PORTS = [3766, 3767, 3768];
 const SESSION_PARTITION = "persist:weatherv1";
 const FIXED_HOST = "127.0.0.1";
+const PRODUCTION_R2 = {
+  enabled: true,
+  gatewayUrl: "https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev",
+  tenantId: "default",
+  bucketName: "weatherv1-media",
+};
 
 let _userDataDir = null;
 let _settings = null;
@@ -141,6 +147,7 @@ function decryptSecret(stored, opts) {
  *   token: string,
  *   ffmpeg: { ffmpegPath: string|null, ffprobePath: string|null },
  *   safeStorage?: any,
+ *   productionMode?: boolean,
  * }} args
  */
 function buildChildEnv(args) {
@@ -167,13 +174,16 @@ function buildChildEnv(args) {
   if (gemini) env.GEMINI_API_KEY = gemini;
 
   env.WEATHER_USER_DATA_DIR = getUserDataDir();
-  if (settings.r2.enabled && settings.r2.gatewayUrl && settings.r2.tenantId && r2SessionToken) {
+  const r2 = args.productionMode
+    ? { ...(settings.r2 || {}), ...PRODUCTION_R2, enabled: true }
+    : settings.r2;
+  if (r2.enabled && r2.gatewayUrl && r2.tenantId) {
     env.R2_SYNC_ENABLED = "1";
-    env.R2_GATEWAY_URL = settings.r2.gatewayUrl;
-    env.R2_TENANT_ID = settings.r2.tenantId;
-    env.R2_SESSION_TOKEN = r2SessionToken;
+    env.R2_GATEWAY_URL = r2.gatewayUrl;
+    env.R2_TENANT_ID = r2.tenantId;
     env.R2_STATE_PATH = path.join(getUserDataDir(), "r2-sync-state.json");
-    if (settings.r2.bucketName) env.R2_BUCKET_NAME = settings.r2.bucketName;
+    if (r2SessionToken) env.R2_SESSION_TOKEN = r2SessionToken;
+    if (r2.bucketName) env.R2_BUCKET_NAME = r2.bucketName;
   }
 
   // LLM provider preference. "auto" leaves the env var unset so the server-side
@@ -196,6 +206,7 @@ module.exports = {
   FALLBACK_PORTS,
   SESSION_PARTITION,
   FIXED_HOST,
+  PRODUCTION_R2,
   setUserDataDir,
   getUserDataDir,
   readSettings,

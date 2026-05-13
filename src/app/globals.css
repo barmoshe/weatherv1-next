@@ -279,6 +279,61 @@
         .btn:focus-visible { outline: 3px solid var(--v1-ink); outline-offset: 2px; }
         .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
+        .studio-r2-token-card {
+            position: sticky;
+            top: 0.75rem;
+            z-index: 20;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+            gap: 1rem;
+            align-items: center;
+            margin-block: 0 1rem;
+            padding: 1rem;
+            background: var(--v1-paper);
+            border: 2px solid var(--v1-ink);
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 24px rgb(0 0 0 / .14);
+        }
+        .studio-r2-token-card strong {
+            display: block;
+            margin-block-end: 0.25rem;
+            font-size: 1rem;
+        }
+        .studio-r2-token-card p {
+            margin: 0;
+            color: var(--v1-ink-muted);
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+        .studio-r2-token-card__error { color: var(--v1-danger) !important; margin-block-start: 0.35rem !important; }
+        .studio-r2-token-card__ok { color: var(--v1-success) !important; margin-block-start: 0.35rem !important; font-weight: 700; }
+        .studio-r2-token-form {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .studio-r2-token-form input {
+            min-width: 0;
+            flex: 1;
+            padding: 0.72rem 0.8rem;
+            border: 1.5px solid var(--v1-ink);
+            border-radius: var(--radius-sm);
+            font: inherit;
+        }
+        .studio-r2-token-form input:focus-visible {
+            outline: 2px solid var(--v1-coral);
+            outline-offset: 1px;
+        }
+        @media (max-width: 760px) {
+            .studio-r2-token-card {
+                grid-template-columns: 1fr;
+            }
+            .studio-r2-token-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
         /* ── Settings (advanced) ──────────────────────────── */
         .settings-card { margin-top: 1rem; }
         details > summary {

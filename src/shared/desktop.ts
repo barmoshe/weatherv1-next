@@ -24,6 +24,7 @@ export interface DesktopAppInfo {
   electronVersion: string;
   nodeVersion: string;
   desktopMode: boolean;
+  packaged?: boolean;
   ffmpeg: DesktopFfmpegInfo;
 }
 

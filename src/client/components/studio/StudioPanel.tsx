@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useJobStatus } from "@/client/hooks/useJobStatus";
+import { useR2SyncStatus } from "@/client/hooks/useCatalog";
+import { desktop } from "@/client/lib/desktop";
 import { UploadCard } from "./UploadCard";
 import { TranscribeCard } from "./TranscribeCard";
 import { PlanCard } from "./PlanCard";
@@ -10,6 +12,7 @@ import { RenderCard } from "./RenderCard";
 import { OutputCard } from "./OutputCard";
 import { WhyPanel } from "./WhyPanel";
 import { HeroStrip } from "./HeroStrip";
+import type { DesktopAppInfo } from "@/shared/desktop";
 import type { Scene } from "@/shared/types";
 
 export type StudioPhase = "upload" | "transcribing" | "transcribed" | "planning" | "planned" | "rendering" | "done" | "failed";
@@ -67,9 +70,28 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
   const [error, setError] = useState<string | null>(null);
   const [transcriptData, setTranscriptData] = useState<TranscriptData | null>(null);
   const [planData, setPlanData] = useState<PlanData | null>(null);
+  const [appInfo, setAppInfo] = useState<DesktopAppInfo | null>(null);
+  const [r2Token, setR2Token] = useState("");
+  const [r2TokenSaving, setR2TokenSaving] = useState(false);
+  const [r2TokenSaved, setR2TokenSaved] = useState(false);
+  const [r2TokenError, setR2TokenError] = useState<string | null>(null);
   const qc = useQueryClient();
+  const { data: r2Status, refetch: refetchR2Status } = useR2SyncStatus();
 
   const jobId = transcriptData?.job_id ?? null;
+
+  useEffect(() => {
+    if (!desktop) return;
+    let cancelled = false;
+    void desktop.getAppInfo().then((info) => {
+      if (!cancelled) setAppInfo(info);
+    }).catch(() => {
+      if (!cancelled) setAppInfo(null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!restoreJobId) {
@@ -236,8 +258,26 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
     onJobIdChange?.(null);
   }, [onJobIdChange]);
 
+  const saveR2Token = useCallback(async () => {
+    if (!desktop || !r2Token.trim()) return;
+    setR2TokenSaving(true);
+    setR2TokenSaved(false);
+    setR2TokenError(null);
+    try {
+      await desktop.saveSettings({ r2SessionToken: r2Token.trim() });
+      setR2Token("");
+      setR2TokenSaved(true);
+      await refetchR2Status();
+    } catch (err) {
+      setR2TokenError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setR2TokenSaving(false);
+    }
+  }, [r2Token, refetchR2Status]);
+
   const tileStates = deriveTileStates(phase);
   const showUploadBanner = phase === "upload";
+  const showR2TokenPrompt = Boolean(desktop && appInfo?.packaged && r2Status?.enabled && !r2Status.ready);
 
   const phaseIndex = {
     upload: 0, transcribing: 1, transcribed: 1, planning: 2, planned: 2, rendering: 3, done: 4, failed: 3,
@@ -255,6 +295,41 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
       <div id="error-banner" hidden={!error}>
         {error}
       </div>
+
+      {showR2TokenPrompt && (
+        <div className="studio-r2-token-card" role="region" aria-label="Cloudflare R2 app token">
+          <div>
+            <strong>Cloudflare R2 token required</strong>
+            <p>
+              Production uses the WeatherV1 R2 catalog. Paste the app token once to connect this desktop app.
+            </p>
+            {r2Status?.error && <p className="studio-r2-token-card__error">{r2Status.error}</p>}
+            {r2TokenError && <p className="studio-r2-token-card__error">{r2TokenError}</p>}
+            {r2TokenSaved && <p className="studio-r2-token-card__ok">Saved. Restarting the local server…</p>}
+          </div>
+          <form
+            className="studio-r2-token-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveR2Token();
+            }}
+          >
+            <input
+              type="password"
+              value={r2Token}
+              onChange={(event) => {
+                setR2Token(event.target.value);
+                setR2TokenSaved(false);
+              }}
+              placeholder="Worker app token"
+              autoComplete="off"
+            />
+            <button className="btn btn--primary" type="submit" disabled={r2TokenSaving || !r2Token.trim()}>
+              {r2TokenSaving ? "Saving…" : "Connect R2"}
+            </button>
+          </form>
+        </div>
+      )}
 
       <HeroStrip
         jobId={jobId}

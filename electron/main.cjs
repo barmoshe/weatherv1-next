@@ -113,6 +113,7 @@ async function bootstrap() {
     token: state.token,
     ffmpeg: { ffmpegPath: state.ffmpeg.ffmpegPath, ffprobePath: state.ffmpeg.ffprobePath },
     safeStorage,
+    productionMode: app.isPackaged,
   });
 
   state.manager = createServerManager({
@@ -250,6 +251,7 @@ ipcMain.handle("desktop:getAppInfo", async () => ({
   electronVersion: process.versions.electron,
   nodeVersion: process.versions.node,
   desktopMode: true,
+  packaged: app.isPackaged,
   ffmpeg: {
     ok: state.ffmpeg?.ok ?? false,
     ffmpegPath: state.ffmpeg?.ffmpegPath ?? null,
@@ -266,6 +268,7 @@ async function restartChildWithCurrentSettings() {
     token: state.token,
     ffmpeg: { ffmpegPath: state.ffmpeg.ffmpegPath, ffprobePath: state.ffmpeg.ffprobePath },
     safeStorage,
+    productionMode: app.isPackaged,
   });
   await state.manager.restart(env);
   if (state.window && !state.window.isDestroyed()) {
