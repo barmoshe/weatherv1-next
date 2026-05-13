@@ -12,13 +12,16 @@ Do not touch segments that already have tags or a description. Do not change any
 
 ## Current state (2026-05-13)
 
-The initial pass has shipped end-to-end. The pipeline below is built and was run once against the canonical catalog, including the R2 mirror.
+The initial bulk tagging pass and follow-up fixes have shipped. **212 videos / 408 segments — every segment has tags and a non-empty Hebrew description.** Remote catalog was last verified with **0 empty** rows (etag rotates on each push; use `getR2Text(tenantKey("catalog/catalog.json"))` for the current value).
 
-- Catalog re-segmented to 406 segments (was 212). 193 newly tagged + described, 1 intentionally empty (`IB019-s33` — park information signboard, no weather content).
-- All 406 segment posters mirrored to `tenants/default/posters/segments/<segId>.jpg`.
-- R2 catalog at `tenants/default/catalog/catalog.json` is the tagged version (etag `36ff8fc768c910974647b7c3075f63e1`, 212 videos / 406 segments / 405 tagged / 1 empty).
+- First resegment: 212 → 406 segments; bulk tagging of new empties (+ `IB019-s33` briefly skipped as uninformative).
+- **IB012 repair:** lone segment `[0,29]` vs 29.8s file — see `scripts/repair-long-single-segments.ts` — 406 → 408 segments; `IB012-s1`/`s2` tagged.
+- **IB019-s33:** park sign frame later tagged with factual `nature` / `urban` / `day` vocabulary (no fabricated weather).
+- Segment posters: **408** keys under `tenants/default/posters/segments/<segId>.jpg` after `sync-segment-posters --skip-clips`.
 
-If you arrive here and the `Changes` table at the bottom already shows the run dated 2026-05-13 you do **not** need to repeat Step 0..3 below. The Step 0..3 walkthrough is kept for the next time the catalog is re-segmented and a new batch of empty segments appears.
+If a future **re-segmentation** produces new empty windows, repeat Phase 1 → labelling → apply from this doc (and run repair dry-run first if any long clip still shows a single short span).
+
+You do **not** need to repeat the historical steps below unless you are reproducing the pipeline from scratch on a fresh catalog.
 
 ## Source-of-truth files
 
@@ -118,6 +121,13 @@ Two exports:
 - `applyTagsToCatalog(catalog, updates): ApplyResult` — pure, returns a new catalog. Silently drops unknown vocab tags, dedupes (first-seen order), refuses to overwrite already-tagged segments, never touches any field other than `tags` / `description`. Treats `{ tags: [], description: "" }` as a no-op so "uninformative frame" results are safe to feed in.
 
 Covered by [src/test/tagging.test.ts](../src/test/tagging.test.ts) (9 tests).
+
+### Long-clip / wrong-span repair — `src/server/catalog/repair-long-single-segment.ts` + `scripts/repair-long-single-segments.ts`
+
+`resegmentCatalog` splits using `(end_sec - start_sec)`, not `duration_sec` alone. A lone segment `[0, 29]` with ffprobe `29.8s` stays **one** segment (never splits). The repair helpers widen the span to `[0, effectiveDuration]` (from `max(catalog duration_sec, ffprobe)`), then chain **`resegmentCatalog`** with the same `minWindow` / `splitAbove` defaults.
+
+- Run `npx tsx scripts/repair-long-single-segments.ts` (dry-run lists candidates + split preview); `--write` + backup `catalog.json.before-repair-resegment-<iso>`.
+- Covered by [src/test/repair-long-single-segment.test.ts](../src/test/repair-long-single-segment.test.ts).
 
 ### Phase 1 — `scripts/prepare-tag-queue.ts`
 
@@ -262,3 +272,5 @@ If the canonical catalog gets re-segmented again and a new batch of empty segmen
 | 2026-05-13 | claude (cursor) | 194 (posters only) | Ran `scripts/prepare-tag-queue.ts --write --no-r2-upload`; 194 segment posters generated under `runtime/cache/segment_posters/` and queued to `runtime/cache/tagging/segment-tag-queue.json`. R2 not configured locally, so poster mirror to `tenants/default/posters/segments/<segId>.jpg` is deferred. |
 | 2026-05-13 | claude (cursor) | 193 tagged + 1 skipped | Ran `scripts/apply-segment-tags.ts --write --no-r2-upload`. 193 segments received 3-7 Hebrew descriptions + TAG_VOCAB tags via in-chat vision (no external API). 1 segment (`IB019-s33` — frame is a park information signboard, no weather content) intentionally left empty. 25 results were trimmed from 8-9 tags down to the 7-tag cap. All tags vocab-clean, 0 unknown. Backup at `catalog.json.before-tagging-2026-05-13T02-37-59-377Z`. R2 catalog push and segment poster mirror to `tenants/default/posters/segments/<segId>.jpg` are deferred — user will run them later. |
 | 2026-05-13 | claude (cursor) | 0 (R2 mirror) | R2 deferral resolved via CLI. `scripts/sync-segment-posters.ts --skip-clips` mirrored all 406 segment posters (193 newly uploaded, 213 already present, 0 failed). Catalog pushed via `replaceRemoteCatalog()` (fresh CLI session had no `lastCatalogEtag` cached, so the standard `pushCatalogToR2` conflict-guard tripped — `replaceRemote: true` was the safe bypass because the local catalog at `v1Drive/weather/notouch!/catalog.json` was the authoritative copy). Remote etag `36ff8fc768c910974647b7c3075f63e1`; remote verified at 212 videos / 406 segments / 405 tagged / 1 empty (`IB019-s33`). |
+| 2026-05-13 | claude (cursor) | IB012 repair + 2 tagged | **`repair-long-single-segment` class bug:** `IB012` had one segment `[0,29]` while ffprobe `duration_sec` was 29.8s — below the split threshold in geometry. Added [`scripts/repair-long-single-segments.ts`](scripts/repair-long-single-segments.ts) + [`src/server/catalog/repair-long-single-segment.ts`](src/server/catalog/repair-long-single-segment.ts) (unit-tested). Dry-run found 1 candidate (W032 already had 5 segments from the first resegment pass). Applied repair+resegment: 406→408 segments; backup `catalog.json.before-repair-resegment-2026-05-13T09-40-00-188Z`. Tagged `IB012-s1` / `IB012-s2` in-chat (`segment-tag-results.part-8.json`); `IB019-s33` still skipped (park sign). R2: 2 new segment posters uploaded; `replaceRemoteCatalog()` etag `c4ae832aa4a04528e33873a746b44eaa`. Remaining empty: 1 (`IB019-s33`). |
+| 2026-05-13 | claude (cursor) | IB019-s33 | Tagged the park information-board frame with factual `nature`/`urban`/`day` vocabulary (no weather guess): Hebrew description + 5 tags. All 408 segments now tagged. Backup `catalog.json.before-tagging-2026-05-13T09-43-50-435Z`; R2 catalog re-pushed (e.g. etag `0f57cca629115152` — rotates). `runtime/r2-sync-state.json` removed from git tracking (gitignored) as machine-local state. |

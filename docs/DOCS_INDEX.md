@@ -44,6 +44,7 @@ The same product can run in two modes:
 | HTTP API for the app | `src/app/api/sync/r2/*` |
 | Desktop login + Settings fields for gateway URL / tenant / bucket / Basic Auth | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md) (`SettingsModal`, `StorageOnboardingGate`) |
 | CLI poster + catalog push after bulk tagging | [CATALOG_TAGGING_HANDOFF.md](CATALOG_TAGGING_HANDOFF.md) (“How the R2 mirror was done from the CLI”) |
+| Long clip stuck at one segment (wrong `start_sec`/`end_sec` span) | [CATALOG_TAGGING_HANDOFF.md](CATALOG_TAGGING_HANDOFF.md) — `scripts/repair-long-single-segments.ts` |
 
 **Mental model:** `readCatalog()` / `writeCatalog()` are always local. The Worker mints **short-lived** S3-compatible credentials; the app does not store permanent R2 API keys. Remote-only rows show in the UI; preview/render **materialize** to disk before ffmpeg runs.
 
@@ -58,7 +59,7 @@ The same product can run in two modes:
 | **Work on R2, the Worker gateway, or Pulumi infra** | [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md), [infra/cloudflare/README.md](../infra/cloudflare/README.md) | `src/server/sync/r2`, `src/app/api/sync/r2`, `infra/cloudflare` |
 | Modify Electron behavior | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md) | `electron/`, `forge.config.cjs`, `src/shared/desktop.ts` |
 | Understand why Electron was designed this way | [ELECTRON_DESKTOP_PLAN.md](ELECTRON_DESKTOP_PLAN.md) | `electron/`, `src/server/runtime`, `src/proxy.ts` |
-| Change desktop UI flows | [ELECTRON_UXUI_RESEARCH.md](ELECTRON_UXUI_RESEARCH.md) | `src/client/components/**`, `src/client/lib/desktop.ts` |
+| Change desktop UI flows (including catalog / segment modal) | [ELECTRON_UXUI_RESEARCH.md](ELECTRON_UXUI_RESEARCH.md) §5.6, §4.1 | `src/client/components/catalog/**`, `src/client/lib/desktop.ts`, `src/app/globals.css` |
 | Package or release installers | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md) | `.github/workflows/desktop*.yml`, `forge.config.cjs`, `build/` |
 | Deploy the web/server version with Docker | [DESIGN_DEPLOYMENT.md](DESIGN_DEPLOYMENT.md) | `Dockerfile`, `docker-compose.yml`, `src/server/**` |
 | Understand historical monorepo assumptions | [HANDOFF_NEW_REPO.md](HANDOFF_NEW_REPO.md) | old sibling-path notes in `src/server/**` |

@@ -388,6 +388,18 @@ and resume on relaunch.
   prompt before terminating the Next child process.
 - Windows/Linux: closing the last window quits. Same in-flight-job prompt.
 
+### 5.6 Catalog, Segments, and Cloud Mirror (UX Notes)
+
+**Where it lives (code):** catalog surface is `CatalogPanel` + `VideoGrid` / `VideoCard`; entry detail and per-segment editing use `DetailModal` and `SegmentRow` under `src/client/components/catalog/`. Styling is **`globals.css`** — use existing modal (`modal`, `modal-dialog`, …), segment editor (`segment-block`, `segment-thumb`, `segment-tags-input`, …), and button (`btn`, variants) classes only; do not introduce new BEM-style class names without matching CSS.
+
+**In-app editing:** users open a clip, view segments in the modal, and edit **descriptions** and **tag chips** per segment. Saves go through the existing catalog write path (desktop auth on mutating routes).
+
+**Bulk / agent workflows (outside the click path):** resegmenting long clips, generating segment posters, applying a closed tag vocabulary at scale, and mirroring `catalog.json` to R2 are documented operationally in **`docs/CATALOG_TAGGING_HANDOFF.md`** and **`docs/R2_PULUMI_HANDOFF.md`**. The UX doc does not duplicate those procedures; keep UI copy and layout consistent with “segment = one timed window + labels,” and avoid implying that every catalog fix happens in-modal.
+
+**Availability and materialize:** when clips are cloud-only, the UI may show “needs materialize” or download states; desktop packaging and ffmpeg gates are in **`docs/ELECTRON_DESKTOP_HANDOFF.md`**.
+
+**Future enhancement (optional):** if we surface “segment span looks wrong vs duration” in-app, tie any warning to the same **`segment-block`** row and a non-blocking affordance (copy diagnostics / open handoff); implementation would align with `scripts/repair-long-single-segments.ts` and `docs/CATALOG_TAGGING_HANDOFF.md`.
+
 ## 6. Performance
 
 - Cold-start budget: under 2.5s to interactive on a 2020-era laptop. Achieved
