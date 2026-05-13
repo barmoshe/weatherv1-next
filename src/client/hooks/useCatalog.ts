@@ -15,6 +15,15 @@ export interface R2SyncStatus {
   error?: string;
 }
 
+export interface CatalogTagCounts {
+  success?: boolean;
+  counts: Record<string, number>;
+  segment_counts: Record<string, number>;
+  source_counts: Record<string, number>;
+  total: number;
+  untagged: number;
+}
+
 export function useCatalog() {
   return useQuery<ParsedVideo[]>({
     queryKey: ["catalog"],
@@ -42,12 +51,12 @@ export function useR2SyncStatus() {
 }
 
 export function useTagCounts() {
-  return useQuery<{ tags: Record<string, number>; sources: Record<string, number> }>({
+  return useQuery<CatalogTagCounts>({
     queryKey: ["tag-counts"],
     queryFn: async () => {
       const res = await fetch("/api/catalog/tag-counts");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json() as Promise<{ tags: Record<string, number>; sources: Record<string, number> }>;
+      return res.json() as Promise<CatalogTagCounts>;
     },
     staleTime: 30_000,
   });

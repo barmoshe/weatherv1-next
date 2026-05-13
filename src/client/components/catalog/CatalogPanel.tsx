@@ -4,6 +4,11 @@ import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { desktop } from "@/client/lib/desktop";
 import { useCatalog, useR2SyncStatus } from "@/client/hooks/useCatalog";
+import {
+  hasAnyCatalogTag,
+  matchesCatalogSearch,
+  videoMatchesTags,
+} from "@/client/lib/catalog-display";
 import type { ParsedVideo } from "@/shared/types";
 import { CatalogFilters, type FilterState, type SortOrder } from "./CatalogFilters";
 import { VideoGrid } from "./VideoGrid";
@@ -34,39 +39,6 @@ function CatalogSkeleton() {
   );
 }
 
-function hasAnySegmentTag(video: ParsedVideo): boolean {
-  for (const seg of video.segments ?? []) {
-    if ((seg.tags ?? []).some((t) => t)) return true;
-  }
-  // Also check legacy clip-level tags
-  const lt = video.tags;
-  if (!lt) return false;
-  if (Array.isArray(lt)) return lt.some(Boolean);
-  return Boolean(lt.main || lt.secondary || lt.third);
-}
-
-function videoMatchesTags(video: ParsedVideo, activeTags: string[]): boolean {
-  if (activeTags.length === 0) return true;
-  const allTags = new Set<string>();
-
-  for (const seg of video.segments ?? []) {
-    for (const t of seg.tags ?? []) {
-      if (t) allTags.add(t);
-    }
-  }
-
-  const lt = video.tags;
-  if (lt) {
-    if (Array.isArray(lt)) {
-      (lt as string[]).forEach((t) => t && allTags.add(t));
-    } else {
-      [lt.main, lt.secondary, lt.third].forEach((t) => t && allTags.add(t));
-    }
-  }
-
-  return activeTags.every((tag) => allTags.has(tag));
-}
-
 function sortVideos(videos: ParsedVideo[], sort: SortOrder): ParsedVideo[] {
   const arr = [...videos];
   switch (sort) {
@@ -93,13 +65,27 @@ function sortVideos(videos: ParsedVideo[], sort: SortOrder): ParsedVideo[] {
   }
 }
 
+function r2StatusText(r2Status: ReturnType<typeof useR2SyncStatus>["data"], materializingId: string | null): string | null {
+  if (!r2Status?.enabled) return null;
+  const base = r2Status.conflict
+    ? "הקטלוג בענן השתנה"
+    : r2Status.error
+      ? r2Status.error
+      : r2Status.counts.syncing > 0
+        ? `מסנכרן ${r2Status.counts.syncing}`
+        : r2Status.ready
+          ? "מסונכרן"
+          : "R2 לא מחובר";
+
+  return materializingId ? `${base} · מוריד ${materializingId}` : base;
+}
+
 export function CatalogPanel() {
   const qc = useQueryClient();
   const { data: videos = [], isLoading, isError, error } = useCatalog();
   const { data: r2Status } = useR2SyncStatus();
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [searchText, setSearchText] = useState(DEFAULT_FILTERS.search);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedVideo, setSelectedVideo] = useState<ParsedVideo | null>(null);
   const [importing, setImporting] = useState(false);
   const [materializingId, setMaterializingId] = useState<string | null>(null);
@@ -131,15 +117,9 @@ export function CatalogPanel() {
   const filtered = useMemo(() => {
     let result = videos;
 
-    // Text search: id, filename, description
     const q = filters.search.trim().toLowerCase();
     if (q) {
-      result = result.filter(
-        (v) =>
-          v.id.toLowerCase().includes(q) ||
-          v.filename.toLowerCase().includes(q) ||
-          (v.description ?? "").toLowerCase().includes(q)
-      );
+      result = result.filter((v) => matchesCatalogSearch(v, q));
     }
 
     // Tag filter (AND across selected tags)
@@ -154,7 +134,7 @@ export function CatalogPanel() {
 
     // Untagged only
     if (filters.untaggedOnly) {
-      result = result.filter((v) => !hasAnySegmentTag(v));
+      result = result.filter((v) => !hasAnyCatalogTag(v));
     }
 
     // Videos with 2+ catalog segments only
@@ -169,6 +149,7 @@ export function CatalogPanel() {
     () => videos.filter((v) => (v.segments?.length ?? 0) >= 2).length,
     [videos]
   );
+  const syncText = r2StatusText(r2Status, materializingId);
 
   const handleVideoClick = useCallback((video: ParsedVideo) => {
     setSelectedVideo(video);
@@ -280,17 +261,21 @@ export function CatalogPanel() {
       )}
 
       <header className="catalog-bar">
-        <div className="catalog-bar-left">
-          <h2 className="catalog-title">קטלוג קליפים</h2>
-          <span className="catalog-progress" id="catalog-progress">
-            {isLoading
-              ? "טוען…"
-              : r2Status?.enabled
-                ? `${filtered.length} מתוך ${videos.length} · מקומי ${r2Status.counts.local} · בענן ${r2Status.counts.cloudOnly}`
-                : `${filtered.length} מתוך ${videos.length}`}
-          </span>
+        <div className="catalog-heading">
+          <div>
+            <h2 className="catalog-title">קטלוג קליפים</h2>
+            <p className="catalog-progress" id="catalog-progress">
+              {isLoading ? "טוען קטלוג…" : `${filtered.length} מתוך ${videos.length} קליפים`}
+            </p>
+          </div>
+          {syncText && (
+            <span className={`catalog-sync-pill${r2Status?.conflict ? " is-conflict" : ""}${r2Status?.error ? " is-error" : ""}`}>
+              {syncText}
+            </span>
+          )}
         </div>
-        <div className="catalog-bar-right">
+
+        <div className="catalog-toolbar">
           <input
             ref={searchInputRef}
             type="search"
@@ -301,10 +286,6 @@ export function CatalogPanel() {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <div className="catalog-view-toggle" role="group" aria-label="תצוגה">
-            <button type="button" className={viewMode === "grid" ? "is-active" : ""} onClick={() => setViewMode("grid")}>רשת</button>
-            <button type="button" className={viewMode === "list" ? "is-active" : ""} onClick={() => setViewMode("list")}>רשימה</button>
-          </div>
           <select
             id="catalog-sort"
             className="catalog-sort"
@@ -353,32 +334,16 @@ export function CatalogPanel() {
         </div>
       )}
 
-      <div className="catalog-layout">
-        <CatalogFilters
-          filters={filters}
-          onChange={patchFilters}
-          totalCount={videos.length}
-          filteredCount={filtered.length}
-          multiSegmentCount={multiSegmentCount}
-        />
+      <CatalogFilters
+        filters={filters}
+        onChange={patchFilters}
+        totalCount={videos.length}
+        filteredCount={filtered.length}
+        multiSegmentCount={multiSegmentCount}
+      />
 
+      <div className="catalog-layout">
         <div className="catalog-main">
-          {r2Status?.enabled && (
-            <div className={`catalog-sync-strip${r2Status.conflict ? " is-conflict" : ""}${r2Status.error ? " is-error" : ""}`}>
-              {r2Status.conflict
-                ? "הקטלוג המרוחק השתנה"
-                : r2Status.error
-                  ? r2Status.error
-                  : r2Status.counts.syncing > 0
-                    ? `מסנכרן ${r2Status.counts.syncing} קבצים`
-                    : r2Status.ready
-                      ? "כל הקבצים מסונכרנים"
-                      : "R2 לא מחובר"}
-              {materializingId && <span> · מוריד {materializingId}</span>}
-            </div>
-          )}
-          <div className="active-filters" id="active-filters" hidden />
-          <div className="grid-summary" id="grid-summary" hidden />
           <div className="sr-only" role="status" aria-live="polite" id="grid-announce" />
           {isLoading ? (
             <CatalogSkeleton />
@@ -387,7 +352,6 @@ export function CatalogPanel() {
               videos={filtered}
               onVideoClick={handleVideoClick}
               onMaterialize={handleMaterialize}
-              viewMode={viewMode}
             />
           )}
         </div>

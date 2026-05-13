@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, KeyboardEvent } from "react";
+import { labelFor } from "@/client/lib/tag-labels";
 import type { NormalisedSegment } from "@/shared/types";
 
 interface SegmentRowProps {
@@ -69,16 +70,27 @@ export function SegmentRow({ segment, onChange, readOnly = false }: SegmentRowPr
         )}
       </div>
 
-      {segment.description ? (
-        <p className="segment-desc-input segment-desc-text">{segment.description}</p>
+      {readOnly ? (
+        segment.description ? (
+          <p className="segment-desc-input segment-desc-text">{segment.description}</p>
+        ) : (
+          <span className="segment-desc-spacer" aria-hidden="true" />
+        )
       ) : (
-        <span className="segment-desc-spacer" aria-hidden="true" />
+        <textarea
+          className="segment-desc-input"
+          rows={2}
+          value={segment.description ?? ""}
+          onChange={(e) => onChange?.({ ...segment, description: e.target.value })}
+          placeholder="תיאור קצר של מה שרואים במקטע"
+          aria-label={`תיאור מקטע ${segment.id}`}
+        />
       )}
 
       <div className="segment-tags-input">
         {tags.map((tag) => (
-          <span key={tag} className="tag-pill">
-            {tag}
+          <span key={tag} className="tag-pill" title={tag}>
+            {labelFor(tag)}
             {!readOnly && (
               <button
                 type="button"

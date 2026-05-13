@@ -2,6 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  availabilityLongLabel,
+  catalogDurationLabel,
+  catalogVideoMeta,
+  catalogVideoTitle,
+} from "@/client/lib/catalog-display";
+import { labelFor } from "@/client/lib/tag-labels";
 import type { ParsedVideo, NormalisedSegment } from "@/shared/types";
 import { SOURCE_VALUES } from "@/server/tag-vocab";
 import { SegmentRow } from "./SegmentRow";
@@ -88,6 +95,9 @@ export function DetailModal({ video, onClose }: DetailModalProps) {
     if (e.key === "Escape") onClose();
   }
 
+  const title = catalogVideoTitle(video);
+  const meta = catalogVideoMeta(video);
+
   return (
     <div
       className="modal"
@@ -101,8 +111,8 @@ export function DetailModal({ video, onClose }: DetailModalProps) {
       <div className="modal-dialog modal-dialog--wide" dir="rtl">
         <header className="modal-header">
           <h2 className="modal-title" id="detail-modal-title">
-            {video.id}
-            <span className="modal-subtitle">{video.filename}</span>
+            <span className="detail-modal-title-main">{title}</span>
+            <span className="modal-subtitle" dir="ltr">{meta}</span>
           </h2>
           <button
             type="button"
@@ -121,51 +131,73 @@ export function DetailModal({ video, onClose }: DetailModalProps) {
             </div>
           )}
 
-          <div className="detail-form-grid">
-            <div className="field">
-              <label className="field-label" htmlFor="detail-description">
-                תיאור
-              </label>
-              <textarea
-                id="detail-description"
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="תיאור הקטע..."
-              />
-            </div>
-
-            <div className="field">
-              <label className="field-label" htmlFor="detail-source">
-                מקור
-              </label>
-              <select
-                id="detail-source"
-                value={source}
-                onChange={(e) => setSource(e.target.value as typeof source)}
-              >
-                {SOURCE_VALUES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {segments.length > 0 && (
-              <div className="field">
-                <p className="field-label">מקטעים ({segments.length})</p>
-                <div className="detail-segments">
-                  {segments.map((seg) => (
-                    <SegmentRow
-                      key={seg.id}
-                      segment={seg}
-                      onChange={handleSegmentChange}
-                    />
-                  ))}
-                </div>
+          <div className="detail-editor-shell">
+            <aside className="detail-asset-panel" aria-label="פרטי קליפ">
+              <div className="detail-asset-summary">
+                <span className={`cloud-dot cloud-dot--${video.availability}`} aria-hidden="true" />
+                <span>{availabilityLongLabel(video)}</span>
+                {catalogDurationLabel(video.duration_sec) && (
+                  <span className="detail-asset-duration">
+                    {catalogDurationLabel(video.duration_sec)}
+                  </span>
+                )}
               </div>
-            )}
+
+              <div className="field">
+                <label className="field-label" htmlFor="detail-description">
+                  תיאור כללי
+                </label>
+                <textarea
+                  id="detail-description"
+                  rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="תיאור קצר של הקליפ כולו"
+                />
+              </div>
+
+              <div className="field">
+                <label className="field-label" htmlFor="detail-source">
+                  מקור
+                </label>
+                <select
+                  id="detail-source"
+                  value={source}
+                  onChange={(e) => setSource(e.target.value as typeof source)}
+                >
+                  {SOURCE_VALUES.map((s) => (
+                    <option key={s} value={s}>
+                      {labelFor(s)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <dl className="detail-meta">
+                <dt>מזהה</dt>
+                <dd dir="ltr">{video.id}</dd>
+                <dt>קובץ</dt>
+                <dd dir="ltr">{video.filename}</dd>
+              </dl>
+            </aside>
+
+            <section className="detail-segment-panel" aria-label="מקטעי הקליפ">
+              <header className="detail-segment-header">
+                <div>
+                  <h3>מקטעים</h3>
+                  <p>{segments.length ? `${segments.length} מקטעים לעריכה` : "אין מקטעים בקליפ הזה"}</p>
+                </div>
+              </header>
+              <div className="detail-segments">
+                {segments.map((seg) => (
+                  <SegmentRow
+                    key={seg.id}
+                    segment={seg}
+                    onChange={handleSegmentChange}
+                  />
+                ))}
+              </div>
+            </section>
           </div>
         </div>
 

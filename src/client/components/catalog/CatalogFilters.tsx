@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useTagCounts } from "@/client/hooks/useCatalog";
 import { labelFor } from "@/client/lib/tag-labels";
+import { SOURCE_VALUES } from "@/server/tag-vocab";
 
 export type SortOrder = "newest" | "oldest" | "duration_asc" | "duration_desc" | "name";
 
@@ -33,19 +34,18 @@ export function CatalogFilters({
   const { data: tagData } = useTagCounts();
 
   const untaggedCount = useMemo(() => {
-    if (!tagData) return 0;
-    return ((tagData as Record<string, unknown>).untagged_count as number) ?? 0;
+    return tagData?.untagged ?? 0;
   }, [tagData]);
 
   const sortedTags = useMemo(() => {
     if (!tagData) return [];
-    const segCounts = (tagData as Record<string, unknown>).segment_counts as Record<string, number> | undefined;
-    const counts = (tagData as Record<string, unknown>).counts as Record<string, number> | undefined;
-    const merged = { ...(counts ?? {}), ...(segCounts ?? {}) };
+    const merged = { ...tagData.counts, ...tagData.segment_counts };
     return Object.entries(merged)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 40);
+      .sort((a, b) => b[1] - a[1] || labelFor(a[0]).localeCompare(labelFor(b[0]), "he"))
+      .slice(0, 32);
   }, [tagData]);
+
+  const sourceCounts = tagData?.source_counts ?? {};
 
   function toggleTag(tag: string) {
     const next = filters.activeTags.includes(tag)
@@ -61,55 +61,84 @@ export function CatalogFilters({
     filters.multiSegmentOnly;
 
   return (
-    <aside className="catalog-filters" id="catalog-filters" aria-label="מסננים">
-      <div className="filter-section">
-        <button
-          type="button"
-          className="filter-chip"
-          aria-pressed={filters.multiSegmentOnly}
-          onClick={() => onChange({ multiSegmentOnly: !filters.multiSegmentOnly })}
-        >
-          הצג קליפים עם 2+ מקטעים
-          <span className="chip-count">{multiSegmentCount}</span>
-        </button>
-        <button
-          type="button"
-          className="filter-chip filter-untagged"
-          id="filter-untagged-only"
-          aria-pressed={filters.untaggedOnly}
-          onClick={() => onChange({ untaggedOnly: !filters.untaggedOnly })}
-        >
-          הצג לא מתויגים בלבד <span className="chip-count" id="filter-untagged-count">{untaggedCount}</span>
-        </button>
-      </div>
-      <div id="filter-facets">
+    <details
+      className="catalog-filters"
+      id="catalog-filters"
+      aria-label="מסננים"
+      open={hasFilters || undefined}
+    >
+      <summary className="catalog-filters-summary">
+        <span>מסננים</span>
+        <span className="catalog-filters-count">
+          {filteredCount} מתוך {totalCount}
+        </span>
+      </summary>
+
+      <div className="catalog-filters-body">
+        <div className="filter-section filter-section--quick" aria-label="סינון מהיר">
+          <button
+            type="button"
+            className="filter-chip"
+            aria-pressed={filters.multiSegmentOnly}
+            onClick={() => onChange({ multiSegmentOnly: !filters.multiSegmentOnly })}
+          >
+            2+ מקטעים
+            <span className="chip-count">{multiSegmentCount}</span>
+          </button>
+          <button
+            type="button"
+            className="filter-chip filter-untagged"
+            id="filter-untagged-only"
+            aria-pressed={filters.untaggedOnly}
+            onClick={() => onChange({ untaggedOnly: !filters.untaggedOnly })}
+          >
+            לא מתויגים
+            <span className="chip-count" id="filter-untagged-count">{untaggedCount}</span>
+          </button>
+        </div>
+
+        <section className="filter-section" aria-label="מקור">
+          <h3 className="filter-section-title">מקור</h3>
+          <div className="filter-options filter-options--inline">
+            {SOURCE_VALUES.map((source) => (
+              <button
+                key={source}
+                type="button"
+                className="filter-option"
+                onClick={() => onChange({ activeSource: filters.activeSource === source ? null : source })}
+                aria-pressed={filters.activeSource === source}
+              >
+                <span>{labelFor(source)}</span>
+                <span className="chip-count">{sourceCounts[source] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {sortedTags.length > 0 && (
-          <details className="facet-group" open>
-            <summary>תגיות נפוצות</summary>
-            <div className="facet-group-body">
-              <div className="filter-options">
-                {sortedTags.map(([tag, count]) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className="filter-option"
-                    onClick={() => toggleTag(tag)}
-                    aria-pressed={filters.activeTags.includes(tag)}
-                  >
-                    <span>{labelFor(tag)}</span>
-                    <span className="chip-count">{count}</span>
-                  </button>
-                ))}
-              </div>
+          <section className="filter-section" aria-label="תגיות נפוצות">
+            <h3 className="filter-section-title">תגיות נפוצות</h3>
+            <div className="filter-options filter-options--inline">
+              {sortedTags.map(([tag, count]) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="filter-option"
+                  onClick={() => toggleTag(tag)}
+                  aria-pressed={filters.activeTags.includes(tag)}
+                >
+                  <span>{labelFor(tag)}</span>
+                  <span className="chip-count">{count}</span>
+                </button>
+              ))}
             </div>
-          </details>
+          </section>
         )}
-      </div>
-      <div className="filter-section filter-section-actions">
+
         {hasFilters && (
           <button
             type="button"
-            className="btn btn--ghost btn--sm"
+            className="btn btn--ghost btn--sm filter-clear"
             id="filter-clear"
             onClick={() =>
               onChange({
@@ -124,6 +153,6 @@ export function CatalogFilters({
           </button>
         )}
       </div>
-    </aside>
+    </details>
   );
 }
