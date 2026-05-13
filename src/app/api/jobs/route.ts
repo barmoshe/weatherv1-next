@@ -20,6 +20,8 @@ export async function GET() {
       audio_filename: job.audio_filename,
       output_url: job.output_url ?? undefined,
       transcript_preview: transcriptPreview(job.job_id),
+      usage_summary: job.usage_summary,
+      usage_calls: job.usage_calls,
     }))
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 

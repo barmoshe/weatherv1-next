@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { transcribeAudio } from "@/server/pipeline/picker";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { upsertJob } from "@/server/jobs/store";
+import { persistTranscriptionUsageEstimate } from "@/server/jobs/usage-persist";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
@@ -48,7 +49,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { text, segments, duration } = await transcribeAudio(savedPath);
+    const {
+      text,
+      segments,
+      duration,
+      transcription_model,
+      billed_audio_sec,
+    } = await transcribeAudio(savedPath);
 
     const jobId = uuidv4().replace(/-/g, "");
     upsertJob({
@@ -56,6 +63,11 @@ export async function POST(req: NextRequest) {
       status: "draft",
       audio_filename: savedName,
       created_at: new Date().toISOString(),
+    });
+
+    persistTranscriptionUsageEstimate(jobId, {
+      billed_audio_sec,
+      transcription_model,
     });
 
     updatePlanBundle(jobId, {

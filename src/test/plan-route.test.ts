@@ -15,17 +15,21 @@ vi.mock("@/server/catalog/parser", () => ({
 vi.mock("@/server/jobs/plan-bundle", () => ({ updatePlanBundle: mockUpdatePlanBundle }));
 vi.mock("@/server/providers/errors", () => ({ mapProviderError: vi.fn(() => null) }));
 vi.mock("@/server/pipeline/scene-planner", () => ({
-  planScenes: vi.fn(async () => [{
-    idx: 0,
-    start_sec: 0,
-    end_sec: 8,
-    title_he: "שרב",
-    narration: "שרב ועומס חום",
-    keywords: ["שרב"],
-    kind: "prose",
-    heterogeneous: false,
-    whisper_beat_indices: [],
-  }]),
+  planScenes: vi.fn(async () => ({
+    scenes: [
+      {
+        idx: 0,
+        start_sec: 0,
+        end_sec: 8,
+        title_he: "שרב",
+        narration: "שרב ועומס חום",
+        keywords: ["שרב"],
+        kind: "prose",
+        heterogeneous: false,
+        whisper_beat_indices: [],
+      },
+    ],
+  })),
   fallbackSingleScene: vi.fn(() => []),
 }));
 vi.mock("@/server/pipeline/picker", () => {

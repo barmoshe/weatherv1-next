@@ -33,6 +33,19 @@ async function mocks() {
   };
 }
 
+/** Shape returned by real `completeJson`; tests mock this. */
+function mockPickTimeline(timeline: Array<Record<string, unknown>>) {
+  return {
+    data: { timeline },
+    usage: {
+      provider: "anthropic" as const,
+      model: "test-model",
+      input_tokens: 200,
+      output_tokens: 100,
+    },
+  };
+}
+
 function video(): ParsedVideo {
   return {
     id: "IB001",
@@ -82,7 +95,7 @@ describe("picker", () => {
 
   it("returns an empty status instead of pretending the picker succeeded", async () => {
     const { mockCompleteJson } = await mocks();
-    mockCompleteJson.mockResolvedValueOnce({ timeline: [] });
+    mockCompleteJson.mockResolvedValueOnce(mockPickTimeline([]));
 
     const result = await pickSegmentsDetailed("תחזית", [video()], 12, {
       scenes: [{
@@ -156,10 +169,10 @@ describe("picker", () => {
   it("retries empty timelines up to maxLlmAttempts", async () => {
     const { mockCompleteJson } = await mocks();
     mockCompleteJson
-      .mockResolvedValueOnce({ timeline: [] })
-      .mockResolvedValueOnce({ timeline: [] })
-      .mockResolvedValueOnce({
-        timeline: [
+      .mockResolvedValueOnce(mockPickTimeline([]))
+      .mockResolvedValueOnce(mockPickTimeline([]))
+      .mockResolvedValueOnce(
+        mockPickTimeline([
           {
             scene_idx: 0,
             segment_id: "IB001-s0",
@@ -167,8 +180,8 @@ describe("picker", () => {
             audio_end: 12,
             reason: "ok",
           },
-        ],
-      });
+        ]),
+      );
 
     const result = await pickSegmentsDetailed("תחזית", [video()], 12, {
       maxLlmAttempts: 3,
@@ -178,11 +191,13 @@ describe("picker", () => {
     expect(mockCompleteJson).toHaveBeenCalledTimes(3);
     expect(result.timeline).toHaveLength(1);
     expect(result.picker_status.llm_attempts_used).toBe(3);
+    expect(result.picker_usages?.map((u) => u.step)).toEqual(["picker_attempt_1", "picker_attempt_2", "picker_attempt_3"]);
+    expect(result.picker_usages).toHaveLength(3);
   });
 
   it("stops after three empty timelines without a fourth LLM call", async () => {
     const { mockCompleteJson } = await mocks();
-    mockCompleteJson.mockResolvedValue({ timeline: [] });
+    mockCompleteJson.mockResolvedValue(mockPickTimeline([]));
 
     const result = await pickSegmentsDetailed("תחזית", [video()], 12, {
       maxLlmAttempts: 3,
@@ -192,5 +207,6 @@ describe("picker", () => {
     expect(mockCompleteJson).toHaveBeenCalledTimes(3);
     expect(result.timeline).toHaveLength(0);
     expect(result.picker_status.last_retry_reason).toBe("exhausted_llm_attempts_empty_timeline");
+    expect(result.picker_usages).toHaveLength(3);
   });
 });

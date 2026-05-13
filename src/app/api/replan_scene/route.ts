@@ -5,6 +5,7 @@ import type { Scene } from "@/shared/types";
 import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/parser";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
+import { persistReplanPickerUsage } from "@/server/jobs/usage-persist";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
 
@@ -107,6 +108,7 @@ export async function POST(req: NextRequest) {
       scenes: [target as unknown as Scene],
       avoidSegmentIds: avoidSet,
       maxLlmAttempts: 3,
+      usageAttemptPrefix: "replan_picker_attempt",
     });
     const newPicksRaw = pickerResult.timeline;
     if (!newPicksRaw.length) {
@@ -138,6 +140,8 @@ export async function POST(req: NextRequest) {
     });
 
     updatePlanBundle(jobId, { timeline: merged, validator: validatorResult, picker_status: pickerResult.picker_status });
+
+    persistReplanPickerUsage(jobId, pickerResult.picker_usages ?? []);
 
     return NextResponse.json({
       success: true,

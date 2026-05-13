@@ -61,7 +61,14 @@ export function createOpenAiTranscriptionProvider(
         }));
         const duration =
           raw.duration ?? (segments.length ? segments[segments.length - 1].end : 0);
-        return { text: fixedText, segments, duration };
+        const transcription_model = "whisper-1";
+        return {
+          text: fixedText,
+          segments,
+          duration,
+          transcription_model,
+          billed_audio_sec: duration,
+        };
       } catch (err) {
         throw translate(err);
       }

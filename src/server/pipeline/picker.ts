@@ -3,6 +3,7 @@ import { fallbackSingleScene } from "./scene-planner";
 import { SOURCE_VALUES } from "@/server/tag-vocab";
 import { getLlmProvider, LlmProviderError } from "@/server/providers/llm";
 import { getTranscriptionProvider } from "@/server/providers/transcription";
+import type { TranscriptionResult } from "@/server/providers/transcription/types";
 import type { LlmErrorCode, LlmProviderId } from "@/server/providers/llm";
 import type {
   Scene,
@@ -12,6 +13,7 @@ import type {
   SegmentConcepts,
   SegmentMapEntry,
 } from "@/shared/types";
+import type { UsageCallRecord, LlmCallUsage } from "@/shared/usage";
 import { validateAndSwap, type MutablePick, type ValidatorBundle } from "@/server/pipeline/validator";
 
 // ---------------------------------------------------------------------------
@@ -162,6 +164,8 @@ export interface PickSegmentsResult {
   picker_status: PickerRunStatus;
   /** Present when `validationContext` was passed and validation ran at least once. */
   validator?: ValidatorBundle;
+  /** Successful LLM round-trips in this Detailed run (one entry per picker attempt). */
+  picker_usages?: UsageCallRecord[];
 }
 
 export class PickerFailureError extends Error {
@@ -276,6 +280,11 @@ export interface PickerOptions {
   validationContext?: PickerValidationContext;
   /** Default: 3 when validationContext is set, otherwise 1. */
   maxLlmAttempts?: number;
+  /**
+   * Prefix for `usage_calls` step IDs (default picks `picker_attempt_N`).
+   * Replan flows should pass `replan_picker_attempt` → `replan_picker_attempt_1`, ….
+   */
+  usageAttemptPrefix?: string;
 }
 
 export async function pickSegments(
@@ -387,8 +396,20 @@ async function invokePickerLlmOnce(args: {
   avoidSegmentIds?: Set<string>;
   attempt: number;
   retryFeedback?: Record<string, unknown>;
+  usageStep: string;
 }): Promise<PickSegmentsResult> {
-  const { provider, transcriptText, durationSec, scenes, catalog, customPrompt, avoidSegmentIds, attempt, retryFeedback } =
+  const {
+    provider,
+    transcriptText,
+    durationSec,
+    scenes,
+    catalog,
+    customPrompt,
+    avoidSegmentIds,
+    attempt,
+    retryFeedback,
+    usageStep,
+  } =
     args;
 
   let systemPrompt = customPrompt?.trim() ? customPrompt.trim() : SCENE_AWARE_SYSTEM_PROMPT;
@@ -421,7 +442,7 @@ async function invokePickerLlmOnce(args: {
     !customPrompt && !(avoidSegmentIds && avoidSegmentIds.size > 0) && attempt === 1 && !retryFeedback;
 
   try {
-    const data = await provider.completeJson({
+    const { data, usage } = await provider.completeJson({
       systemPrompt,
       userPayload,
       schema: PickResponseSchema,
@@ -435,9 +456,11 @@ async function invokePickerLlmOnce(args: {
 
     const timeline = data.timeline as TimelinePick[];
     backfillSceneIdx(timeline, scenes);
+    const usageRecord: UsageCallRecord = { step: usageStep, ...usage };
     if (!timeline.length) {
       return {
         timeline,
+        picker_usages: [usageRecord],
         picker_status: {
           ...baseStatus(),
           state: "empty",
@@ -450,6 +473,7 @@ async function invokePickerLlmOnce(args: {
     }
     return {
       timeline,
+      picker_usages: [usageRecord],
       picker_status: {
         ...baseStatus(),
         state: "ok",
@@ -501,10 +525,12 @@ export async function pickSegmentsDetailed(
       ? opts.scenes
       : fallbackSingleScene(transcriptText, opts.transcriptSegments ?? [], durationSec);
 
+  const prefix = opts.usageAttemptPrefix ?? "picker_attempt";
   const maxAttempts = Math.max(1, opts.maxLlmAttempts ?? (opts.validationContext ? 3 : 1));
   const vctx = opts.validationContext;
   let cumulativeAvoid = new Set(opts.avoidSegmentIds ?? []);
   let lastRetryFeedback: Record<string, unknown> | undefined;
+  const accruedPickerUsages: UsageCallRecord[] = [];
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     if (attempt > 1) {
@@ -521,7 +547,12 @@ export async function pickSegmentsDetailed(
       avoidSegmentIds: cumulativeAvoid,
       attempt,
       retryFeedback: lastRetryFeedback,
+      usageStep: `${prefix}_${attempt}`,
     });
+
+    if (invokeResult.picker_usages?.length) {
+      accruedPickerUsages.push(...invokeResult.picker_usages);
+    }
 
     const hasPicks = invokeResult.timeline.length > 0 && invokeResult.picker_status.state === "ok";
 
@@ -534,6 +565,7 @@ export async function pickSegmentsDetailed(
       if (attempt === maxAttempts) {
         return {
           timeline: [],
+          picker_usages: accruedPickerUsages,
           picker_status: {
             ...invokeResult.picker_status,
             llm_attempts_used: attempt,
@@ -547,6 +579,7 @@ export async function pickSegmentsDetailed(
     if (!vctx) {
       return {
         timeline: invokeResult.timeline,
+        picker_usages: accruedPickerUsages,
         picker_status: { ...invokeResult.picker_status, llm_attempts_used: attempt },
       };
     }
@@ -566,6 +599,7 @@ export async function pickSegmentsDetailed(
       return {
         timeline: mutable as unknown as TimelinePick[],
         validator,
+        picker_usages: accruedPickerUsages,
         picker_status: {
           ...invokeResult.picker_status,
           llm_attempts_used: attempt,
@@ -600,13 +634,10 @@ export async function pickSegmentsDetailed(
 // Whisper cloud today, see src/server/providers/transcription)
 // ---------------------------------------------------------------------------
 
-export interface TranscriptionResult {
-  text: string;
-  segments: WhisperSegment[];
-  duration: number;
-}
 
 export async function transcribeAudio(audioPath: string): Promise<TranscriptionResult> {
   const provider = getTranscriptionProvider();
   return provider.transcribe(audioPath);
 }
+
+export type { TranscriptionResult } from "@/server/providers/transcription/types";

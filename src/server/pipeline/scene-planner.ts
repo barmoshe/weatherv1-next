@@ -3,6 +3,7 @@ import { TAG_VOCAB } from "@/server/tag-vocab";
 import { detectRegions } from "./hebrew-places";
 import { getLlmProvider, LlmProviderError } from "@/server/providers/llm";
 import type { Scene, WhisperSegment } from "@/shared/types";
+import type { LlmCallUsage } from "@/shared/usage";
 
 const MIN_SCENE_DURATION = 3.0;
 const MAX_SCENES = 8;
@@ -309,9 +310,9 @@ export async function planScenes(
   transcriptText: string,
   whisperSegments: WhisperSegment[],
   durationSec: number,
-  customPrompt?: string
-): Promise<Scene[]> {
-  if (!transcriptText?.trim() || !durationSec) return [];
+  customPrompt?: string,
+): Promise<{ scenes: Scene[]; usage?: LlmCallUsage }> {
+  if (!transcriptText?.trim() || !durationSec) return { scenes: [] };
 
   const provider = getLlmProvider();
   const systemPrompt =
@@ -342,7 +343,7 @@ export async function planScenes(
   };
 
   try {
-    const data = await provider.completeJson({
+    const { data, usage } = await provider.completeJson({
       systemPrompt,
       userPayload: JSON.stringify(payload, null, 2),
       schema: ScenePlanResponseSchema,
@@ -356,15 +357,18 @@ export async function planScenes(
       },
     });
 
-    return validateScenes(data.scenes ?? [], whisperSegments, durationSec);
+    return {
+      scenes: validateScenes(data.scenes ?? [], whisperSegments, durationSec),
+      usage,
+    };
   } catch (err) {
     if (err instanceof LlmProviderError) {
       if (err.code === "llm_invalid_key" || err.code === "llm_quota_exceeded") throw err;
       console.warn(`planScenes: LLM call failed: ${err.message}`);
-      return [];
+      return { scenes: [] };
     }
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`planScenes: LLM call failed: ${msg}`);
-    return [];
+    return { scenes: [] };
   }
 }

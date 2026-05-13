@@ -45,6 +45,13 @@ beforeEach(() => {
   process.env.ANTHROPIC_API_KEY = "test-key";
 });
 
+function mockLlmScenes(rawScenes: unknown[]) {
+  return {
+    data: { scenes: rawScenes },
+    usage: { provider: "anthropic" as const, model: "test", input_tokens: 10, output_tokens: 8 },
+  };
+}
+
 // ---------------------------------------------------------------------------
 // fallbackSingleScene
 // ---------------------------------------------------------------------------
@@ -84,9 +91,9 @@ describe("planScenes", () => {
       { start_sec: 3.2, end_sec: 5.9, title_he: "ב", kind: "prose" },
       { start_sec: 5.9, end_sec: 12.0, title_he: "ג", kind: "prose" },
     ];
-    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
+    mockCompleteJson.mockResolvedValueOnce(mockLlmScenes(rawScenes));
 
-    const out = await planScenes("transcript", whisper, 12.0);
+    const { scenes: out } = await planScenes("transcript", whisper, 12.0);
     const validBoundaries = new Set([0, 3, 6, 9, 12]);
     for (const s of out) {
       expect(validBoundaries.has(s.start_sec)).toBe(true);
@@ -102,9 +109,9 @@ describe("planScenes", () => {
       { start_sec: 2.0, end_sec: 6.0, title_he: "med", kind: "prose" },
       { start_sec: 6.0, end_sec: 10.0, title_he: "end", kind: "prose" },
     ];
-    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
+    mockCompleteJson.mockResolvedValueOnce(mockLlmScenes(rawScenes));
 
-    const out = await planScenes("transcript", whisper, 10.0);
+    const { scenes: out } = await planScenes("transcript", whisper, 10.0);
     for (const s of out) {
       expect(s.end_sec - s.start_sec).toBeGreaterThanOrEqual(3.0);
     }
@@ -124,9 +131,9 @@ describe("planScenes", () => {
         narration: "מעונן וטפטוף בצפון ובמרכז.",
       },
     ];
-    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
+    mockCompleteJson.mockResolvedValueOnce(mockLlmScenes(rawScenes));
 
-    const out = await planScenes("transcript", whisper, 12.0);
+    const { scenes: out } = await planScenes("transcript", whisper, 12.0);
     expect(out).toHaveLength(1);
     expect(out[0].kind).toBe("list");
     expect(out[0].heterogeneous).toBe(true);
@@ -139,17 +146,17 @@ describe("planScenes", () => {
       { start_sec: 0.0, end_sec: 6.0, title_he: "multi-region", kind: "list", heterogeneous: true },
       { start_sec: 6.0, end_sec: 12.0, title_he: "rest", kind: "prose" },
     ];
-    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
+    mockCompleteJson.mockResolvedValueOnce(mockLlmScenes(rawScenes));
 
-    const out = await planScenes("transcript", whisper, 12.0);
+    const { scenes: out } = await planScenes("transcript", whisper, 12.0);
     expect(out[0].heterogeneous).toBe(true);
     expect(out[1].heterogeneous).toBe(false);
   });
 
   it("returns empty array when LLM response has no scenes", async () => {
     const mockCompleteJson = await getMockCompleteJson();
-    mockCompleteJson.mockResolvedValueOnce({ scenes: [] });
-    const out = await planScenes("transcript", segs(3), 9.0);
+    mockCompleteJson.mockResolvedValueOnce(mockLlmScenes([]));
+    const { scenes: out } = await planScenes("transcript", segs(3), 9.0);
     expect(out).toHaveLength(0);
   });
 
@@ -160,9 +167,9 @@ describe("planScenes", () => {
       { start_sec: 0.0, end_sec: 6.0, title_he: "א", kind: "prose" },
       { start_sec: 6.0, end_sec: 12.0, title_he: "ב", kind: "prose" },
     ];
-    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
+    mockCompleteJson.mockResolvedValueOnce(mockLlmScenes(rawScenes));
 
-    const out = await planScenes("transcript", whisper, 12.0);
+    const { scenes: out } = await planScenes("transcript", whisper, 12.0);
     out.forEach((s, i) => expect(s.idx).toBe(i));
   });
 });

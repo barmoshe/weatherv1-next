@@ -23,6 +23,10 @@ export interface JobRecord {
   error?: string | null;
   created_at?: string;
   audio_filename?: string;
+  /** LLM + transcription usage rollup (see `@/shared/usage` JobUsageSummary). */
+  usage_summary?: import("@/shared/usage").JobUsageSummary;
+  /** Per-call LLM usage for analytics (steps like scene_planner, picker_attempt_1). */
+  usage_calls?: import("@/shared/usage").UsageCallRecord[];
 }
 
 function getJobsPath(): string {

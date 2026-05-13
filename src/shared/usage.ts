@@ -17,13 +17,8 @@ export interface CompleteJsonResult<T> {
   usage: LlmCallUsage;
 }
 
-export type UsageCallStep =
-  | "scene_planner"
-  | `picker_attempt_${number}`
-  | `replan_picker_attempt_${number}`;
-
 export interface UsageCallRecord extends LlmCallUsage {
-  step: UsageCallStep;
+  step: string;
 }
 
 /** Persisted rollup on JobRecord (+ API / local history when synced). */

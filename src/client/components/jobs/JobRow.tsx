@@ -1,5 +1,6 @@
 "use client";
 import type { HistoryEntry } from "@/client/hooks/useLocalHistory";
+import type { JobUsageSummary } from "@/shared/usage";
 import { formatRelativeTime, formatDuration } from "@/client/lib/format-time";
 
 interface JobRowProps {
@@ -17,6 +18,13 @@ const STATUS_TAG_HE: Record<string, string> = {
   failed: "נכשל",
   lost: "לא נמצא",
 };
+
+function usageShort(s: JobUsageSummary): string {
+  const total = s.total_cost_usd_estimate ?? 0;
+  const inT = s.input_tokens ?? 0;
+  const outT = s.output_tokens ?? 0;
+  return `~$${total.toFixed(3)} · ${inT}/${outT} tok`;
+}
 
 export function JobRow({ entry, lane, onRestore, onDelete }: JobRowProps) {
   const dotClass = `is-${entry.status || "queued"}`;
@@ -57,6 +65,14 @@ export function JobRow({ entry, lane, onRestore, onDelete }: JobRowProps) {
           <>
             {" · "}
             <span className="duration">{dur}</span>
+          </>
+        )}
+        {entry.usage_summary && (
+          <>
+            {" · "}
+            <span className="duration" dir="ltr">
+              {usageShort(entry.usage_summary)}
+            </span>
           </>
         )}
       </span>

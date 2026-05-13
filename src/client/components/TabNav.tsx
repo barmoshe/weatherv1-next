@@ -14,6 +14,7 @@ const TABS: { id: Tab; label: string; badgeId: string }[] = [
   { id: "active", label: "פעילים", badgeId: "badge-active" },
   { id: "history", label: "היסטוריה", badgeId: "badge-history" },
   { id: "catalog", label: "קטלוג", badgeId: "badge-catalog" },
+  { id: "analytics", label: "אנליטיקה", badgeId: "" },
 ];
 
 export function TabNav({ activeTab, onTabChange, activeBadge, historyBadge, catalogBadge }: TabNavProps) {

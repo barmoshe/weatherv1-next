@@ -16,6 +16,7 @@ import { SettingsModal } from "@/client/components/studio/SettingsModal";
 import { StorageOnboardingGate } from "@/client/components/storage/StorageOnboardingGate";
 import { ActivePanel } from "@/client/components/jobs/ActivePanel";
 import { HistoryPanel } from "@/client/components/jobs/HistoryPanel";
+import { AnalyticsPanel } from "@/client/components/jobs/AnalyticsPanel";
 
 const qc = new QueryClient();
 
@@ -108,6 +109,7 @@ function AppInner() {
         />
         <ActivePanel hidden={tab !== "active"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} />
         <HistoryPanel hidden={tab !== "history"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} />
+        <AnalyticsPanel hidden={tab !== "analytics"} jobs={history} />
         {tab === "catalog" ? (
           <Suspense fallback={<div className="loading">טוען קטלוג…</div>}>
             <CatalogTab />

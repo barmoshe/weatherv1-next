@@ -17,6 +17,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { usageFromAnthropicMessage } from "@/shared/usage";
 import type { CompleteJsonResult } from "@/shared/usage";
+import {
+  type CompleteJsonArgs,
+  type LlmProvider,
+  LlmProviderError,
+} from "./types";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 8192;
@@ -99,7 +104,7 @@ export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProv
       }
 
       const usage = usageFromAnthropicMessage(
-        response.usage as Record<string, unknown> | undefined,
+        response.usage as unknown as Record<string, unknown> | undefined,
         "anthropic",
         model,
       );

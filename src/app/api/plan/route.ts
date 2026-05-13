@@ -8,6 +8,8 @@ import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
 import type { Scene } from "@/shared/types";
+import type { LlmCallUsage } from "@/shared/usage";
+import { persistPlanUsage } from "@/server/jobs/usage-persist";
 
 function pickerFailureResponse(pickerStatus: PickerRunStatus, status = 502) {
   return NextResponse.json(
@@ -45,9 +47,12 @@ export async function POST(req: NextRequest) {
     const videoMap = buildVideoMap(videos);
 
     let scenes: Scene[] = [];
+    let scenePlannerUsage: LlmCallUsage | undefined;
     if (!skipScenes) {
       try {
-        scenes = await planScenes(transcript, transcriptSegments, duration, customScenePrompt);
+        const planned = await planScenes(transcript, transcriptSegments, duration, customScenePrompt);
+        scenes = planned.scenes;
+        scenePlannerUsage = planned.usage;
       } catch (e) {
         const handled = mapProviderError(e);
         if (handled) throw e; // bubble quota/auth errors
@@ -109,6 +114,8 @@ export async function POST(req: NextRequest) {
       picker_status: pickerResult.picker_status,
       system_prompt: data.system_prompt,
     });
+
+    persistPlanUsage(jobId, scenePlannerUsage, pickerResult.picker_usages ?? []);
 
     return NextResponse.json({ success: true, scenes, timeline, validator: validatorResult, picker_status: pickerResult.picker_status });
   } catch (err) {

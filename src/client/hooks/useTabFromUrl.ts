@@ -2,8 +2,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
-export type Tab = "studio" | "active" | "history" | "catalog";
-const VALID_TABS: Tab[] = ["studio", "active", "history", "catalog"];
+export type Tab = "studio" | "active" | "history" | "catalog" | "analytics";
+const VALID_TABS: Tab[] = ["studio", "active", "history", "catalog", "analytics"];
 
 function buildQueryString(params: URLSearchParams): string {
   const qs = params.toString();

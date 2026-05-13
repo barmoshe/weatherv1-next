@@ -29,6 +29,7 @@ describe("Anthropic provider tool-use shape", () => {
           input: { answer: 42 },
         },
       ],
+      usage: { input_tokens: 100, output_tokens: 50 },
     });
 
     const out = await provider.completeJson({
@@ -39,7 +40,8 @@ describe("Anthropic provider tool-use shape", () => {
       schemaDescription: "demo",
       options: { temperature: 0.5, cacheSystemPrompt: true, maxTokens: 256 },
     });
-    expect(out.answer).toBe(42);
+    expect(out.data.answer).toBe(42);
+    expect(out.usage.input_tokens).toBe(100);
 
     const call = createMock.mock.calls[0][0];
     expect(call.model).toBe("claude-sonnet-4-6");
@@ -61,6 +63,7 @@ describe("Anthropic provider tool-use shape", () => {
 
     createMock.mockResolvedValueOnce({
       content: [{ type: "tool_use", name: "demo", input: { ok: true } }],
+      usage: { input_tokens: 1, output_tokens: 2 },
     });
 
     await provider.completeJson({

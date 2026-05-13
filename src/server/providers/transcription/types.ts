@@ -12,6 +12,10 @@ export interface TranscriptionResult {
   text: string;
   segments: WhisperSegment[];
   duration: number;
+  /** Model id billed by the transcription API (e.g. whisper-1). */
+  transcription_model: string;
+  /** Audio duration used for per-minute metering (typically API `duration` in seconds). */
+  billed_audio_sec: number;
 }
 
 export interface TranscriptionProvider {

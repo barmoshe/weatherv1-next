@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import type { JobUsageSummary, UsageCallRecord } from "@/shared/usage";
 
 export interface HistoryEntry {
   job_id: string;
@@ -9,6 +10,8 @@ export interface HistoryEntry {
   duration_sec?: number;
   output_url?: string;
   status: string;
+  usage_summary?: JobUsageSummary;
+  usage_calls?: UsageCallRecord[];
 }
 
 const KEY = "weatherv1.history";
@@ -47,6 +50,8 @@ export function mergeHistoryEntries(local: HistoryEntry[], persisted: HistoryEnt
       ...entry,
       transcript_preview: existing?.transcript_preview ?? entry.transcript_preview,
       duration_sec: existing?.duration_sec ?? entry.duration_sec,
+      usage_summary: entry.usage_summary ?? existing?.usage_summary,
+      usage_calls: entry.usage_calls ?? existing?.usage_calls,
     });
   }
 
