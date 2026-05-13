@@ -106,6 +106,18 @@ export async function pullCatalogFromR2(): Promise<R2SyncStatus> {
   return getR2SyncStatus();
 }
 
+export async function pullCatalogFromR2IfLocalEmpty(): Promise<void> {
+  if (!r2Configured()) return;
+  const catalog = readCatalog();
+  if (catalog.videos.length > 0) return;
+
+  try {
+    await pullCatalogFromR2();
+  } catch (err) {
+    console.warn("R2 auto-pull skipped:", err);
+  }
+}
+
 export async function pushCatalogToR2(args: { replaceRemote?: boolean } = {}): Promise<R2SyncStatus> {
   if (!r2Configured()) return getR2SyncStatus();
   const catalog = readCatalog();
