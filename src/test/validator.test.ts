@@ -75,6 +75,96 @@ describe("enforceAntiRepeat", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Same clip reuse (parent video_id / clip_id)
+// ---------------------------------------------------------------------------
+
+describe("enforceAntiClipReuse", () => {
+  it("swaps the later pick when two segments on the same file are too similar in tags/description", () => {
+    const dup = segClip(
+      "DUP",
+      [
+        seg("DUP-s0", 0, 5, ["rain", "north"], "גשם בצפון"),
+        seg("DUP-s1", 5, 10, ["rain", "north"], "גשם כבד בגליל"),
+      ],
+      30
+    );
+    const other = segClip("OTH", [seg("OTH-s0", 0, 20, ["rain", "sea"])], 20);
+    const sm = segmentMapFrom([dup, other]);
+    const beats = [
+      { idx: 0, text: "rain in the north", start: 0, end: 5 },
+      { idx: 1, text: "rain in the north", start: 5, end: 10 },
+    ];
+    const timeline: MutablePick[] = [
+      { ...tSeg("DUP-s0", 0, 0, 5), scene_idx: 0 },
+      { ...tSeg("DUP-s1", 1, 5, 10), scene_idx: 1 },
+    ];
+
+    const out = validateAndSwap(timeline, { beats, segmentMap: sm, videoMap: { DUP: dup, OTH: other } });
+
+    expect(timeline[0].video_id).toBe("DUP");
+    expect(timeline[1].video_id).toBe("OTH");
+    expect(timeline[1].segment_id).toBe("OTH-s0");
+    expect(out.hard_violations_fixed.some((v) => v.issue === "same clip reuse" && v.fixed === true)).toBe(true);
+  });
+
+  it("keeps two picks from the same file when segment tags describe clearly different concepts", () => {
+    const dup = segClip(
+      "DUP",
+      [
+        seg("DUP-s0", 0, 5, ["urban", "storm"], "עיר בסערה"),
+        seg("DUP-s1", 5, 10, ["sea", "calm"], "ים שקט בבוקר"),
+      ],
+      30
+    );
+    const sm = segmentMapFrom([dup]);
+    const beats = [
+      { idx: 0, text: "סערה במרכז", start: 0, end: 5 },
+      { idx: 1, text: "ים שקט", start: 5, end: 10 },
+    ];
+    const timeline: MutablePick[] = [
+      { ...tSeg("DUP-s0", 0, 0, 5), scene_idx: 0 },
+      { ...tSeg("DUP-s1", 1, 5, 10), scene_idx: 1 },
+    ];
+
+    validateAndSwap(timeline, { beats, segmentMap: sm, videoMap: { DUP: dup } });
+
+    expect(timeline[0].video_id).toBe("DUP");
+    expect(timeline[1].video_id).toBe("DUP");
+    expect(timeline[0].segment_id).toBe("DUP-s0");
+    expect(timeline[1].segment_id).toBe("DUP-s1");
+  });
+
+  it("swaps the third pick when the same parent clip appears more than twice", () => {
+    const dup = segClip(
+      "DUP",
+      [
+        seg("DUP-s0", 0, 5, ["urban", "storm"], "עיר בסערה"),
+        seg("DUP-s1", 5, 10, ["sea", "calm"], "ים שקט"),
+      ],
+      30
+    );
+    const other = segClip("OTH", [seg("OTH-s0", 0, 20, ["urban", "night"])], 20);
+    const sm = segmentMapFrom([dup, other]);
+    const beats = [
+      { idx: 0, text: "weather", start: 0, end: 3 },
+      { idx: 1, text: "weather", start: 3, end: 6 },
+      { idx: 2, text: "weather", start: 6, end: 9 },
+    ];
+    const timeline: MutablePick[] = [
+      { ...tSeg("DUP-s0", 0, 0, 3), scene_idx: 0 },
+      { ...tSeg("DUP-s1", 1, 3, 6), scene_idx: 0 },
+      { ...tSeg("DUP-s0", 2, 6, 9), scene_idx: 1 },
+    ];
+
+    validateAndSwap(timeline, { beats, segmentMap: sm, videoMap: { DUP: dup, OTH: other } });
+
+    const dupCount = timeline.filter((c) => c.video_id === "DUP").length;
+    expect(dupCount).toBe(2);
+    expect(timeline.some((c) => c.video_id === "OTH")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Anti-consecutive
 // ---------------------------------------------------------------------------
 

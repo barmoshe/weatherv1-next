@@ -18,6 +18,14 @@ const MIN_CLIP_DURATION = 3.0;
 const COVERAGE_GAP_TOLERANCE = 0.5;
 const THEMATIC_ADJACENCY_RUN_LEN = 3;
 
+/** Max timeline picks sharing one parent video when "different segment" exception might apply. */
+const SAME_CLIP_MAX_PICKS = 2;
+/** Tag Jaccard (segment-only tags) must be at or below this to count as different concepts. */
+const SAME_CLIP_TAG_JACCARD_MAX = 0.35;
+/** Description token Jaccard ceiling when both descriptions are substantive. */
+const SAME_CLIP_DESC_TOKEN_JACCARD_MAX = 0.55;
+const MIN_SEGMENT_CONCEPT_DESC_LEN = 8;
+
 // ---------------------------------------------------------------------------
 // Internal types
 // ---------------------------------------------------------------------------
@@ -260,6 +268,65 @@ function segmentCandidates(segmentMap: Record<string, SegmentMapEntry>): Candida
 }
 
 // ---------------------------------------------------------------------------
+// Same-clip reuse (segment concept / poster proxy from tags + description only)
+// ---------------------------------------------------------------------------
+
+function segmentOnlyTagSet(segment: SegmentEntry | null | undefined): Set<string> {
+  const raw = segmentTagWords(segment).filter(Boolean);
+  return new Set(raw.map((t) => String(t).trim().toLowerCase()).filter(Boolean));
+}
+
+function descriptionTokenSet(segment: SegmentEntry | null | undefined): Set<string> {
+  const d = String(segment?.description ?? "")
+    .trim()
+    .toLowerCase();
+  if (!d) return new Set();
+  const parts = d.split(/[\s\u200f\u200e,.;:!?'"()[\]{}]+/).filter((w) => w.length >= 2);
+  return new Set(parts);
+}
+
+function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 && b.size === 0) return 1;
+  let inter = 0;
+  for (const x of a) {
+    if (b.has(x)) inter++;
+  }
+  const union = a.size + b.size - inter;
+  return union <= 0 ? 1 : inter / union;
+}
+
+function segmentHasConceptSignal(segment: SegmentEntry | null | undefined): boolean {
+  if (segmentOnlyTagSet(segment).size >= 1) return true;
+  return String(segment?.description ?? "").trim().length >= MIN_SEGMENT_CONCEPT_DESC_LEN;
+}
+
+/**
+ * Whether two segments on the same parent clip may both appear on one timeline.
+ */
+export function sameClipReuseAllowed(segA: SegmentEntry, segB: SegmentEntry): boolean {
+  if (!segmentHasConceptSignal(segA) || !segmentHasConceptSignal(segB)) return false;
+
+  const tA = segmentOnlyTagSet(segA);
+  const tB = segmentOnlyTagSet(segB);
+  const dA = descriptionTokenSet(segA);
+  const dB = descriptionTokenSet(segB);
+
+  if (tA.size >= 1 && tB.size >= 1) {
+    const jacTags = jaccardSimilarity(tA, tB);
+    const disjointMulti = jacTags === 0 && tA.size >= 2 && tB.size >= 2;
+    if (!disjointMulti && jacTags > SAME_CLIP_TAG_JACCARD_MAX) return false;
+
+    if (dA.size >= 2 && dB.size >= 2) {
+      if (jaccardSimilarity(dA, dB) > SAME_CLIP_DESC_TOKEN_JACCARD_MAX) return false;
+    }
+    return true;
+  }
+
+  if (dA.size < 2 || dB.size < 2) return false;
+  return jaccardSimilarity(dA, dB) <= SAME_CLIP_DESC_TOKEN_JACCARD_MAX;
+}
+
+// ---------------------------------------------------------------------------
 // _bestCandidateByOverlap
 // ---------------------------------------------------------------------------
 
@@ -269,6 +336,7 @@ function bestCandidateByOverlap(
     targetText: string;
     usedCounts: Record<string, number>;
     excludedIds: Set<string>;
+    excludedVideoIds?: Set<string>;
     allowClothing: boolean;
     requireMinDuration?: number;
     requireMinOverlap?: number;
@@ -280,6 +348,7 @@ function bestCandidateByOverlap(
     targetText: tText,
     usedCounts,
     excludedIds,
+    excludedVideoIds,
     allowClothing,
     requireMinDuration = 0,
     requireMinOverlap = 0,
@@ -294,6 +363,8 @@ function bestCandidateByOverlap(
 
   for (const [candId, candSeg, candClip] of candidates) {
     if (excludedIds.has(candId)) continue;
+    const vid = candClip.id;
+    if (vid != null && vid !== "" && excludedVideoIds?.has(String(vid))) continue;
     const used = usedCounts[candId] ?? 0;
     if (used >= MAX_REPEATS) continue;
     const candWords = entryTagWords(candSeg, candClip);
@@ -334,10 +405,11 @@ function bestLegacyCandidate(
     targetText: string;
     usedCounts: Record<string, number>;
     excludedIds: Set<string>;
+    excludedVideoIds?: Set<string>;
     allowClothing: boolean;
   },
 ): [CatalogClip | null, number] {
-  const { targetText: tText, usedCounts, excludedIds, allowClothing } = opts;
+  const { targetText: tText, usedCounts, excludedIds, excludedVideoIds, allowClothing } = opts;
   const targetLower = (tText ?? "").toLowerCase();
   let best: CatalogClip | null = null;
   let bestOverlap = -1;
@@ -346,6 +418,7 @@ function bestLegacyCandidate(
   for (const cand of catalog) {
     const cid = cand.id;
     if (!cid || excludedIds.has(cid)) continue;
+    if (excludedVideoIds?.has(String(cid))) continue;
     const used = usedCounts[cid] ?? 0;
     if (used >= MAX_REPEATS) continue;
     const tags = (cand.tags as Record<string, string>) ?? {};
@@ -530,6 +603,140 @@ function enforceClothingRule(
     usedCounts = tally(timeline.map((c) => pickKey(c)));
     fixes.push({ issue: issueLabel, original, swapped_to: newSegId, swap_reason: `climate-aware alternative; tag overlap=${bestOverlap}`, fixed: true });
   }
+  return fixes;
+}
+
+// ---------------------------------------------------------------------------
+// _enforceAntiClipReuse (parent file / video_id)
+// ---------------------------------------------------------------------------
+
+function enforceAntiClipReuse(
+  timeline: MutablePick[],
+  beatsByIdx: Record<number, WhisperBeat>,
+  videoMap: Record<string, CatalogClip>,
+  catalog: CatalogClip[],
+  segmentMap: Record<string, SegmentMapEntry>,
+  scenesByIdx: Record<number, SceneDict>,
+): Record<string, unknown>[] {
+  const fixes: Record<string, unknown>[] = [];
+  if (!Object.keys(segmentMap).length) return fixes;
+
+  const candidates = segmentCandidates(segmentMap);
+  const maxIter = Math.max(12, timeline.length * 4);
+
+  for (let iter = 0; iter < maxIter; iter++) {
+    const byVid: Record<string, number[]> = {};
+    for (let i = 0; i < timeline.length; i++) {
+      const v = timeline[i].video_id;
+      if (!v) continue;
+      (byVid[v] ??= []).push(i);
+    }
+
+    let swapIndex: number | null = null;
+    let swapVideoId: string | null = null;
+
+    for (const [vid, rawIdx] of Object.entries(byVid)) {
+      const idxs = [...rawIdx].sort((a, b) => a - b);
+      if (idxs.length < 2) continue;
+
+      if (idxs.length > SAME_CLIP_MAX_PICKS) {
+        swapIndex = idxs[idxs.length - 1];
+        swapVideoId = vid;
+        break;
+      }
+
+      const c0 = timeline[idxs[0]];
+      const c1 = timeline[idxs[1]];
+      const sid0 = c0.segment_id;
+      const sid1 = c1.segment_id;
+      if (!sid0 || !sid1 || !segmentMap[sid0] || !segmentMap[sid1]) {
+        swapIndex = idxs[1];
+        swapVideoId = vid;
+        break;
+      }
+      const s0 = segmentMap[sid0].segment;
+      const s1 = segmentMap[sid1].segment;
+      if (!sameClipReuseAllowed(s0, s1)) {
+        swapIndex = idxs[1];
+        swapVideoId = vid;
+        break;
+      }
+    }
+
+    if (swapIndex == null || swapVideoId == null) break;
+
+    const clip = timeline[swapIndex];
+    const key = pickKey(clip);
+    const target = targetText(clip, beatsByIdx, scenesByIdx);
+    const beatIsClothing = isClothingText(target);
+    const aLen = audioLen(clip);
+    const counts = tally(timeline.map((c) => pickKey(c)));
+
+    let didSwap = false;
+    if (candidates.length) {
+      const [best, bestOverlap] = bestCandidateByOverlap(candidates, {
+        targetText: target,
+        usedCounts: counts,
+        excludedIds: new Set(key ? [key] : []),
+        excludedVideoIds: new Set([swapVideoId]),
+        allowClothing: beatIsClothing,
+        requireMinDuration: aLen,
+      });
+      if (best) {
+        const [newSegId, newSeg, newClip] = best;
+        swapPickToSegment(
+          clip,
+          newSegId,
+          newSeg,
+          newClip,
+          `validator: אותו קובץ מקור — הוחלף מ-${swapVideoId} (חפיפת תגיות=${bestOverlap})`,
+        );
+        fixes.push({
+          issue: "same clip reuse",
+          video_id: swapVideoId,
+          swapped_to: newSegId,
+          swap_reason: `tag overlap=${bestOverlap}`,
+          fixed: true,
+        });
+        didSwap = true;
+      }
+    }
+    if (!didSwap) {
+      const [legacyBest, legacyOverlap] = bestLegacyCandidate(catalog, {
+        targetText: target,
+        usedCounts: counts,
+        excludedIds: new Set(key ? [key] : []),
+        excludedVideoIds: new Set([swapVideoId]),
+        allowClothing: beatIsClothing,
+      });
+      if (legacyBest) {
+        applyLegacySwap(
+          clip,
+          legacyBest,
+          `validator: אותו קובץ מקור — הוחלף מ-${swapVideoId} (חפיפת תגיות=${legacyOverlap})`,
+        );
+        fixes.push({
+          issue: "same clip reuse",
+          video_id: swapVideoId,
+          swapped_to: legacyBest.id,
+          swap_reason: `tag overlap=${legacyOverlap}`,
+          fixed: true,
+        });
+        didSwap = true;
+      }
+    }
+    if (!didSwap) {
+      fixes.push({
+        issue: "same clip reuse",
+        video_id: swapVideoId,
+        segment_id: key,
+        swap_reason: `no replacement ≥ ${aLen.toFixed(1)}s; kept`,
+        fixed: false,
+      });
+      break;
+    }
+  }
+
   return fixes;
 }
 
@@ -1120,6 +1327,10 @@ export function validateAndSwap(
   }
 
   for (const fix of enforceClothingRule(timeline, beatsByIdx, videoMap, catalog, segmentMap, scenesByIdx)) {
+    (fix.fixed ? hardViolationsFixed : hardViolationsKept).push(fix);
+  }
+
+  for (const fix of enforceAntiClipReuse(timeline, beatsByIdx, videoMap, catalog, segmentMap, scenesByIdx)) {
     (fix.fixed ? hardViolationsFixed : hardViolationsKept).push(fix);
   }
 
