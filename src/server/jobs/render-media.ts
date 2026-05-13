@@ -6,6 +6,7 @@ import { getRuntimePaths } from "@/server/runtime/paths";
 import { spawnFFmpeg } from "@/server/ffmpeg/spawn";
 import { getFFmpegPath } from "@/server/ffmpeg/binaries";
 import type { ParsedVideo, ResolvedPick } from "@/shared/types";
+import { narrativeDecodeFromPick } from "@/server/ffmpeg/timeline-clip-timing";
 
 export interface RenderReadyMedia {
   filePath: string;
@@ -29,19 +30,14 @@ interface PrepareRenderMediaOptions {
     sourcePath: string;
     outputPath: string;
     start: number;
-    duration: number;
+    decodeDur: number;
+    padDur: number;
     jobId?: string;
   }) => Promise<void>;
 }
 
 function safeId(value: string): string {
   return value.replace(/[^A-Za-z0-9_-]/g, "-");
-}
-
-function pickDuration(pick: ResolvedPick): number {
-  const start = pick.video_start ?? 0;
-  const end = pick.video_end ?? start + Math.max(0, pick.audio_end - pick.audio_start);
-  return Math.max(0, end - start);
 }
 
 function pickKey(pick: ResolvedPick): string {
@@ -55,14 +51,21 @@ async function defaultCutSegment(args: {
   sourcePath: string;
   outputPath: string;
   start: number;
-  duration: number;
+  decodeDur: number;
+  padDur: number;
   jobId?: string;
 }): Promise<void> {
   await fs.promises.mkdir(path.dirname(args.outputPath), { recursive: true });
+  const MIN_PAD = 1e-6;
+  const tpad =
+    args.padDur > MIN_PAD ? `,tpad=stop_mode=clone:stop_duration=${args.padDur}` : "";
+  const vf =
+    `trim=start=0:duration=${args.decodeDur},setpts=PTS-STARTPTS,format=yuv420p${tpad}`;
   const result = await spawnFFmpeg(getFFmpegPath(), [
     "-ss", String(args.start),
-    "-t", String(args.duration),
+    "-t", String(args.decodeDur),
     "-i", args.sourcePath,
+    "-vf", vf,
     "-map", "0:v:0",
     "-an",
     "-c:v", "libx264",
@@ -120,9 +123,9 @@ export async function prepareRenderMedia(
       }
 
       const key = pickKey(pick);
-      const duration = pickDuration(pick);
-      if (!(duration > 0)) {
-        throw new Error(`Timeline pick ${pick.segment_id} has a non-positive duration`);
+      const { audioDur, seekStart, decodeDur, padDur } = narrativeDecodeFromPick(pick);
+      if (!(audioDur > 0) || !(decodeDur > 0)) {
+        throw new Error(`Timeline pick ${pick.segment_id} has a non-positive decodable duration`);
       }
 
       let prepared = preparedByPick.get(key);
@@ -132,13 +135,14 @@ export async function prepareRenderMedia(
         await cutSegment({
           sourcePath,
           outputPath,
-          start: pick.video_start ?? 0,
-          duration,
+          start: seekStart,
+          decodeDur,
+          padDur,
           jobId,
         });
         const readyMedia = {
           filePath: outputPath,
-          duration,
+          duration: audioDur,
           segmentId: pick.segment_id,
           videoId: pick.video_id,
         };
@@ -151,11 +155,11 @@ export async function prepareRenderMedia(
           filename: path.basename(outputPath),
           path: outputPath,
           availability: "local",
-          duration_sec: duration,
+          duration_sec: audioDur,
           segments: [{
             id: pick.segment_id,
             start_sec: 0,
-            end_sec: duration,
+            end_sec: audioDur,
             description: "",
             tags: [],
           }],

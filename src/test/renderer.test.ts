@@ -61,7 +61,17 @@ describe("buildRendererArgs", () => {
     expect(args[lastT + 1]).toBe("12");
   });
 
-  it("adds tpad freeze when video is shorter than audio by more than 0.04s", async () => {
+  it("freezes remainder when narration spans longer than the video slice (per clip)", async () => {
+    mockProbeVideo.mockResolvedValue(makeProbeResult(12));
+    const result = await buildRendererArgs([pick("W001", 0, 8, 0, 12)], { W001: vid("W001") }, AUDIO, OUT);
+    expect(result).not.toBeNull();
+    const fcIdx = result!.args.indexOf("-filter_complex");
+    const filterComplex = result!.args[fcIdx + 1];
+    expect(filterComplex).toContain("trim=start=0:duration=8");
+    expect(filterComplex).toContain("tpad=stop_mode=clone:stop_duration=4");
+  });
+
+  it("adds concat-level tpad freeze when summed clip duration trails full audio master", async () => {
     mockProbeVideo.mockResolvedValue(makeProbeResult(12)); // audio=12, video=8 → gap=4
     const result = await buildRendererArgs([pick("W001", 0, 8, 0, 8)], { W001: vid("W001") }, AUDIO, OUT);
     expect(result).not.toBeNull();

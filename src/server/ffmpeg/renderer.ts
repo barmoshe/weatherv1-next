@@ -4,6 +4,7 @@ import { probeVideo } from "./probe";
 import { getFFmpegPath } from "./binaries";
 import type { ResolvedPick, ParsedVideo } from "@/shared/types";
 import { getAssetSource } from "@/server/assets/source";
+import { narrativeDecodeFromPick } from "@/server/ffmpeg/timeline-clip-timing";
 
 const PAD_THRESHOLD_SEC = 0.04;
 
@@ -13,8 +14,6 @@ export interface RenderOptions {
   bgMusicVolume?: string;
   onProgress?: (pct: number) => void;
 }
-
-type SpecKey = `${string}::${number}::${number}`; // filePath::start::duration
 
 export interface RendererArgResult {
   args: string[];
@@ -44,8 +43,14 @@ export async function buildRendererArgs(
   outputPath: string,
   opts: RenderOptions = {}
 ): Promise<RendererArgResult | null> {
-  // Resolve timeline to (filePath, start, duration) tuples
-  type Resolved = { filePath: string; start: number; duration: number };
+  // Resolve timeline: decode up to decodeDur from source at seekStart, then freeze-pad so each slice equals audioDur.
+  type Resolved = {
+    filePath: string;
+    seekStart: number;
+    decodeDur: number;
+    audioDur: number;
+    padDur: number;
+  };
   const resolved: Resolved[] = [];
 
   for (const clip of timeline) {
@@ -54,11 +59,12 @@ export async function buildRendererArgs(
       console.warn(`Warning: Video ${clip.video_id} not found in map. Skipping.`);
       continue;
     }
-    const start = clip.video_start ?? 0;
-    const audioDur = clip.audio_end - clip.audio_start;
-    const end = clip.video_end ?? start + audioDur;
-    const duration = end - start;
-    resolved.push({ filePath: vid.path, start, duration });
+    const { audioDur, seekStart, decodeDur, padDur } = narrativeDecodeFromPick(clip);
+    if (audioDur <= 0 || decodeDur <= 0) {
+      console.warn(`Warning: Timeline pick ${clip.segment_id} has no decodable duration; skipping.`);
+      continue;
+    }
+    resolved.push({ filePath: vid.path, seekStart, decodeDur, audioDur, padDur });
   }
 
   if (resolved.length === 0) {
@@ -74,9 +80,9 @@ export async function buildRendererArgs(
   const args: string[] = [];
   const inputFiles: string[] = [];
 
-  // One -i entry per resolved clip (no dedup needed in CLI — each -i is independent)
-  for (const { filePath, start, duration } of resolved) {
-    args.push("-ss", String(start), "-t", String(duration), "-i", filePath);
+  // One -i entry per resolved clip (each decodes up to decodeDur from seekStart; pad in filter graph to audioDur)
+  for (const { filePath, seekStart, decodeDur } of resolved) {
+    args.push("-ss", String(seekStart), "-t", String(decodeDur), "-i", filePath);
     inputFiles.push(filePath);
   }
 
@@ -100,19 +106,24 @@ export async function buildRendererArgs(
   // Filter complex
   const filterParts: string[] = [];
 
-  // Per-clip video filter chain: trim → setpts → scale → crop → setsar
+  // Per-clip: trim decoded window → scale/crop → optional freeze to match narration length
+  const scaleCrop =
+    "scale=1080:1920:force_original_aspect_ratio=increase," +
+    "crop=1080:1920,setsar=1";
   for (let i = 0; i < resolved.length; i++) {
-    const { duration } = resolved[i];
+    const { decodeDur, padDur } = resolved[i];
+    const MIN_PAD_RENDER = 1e-6;
+    const tpad =
+      padDur > MIN_PAD_RENDER ? `,tpad=stop_mode=clone:stop_duration=${padDur}` : "";
     filterParts.push(
-      `[${i}:v]trim=start=0:duration=${duration},setpts=PTS-STARTPTS,` +
-        `scale=1080:1920:force_original_aspect_ratio=increase,` +
-        `crop=1080:1920,setsar=1[v${i}]`
+      `[${i}:v]trim=start=0:duration=${decodeDur},setpts=PTS-STARTPTS,` +
+        `${scaleCrop}${tpad}[v${i}]`
     );
   }
 
   // Concat all clip video streams
   const concatInputs = resolved.map((_, i) => `[v${i}]`).join("");
-  const totalVideoDur = resolved.reduce((s, r) => s + r.duration, 0);
+  const totalVideoDur = resolved.reduce((s, r) => s + r.audioDur, 0);
 
   let concatOut = "[vcat]";
   filterParts.push(`${concatInputs}concat=n=${resolved.length}:v=1:a=0${concatOut}`);

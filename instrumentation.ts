@@ -1,6 +1,9 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+  const { pullJobsFromR2 } = await import("@/server/sync/r2/service");
+  await pullJobsFromR2();
+
   const { startWorker } = await import("@/server/jobs/worker");
   startWorker();
 

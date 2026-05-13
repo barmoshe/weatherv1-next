@@ -70,7 +70,8 @@ describe("render media preparation", () => {
     expect(downloadObject).toHaveBeenCalledWith("tenants/t/videos/clip-1/clip-1.mp4", expect.stringContaining("sources"));
     expect(cutSegment).toHaveBeenCalledWith(expect.objectContaining({
       start: 12,
-      duration: 6,
+      decodeDur: 6,
+      padDur: 0,
       jobId: "job-1",
     }));
     expect(prepared.timeline[0]).toMatchObject({ video_start: 0, video_end: 6 });
@@ -80,6 +81,42 @@ describe("render media preparation", () => {
 
     await prepared.cleanup();
     expect(fs.existsSync(prepared.tempDir)).toBe(false);
+  });
+
+  it("pads cutSegment when narration is longer than available video trim", async () => {
+    const tempRoot = makeTempDir();
+    tempDirs.push(tempRoot);
+    const downloadObject = vi.fn(async (_key: string, targetPath: string) => {
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+      fs.writeFileSync(targetPath, "source");
+      return { size: 6 };
+    });
+    const cutSegment = vi.fn(async ({ outputPath }: { outputPath: string }) => {
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      fs.writeFileSync(outputPath, "segment");
+    });
+
+    await prepareRenderMedia(
+      [
+        pick({
+          audio_start: 0,
+          audio_end: 8,
+          video_start: 10,
+          video_end: 12,
+        }),
+      ],
+      { "clip-1": video() },
+      "job-pad",
+      { tempRoot, downloadObject, cutSegment },
+    );
+
+    expect(cutSegment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        start: 10,
+        decodeDur: 2,
+        padDur: 6,
+      }),
+    );
   });
 
   it("fails clearly when a catalog clip has no R2 object key", async () => {

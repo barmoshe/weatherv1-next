@@ -1847,6 +1847,74 @@
         .job-delete:hover { background: var(--v1-coral-soft); color: var(--v1-danger); }
         .job-delete:focus-visible { outline: 2px solid var(--v1-danger); outline-offset: 1px; }
 
+        /* ── Analytics tab (usage totals + read-only rows) ─────────── */
+        [data-tab-panel="analytics"] {
+            max-width: 100%;
+            min-width: 0;
+        }
+        [data-tab-panel="analytics"] [dir="ltr"] {
+            unicode-bidi: isolate;
+        }
+        .analytics-panel-main {
+            padding-block: 0.75rem;
+            min-width: 0;
+        }
+        .analytics-stat-grid {
+            margin-block-end: 0.35rem;
+        }
+        @media (min-width: 900px) {
+            .analytics-stat-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        .settings-stat-card--analytics strong {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+            line-height: 1.35;
+            font-variant-numeric: tabular-nums;
+        }
+        .analytics-pricing-revision {
+            margin: 0 0 1rem;
+            font-size: 0.85rem;
+            color: var(--v1-ink-muted);
+            line-height: 1.45;
+        }
+        .analytics-pricing-revision__val {
+            font-family: ui-monospace, "SF Mono", monospace;
+            word-break: break-all;
+        }
+        .analytics-section-title {
+            margin: 0.75rem 0 0.35rem;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--v1-ink);
+            line-height: 1.25;
+        }
+        .analytics-section-title:first-of-type {
+            margin-block-start: 0.35rem;
+        }
+        .job-row.job-row--static {
+            cursor: default;
+            transition: background-color 0.15s ease, opacity 0.12s ease;
+        }
+        .job-row.job-row--static:hover {
+            background: var(--v1-paper);
+            transform: none;
+            opacity: 1;
+        }
+        .job-row.job-row--static:focus-visible {
+            outline: none;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .job-row {
+                transition: none;
+            }
+            .job-row:hover {
+                transform: none;
+            }
+        }
+
         .tab-panel-footer {
             display: flex;
             justify-content: flex-end;

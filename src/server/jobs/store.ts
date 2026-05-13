@@ -1,8 +1,8 @@
 /**
  * JobsStore — in-memory job registry with optional JSON persistence.
  *
- * Risk A2 mitigation: save() is the ONLY writer. All mutations go through
- * update(). Direct fs.writeFile calls are forbidden in this module's callers.
+ * Risk A2 mitigation: save() is the primary writer for in-app mutations.
+ * writeJobsJsonFromHydration() is used only when replacing disk from R2 (no R2 mirror).
  */
 
 import fs from "node:fs";
@@ -70,6 +70,25 @@ function load(): void {
   } catch {
     // Corrupt jobs.json — start fresh
   }
+}
+
+/** Clear the in-memory map so the next accessor re-reads from disk. */
+export function resetJobsStore(): void {
+  store.clear();
+  initialized = false;
+}
+
+/**
+ * Replace `jobs.json` from an R2 snapshot without mirroring back to R2
+ * (the remote object is already authoritative).
+ */
+export function writeJobsJsonFromHydration(canonicalJson: string): void {
+  const jobsPath = getJobsPath();
+  ensureDir();
+  const tmp = `${jobsPath}.tmp.hydrate.${process.pid}`;
+  fs.writeFileSync(tmp, canonicalJson, "utf8");
+  fs.renameSync(tmp, jobsPath);
+  resetJobsStore();
 }
 
 export function getJob(jobId: string): JobRecord | undefined {

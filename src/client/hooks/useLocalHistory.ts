@@ -40,8 +40,9 @@ function save(entries: HistoryEntry[]): void {
 
 export function mergeHistoryEntries(local: HistoryEntry[], persisted: HistoryEntry[]): HistoryEntry[] {
   const byId = new Map<string, HistoryEntry>();
+  const persistedIds = new Set(persisted.map((p) => p.job_id));
   for (const entry of local) {
-    byId.set(entry.job_id, entry);
+    if (persistedIds.has(entry.job_id)) byId.set(entry.job_id, entry);
   }
   for (const entry of persisted) {
     const existing = byId.get(entry.job_id);

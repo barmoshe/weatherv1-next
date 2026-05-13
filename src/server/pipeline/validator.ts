@@ -1524,6 +1524,10 @@ export function validateAndSwap(
   const merges = mergeShortClips(timeline, beatsByIdx, videoMap, segmentMap, scenesByIdx);
   for (const m of merges) hardViolationsFixed.push({ ...m, issue: "clip too short", fixed: true });
 
+  for (const fix of enforceCoverage(timeline, beatsByIdx, videoMap, segmentMap, scenesByIdx)) {
+    (fix.fixed ? hardViolationsFixed : hardViolationsKept).push(fix);
+  }
+
   sortTimelineForRender(timeline);
 
   for (const flag of flagThematicAdjacency(timeline, videoMap, segmentMap)) warnings.push(flag);

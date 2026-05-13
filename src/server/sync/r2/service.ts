@@ -18,6 +18,7 @@ import {
   tenantKey,
   uploadR2File,
 } from "./client";
+import { writeJobsJsonFromHydration } from "@/server/jobs/store";
 import { patchObjectProgress, readR2SyncState, writeR2SyncState } from "./state";
 import type { R2SyncStatus } from "./types";
 
@@ -121,6 +122,7 @@ let autoBootstrapAttempted = false;
  */
 export async function pullCatalogFromR2IfLocalEmpty(): Promise<void> {
   if (!r2Configured()) return;
+  await pullJobsFromR2();
   if (autoBootstrapAttempted) return;
 
   // Make sure the local cache is laid out before we try to read or write the
@@ -163,6 +165,59 @@ export async function pullCatalogFromR2IfLocalEmpty(): Promise<void> {
 /** Test-only: reset the in-process auto-pull guard. */
 export function resetR2AutoBootstrapForTests(): void {
   autoBootstrapAttempted = false;
+}
+
+// Once-per-process hydrate of jobs/jobs.json from R2 (manual pull uses force).
+let jobsHydrateAttempted = false;
+
+/**
+ * When R2 holds `jobs/jobs.json`, replace local `runtime/jobs.json` from it so
+ * GET /api/jobs matches the cloud snapshot. Skips when the object is missing
+ * (local-only jobs until a first push).
+ *
+ * Local-only jobs can be lost if the remote snapshot exists but omits them —
+ * intentional when R2 is the source of truth.
+ */
+export async function pullJobsFromR2(opts?: { force?: boolean }): Promise<void> {
+  if (!r2Configured()) return;
+  const force = Boolean(opts?.force);
+  if (!force && jobsHydrateAttempted) return;
+  if (!force) jobsHydrateAttempted = true;
+
+  const key = tenantKey("jobs/jobs.json");
+
+  const fail = (msg: string, err: unknown) => {
+    console.warn("[r2:jobs]", msg, err);
+    if (force) throw err instanceof Error ? err : new Error(msg);
+  };
+
+  try {
+    const head = await headR2Object(key);
+    if (!head) return;
+
+    const { text } = await getR2Text(key);
+    let jobs: Record<string, unknown>;
+    try {
+      jobs = JSON.parse(text) as Record<string, unknown>;
+    } catch (e) {
+      fail("remote jobs.json is not valid JSON", e);
+      return;
+    }
+    if (jobs === null || typeof jobs !== "object" || Array.isArray(jobs)) {
+      fail("remote jobs.json has invalid shape", new Error("r2_jobs_invalid_shape"));
+      return;
+    }
+
+    const canonicalJson = JSON.stringify(jobs, null, 2);
+    writeJobsJsonFromHydration(canonicalJson);
+  } catch (e) {
+    fail("hydrate failed", e);
+  }
+}
+
+/** Test-only: reset the in-process jobs hydrate guard. */
+export function resetR2JobsBootstrapForTests(): void {
+  jobsHydrateAttempted = false;
 }
 
 export async function pushCatalogToR2(args: { replaceRemote?: boolean } = {}): Promise<R2SyncStatus> {

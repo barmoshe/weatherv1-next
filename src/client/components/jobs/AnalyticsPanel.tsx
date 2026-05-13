@@ -96,46 +96,83 @@ export function AnalyticsPanel({ hidden, jobs }: AnalyticsPanelProps) {
       {stats.jobsWithUsage === 0 ? (
         <p className="jobs-empty">אין עדיין נתוני שימוש. לאחר תמלול ותכנון יופיעו סכומים משוערים.</p>
       ) : (
-        <div className="catalog-layout" style={{ padding: "0.75rem 0" }}>
-          <div className="catalog-main" dir="ltr">
-            <p style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>
-              Totals (LLM tokens + Whisper audio): in {stats.inTok.toLocaleString()} · out{" "}
-              {stats.outTok.toLocaleString()} · audio {stats.audioSec.toFixed(1)}s
-            </p>
-            <p style={{ margin: "0 0 0.5rem" }}>
-              Cost (est.): total {usd(stats.totalUsd)} · LLM {usd(stats.llmUsd)} · transcription{" "}
-              {usd(stats.transUsd)}
-            </p>
-            {stats.pricingRevision && (
-              <p style={{ margin: "0 0 1rem", opacity: 0.75, fontSize: "0.85rem" }}>
-                pricing_revision: {stats.pricingRevision}
-              </p>
-            )}
-
-            <h3 style={{ fontSize: "1rem", margin: "0.75rem 0 0.35rem" }}>LLM by provider:model</h3>
-            <ul className="jobs-list">
-              {stats.modelRows.map(([key, v]) => (
-                <li key={key} className="job-row" style={{ cursor: "default" }}>
-                  <span className="job-preview">{key}</span>
-                  <span className="job-meta">
-                    in {v.inTok.toLocaleString()} · out {v.outTok.toLocaleString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <h3 style={{ fontSize: "1rem", margin: "0.75rem 0 0.35rem" }}>By day (created_at)</h3>
-            <ul className="jobs-list">
-              {stats.dayRows.map(([day, v]) => (
-                <li key={day} className="job-row" style={{ cursor: "default" }}>
-                  <span className="job-preview">{day}</span>
-                  <span className="job-meta">
-                    {v.jobs} jobs · {usd(v.cost)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        <div className="analytics-panel-main" dir="ltr">
+          <div className="settings-stat-grid analytics-stat-grid">
+            <div className="settings-stat-card settings-stat-card--analytics">
+              <div className="settings-stat-card-top">
+                <span>Jobs with usage</span>
+              </div>
+              <strong>{stats.jobsWithUsage}</strong>
+              <small>Rollup from local history</small>
+            </div>
+            <div className="settings-stat-card settings-stat-card--analytics">
+              <div className="settings-stat-card-top">
+                <span>Total cost (est.)</span>
+              </div>
+              <strong>{usd(stats.totalUsd)}</strong>
+              <small>LLM + transcription</small>
+            </div>
+            <div className="settings-stat-card settings-stat-card--analytics">
+              <div className="settings-stat-card-top">
+                <span>LLM (est.)</span>
+              </div>
+              <strong>{usd(stats.llmUsd)}</strong>
+              <small>From usage_calls pricing</small>
+            </div>
+            <div className="settings-stat-card settings-stat-card--analytics">
+              <div className="settings-stat-card-top">
+                <span>Transcription (est.)</span>
+              </div>
+              <strong>{usd(stats.transUsd)}</strong>
+              <small>Whisper / billed audio</small>
+            </div>
+            <div className="settings-stat-card settings-stat-card--analytics">
+              <div className="settings-stat-card-top">
+                <span>LLM tokens</span>
+              </div>
+              <strong>
+                in {stats.inTok.toLocaleString()} · out {stats.outTok.toLocaleString()}
+              </strong>
+              <small>Aggregated job summaries</small>
+            </div>
+            <div className="settings-stat-card settings-stat-card--analytics">
+              <div className="settings-stat-card-top">
+                <span>Billed audio</span>
+              </div>
+              <strong>{stats.audioSec.toFixed(1)}s</strong>
+              <small>Transcription metering</small>
+            </div>
           </div>
+
+          {stats.pricingRevision && (
+            <p className="analytics-pricing-revision">
+              pricing_revision: <span className="analytics-pricing-revision__val">{stats.pricingRevision}</span>
+            </p>
+          )}
+
+          <h3 className="analytics-section-title">LLM by provider:model</h3>
+          <ul className="jobs-list">
+            {stats.modelRows.map(([key, v]) => (
+              <li key={key} className="job-row job-row--static">
+                <span className="job-preview">{key}</span>
+                <span className="job-meta">
+                  in {v.inTok.toLocaleString()} · out {v.outTok.toLocaleString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <h3 className="analytics-section-title">By day (created_at)</h3>
+          <ul className="jobs-list">
+            {stats.dayRows.map(([day, v]) => (
+              <li key={day} className="job-row job-row--static">
+                <span className="job-preview">{day}</span>
+                <span className="job-meta">
+                  {v.jobs} jobs · {usd(v.cost)}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </section>

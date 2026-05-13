@@ -97,4 +97,41 @@ describe("lost jobs", () => {
     });
     expect(merged[1]).toMatchObject({ job_id: "job-old", status: "completed" });
   });
+
+  it("drops local-only jobs that no longer exist on the server", () => {
+    const merged = mergeHistoryEntries(
+      [
+        {
+          job_id: "job-stale-local-only",
+          created_at: "2026-05-10T10:00:00.000Z",
+          transcript_preview: "orphan",
+          status: "completed",
+        },
+        {
+          job_id: "job-still-there",
+          created_at: "2026-05-12T09:00:00.000Z",
+          transcript_preview: "keep me",
+          duration_sec: 8,
+          status: "draft",
+        },
+      ],
+      [
+        {
+          job_id: "job-still-there",
+          created_at: "2026-05-12T09:00:00.000Z",
+          status: "completed",
+          output_url: "out.mp4",
+        },
+      ],
+    );
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toMatchObject({
+      job_id: "job-still-there",
+      status: "completed",
+      output_url: "out.mp4",
+      transcript_preview: "keep me",
+      duration_sec: 8,
+    });
+  });
 });
