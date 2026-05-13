@@ -17,7 +17,8 @@ export interface WeatherRuntimeConfig {
     enabled: boolean;
     gatewayUrl?: string;
     tenantId?: string;
-    sessionToken?: string;
+    appUsername?: string;
+    appPassword?: string;
     accountId?: string;
     bucketName?: string;
     statePath?: string;
@@ -85,7 +86,8 @@ export function getRuntimeConfig(): WeatherRuntimeConfig {
       enabled: process.env.R2_SYNC_ENABLED === "1",
       gatewayUrl: normalizeOptional(process.env.R2_GATEWAY_URL),
       tenantId: normalizeOptional(process.env.R2_TENANT_ID),
-      sessionToken: normalizeOptional(process.env.R2_SESSION_TOKEN),
+      appUsername: normalizeOptional(process.env.R2_APP_USERNAME),
+      appPassword: normalizeOptional(process.env.R2_APP_PASSWORD),
       accountId: normalizeOptional(process.env.R2_ACCOUNT_ID),
       bucketName: normalizeOptional(process.env.R2_BUCKET_NAME),
       statePath: resolveFrom(projectRoot, process.env.R2_STATE_PATH),

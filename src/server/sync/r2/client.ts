@@ -72,7 +72,13 @@ export function tenantKey(relativeKey: string): string {
 
 export function r2Configured(): boolean {
   const cfg = getRuntimeConfig().r2;
-  return Boolean(cfg.enabled && cfg.gatewayUrl && cfg.sessionToken && cfg.tenantId);
+  return Boolean(
+    cfg.enabled && cfg.gatewayUrl && cfg.tenantId && cfg.appUsername && cfg.appPassword,
+  );
+}
+
+function basicAuthHeader(user: string, pass: string): string {
+  return `Basic ${Buffer.from(`${user}:${pass}`).toString("base64")}`;
 }
 
 export async function fetchTemporaryCredentials(force = false): Promise<R2TemporaryCredentials> {
@@ -86,7 +92,7 @@ export async function fetchTemporaryCredentials(force = false): Promise<R2Tempor
   const res = await fetch(`${trimSlash(cfg.gatewayUrl!)}/v1/r2/temporary-credentials`, {
     method: "POST",
     headers: {
-      authorization: `Bearer ${cfg.sessionToken}`,
+      authorization: basicAuthHeader(cfg.appUsername!, cfg.appPassword!),
       "content-type": "application/json",
     },
     body: JSON.stringify({ tenantId: cfg.tenantId }),

@@ -25,7 +25,8 @@ const ENV_KEYS = [
   "R2_SYNC_ENABLED",
   "R2_GATEWAY_URL",
   "R2_TENANT_ID",
-  "R2_SESSION_TOKEN",
+  "R2_APP_USERNAME",
+  "R2_APP_PASSWORD",
   "R2_STATE_PATH",
 ] as const;
 
@@ -138,7 +139,7 @@ describe("desktop auth", () => {
 });
 
 describe("electron config R2 settings", () => {
-  it("persists R2 settings and injects R2 env without exposing tokens to renderer settings", () => {
+  it("persists R2 settings and injects username/password env without leaking the password to renderer settings", () => {
     const userData = makeTempDir("electron-config");
     electronConfig.setUserDataDir(userData);
 
@@ -148,9 +149,10 @@ describe("electron config R2 settings", () => {
         gatewayUrl: "https://r2.example.workers.dev",
         tenantId: "tenant-1",
         bucketName: "weatherv1-media",
+        appUsername: "weatherv1",
       },
       keys: {
-        r2SessionToken: electronConfig.encryptSecret("app-token", {}),
+        r2AppPassword: electronConfig.encryptSecret("super-secret-pw", {}),
       },
     });
 
@@ -160,6 +162,7 @@ describe("electron config R2 settings", () => {
       gatewayUrl: "https://r2.example.workers.dev",
       tenantId: "tenant-1",
       bucketName: "weatherv1-media",
+      appUsername: "weatherv1",
     });
 
     const env = electronConfig.buildChildEnv({
@@ -171,8 +174,32 @@ describe("electron config R2 settings", () => {
     expect(env.R2_SYNC_ENABLED).toBe("1");
     expect(env.R2_GATEWAY_URL).toBe("https://r2.example.workers.dev");
     expect(env.R2_TENANT_ID).toBe("tenant-1");
-    expect(env.R2_SESSION_TOKEN).toBe("app-token");
+    expect(env.R2_APP_USERNAME).toBe("weatherv1");
+    expect(env.R2_APP_PASSWORD).toBe("super-secret-pw");
     expect(env.R2_BUCKET_NAME).toBe("weatherv1-media");
     expect(env.R2_STATE_PATH).toBe(path.join(userData, "r2-sync-state.json"));
+    // Sanity: legacy single-token env must not be set.
+    expect(env.R2_SESSION_TOKEN).toBeUndefined();
+  });
+
+  it("drops a legacy r2SessionToken on read instead of exposing it", () => {
+    const userData = makeTempDir("electron-config-legacy");
+    electronConfig.setUserDataDir(userData);
+
+    // Simulate an upgrade from a previous release that stored a single token.
+    const fs = require("node:fs") as typeof import("node:fs");
+    const path = require("node:path") as typeof import("node:path");
+    fs.writeFileSync(
+      path.join(userData, "settings.json"),
+      JSON.stringify({
+        r2: { enabled: true, gatewayUrl: "https://r2.example.workers.dev", tenantId: "t" },
+        keys: { r2SessionToken: { scheme: "plaintext", data: "legacy" } },
+      }),
+      "utf8",
+    );
+
+    const settings = electronConfig.readSettings();
+    expect(settings.keys).not.toHaveProperty("r2SessionToken");
+    expect(settings.keys.r2AppPassword ?? null).toBeNull();
   });
 });

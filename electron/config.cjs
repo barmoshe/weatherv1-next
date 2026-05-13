@@ -44,6 +44,16 @@ function settingsPath() {
   return path.join(getUserDataDir(), SETTINGS_FILE);
 }
 
+/**
+ * Default app-managed local cache directory used in packaged builds when the
+ * user hasn't explicitly chosen a workspace folder. The R2 catalog is the
+ * source of truth; this folder just stores cached video files, posters,
+ * uploads, and outputs.
+ */
+function defaultLocalCacheDir() {
+  return path.join(getUserDataDir(), "local-cache");
+}
+
 function defaultSettings() {
   return {
     workspaceDir: null,
@@ -51,7 +61,9 @@ function defaultSettings() {
     ffprobePath: null,
     // Stored as { scheme, data } objects (or null). `scheme` is "safe-storage"
     // for OS-keychain-encrypted values, "plaintext" otherwise.
-    keys: { openai: null, anthropic: null, gemini: null, r2SessionToken: null },
+    // `r2AppPassword` replaces the legacy `r2SessionToken`; the worker now
+    // enforces HTTP Basic Auth with a username + password pair.
+    keys: { openai: null, anthropic: null, gemini: null, r2AppPassword: null },
     // Plain-text user preference. "auto" lets the server pick from configured keys.
     llmProvider: "auto", // "auto" | "anthropic" | "openai"
     encryption: "none", // "safe-storage" | "none"
@@ -60,6 +72,9 @@ function defaultSettings() {
       gatewayUrl: null,
       tenantId: null,
       bucketName: null,
+      // Username is non-secret; lives in the same r2 block alongside the
+      // gateway URL. The matching password is encrypted under `keys`.
+      appUsername: null,
     },
   };
 }
@@ -82,6 +97,11 @@ function readSettings() {
     // Drop legacy fields from older releases (whisper.cpp / ONNX local transcription).
     // We're cloud-only now; leaving them in env confuses the Next child.
     if ("transcriptionProvider" in _settings) delete _settings.transcriptionProvider;
+    // Drop the legacy single-token credential. The worker now enforces
+    // username + password Basic Auth; a stale token would silently fail.
+    if (_settings.keys && "r2SessionToken" in _settings.keys) {
+      delete _settings.keys.r2SessionToken;
+    }
     return _settings;
   } catch {
     _settings = defaultSettings();
@@ -155,7 +175,7 @@ function buildChildEnv(args) {
   const openai = decryptSecret(settings.keys.openai, { safeStorage: args.safeStorage });
   const anthropic = decryptSecret(settings.keys.anthropic, { safeStorage: args.safeStorage });
   const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
-  const r2SessionToken = decryptSecret(settings.keys.r2SessionToken, { safeStorage: args.safeStorage });
+  const r2AppPassword = decryptSecret(settings.keys.r2AppPassword, { safeStorage: args.safeStorage });
 
   const env = {
     ...process.env,
@@ -166,7 +186,21 @@ function buildChildEnv(args) {
     NODE_ENV: process.env.NODE_ENV || "production",
   };
 
-  if (settings.workspaceDir) env.WEATHER_WORKSPACE_DIR = settings.workspaceDir;
+  // In packaged builds we always have a workspace path: either the explicit
+  // user choice, or the app-managed local cache under userData. In dev we
+  // leave the env var unset so getRuntimeConfig() falls back to the repo's
+  // sibling v1Drive/weather folder (the historical local-only default).
+  const workspaceDir = settings.workspaceDir && settings.workspaceDir.trim()
+    ? settings.workspaceDir.trim()
+    : (args.productionMode ? defaultLocalCacheDir() : null);
+  if (workspaceDir) {
+    env.WEATHER_WORKSPACE_DIR = workspaceDir;
+    try {
+      fs.mkdirSync(workspaceDir, { recursive: true });
+    } catch (err) {
+      console.warn(`[config] failed to ensure workspace dir ${workspaceDir}:`, err && err.message ? err.message : err);
+    }
+  }
   if (args.ffmpeg.ffmpegPath) env.FFMPEG_PATH = args.ffmpeg.ffmpegPath;
   if (args.ffmpeg.ffprobePath) env.FFPROBE_PATH = args.ffmpeg.ffprobePath;
   if (openai) env.OPENAI_API_KEY = openai;
@@ -182,7 +216,8 @@ function buildChildEnv(args) {
     env.R2_GATEWAY_URL = r2.gatewayUrl;
     env.R2_TENANT_ID = r2.tenantId;
     env.R2_STATE_PATH = path.join(getUserDataDir(), "r2-sync-state.json");
-    if (r2SessionToken) env.R2_SESSION_TOKEN = r2SessionToken;
+    if (r2.appUsername) env.R2_APP_USERNAME = r2.appUsername;
+    if (r2AppPassword) env.R2_APP_PASSWORD = r2AppPassword;
     if (r2.bucketName) env.R2_BUCKET_NAME = r2.bucketName;
   }
 
@@ -209,6 +244,7 @@ module.exports = {
   PRODUCTION_R2,
   setUserDataDir,
   getUserDataDir,
+  defaultLocalCacheDir,
   readSettings,
   writeSettings,
   encryptSecret,

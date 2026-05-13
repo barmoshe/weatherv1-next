@@ -7,6 +7,7 @@ import type {
   DesktopUpdateState,
   LlmProviderPreference,
 } from "@/shared/desktop";
+import type { StorageStatus } from "@/client/hooks/useStorageStatus";
 
 interface CatalogHealth {
   loaded_count?: number;
@@ -56,12 +57,14 @@ interface DesktopStatus {
     gatewayUrl?: string;
     tenantId?: string;
     bucketName?: string;
+    appUsername?: string;
     lastCatalogEtag?: string;
     lastSyncAt?: string;
     conflict?: { remoteEtag: string; localHash: string; detectedAt: string };
     counts: { local: number; cloudOnly: number; syncing: number; error: number };
     error?: string;
   };
+  storage?: StorageStatus;
 }
 
 interface SettingsModalProps {
@@ -98,7 +101,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [r2GatewayUrl, setR2GatewayUrl] = useState("");
   const [r2TenantId, setR2TenantId] = useState("");
   const [r2BucketName, setR2BucketName] = useState("");
-  const [r2SessionToken, setR2SessionToken] = useState("");
+  const [r2AppUsername, setR2AppUsername] = useState("");
+  const [r2AppPassword, setR2AppPassword] = useState("");
+  const [showR2Password, setShowR2Password] = useState(false);
   const [llmProvider, setLlmProvider] = useState<LlmProviderPreference>("auto");
   const [saving, setSaving] = useState(false);
   const [syncingR2, setSyncingR2] = useState(false);
@@ -146,6 +151,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setR2GatewayUrl(status.r2?.gatewayUrl ?? "");
       setR2TenantId(status.r2?.tenantId ?? "");
       setR2BucketName(status.r2?.bucketName ?? "");
+      setR2AppUsername(status.r2?.appUsername ?? "");
     } catch (e) {
       setDesktopError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -161,6 +167,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setSaved(false);
     }
   }, []);
+
+  const resetWorkspaceToDefault = useCallback(async () => {
+    if (!desktop) return;
+    setSaving(true);
+    setDesktopError(null);
+    try {
+      // Empty workspaceDir tells Electron to fall back to the app-managed
+      // default local cache under userData (packaged builds only).
+      await desktop.saveSettings({ workspaceDir: "" });
+      setWorkspaceDir("");
+      await loadDesktopStatus();
+      await loadHealth();
+      setSaved(true);
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
+    }
+  }, [loadDesktopStatus, loadHealth]);
 
   const saveDesktopSettings = useCallback(async () => {
     if (!desktop) return;
@@ -179,14 +204,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       update.r2GatewayUrl = r2GatewayUrl.trim();
       update.r2TenantId = r2TenantId.trim();
       update.r2BucketName = r2BucketName.trim();
-      if (r2SessionToken.trim()) update.r2SessionToken = r2SessionToken.trim();
+      update.r2AppUsername = r2AppUsername.trim();
+      if (r2AppPassword) update.r2AppPassword = r2AppPassword;
       update.llmProvider = llmProvider;
 
       await desktop.saveSettings(update);
       setOpenaiKey("");
       setAnthropicKey("");
       setGeminiKey("");
-      setR2SessionToken("");
+      setR2AppPassword("");
+      setShowR2Password(false);
       await loadDesktopStatus();
       await loadHealth();
       setSaved(true);
@@ -204,10 +231,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     loadDesktopStatus,
     loadHealth,
     openaiKey,
+    r2AppPassword,
+    r2AppUsername,
     r2BucketName,
     r2Enabled,
     r2GatewayUrl,
-    r2SessionToken,
     r2TenantId,
     workspaceDir,
   ]);
@@ -221,7 +249,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (provider === "openai") setOpenaiKey("");
       if (provider === "anthropic") setAnthropicKey("");
       if (provider === "gemini") setGeminiKey("");
-      if (provider === "r2") setR2SessionToken("");
+      if (provider === "r2") {
+        setR2AppPassword("");
+        setShowR2Password(false);
+      }
       await loadDesktopStatus();
       await loadHealth();
       setSaved(true);
@@ -429,151 +460,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {isDesktop && (
             <section className="settings-section">
               <div className="settings-section-header">
-                <h3>נתיבי דסקטופ</h3>
-                <button type="button" className="settings-link" onClick={pickWorkspace} disabled={saving}>
-                  בחר תיקייה
-                </button>
-              </div>
-              <label className="settings-field">
-                <span>Workspace</span>
-                <input value={workspaceDir} onChange={(e) => { setWorkspaceDir(e.target.value); setSaved(false); }} />
-              </label>
-              <label className="settings-field">
-                <span>FFmpeg</span>
-                <input value={ffmpegPath} onChange={(e) => { setFfmpegPath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
-              </label>
-              <label className="settings-field">
-                <span>FFprobe</span>
-                <input value={ffprobePath} onChange={(e) => { setFfprobePath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
-              </label>
-              {desktopStatus && desktopStatus.workspace.missing.length > 0 && (
-                <p className="settings-hint">
-                  חסרים ב-workspace: {desktopStatus.workspace.missing.join(", ")}
-                </p>
-              )}
-            </section>
-          )}
-
-          {isDesktop && (
-            <section className="settings-section">
-              <div className="settings-section-header">
-                <h3>Cloudflare R2 Sync</h3>
-                <button
-                  type="button"
-                  className="settings-link"
-                  onClick={() => void pullCatalogFromR2()}
-                  disabled={syncingR2 || !desktopStatus?.r2?.ready}
-                >
-                  {syncingR2 ? "מסנכרן…" : "משוך קטלוג"}
-                </button>
-              </div>
-              <p className="settings-hint">
-                R2 משמש כשכבת סנכרון וגיבוי. רינדור, תצוגות מקדימות וקבצי עבודה נשארים מקומיים.
-                {appInfo?.packaged
-                  ? " בגרסת ההפצה החיבור ל-R2 קבוע; אם חסר App Token הוא יופיע ככרטיס מעל הסטודיו."
-                  : ""}
-              </p>
-              {!appInfo?.packaged && (
-                <>
-                  <label className="settings-field">
-                    <span>Gateway URL</span>
-                    <input
-                      value={r2GatewayUrl}
-                      onChange={(e) => {
-                        setR2GatewayUrl(e.target.value);
-                        setSaved(false);
-                      }}
-                      placeholder="https://weatherv1-r2-gateway.example.workers.dev"
-                    />
-                  </label>
-                  <label className="settings-field">
-                    <span>Tenant ID</span>
-                    <input
-                      value={r2TenantId}
-                      onChange={(e) => {
-                        setR2TenantId(e.target.value);
-                        setSaved(false);
-                      }}
-                      placeholder="default"
-                    />
-                  </label>
-                  <label className="settings-field">
-                    <span>Bucket</span>
-                    <input
-                      value={r2BucketName}
-                      onChange={(e) => {
-                        setR2BucketName(e.target.value);
-                        setSaved(false);
-                      }}
-                      placeholder="weatherv1-media"
-                    />
-                  </label>
-                  <label className="settings-field">
-                    <span>App Token</span>
-                    <div style={{ display: "flex", gap: "8px", flex: 1 }}>
-                  <input
-                    type="password"
-                    style={{ flex: 1 }}
-                    value={r2SessionToken}
-                    onChange={(e) => {
-                      setR2SessionToken(e.target.value);
-                      setSaved(false);
-                    }}
-                    placeholder={desktopStatus?.r2?.ready ? "מוגדר — הקלד כדי להחליף" : "Worker app token"}
-                  />
-                  {desktopStatus?.r2?.ready && (
-                    <button type="button" className="btn btn--ghost" onClick={() => clearKey("r2")} disabled={saving}>
-                      נקה
-                    </button>
-                  )}
-                    </div>
-                  </label>
-                  <label className="settings-radio">
-                    <input
-                      type="checkbox"
-                      checked={r2Enabled}
-                      onChange={(e) => {
-                        setR2Enabled(e.target.checked);
-                        setSaved(false);
-                      }}
-                    />
-                    <span>הפעל סנכרון ל-R2</span>
-                  </label>
-                </>
-              )}
-              <div className="settings-model-row__actions">
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  onClick={() => void pushCatalogToR2(false)}
-                  disabled={syncingR2 || saving || !desktopStatus?.r2?.ready}
-                >
-                  דחוף קטלוג
-                </button>
-                {desktopStatus?.r2?.conflict && (
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    onClick={() => void pushCatalogToR2(true)}
-                    disabled={syncingR2 || saving || !desktopStatus?.r2?.ready}
-                  >
-                    החלף מרוחק
-                  </button>
-                )}
-              </div>
-              {desktopStatus?.r2 && (
-                <p className="settings-hint">
-                  מקומי: {desktopStatus.r2.counts.local} · בענן בלבד: {desktopStatus.r2.counts.cloudOnly} · מסנכרן: {desktopStatus.r2.counts.syncing} · שגיאות: {desktopStatus.r2.counts.error}
-                </p>
-              )}
-              {desktopStatus?.r2?.error && <p className="settings-hint">{desktopStatus.r2.error}</p>}
-              {desktopStatus?.r2?.conflict && <p className="settings-hint">הקטלוג המרוחק השתנה. משוך מרחוק או החלף את המרוחק.</p>}
-            </section>
-          )}
-
-          {isDesktop && (
-            <section className="settings-section">
-              <div className="settings-section-header">
                 <h3>מפתחות API</h3>
               </div>
               <p className="settings-hint">
@@ -646,6 +532,258 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   )}
                 </div>
               </label>
+            </section>
+          )}
+
+          {isDesktop && (
+            <section className="settings-section">
+              <div className="settings-section-header">
+                <h3>{appInfo?.packaged ? "מטמון מקומי" : "סביבת עבודה ונתיבי FFmpeg"}</h3>
+                <button type="button" className="settings-link" onClick={pickWorkspace} disabled={saving}>
+                  בחר תיקייה
+                </button>
+              </div>
+              {appInfo?.packaged ? (
+                <p className="settings-hint">
+                  R2 הוא מקור האמת לקטלוג. התיקייה הזו משמשת כמטמון מקומי לקליפים שירדו מהענן,
+                  לתצוגות מקדימות, להעלאות ולקבצי הפלט.
+                  {desktopStatus?.storage?.localCache.isDefault
+                    ? " כרגע נעשה שימוש במטמון ברירת המחדל של האפליקציה."
+                    : " נבחרה תיקייה ידנית."}
+                </p>
+              ) : (
+                <p className="settings-hint">
+                  בגרסת פיתוח התיקייה הזו היא סביבת העבודה המקומית הראשית.
+                </p>
+              )}
+              <label className="settings-field">
+                <span>{appInfo?.packaged ? "תיקיית מטמון" : "Workspace"}</span>
+                <input
+                  value={workspaceDir}
+                  onChange={(e) => { setWorkspaceDir(e.target.value); setSaved(false); }}
+                  placeholder={
+                    appInfo?.packaged && desktopStatus?.storage?.localCache.isDefault
+                      ? `ברירת מחדל · ${shortPath(desktopStatus?.storage?.localCache.workspaceDir)}`
+                      : ""
+                  }
+                />
+              </label>
+              {appInfo?.packaged && !desktopStatus?.storage?.localCache.isDefault && (
+                <div className="settings-model-row__actions">
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => void resetWorkspaceToDefault()}
+                    disabled={saving}
+                  >
+                    חזור למטמון ברירת המחדל
+                  </button>
+                </div>
+              )}
+              <label className="settings-field">
+                <span>FFmpeg</span>
+                <input value={ffmpegPath} onChange={(e) => { setFfmpegPath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
+              </label>
+              <label className="settings-field">
+                <span>FFprobe</span>
+                <input value={ffprobePath} onChange={(e) => { setFfprobePath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
+              </label>
+              {desktopStatus && desktopStatus.workspace.missing.length > 0 && (
+                <p className="settings-hint">
+                  חסרים בתיקייה: {desktopStatus.workspace.missing.join(", ")}
+                </p>
+              )}
+            </section>
+          )}
+
+          {isDesktop && (
+            <section className="settings-section">
+              <div className="settings-section-header">
+                <h3>{appInfo?.packaged ? "ספריית הענן (R2)" : "Cloudflare R2 Sync"}</h3>
+                <button
+                  type="button"
+                  className="settings-link"
+                  onClick={() => void pullCatalogFromR2()}
+                  disabled={syncingR2 || !desktopStatus?.r2?.ready}
+                >
+                  {syncingR2 ? "מסנכרן…" : "משוך קטלוג"}
+                </button>
+              </div>
+              {appInfo?.packaged ? (
+                <>
+                  <p className="settings-hint">
+                    החיבור ל-R2 מוגדר מראש בגרסת ההפצה. אם חסרים פרטי הכניסה, מסך התחברות יופיע בעת הפעלת האפליקציה.
+                  </p>
+                  <div className="settings-status-grid">
+                    <div className="settings-status-row">
+                      <StatusDot ok={Boolean(desktopStatus?.r2?.ready)} />
+                      <span>סטטוס</span>
+                      <span>
+                        {desktopStatus?.r2?.ready
+                          ? "מחובר"
+                          : desktopStatus?.r2?.enabled
+                            ? "ממתין להתחברות"
+                            : "לא פעיל"}
+                      </span>
+                    </div>
+                    {desktopStatus?.r2?.appUsername && (
+                      <div className="settings-status-row">
+                        <span className="dot is-healthy" />
+                        <span>שם משתמש</span>
+                        <code>{desktopStatus.r2.appUsername}</code>
+                      </div>
+                    )}
+                    {desktopStatus?.r2?.gatewayUrl && (
+                      <div className="settings-status-row">
+                        <span className="dot is-healthy" />
+                        <span>Gateway</span>
+                        <code title={desktopStatus.r2.gatewayUrl}>{shortPath(desktopStatus.r2.gatewayUrl)}</code>
+                      </div>
+                    )}
+                    {desktopStatus?.r2?.bucketName && (
+                      <div className="settings-status-row">
+                        <span className="dot is-healthy" />
+                        <span>Bucket</span>
+                        <code>{desktopStatus.r2.bucketName}</code>
+                      </div>
+                    )}
+                    <div className="settings-status-row">
+                      <span className="dot is-healthy" />
+                      <span>סנכרון אחרון</span>
+                      <span>{desktopStatus?.r2?.lastSyncAt ?? "טרם בוצע"}</span>
+                    </div>
+                  </div>
+                  {desktopStatus?.r2?.ready && (
+                    <div className="settings-model-row__actions">
+                      <button type="button" className="btn btn--ghost" onClick={() => clearKey("r2")} disabled={saving}>
+                        התנתק (נקה סיסמה)
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="settings-hint">
+                    בפיתוח אפשר להגדיר Gateway, Tenant ו-Bucket באופן ידני. בגרסת ההפצה הם נעולים על
+                    החשבון של WeatherV1.
+                  </p>
+                  <label className="settings-field">
+                    <span>Gateway URL</span>
+                    <input
+                      value={r2GatewayUrl}
+                      onChange={(e) => {
+                        setR2GatewayUrl(e.target.value);
+                        setSaved(false);
+                      }}
+                      placeholder="https://weatherv1-r2-gateway.example.workers.dev"
+                    />
+                  </label>
+                  <label className="settings-field">
+                    <span>Tenant ID</span>
+                    <input
+                      value={r2TenantId}
+                      onChange={(e) => {
+                        setR2TenantId(e.target.value);
+                        setSaved(false);
+                      }}
+                      placeholder="default"
+                    />
+                  </label>
+                  <label className="settings-field">
+                    <span>Bucket</span>
+                    <input
+                      value={r2BucketName}
+                      onChange={(e) => {
+                        setR2BucketName(e.target.value);
+                        setSaved(false);
+                      }}
+                      placeholder="weatherv1-media"
+                    />
+                  </label>
+                  <label className="settings-field">
+                    <span>שם משתמש</span>
+                    <input
+                      value={r2AppUsername}
+                      onChange={(e) => {
+                        setR2AppUsername(e.target.value);
+                        setSaved(false);
+                      }}
+                      placeholder="weatherv1"
+                      autoComplete="username"
+                      spellCheck={false}
+                    />
+                  </label>
+                  <label className="settings-field">
+                    <span>סיסמה</span>
+                    <div className="settings-password">
+                      <input
+                        type={showR2Password ? "text" : "password"}
+                        className="settings-password__input"
+                        value={r2AppPassword}
+                        onChange={(e) => {
+                          setR2AppPassword(e.target.value);
+                          setSaved(false);
+                        }}
+                        placeholder={desktopStatus?.r2?.ready ? "מוגדר — הקלד כדי להחליף" : "סיסמה לעובד R2"}
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        className="settings-password__toggle"
+                        onClick={() => setShowR2Password((v) => !v)}
+                        aria-pressed={showR2Password}
+                        aria-label={showR2Password ? "הסתר סיסמה" : "הצג סיסמה"}
+                        tabIndex={-1}
+                      >
+                        {showR2Password ? "הסתר" : "הצג"}
+                      </button>
+                      {desktopStatus?.r2?.ready && (
+                        <button type="button" className="btn btn--ghost" onClick={() => clearKey("r2")} disabled={saving}>
+                          נקה
+                        </button>
+                      )}
+                    </div>
+                  </label>
+                  <label className="settings-radio">
+                    <input
+                      type="checkbox"
+                      checked={r2Enabled}
+                      onChange={(e) => {
+                        setR2Enabled(e.target.checked);
+                        setSaved(false);
+                      }}
+                    />
+                    <span>הפעל סנכרון ל-R2</span>
+                  </label>
+                </>
+              )}
+              <div className="settings-model-row__actions">
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  onClick={() => void pushCatalogToR2(false)}
+                  disabled={syncingR2 || saving || !desktopStatus?.r2?.ready}
+                >
+                  דחוף קטלוג
+                </button>
+                {desktopStatus?.r2?.conflict && (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => void pushCatalogToR2(true)}
+                    disabled={syncingR2 || saving || !desktopStatus?.r2?.ready}
+                  >
+                    החלף מרוחק
+                  </button>
+                )}
+              </div>
+              {desktopStatus?.r2 && (
+                <p className="settings-hint">
+                  מקומי: {desktopStatus.r2.counts.local} · בענן בלבד: {desktopStatus.r2.counts.cloudOnly} · מסנכרן: {desktopStatus.r2.counts.syncing} · שגיאות: {desktopStatus.r2.counts.error}
+                </p>
+              )}
+              {desktopStatus?.r2?.error && <p className="settings-hint">{desktopStatus.r2.error}</p>}
+              {desktopStatus?.r2?.conflict && <p className="settings-hint">הקטלוג המרוחק השתנה. משוך מרחוק או החלף את המרוחק.</p>}
             </section>
           )}
 

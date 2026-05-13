@@ -35,6 +35,10 @@ export interface DesktopSettingsUpdate {
   openaiKey?: string;
   anthropicKey?: string;
   geminiKey?: string;
+  /**
+   * Wipes the matching stored credential. "r2" clears the R2 password only
+   * (the username is non-secret and stays put until edited explicitly).
+   */
   clearKeys?: ("openai" | "anthropic" | "gemini" | "r2")[];
   ffmpegPath?: string;
   ffprobePath?: string;
@@ -43,7 +47,8 @@ export interface DesktopSettingsUpdate {
   r2GatewayUrl?: string;
   r2TenantId?: string;
   r2BucketName?: string;
-  r2SessionToken?: string;
+  r2AppUsername?: string;
+  r2AppPassword?: string;
 }
 
 export interface DesktopBridge {

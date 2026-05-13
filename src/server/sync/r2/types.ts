@@ -38,6 +38,12 @@ export interface R2SyncStatus {
   tenantId?: string;
   bucketName?: string;
   tenantPrefix?: string;
+  /**
+   * Worker Basic-Auth username. Non-secret on purpose — the renderer uses it
+   * to pre-fill the login screen so the user only re-enters their password.
+   * Never expose `appPassword` over this channel.
+   */
+  appUsername?: string;
   lastCatalogEtag?: string;
   lastSyncAt?: string;
   conflict?: R2SyncState["conflict"];

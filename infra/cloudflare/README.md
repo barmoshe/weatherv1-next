@@ -14,9 +14,24 @@ Pulumi TypeScript project for the WeatherV1 R2 asset layer.
 
 ```bash
 pulumi config set accountId <cloudflare-account-id>
-pulumi config set --secret appToken <weatherv1-app-token>
+pulumi config set appUsername <chosen-username>           # plain text, defaults to "weatherv1"
+pulumi config set --secret appPassword <chosen-password>  # used by the desktop app to sign in
 pulumi config set --secret cloudflareApiToken <cloudflare-api-token-with-r2-temp-credential-access>
 pulumi config set --secret r2ParentAccessKeyId <r2-parent-access-key-id>
+```
+
+The Worker enforces HTTP Basic Auth against `WEATHERV1_APP_USERNAME` /
+`WEATHERV1_APP_PASSWORD`. Both are bound as Worker secrets. The desktop app
+sends them as `Authorization: Basic base64(user:pass)`; comparison is
+constant-time via `crypto.subtle.timingSafeEqual`.
+
+To migrate from a previous deploy that used a single `appToken`:
+
+```bash
+pulumi config rm appToken
+pulumi config set appUsername <chosen-username>
+pulumi config set --secret appPassword <chosen-password>
+pulumi up
 ```
 
 ## Optional Config

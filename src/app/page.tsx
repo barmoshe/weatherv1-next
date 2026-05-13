@@ -13,6 +13,7 @@ import { Masthead } from "@/client/components/Masthead";
 import { TabNav } from "@/client/components/TabNav";
 import { StudioPanel } from "@/client/components/studio/StudioPanel";
 import { SettingsModal } from "@/client/components/studio/SettingsModal";
+import { StorageOnboardingGate } from "@/client/components/storage/StorageOnboardingGate";
 import { ActivePanel } from "@/client/components/jobs/ActivePanel";
 import { HistoryPanel } from "@/client/components/jobs/HistoryPanel";
 
@@ -97,6 +98,7 @@ function AppInner() {
         historyBadge={historyCount}
       />
       <main className="container">
+        <StorageOnboardingGate />
         <StudioPanel
           hidden={tab !== "studio"}
           restoreJobId={urlJobId}

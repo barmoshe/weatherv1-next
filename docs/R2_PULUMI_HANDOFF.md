@@ -33,6 +33,15 @@ Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and 
 - Worker smoke tests pass: `/v1/health` returns bucket `weatherv1-media` / tenant `default`, and `/v1/r2/temporary-credentials` returns scoped temporary credentials for `tenants/default/`.
 - Local `v1Drive/weather` upload to R2 completed. Source had 212 catalog videos totaling about 12.13 GiB; upload target was `tenants/default/videos/<videoId>/<filename>`, followed by `tenants/default/catalog/catalog.json` with `remote` metadata. Verified remote catalog has 212 videos and 212 `remote.key` values. Local catalog was updated from the verified remote catalog, with a backup saved next to it.
 
+## 2026-05-13 update — Worker Basic Auth + login screen
+
+- The Worker no longer accepts `Authorization: Bearer <appToken>`. It now enforces HTTP Basic Auth against `WEATHERV1_APP_USERNAME` + `WEATHERV1_APP_PASSWORD` (Worker secrets), with constant-time compare via `crypto.subtle.timingSafeEqual` and the length-mismatch-safe pattern. No `WWW-Authenticate` header is sent on 401 (machine-to-machine client, no browser popups wanted).
+- Pulumi: replaced `appToken` secret with `appUsername` (plain config, default `"weatherv1"`) + `appPassword` (secret). Run `pulumi config set appUsername <user> && pulumi config set --secret appPassword <pw> && pulumi config rm appToken && pulumi up` to migrate an existing stack.
+- Runtime: `r2.sessionToken` → `r2.appUsername` + `r2.appPassword`. Env vars `R2_SESSION_TOKEN` → `R2_APP_USERNAME` + `R2_APP_PASSWORD`. The R2 client sends `Authorization: Basic base64(user:pass)`.
+- Electron settings: `keys.r2SessionToken` → `keys.r2AppPassword` (encrypted via `safeStorage`); the username lives non-secret under `r2.appUsername`. Legacy `r2SessionToken` is silently dropped on read.
+- Desktop bridge: `DesktopSettingsUpdate.r2SessionToken` removed; replaced with `r2AppUsername` + `r2AppPassword`. `clearKeys: ["r2"]` clears the password only.
+- UI: the sticky `studio-r2-token-card` is gone. `StorageOnboardingGate` now renders a real full-screen login (`.login-screen` / `.login-card`) with username, password (with show/hide toggle), and pre-fill from `r2.appUsername` (server-known) or `localStorage` cache. Settings modal's R2 section was rewritten the same way.
+
 ## Important Decisions
 
 - R2 sync is a sidecar service beside local catalog CRUD. `readCatalog()` and `writeCatalog()` remain local and fast.

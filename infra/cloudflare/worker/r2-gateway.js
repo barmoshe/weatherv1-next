@@ -1,3 +1,63 @@
+// HTTP Basic Auth gateway for the WeatherV1 R2 bucket.
+//
+// Auth model: a single shared username + password pair, stored as Worker
+// secrets (`WEATHERV1_APP_USERNAME`, `WEATHERV1_APP_PASSWORD`). The desktop
+// app sends them via `Authorization: Basic <base64(user:pass)>`.
+//
+// Notes:
+//   - Comparison uses `crypto.subtle.timingSafeEqual` (Web Crypto). We never
+//     short-circuit on length mismatch — that would leak the secret length
+//     through timing. See:
+//     https://developers.cloudflare.com/workers/examples/protect-against-timing-attacks
+//   - We deliberately do NOT send a `WWW-Authenticate: Basic ...` header on
+//     401. The client is the Electron desktop app, not a browser; the header
+//     would only serve to pop a login dialog if someone visits the worker URL
+//     in a browser.
+//   - Decoding uses `atob` so we don't require the `nodejs_compat` flag.
+
+const encoder = new TextEncoder();
+
+/** Constant-time string compare. Returns false even if lengths differ. */
+function timingSafeEqualStr(a, b) {
+  const aBytes = encoder.encode(a);
+  const bBytes = encoder.encode(b);
+  if (aBytes.byteLength !== bBytes.byteLength) {
+    return !crypto.subtle.timingSafeEqual(aBytes, aBytes);
+  }
+  return crypto.subtle.timingSafeEqual(aBytes, bBytes);
+}
+
+/**
+ * @returns {{ ok: true } | { ok: false, status: number, error: string }}
+ */
+function checkBasicAuth(request, env) {
+  const expectedUser = env.WEATHERV1_APP_USERNAME;
+  const expectedPass = env.WEATHERV1_APP_PASSWORD;
+  if (!expectedUser || !expectedPass) {
+    return { ok: false, status: 500, error: "worker missing WEATHERV1_APP_USERNAME / WEATHERV1_APP_PASSWORD" };
+  }
+  const header = request.headers.get("authorization") || "";
+  const [scheme, encoded] = header.split(" ");
+  if (scheme !== "Basic" || !encoded) {
+    return { ok: false, status: 401, error: "unauthorized" };
+  }
+  let decoded;
+  try {
+    decoded = atob(encoded);
+  } catch {
+    return { ok: false, status: 400, error: "malformed authorization header" };
+  }
+  const sep = decoded.indexOf(":");
+  if (sep < 0) return { ok: false, status: 400, error: "malformed authorization header" };
+  const user = decoded.slice(0, sep);
+  const pass = decoded.slice(sep + 1);
+  // Always run both compares so timing doesn't leak which field was wrong.
+  const userOk = timingSafeEqualStr(user, expectedUser);
+  const passOk = timingSafeEqualStr(pass, expectedPass);
+  if (!userOk || !passOk) return { ok: false, status: 401, error: "unauthorized" };
+  return { ok: true };
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -11,9 +71,9 @@ export default {
       return json({ ok: true, bucket: env.R2_BUCKET_NAME, tenantId: env.DEFAULT_TENANT_ID }, cors);
     }
 
-    const auth = request.headers.get("authorization") || "";
-    if (auth !== `Bearer ${env.WEATHERV1_APP_TOKEN}`) {
-      return json({ success: false, error: "unauthorized" }, cors, 401);
+    const auth = checkBasicAuth(request, env);
+    if (!auth.ok) {
+      return json({ success: false, error: auth.error }, cors, auth.status);
     }
 
     if (url.pathname === "/v1/r2/temporary-credentials" && request.method === "POST") {

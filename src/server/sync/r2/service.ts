@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { CatalogSchema, type Catalog, type CatalogEntry, type ParsedVideo } from "@/shared/types";
 import { getVideosDir, invalidateCatalogCache, readCatalog, writeCatalog } from "@/server/catalog/storage";
 import { parseCatalog } from "@/server/catalog/parser";
+import { getAssetSource } from "@/server/assets/source";
 import { getRuntimeConfig } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { catalogHash, catalogJson } from "@/server/catalog/stores";
@@ -82,11 +83,12 @@ export async function getR2SyncStatus(): Promise<R2SyncStatus> {
     tenantId: cfg.tenantId,
     bucketName: cfg.bucketName,
     tenantPrefix: cfg.tenantId ? `tenants/${cfg.tenantId}` : undefined,
+    appUsername: cfg.appUsername,
     lastCatalogEtag: state.lastCatalogEtag,
     lastSyncAt: state.lastSyncAt,
     conflict: state.conflict,
     counts: statusCounts(),
-    error: enabled && !ready ? "R2 sync is enabled but gateway URL, tenant ID, or app token is missing" : undefined,
+    error: enabled && !ready ? "R2 sync is enabled but gateway URL, tenant ID, username, or password is missing" : undefined,
   };
 }
 
@@ -106,16 +108,61 @@ export async function pullCatalogFromR2(): Promise<R2SyncStatus> {
   return getR2SyncStatus();
 }
 
+// Tracks whether we've already attempted an auto-pull this process so we
+// don't spam R2 on every status poll. The Electron main restarts the Next
+// child whenever settings change (e.g. a new app token), which gives us a
+// fresh module instance and a fresh attempt automatically.
+let autoBootstrapAttempted = false;
+
+/**
+ * Auto-bootstrap the local catalog from R2 if it's empty or missing. Safe to
+ * call from request handlers; this never overwrites a non-empty local
+ * catalog. Skips silently when R2 is not configured.
+ */
 export async function pullCatalogFromR2IfLocalEmpty(): Promise<void> {
   if (!r2Configured()) return;
-  const catalog = readCatalog();
-  if (catalog.videos.length > 0) return;
+  if (autoBootstrapAttempted) return;
 
+  // Make sure the local cache is laid out before we try to read or write the
+  // catalog. In packaged builds the workspace is the app-managed cache under
+  // userData and may not exist yet on first launch.
   try {
-    await pullCatalogFromR2();
+    getAssetSource().ensureWorkspaceScaffold();
   } catch (err) {
-    console.warn("R2 auto-pull skipped:", err);
+    console.warn("[r2:bootstrap] failed to scaffold local cache:", err);
   }
+
+  let catalog: Catalog;
+  try {
+    catalog = readCatalog();
+  } catch (err) {
+    console.warn("[r2:bootstrap] failed to read local catalog:", err);
+    autoBootstrapAttempted = true;
+    return;
+  }
+
+  if (catalog.videos.length > 0) {
+    // Local catalog already populated — never silently overwrite the user's
+    // local source-of-truth. A manual pull is still available from Settings.
+    autoBootstrapAttempted = true;
+    return;
+  }
+
+  autoBootstrapAttempted = true;
+  console.info("[r2:bootstrap] local catalog is empty; pulling from R2…");
+  try {
+    const status = await pullCatalogFromR2();
+    console.info(
+      `[r2:bootstrap] pulled remote catalog (etag=${status.lastCatalogEtag ?? "?"}, local=${status.counts.local}, cloudOnly=${status.counts.cloudOnly})`,
+    );
+  } catch (err) {
+    console.warn("[r2:bootstrap] auto-pull skipped:", err);
+  }
+}
+
+/** Test-only: reset the in-process auto-pull guard. */
+export function resetR2AutoBootstrapForTests(): void {
+  autoBootstrapAttempted = false;
 }
 
 export async function pushCatalogToR2(args: { replaceRemote?: boolean } = {}): Promise<R2SyncStatus> {

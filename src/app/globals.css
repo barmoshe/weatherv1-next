@@ -334,6 +334,86 @@
             }
         }
 
+        /* ── Storage onboarding gate ───────────────────────── */
+        .storage-gate {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+            gap: 1.25rem;
+            align-items: center;
+            margin-block: 0 1.25rem;
+            padding: 1.25rem 1.4rem;
+            background: var(--v1-paper);
+            border: 2px solid var(--v1-ink);
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 24px rgb(0 0 0 / .14);
+        }
+        .storage-gate--cloud { border-color: var(--v1-coral); }
+        .storage-gate--cache { border-color: var(--v1-ink); }
+        .storage-gate__copy h2 {
+            margin: 0.1rem 0 0.45rem;
+            font-size: 1.15rem;
+        }
+        .storage-gate__copy p {
+            margin: 0;
+            color: var(--v1-ink-muted);
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .storage-gate__step {
+            display: inline-block;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--v1-ink-muted);
+            font-weight: 700;
+        }
+        .storage-gate__error {
+            color: var(--v1-danger) !important;
+            margin-block-start: 0.4rem !important;
+        }
+        .storage-gate__ok {
+            color: var(--v1-success) !important;
+            margin-block-start: 0.4rem !important;
+            font-weight: 700;
+        }
+        .storage-gate__hint {
+            margin-block-start: 0.4rem !important;
+            font-size: 0.85rem !important;
+        }
+        .storage-gate__hint code {
+            background: rgb(0 0 0 / .05);
+            padding: 0.1rem 0.35rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.85em;
+        }
+        .storage-gate__form {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .storage-gate__form input {
+            min-width: 0;
+            flex: 1;
+            padding: 0.72rem 0.8rem;
+            border: 1.5px solid var(--v1-ink);
+            border-radius: var(--radius-sm);
+            font: inherit;
+        }
+        .storage-gate__form input:focus-visible {
+            outline: 2px solid var(--v1-coral);
+            outline-offset: 1px;
+        }
+        @media (max-width: 760px) {
+            .storage-gate {
+                grid-template-columns: 1fr;
+            }
+            .storage-gate__form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
         /* ── Settings (advanced) ──────────────────────────── */
         .settings-card { margin-top: 1rem; }
         details > summary {
@@ -1063,6 +1143,220 @@
             display: flex;
             gap: 0.4rem;
             margin-top: 0.25rem;
+        }
+        /* Password field with show/hide toggle inside Settings. */
+        .settings-password {
+            display: flex;
+            gap: 0.4rem;
+            flex: 1;
+            min-width: 0;
+            align-items: stretch;
+        }
+        .settings-password__input {
+            flex: 1;
+            min-width: 0;
+            border: 1px solid rgb(0 0 0 / .16);
+            border-radius: var(--radius-sm);
+            padding: 0.48rem 0.6rem;
+            background: #fff;
+            color: var(--v1-ink);
+            font: inherit;
+            direction: ltr;
+            text-align: left;
+        }
+        .settings-password__input:focus {
+            outline: 2px solid var(--v1-coral);
+            outline-offset: 1px;
+        }
+        .settings-password__toggle {
+            background: var(--v1-cream);
+            border: 1px solid rgb(0 0 0 / .12);
+            border-radius: var(--radius-sm);
+            padding: 0 0.7rem;
+            font: inherit;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            color: var(--v1-ink-muted);
+            min-width: 3.5rem;
+        }
+        .settings-password__toggle:hover { background: var(--v1-coral-soft); color: var(--v1-ink); }
+        .settings-password__toggle:focus-visible {
+            outline: 2px solid var(--v1-coral);
+            outline-offset: 1px;
+        }
+
+        /* ── Login screen (R2 sign-in gate) ───────────────── */
+        .login-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: grid;
+            place-items: center;
+            padding: 1.25rem;
+        }
+        .login-screen__backdrop {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(120% 80% at 50% 0%, rgb(252 233 228 / .9), transparent 70%),
+                rgb(244 243 239 / .96);
+            backdrop-filter: blur(6px);
+        }
+        .login-card {
+            position: relative;
+            width: min(440px, 100%);
+            background: var(--v1-paper);
+            border: 2px solid var(--v1-ink);
+            border-radius: var(--radius-md);
+            box-shadow: 0 18px 48px rgb(0 0 0 / .22);
+            padding: 1.85rem 1.85rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+            animation: login-card-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+        }
+        @keyframes login-card-in {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .login-card { animation: none; }
+        }
+        .login-card__brand {
+            display: grid;
+            place-items: center;
+        }
+        .login-card__brand-mark {
+            display: inline-grid;
+            place-items: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: var(--v1-ink);
+            color: var(--v1-paper);
+            font-weight: 900;
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+        }
+        .login-card__title {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 900;
+            line-height: var(--lh-heading);
+        }
+        .login-card__subtitle {
+            margin: 0;
+            color: var(--v1-ink-muted);
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .login-card__form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            text-align: start;
+            margin-top: 0.25rem;
+        }
+        .login-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .login-field__label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--v1-ink-muted);
+        }
+        .login-field__input {
+            width: 100%;
+            padding: 0.72rem 0.85rem;
+            border: 1.5px solid var(--v1-ink);
+            border-radius: var(--radius-sm);
+            background: #fff;
+            font: inherit;
+            color: var(--v1-ink);
+            direction: ltr;
+            text-align: left;
+        }
+        .login-field__input:focus {
+            outline: 2px solid var(--v1-coral);
+            outline-offset: 1px;
+        }
+        .login-field__input:disabled {
+            background: var(--v1-cream);
+            opacity: 0.7;
+        }
+        .login-field__password {
+            position: relative;
+        }
+        .login-field__password .login-field__input {
+            padding-inline-end: 4.2rem;
+        }
+        .login-field__toggle {
+            position: absolute;
+            inset-block: 0.35rem;
+            inset-inline-end: 0.35rem;
+            padding: 0 0.65rem;
+            border: none;
+            background: transparent;
+            color: var(--v1-ink-muted);
+            font: inherit;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+        }
+        .login-field__toggle:hover { background: var(--v1-coral-soft); color: var(--v1-ink); }
+        .login-field__toggle:focus-visible {
+            outline: 2px solid var(--v1-coral);
+            outline-offset: 1px;
+        }
+        .login-card__hint {
+            margin: 0;
+            font-size: 0.78rem;
+            color: var(--v1-ink-muted);
+            word-break: break-all;
+        }
+        .login-card__hint code {
+            background: var(--v1-cream);
+            padding: 0.05rem 0.35rem;
+            border-radius: 4px;
+            direction: ltr;
+        }
+        .login-card__error {
+            margin: 0;
+            color: var(--v1-danger);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+        .login-card__ok {
+            margin: 0;
+            color: var(--v1-success);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+        .login-card__submit {
+            margin-top: 0.25rem;
+            padding-block: 0.78rem;
+            font-size: 0.98rem;
+        }
+        .login-card__footer {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.74rem;
+            color: var(--v1-ink-muted);
+            letter-spacing: 0.02em;
+            margin-top: 0.4rem;
+        }
+        @media (max-width: 520px) {
+            .login-card {
+                padding: 1.4rem 1.2rem 1.15rem;
+            }
         }
         .catalog-card {
             background: var(--v1-cream); border-radius: var(--radius-sm);

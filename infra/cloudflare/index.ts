@@ -16,7 +16,11 @@ const routePattern = config.get("routePattern");
 const r2Location = config.get("r2Location");
 const r2StorageClass = config.get("r2StorageClass") ?? "Standard";
 
-const appToken = config.requireSecret("appToken");
+// Worker shared-credential auth. The username can be plain config; the
+// password must be a Pulumi secret. Defaults to "weatherv1" if unset to keep
+// `pulumi up` from breaking on existing stacks during the migration.
+const appUsername = config.get("appUsername") ?? "weatherv1";
+const appPassword = config.requireSecret("appPassword");
 const cloudflareApiToken = config.requireSecret("cloudflareApiToken");
 const r2ParentAccessKeyId = config.requireSecret("r2ParentAccessKeyId");
 
@@ -75,7 +79,8 @@ const script = new cloudflare.WorkersScript("r2-gateway", {
     { name: "R2_BUCKET_NAME", type: "plain_text", text: bucket.name },
     { name: "DEFAULT_TENANT_ID", type: "plain_text", text: tenantId },
     { name: "ALLOWED_ORIGIN", type: "plain_text", text: allowedOrigin },
-    { name: "WEATHERV1_APP_TOKEN", type: "secret_text", text: appToken },
+    { name: "WEATHERV1_APP_USERNAME", type: "secret_text", text: appUsername },
+    { name: "WEATHERV1_APP_PASSWORD", type: "secret_text", text: appPassword },
     { name: "CLOUDFLARE_API_TOKEN", type: "secret_text", text: cloudflareApiToken },
     { name: "R2_PARENT_ACCESS_KEY_ID", type: "secret_text", text: r2ParentAccessKeyId },
   ],

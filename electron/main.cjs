@@ -284,7 +284,12 @@ async function restartChildWithCurrentSettings() {
 
 ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   const patch = {};
-  if (update && typeof update.workspaceDir === "string") patch.workspaceDir = update.workspaceDir;
+  if (update && typeof update.workspaceDir === "string") {
+    // Empty string means "clear" — fall back to the app-managed local cache
+    // in packaged builds. Trim and normalize null vs string.
+    const trimmed = update.workspaceDir.trim();
+    patch.workspaceDir = trimmed.length > 0 ? trimmed : null;
+  }
   if (update && typeof update.ffmpegPath === "string") patch.ffmpegPath = update.ffmpegPath;
   if (update && typeof update.ffprobePath === "string") patch.ffprobePath = update.ffprobePath;
 
@@ -304,6 +309,9 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   if (update && typeof update.r2BucketName === "string") {
     patch.r2 = { ...(patch.r2 || {}), bucketName: update.r2BucketName.trim() || null };
   }
+  if (update && typeof update.r2AppUsername === "string") {
+    patch.r2 = { ...(patch.r2 || {}), appUsername: update.r2AppUsername.trim() || null };
+  }
 
   const keyUpdates = {};
   if (update && typeof update.openaiKey === "string") {
@@ -315,14 +323,17 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   if (update && typeof update.geminiKey === "string") {
     keyUpdates.gemini = cfg.encryptSecret(update.geminiKey, { safeStorage });
   }
-  if (update && typeof update.r2SessionToken === "string") {
-    keyUpdates.r2SessionToken = cfg.encryptSecret(update.r2SessionToken, { safeStorage });
+  if (update && typeof update.r2AppPassword === "string") {
+    keyUpdates.r2AppPassword = cfg.encryptSecret(update.r2AppPassword, { safeStorage });
   }
   if (update && Array.isArray(update.clearKeys)) {
     if (update.clearKeys.includes("openai")) keyUpdates.openai = null;
     if (update.clearKeys.includes("anthropic")) keyUpdates.anthropic = null;
     if (update.clearKeys.includes("gemini")) keyUpdates.gemini = null;
-    if (update.clearKeys.includes("r2")) keyUpdates.r2SessionToken = null;
+    // "r2" clears the password (the username stays in the r2 block until the
+    // user explicitly blanks it; that's intentional — username is rarely the
+    // thing that needs rotating).
+    if (update.clearKeys.includes("r2")) keyUpdates.r2AppPassword = null;
   }
   if (Object.keys(keyUpdates).length > 0) patch.keys = keyUpdates;
 
