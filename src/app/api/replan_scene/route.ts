@@ -96,7 +96,12 @@ export async function POST(req: NextRequest) {
       avoidSegmentIds: avoidSet,
     });
 
-    const newPicks: MutablePick[] = newPicksRaw.map((p) => ({ ...p, scene_idx: sceneIdx }));
+    const newPicks: MutablePick[] = newPicksRaw.map((p) => {
+      const m: MutablePick = { ...p, scene_idx: sceneIdx };
+      const trimmed = (p.reason ?? "").trim();
+      if (trimmed) m.picker_reason = trimmed;
+      return m;
+    });
 
     const merged: MutablePick[] = [
       ...(otherPicks as unknown as MutablePick[]),

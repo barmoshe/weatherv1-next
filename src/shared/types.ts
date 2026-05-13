@@ -24,12 +24,22 @@ export function clipIdFromSegmentId(segId: string): string {
 // Catalog
 // ---------------------------------------------------------------------------
 
+export const SegmentConceptsSchema = z.object({
+  weather: z.array(z.string()).optional().default([]),
+  season_mood: z.array(z.string()).optional().default([]),
+  visual_role: z.array(z.string()).optional().default([]),
+  scene_fit: z.array(z.string()).optional().default([]),
+  avoid_for: z.array(z.string()).optional().default([]),
+});
+export type SegmentConcepts = z.infer<typeof SegmentConceptsSchema>;
+
 export const SegmentEntrySchema = z.object({
   id: z.string().optional(),
   start_sec: z.number(),
   end_sec: z.number(),
   description: z.string().optional().default(""),
   tags: z.array(z.string()).optional().default([]),
+  concepts: SegmentConceptsSchema.optional(),
   confidence: z.number().min(0).max(1).optional(),
 });
 export type SegmentEntry = z.infer<typeof SegmentEntrySchema>;
@@ -144,6 +154,8 @@ export const TimelinePickSchema = z.object({
   video_start: z.number().optional(),
   video_end: z.number().optional(),
   reason: z.string().optional().default(""),
+  /** LLM editorial "why this segment" before validator mutates `reason` (optional, stamped server-side). */
+  picker_reason: z.string().optional(),
 });
 export type TimelinePick = z.infer<typeof TimelinePickSchema>;
 

@@ -19,7 +19,7 @@ import type {
   ParsedVideo,
   SegmentEntry,
 } from "@/shared/types";
-import { isVocabValue } from "@/server/tag-vocab";
+import { canonicalHebrewTag } from "@/server/catalog/hebrew-taxonomy";
 
 export interface EmptySegmentTarget {
   segId: string;
@@ -118,9 +118,10 @@ export function applyTagsToCatalog(
           unknownTagsDropped++;
           continue;
         }
-        const tag = raw.trim();
-        if (!tag) continue;
-        if (!isVocabValue(tag)) {
+        const rawTag = raw.trim();
+        if (!rawTag) continue;
+        const tag = canonicalHebrewTag(rawTag);
+        if (!tag) {
           unknownTagsDropped++;
           continue;
         }

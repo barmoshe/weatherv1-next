@@ -22,6 +22,26 @@ const STATUS_LABELS: Record<TileState, string> = {
   failed: "נכשל",
 };
 
+function RenderGlyph() {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="2" y="5" width="14" height="14" rx="2" ry="2" />
+      <path d="M17 9l6 3-6 3V9z" />
+    </svg>
+  );
+}
+
+function RerenderGlyph() {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M3 12a9 9 0 0 0 9 9 9 9 0 0 0 6.64-2.87L21 16" />
+      <path d="M21 21v-5h-5" />
+    </svg>
+  );
+}
+
 export function RenderCard({ phase, tileState, planData, onRenderStart }: RenderCardProps) {
   const isRendering = phase === "rendering";
   const isDone = phase === "done";
@@ -71,7 +91,17 @@ export function RenderCard({ phase, tileState, planData, onRenderStart }: Render
               type="button"
               onClick={onRenderStart}
             >
-              {isDone ? "⟳ רנדר מחדש" : "🎬 רנדר"}
+              {isDone ? (
+                <>
+                  <RerenderGlyph />
+                  רנדר מחדש
+                </>
+              ) : (
+                <>
+                  <RenderGlyph />
+                  רנדר
+                </>
+              )}
             </button>
           )}
           {tileState === "is-skeleton" && (

@@ -1,23 +1,6 @@
-export const TAG_VOCAB: string[] = [
-  // weather (10)
-  "rain", "sun", "snow", "storm", "fog", "clouds", "wind",
-  "clear_sky", "partly_cloudy", "overcast",
-  // scenery (6)
-  "urban", "nature", "sea", "mountain", "indoor", "aerial",
-  // people / wardrobe (4)
-  "people", "kids", "crowd", "clothing",
-  // time / light (6)
-  "day", "night", "golden_hour", "dawn", "dusk", "midday",
-  // climate / season
-  "hot", "warm", "mild", "cool", "cold",
-  "summer", "winter", "inbetween",
-  // region
-  "north", "center", "south", "coast", "inland",
-  "negev", "arava", "golan", "galilee",
-  "hermon", "kinneret", "dead-sea", "eilat",
-  // vibe
-  "calm", "dramatic", "gloomy", "cheerful",
-];
+import { HEBREW_TAG_VOCAB, canonicalHebrewTag } from "@/server/catalog/hebrew-taxonomy";
+
+export const TAG_VOCAB: string[] = [...HEBREW_TAG_VOCAB];
 
 export const SOURCE_VALUES = [
   "getty",
@@ -33,7 +16,7 @@ const SOURCE_SET = new Set<string>(SOURCE_VALUES);
 const VIBE_SET = new Set(["calm", "dramatic", "gloomy"]);
 
 export function isVocabValue(value: string): boolean {
-  return TAG_SET.has(value);
+  return TAG_SET.has(value) || canonicalHebrewTag(value) != null;
 }
 
 export function isValidSource(value: string | null | undefined): boolean {

@@ -53,7 +53,12 @@ export async function POST(req: NextRequest) {
       scenes,
     });
 
-    const timeline: MutablePick[] = rawTimeline.map((p) => ({ ...p }));
+    const timeline: MutablePick[] = rawTimeline.map((p) => {
+      const m: MutablePick = { ...p };
+      const trimmed = (p.reason ?? "").trim();
+      if (trimmed) m.picker_reason = trimmed;
+      return m;
+    });
     const validatorResult = validateAndSwap(timeline, {
       beats: transcriptSegments.map((s, i) => ({ idx: i, start: s.start, end: s.end, text: s.text })),
       videoMap,

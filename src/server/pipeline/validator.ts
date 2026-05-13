@@ -7,6 +7,8 @@ import {
   clothingClimateMismatch,
 } from "./beat-tagger";
 import { PLACE_ALIASES } from "./hebrew-places";
+import { targetContradictsSegment } from "@/server/catalog/hebrew-taxonomy";
+import type { SegmentConcepts } from "@/shared/types";
 
 // ---------------------------------------------------------------------------
 // Constants (mirror plan_validator.py)
@@ -40,6 +42,8 @@ export interface MutablePick {
   video_end?: number;
   beat_idx?: number;
   reason?: string;
+  /** Set before validateAndSwap; preserved for UI (LLM editorial copy). */
+  picker_reason?: string;
 }
 
 type SegmentEntry = {
@@ -48,6 +52,7 @@ type SegmentEntry = {
   end_sec?: number | string;
   description?: string;
   tags?: string[] | Record<string, string>;
+  concepts?: SegmentConcepts;
   confidence?: number;
 };
 
@@ -166,7 +171,16 @@ function segmentTagWords(segment: SegmentEntry | null | undefined): string[] {
 
 function entryTagWords(segment: SegmentEntry | null | undefined, video: CatalogClip | null | undefined): string[] {
   const segWords = segmentTagWords(segment).filter(Boolean);
-  if (segWords.length) return segWords;
+  const concepts = segment?.concepts;
+  const conceptWords = [
+    ...(concepts?.weather ?? []),
+    ...(concepts?.season_mood ?? []),
+    ...(concepts?.visual_role ?? []),
+    ...(concepts?.scene_fit ?? []),
+    segment?.description ?? "",
+  ].filter(Boolean);
+  const words = [...new Set([...segWords, ...conceptWords])];
+  if (words.length) return words;
   return videoTagWords(video).filter(Boolean);
 }
 
@@ -181,18 +195,21 @@ function hasAnyClothingTag(segment: SegmentEntry | null | undefined, video: Cata
 const CLOUDS_DECORATIVE_COMPANIONS = new Set([
   "sun", "summer", "partly_cloudy", "clear_sky", "golden_hour",
   "dusk", "cheerful", "hot", "warm",
+  "שמש", "קיץ", "מעונן חלקית", "שמיים בהירים", "שעת זהב",
+  "בין ערביים", "שמח", "חם", "חמים", "בהיר", "קיצי",
 ]);
 
 const CLOUDS_OVERCAST_COMPANIONS = new Set([
   "gloomy", "rain", "winter", "storm", "fog", "hail", "overcast", "cold",
+  "קודר", "גשם", "חורף", "סופה", "ערפל", "ברד", "מעונן", "קר", "חורפי",
 ]);
 
 function cloudsIntent(tags: string[]): "decorative" | "overcast" | "ambiguous" | "none" {
   const s = new Set(tags.map((t) => String(t).toLowerCase()));
-  const hasCloudsLike = s.has("clouds") || s.has("partly_cloudy") || s.has("overcast");
+  const hasCloudsLike = s.has("clouds") || s.has("partly_cloudy") || s.has("overcast") || s.has("עננים") || s.has("מעונן חלקית") || s.has("מעונן");
   if (!hasCloudsLike) return "none";
-  if (s.has("overcast")) return "overcast";
-  if (s.has("partly_cloudy")) return "decorative";
+  if (s.has("overcast") || s.has("מעונן")) return "overcast";
+  if (s.has("partly_cloudy") || s.has("מעונן חלקית")) return "decorative";
   for (const c of CLOUDS_DECORATIVE_COMPANIONS) if (s.has(c)) return "decorative";
   for (const c of CLOUDS_OVERCAST_COMPANIONS) if (s.has(c)) return "overcast";
   return "ambiguous";
@@ -378,6 +395,7 @@ function bestCandidateByOverlap(
       const intent = cloudsIntent(candWords);
       if (intent === rejectCloudsIntent) continue;
     }
+    if (targetContradictsSegment(tText ?? "", candSeg)) continue;
     const overlap = targetLower
       ? candWords.reduce(
           (sum, w) =>
@@ -603,6 +621,70 @@ function enforceClothingRule(
     usedCounts = tally(timeline.map((c) => pickKey(c)));
     fixes.push({ issue: issueLabel, original, swapped_to: newSegId, swap_reason: `climate-aware alternative; tag overlap=${bestOverlap}`, fixed: true });
   }
+  return fixes;
+}
+
+// ---------------------------------------------------------------------------
+// _enforceSemanticFit
+// ---------------------------------------------------------------------------
+
+function enforceSemanticFit(
+  timeline: MutablePick[],
+  beatsByIdx: Record<number, WhisperBeat>,
+  segmentMap: Record<string, SegmentMapEntry>,
+  scenesByIdx: Record<number, SceneDict>,
+): Record<string, unknown>[] {
+  const fixes: Record<string, unknown>[] = [];
+  if (!segmentMap || !Object.keys(segmentMap).length) return fixes;
+
+  const candidates = segmentCandidates(segmentMap);
+  let usedCounts = tally(timeline.map((c) => pickKey(c)));
+
+  for (const clip of timeline) {
+    const segId = clip.segment_id;
+    if (!segId || !segmentMap[segId]) continue;
+
+    const target = targetText(clip, beatsByIdx, scenesByIdx);
+    if (!target || !targetContradictsSegment(target, segmentMap[segId].segment)) continue;
+
+    const aLen = audioLen(clip);
+    const [best, bestOverlap] = bestCandidateByOverlap(candidates, {
+      targetText: target,
+      usedCounts,
+      excludedIds: new Set([segId]),
+      allowClothing: isClothingText(target),
+      requireMinDuration: aLen,
+      requireMinOverlap: 1,
+    });
+
+    if (!best) {
+      fixes.push({
+        issue: "semantic mismatch",
+        segment_id: segId,
+        swap_reason: `no semantically valid replacement covering ${aLen.toFixed(1)}s`,
+        fixed: false,
+      });
+      continue;
+    }
+
+    const [newSegId, newSeg, newClip] = best;
+    swapPickToSegment(
+      clip,
+      newSegId,
+      newSeg,
+      newClip,
+      `validator: התאמה סמנטית — הוחלף מ-${segId} (חפיפת תגיות=${bestOverlap})`,
+    );
+    usedCounts = tally(timeline.map((c) => pickKey(c)));
+    fixes.push({
+      issue: "semantic mismatch",
+      original: segId,
+      swapped_to: newSegId,
+      swap_reason: `target weather/concept contradiction; overlap=${bestOverlap}`,
+      fixed: true,
+    });
+  }
+
   return fixes;
 }
 
@@ -1323,6 +1405,10 @@ export function validateAndSwap(
   }
 
   for (const fix of enforceCoverage(timeline, beatsByIdx, videoMap, segmentMap, scenesByIdx)) {
+    (fix.fixed ? hardViolationsFixed : hardViolationsKept).push(fix);
+  }
+
+  for (const fix of enforceSemanticFit(timeline, beatsByIdx, segmentMap, scenesByIdx)) {
     (fix.fixed ? hardViolationsFixed : hardViolationsKept).push(fix);
   }
 

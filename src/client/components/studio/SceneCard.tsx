@@ -2,6 +2,7 @@
 import { useState } from "react";
 import type { Scene } from "@/shared/types";
 import { formatTime, segmentPosterUrl } from "@/client/lib/format-time";
+import { pickDisplayReason } from "@/client/lib/plan-pick-display";
 import { labelFor } from "@/client/lib/tag-labels";
 
 interface SceneCardProps {
@@ -112,6 +113,7 @@ export function SceneCard({ scene, picks, jobId, fullTimeline, fullScenes, valid
             const id = String(p.segment_id ?? p.video_id ?? "?");
             const pickRange = `${formatTime(Number(p.video_start ?? 0), 1)}–${formatTime(Number(p.video_end ?? 0), 1)}`;
             const poster = segmentPosterUrl(p as { segment_id?: unknown; video_id?: unknown });
+            const why = pickDisplayReason(p);
             return (
               <div key={i} className="scene-pick">
                 {poster ? (
@@ -125,8 +127,8 @@ export function SceneCard({ scene, picks, jobId, fullTimeline, fullScenes, valid
                     {id} · {pickRange}
                     {isFilled && <span className="gap-fill-tag">מילוי אוטומטי</span>}
                   </div>
-                  {p.reason != null && (
-                    <div className="scene-pick-reason">{String(p.reason)}</div>
+                  {why != null && (
+                    <div className="scene-pick-reason">{why}</div>
                   )}
                 </div>
               </div>

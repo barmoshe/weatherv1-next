@@ -7,9 +7,10 @@ interface HistoryPanelProps {
   jobs: HistoryEntry[];
   onRestore?: (entry: HistoryEntry) => void;
   onRemove?: (jobId: string) => void;
+  onExportJobsJson?: () => void;
 }
 
-export function HistoryPanel({ hidden, jobs, onRestore, onRemove }: HistoryPanelProps) {
+export function HistoryPanel({ hidden, jobs, onRestore, onRemove, onExportJobsJson }: HistoryPanelProps) {
   const done = jobs.filter((j) => HISTORY_JOB_STATUSES.has(j.status));
   const handleClearAll = () => {
     if (!onRemove) return;
@@ -41,6 +42,16 @@ export function HistoryPanel({ hidden, jobs, onRestore, onRemove }: HistoryPanel
         )}
       </ul>
       <div className="tab-panel-footer">
+        {onExportJobsJson ? (
+          <button
+            id="export-jobs-json-history"
+            className="btn btn--secondary btn--sm"
+            type="button"
+            onClick={onExportJobsJson}
+          >
+            Export JSON
+          </button>
+        ) : null}
         <button
           id="clear-history"
           className="btn btn--ghost"

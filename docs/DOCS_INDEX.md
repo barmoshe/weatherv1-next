@@ -75,7 +75,7 @@ The same product can run in two modes:
 | `src/server/sync/r2/` | Cloudflare R2 catalog/media sidecar sync |
 | `src/server/ffmpeg/` | Probe, binary resolution, preview/poster generation, render pipeline |
 | `src/server/jobs/` | Job queue, store, worker lifecycle |
-| `src/server/pipeline/` | Planning and scene-selection logic (delegates LLM + transcription to providers) |
+| `src/server/pipeline/` | Planning and scene-selection logic; timeline picks include **`picker_reason`** (LLM editorial) and **`reason`** (post-validator) for Studio previews |
 | `src/server/providers/` | Pluggable LLM (Anthropic/OpenAI) and OpenAI Whisper cloud transcription provider + unified error mapping |
 | `src/server/runtime/` | Runtime config, derived paths, desktop auth, **R2 env fields** |
 | `src/shared/` | Cross-boundary types shared by preload and renderer |

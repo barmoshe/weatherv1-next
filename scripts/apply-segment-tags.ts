@@ -31,7 +31,7 @@ import { CatalogSchema } from "@/shared/types";
 import { readCatalog, writeCatalog, getCatalogPath } from "@/server/catalog/storage";
 import { parseCatalog } from "@/server/catalog/parser";
 import { applyTagsToCatalog, selectEmptySegments } from "@/server/catalog/tagging";
-import { isVocabValue } from "@/server/tag-vocab";
+import { canonicalHebrewTag } from "@/server/catalog/hebrew-taxonomy";
 import { pushCatalogToR2, R2CatalogConflictError } from "@/server/sync/r2/service";
 import { r2Configured } from "@/server/sync/r2/client";
 
@@ -212,13 +212,14 @@ async function main(): Promise<void> {
       if (typeof t === "string") {
         const trimmed = t.trim();
         if (!trimmed) continue;
-        if (!isVocabValue(trimmed)) {
+        const canonical = canonicalHebrewTag(trimmed);
+        if (!canonical) {
           unknownTagsPreview++;
           continue;
         }
-        if (seen.has(trimmed)) continue;
-        seen.add(trimmed);
-        filteredTags.push(trimmed);
+        if (seen.has(canonical)) continue;
+        seen.add(canonical);
+        filteredTags.push(canonical);
       } else if (t) {
         unknownTagsPreview++;
       }

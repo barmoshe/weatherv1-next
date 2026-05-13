@@ -2,6 +2,7 @@
 import { useState } from "react";
 import type { TileState } from "./StudioPanel";
 import type { Scene } from "@/shared/types";
+import { pickDisplayReason } from "@/client/lib/plan-pick-display";
 
 interface WhyPanelProps {
   tileState: TileState;
@@ -92,7 +93,7 @@ export function WhyPanel({ tileState, hidden, timeline, validator, scenes }: Why
                   <td>{scene ? `${sIdx! + 1}. ${scene.title_he}` : sIdx != null ? String(sIdx + 1) : "—"}</td>
                   <td dir="ltr">{aStart}–{aEnd}</td>
                   <td dir="ltr">{String(p.segment_id ?? p.video_id ?? "—")}</td>
-                  <td>{String(p.reason ?? "—")}</td>
+                  <td>{pickDisplayReason(p as Record<string, unknown>) ?? "—"}</td>
                   <td></td>
                 </tr>
               );

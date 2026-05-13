@@ -4,6 +4,7 @@ import type { StudioPhase, TileState } from "./StudioPanel";
 import { SceneCard } from "./SceneCard";
 import type { Scene } from "@/shared/types";
 import { formatTime } from "@/client/lib/format-time";
+import { pickDisplayReason } from "@/client/lib/plan-pick-display";
 
 interface TranscriptData {
   job_id: string;
@@ -186,13 +187,14 @@ export function PlanCard({
                       {orphans.map((p, i) => {
                         const id = String(p.segment_id ?? p.video_id ?? "?");
                         const range = `${formatTime(Number(p.video_start ?? 0), 1)}–${formatTime(Number(p.video_end ?? 0), 1)}`;
+                        const why = pickDisplayReason(p);
                         return (
                           <div key={i} className="scene-pick">
                             <div className="scene-pick-thumb" />
                             <div className="scene-pick-meta">
                               <div className="scene-pick-id">{id} · {range}</div>
-                              {p.reason != null && (
-                                <div className="scene-pick-reason">{String(p.reason)}</div>
+                              {why != null && (
+                                <div className="scene-pick-reason">{why}</div>
                               )}
                             </div>
                           </div>

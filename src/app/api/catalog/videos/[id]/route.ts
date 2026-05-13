@@ -67,12 +67,17 @@ export async function PATCH(
         const tagList = (tags as unknown[]).map((t) => String(t).trim()).filter(Boolean);
         const desc = String(raw.description ?? (base as any).description ?? "").trim();
         const conf = Math.min(1, Math.max(0, parseFloat(String(raw.confidence ?? (base as any).confidence ?? 0)) || 0));
+        const concepts =
+          typeof raw.concepts === "object" && raw.concepts !== null
+            ? raw.concepts
+            : (base as any).concepts;
         entry.segments.push({
           id: segId,
           start_sec: Math.round(start * 100) / 100,
           end_sec: Math.round(end * 100) / 100,
           description: desc,
           tags: tagList,
+          ...(concepts ? { concepts: concepts as any } : {}),
           confidence: conf,
         });
       }

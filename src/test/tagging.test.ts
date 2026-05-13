@@ -93,7 +93,7 @@ describe("applyTagsToCatalog", () => {
     ]);
     expect(result.applied).toBe(1);
     expect(result.skippedAlreadyTagged).toBe(1);
-    expect(result.catalog.videos[0].segments[0].tags).toEqual(["sun", "day", "urban"]);
+    expect(result.catalog.videos[0].segments[0].tags).toEqual(["שמש", "יום", "עירוני"]);
     expect(result.catalog.videos[0].segments[0].description).toBe("שמש בעיר");
     expect(result.catalog.videos[0].segments[1].tags).toEqual(["rain"]);
     expect(result.catalog.videos[0].segments[1].description).toBe("already");
@@ -110,7 +110,7 @@ describe("applyTagsToCatalog", () => {
     ]);
     expect(result.applied).toBe(1);
     expect(result.unknownTagsDropped).toBe(2);
-    expect(result.catalog.videos[0].segments[0].tags).toEqual(["sun", "day"]);
+    expect(result.catalog.videos[0].segments[0].tags).toEqual(["שמש", "יום"]);
   });
 
   it("de-duplicates repeated tags while preserving first-seen order", () => {
@@ -122,7 +122,7 @@ describe("applyTagsToCatalog", () => {
         description: "x",
       },
     ]);
-    expect(result.catalog.videos[0].segments[0].tags).toEqual(["sun", "day", "urban"]);
+    expect(result.catalog.videos[0].segments[0].tags).toEqual(["שמש", "יום", "עירוני"]);
   });
 
   it("treats an empty update (tags=[] AND description='') as a no-op uninformative frame", () => {

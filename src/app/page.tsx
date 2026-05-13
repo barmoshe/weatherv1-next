@@ -16,6 +16,7 @@ import { SettingsModal } from "@/client/components/studio/SettingsModal";
 import { StorageOnboardingGate } from "@/client/components/storage/StorageOnboardingGate";
 import { ActivePanel } from "@/client/components/jobs/ActivePanel";
 import { HistoryPanel } from "@/client/components/jobs/HistoryPanel";
+import { downloadJsonFile } from "@/client/lib/download-json-file";
 
 const qc = new QueryClient();
 
@@ -67,6 +68,16 @@ function AppInner() {
     [updateEntry],
   );
 
+  const handleExportJobsJson = useCallback(() => {
+    const now = new Date();
+    const stamp = now.toISOString().replace(/[:]/g, "-").slice(0, 19);
+    downloadJsonFile(`weatherv1-jobs-${stamp}.json`, {
+      exportedAt: now.toISOString(),
+      source: "weatherv1-next-jobs-dashboard",
+      jobs: history,
+    });
+  }, [history]);
+
   // "N" keyboard shortcut for new job — match Flask: skip when modal open, input focused, or modifier held.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -107,8 +118,20 @@ function AppInner() {
           onJobIdChange={setUrlJobId}
           onJobStatusChange={handleJobStatusChange}
         />
-        <ActivePanel hidden={tab !== "active"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} />
-        <HistoryPanel hidden={tab !== "history"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} />
+        <ActivePanel
+          hidden={tab !== "active"}
+          jobs={history}
+          onRestore={handleRestore}
+          onRemove={removeEntry}
+          onExportJobsJson={handleExportJobsJson}
+        />
+        <HistoryPanel
+          hidden={tab !== "history"}
+          jobs={history}
+          onRestore={handleRestore}
+          onRemove={removeEntry}
+          onExportJobsJson={handleExportJobsJson}
+        />
         {tab === "catalog" ? (
           <Suspense fallback={<div className="loading">טוען קטלוג…</div>}>
             <CatalogTab />

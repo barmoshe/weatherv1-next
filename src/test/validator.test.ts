@@ -302,3 +302,55 @@ describe("enforceCoverage", () => {
     expect(timeline).toHaveLength(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Semantic fit
+// ---------------------------------------------------------------------------
+
+describe("enforceSemanticFit", () => {
+  it("swaps an autumn/winter concept away from a heatwave scene", () => {
+    const bad = segClip(
+      "BAD",
+      [
+        {
+          ...seg("BAD-s0", 0, 10, ["יום", "טבע"], "עלי שלכת על שביל"),
+          concepts: {
+            weather: ["מעונן"],
+            season_mood: ["סתווי"],
+            visual_role: ["רקע כללי", "טבע"],
+            scene_fit: ["טמפרטורות"],
+            avoid_for: ["שרב"],
+          },
+        } as any,
+      ],
+      10,
+    );
+    const good = segClip(
+      "GOOD",
+      [
+        {
+          ...seg("GOOD-s0", 0, 10, ["שמש", "יום", "חם", "טבע"], "שמש חזקה מעל נוף יבש"),
+          concepts: {
+            weather: ["חם", "בהיר"],
+            season_mood: ["קיצי"],
+            visual_role: ["עומס חום", "טבע"],
+            scene_fit: ["שרב", "קרינת שמש"],
+            avoid_for: ["חורף"],
+          },
+        } as any,
+      ],
+      10,
+    );
+    const sm = segmentMapFrom([bad, good] as any);
+    const timeline: MutablePick[] = [{ ...tSeg("BAD-s0", 0, 0, 5), scene_idx: 0 }];
+
+    const out = validateAndSwap(timeline, {
+      beats: [{ idx: 0, text: "שרב כבד ועומס חום", start: 0, end: 5 }],
+      segmentMap: sm as any,
+      videoMap: { BAD: bad, GOOD: good } as any,
+    });
+
+    expect(timeline[0].segment_id).toBe("GOOD-s0");
+    expect(out.hard_violations_fixed.some((v) => v.issue === "semantic mismatch")).toBe(true);
+  });
+});

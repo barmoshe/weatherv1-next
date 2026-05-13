@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { fallbackSingleScene } from "./scene-planner";
 import { SOURCE_VALUES } from "@/server/tag-vocab";
+import { flattenConcepts } from "@/server/catalog/hebrew-taxonomy";
 import { getLlmProvider, LlmProviderError } from "@/server/providers/llm";
 import { getTranscriptionProvider } from "@/server/providers/transcription";
-import type { Scene, WhisperSegment, TimelinePick, ParsedVideo } from "@/shared/types";
+import type { Scene, WhisperSegment, TimelinePick, ParsedVideo, SegmentConcepts } from "@/shared/types";
 
 // ---------------------------------------------------------------------------
 // Scene-aware system prompt
@@ -27,15 +28,12 @@ export const SCENE_AWARE_SYSTEM_PROMPT = `You are a video editor for short Hebre
 
 **Catalog row anatomy** — Each row is one **\`segment_id\`** tied to exactly one **\`clip_id\`** (source file). Fields include Hebrew description, 1–3 keyword tags, and \`start_sec\`/\`end_sec\` (**trim controls only—do not cite time overlap or separation as proof that two segments “look different”**). Diversity of shots is inferred from **tags + description semantics**, not from timestamps alone. Tags may be vocabulary values or free-form Hebrew/English keywords; treat all tags as shot descriptors.
 
-Suggested vocabulary (schema v2 — 7 axes you'll see in segment tags):
-  weather: rain, storm, snow, hail, fog, wind, clear_sky, partly_cloudy, overcast
-  light:   dawn, day, midday, golden_hour, dusk, night
-  climate: hot, warm, mild, cool, cold, summer, winter, inbetween
-  scenery: urban, nature, sea, mountain, aerial, indoor
-  region:  north, center, south, coast, inland, negev, arava, golan, galilee, hermon, kinneret, dead-sea, eilat
-  people:  people, kids, crowd, clothing
-  vibe:    calm, dramatic, gloomy, cheerful
-  (Regions anchor on weather-forecast geography — never expect to see city names like \`tel-aviv\`. A Tel Aviv-looking aerial is tagged \`center\` + \`coast\`. Eilat / Hermon / Kinneret / Dead-Sea are region names that the forecast calls out by name, so they're tagged as themselves.)
+Catalog tags are Hebrew-only. New rows may also include structured \`concepts\`:
+  weather: שרב, חם, בהיר, מעונן, גשם, רוח, ברד, שלג
+  season_mood: קיצי, חורפי, סתווי, אביבי, מעבר
+  visual_role: רקע כללי, אזהרת מזג אוויר, עומס חום, הקלה בחום, תחזית ים, לבוש, עיר, טבע
+  scene_fit: פתיחה חמה, שרב, טמפרטורות, סוף שבוע נעים, קרינת שמש, ים ושקיעה
+  avoid_for: concepts this shot must NOT illustrate.
 
 Source values (clip-level attribution):
   ${SOURCE_VALUES.join(", ")}
@@ -62,7 +60,7 @@ PER-SCENE PICKING RULES
 CORE RULES
 
 A. **Holistic interpretation, not literal keyword match.** Read the scene's narration, pick by intent.
-A1. **Weather state outranks geography.** When the narration mentions a weather state (rain / clouds / sun / snow / storm / fog / wind / hot / cold — including Hebrew variants like טפטוף / מעונן / חמסין), the picked segment's weather signal MUST match. Wrong-weather + right-place is worse than right-weather + generic-place.
+A1. **Weather state outranks geography.** When the narration mentions a weather state (גשם / עננים / שמש / שלג / סופה / ערפל / רוח / חם / קר / שרב / חמסין), the picked segment's weather/concept signal MUST match. Wrong-weather + right-place is worse than right-weather + generic-place.
 A2. **When no candidate scores high on the dominant signal, fall back to a generic AMBIENT shot that fits the weather mood** — a wide sky shot, calm city skyline, generic seasonal landscape — rather than a thematically-off specific shot.
 A3. **Sky-state tags.** Match \`overcast\` to overcast/wet narration (מעונן / טפטוף / חורפי); \`clear_sky\` or \`partly_cloudy\` to sunny narration (יום בהיר / שמשי / חם). Don't pick a \`partly_cloudy + summer\` clip for an overcast scene.
 B. **Anti-repeat (\`segment_id\`)**: a \`segment_id\` appears at most twice across the whole timeline; never within 2 scenes of its previous use. Independent of B2 (parent file).
@@ -110,6 +108,8 @@ interface CatalogRow {
   duration: number;
   orientation: string;
   tags?: string[];
+  concepts?: SegmentConcepts;
+  concept_terms?: string[];
   description?: string;
   source?: string;
 }
@@ -138,6 +138,11 @@ export function prepareCatalog(videos: ParsedVideo[]): CatalogRow[] {
       if (tags.length) entry.tags = tags;
       const desc = (seg.description ?? "").trim();
       if (desc) entry.description = desc;
+      if (seg.concepts) {
+        entry.concepts = seg.concepts;
+        const terms = flattenConcepts(seg.concepts);
+        if (terms.length) entry.concept_terms = terms;
+      }
       if (clipSrc) entry.source = String(clipSrc);
       out.push(entry);
     }

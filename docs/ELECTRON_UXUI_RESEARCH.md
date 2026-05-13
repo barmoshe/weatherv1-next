@@ -301,6 +301,15 @@ BEM `__`-style names (`modal-overlay`, `modal__header`, `field-group`,
 convention and have no CSS — components using them will render with no
 background, no padding, and a broken layout.
 
+### 4.1.1 Plan preview: segment explanations
+
+The Studio **Plan** tile and **למה הקליפים האלה?** panel show why each catalog row was chosen. Timeline picks carry two strings:
+
+- **`picker_reason`** — optional, set **before** `validateAndSwap` from the picker LLM’s `reason` field. This is the editorial Hebrew sentence users expect (e.g. weather/shots matching the narration).
+- **`reason`** — mutable; the validator overwrites it with technical messages when it swaps segments (`validator: …`). The UI prefers **`picker_reason`** when present (`pickDisplayReason` in `src/client/lib/plan-pick-display.ts`).
+
+If the model leaves `reason` empty, both fields may be blank until prompts or follow-up work address it.
+
 ### 4.2 Desktop Density
 
 - Native desktop UIs are denser than typical web UIs. Reduce default spacing

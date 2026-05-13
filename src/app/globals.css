@@ -722,6 +722,64 @@
             word-break: break-word;
         }
 
+        /* Render tile — hero CTA + progress (scoped; aligns with waiting-state height) */
+        [data-area="render"] .tile-body > .step-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 160px;
+        }
+        [data-area="render"] .render-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            min-height: 48px;
+            padding: 1rem 2rem;
+            font-size: 1.08rem;
+            width: 100%;
+            max-width: 280px;
+            box-shadow: 0 4px 12px rgb(0 0 0 / .08);
+            transition:
+                transform 0.1s ease,
+                filter 0.15s ease,
+                opacity 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+        [data-area="render"] .render-btn:hover {
+            box-shadow: 0 6px 16px rgb(0 0 0 / .1);
+        }
+        [data-area="render"] .render-btn .icon {
+            width: 1em;
+            height: 1em;
+            flex-shrink: 0;
+        }
+        [data-area="render"] .render-progress {
+            display: inline-flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.55rem;
+            font-weight: 700;
+            color: var(--v1-ink-muted);
+        }
+        [data-area="render"] .render-progress .spinner {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            border: 2.5px solid var(--v1-coral-soft);
+            border-top-color: var(--v1-coral);
+            border-radius: 50%;
+            animation: render-spin 1s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            [data-area="render"] .render-progress .spinner {
+                animation: none;
+                border-color: var(--v1-coral);
+                opacity: 0.9;
+            }
+        }
+
         /* Output tile keeps the phone-frame mockup centered & bounded */
         .tile--output .tile-body  { display: flex; align-items: center; justify-content: center; padding: 0.4rem 0; }
         .tile--output .step-content { background: transparent; padding: 0; width: 100%; }
@@ -1517,6 +1575,8 @@
         .tab-panel-footer {
             display: flex;
             justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 0.5rem;
             padding-block-start: 0.75rem;
         }
         .btn--ghost {
