@@ -7,6 +7,8 @@ Read it before large changes, release work, or any task where the desired end st
 
 WeatherV1 is a local-first weather video production app. It turns recorded narration into a transcribed, scene-planned, ffmpeg-rendered 9:16 forecast video using a local media catalog, with optional Cloudflare R2 sync for catalog/media assets.
 
+R2 is documented end-to-end in [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) (app sync, Worker auth, live status) and [`infra/cloudflare/README.md`](../infra/cloudflare/README.md) (Pulumi). The docs router is [`docs/DOCS_INDEX.md`](DOCS_INDEX.md) → section *Cloudflare R2 (optional cloud mirror)*.
+
 The project must stay useful in two runtimes:
 
 - **Desktop:** Electron shell around a managed local Next server, user-chosen workspace, native pickers, bundled ffmpeg, GitHub-built installers.

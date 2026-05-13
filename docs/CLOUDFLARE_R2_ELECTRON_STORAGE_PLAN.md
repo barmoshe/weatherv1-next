@@ -10,7 +10,7 @@ WeatherV1 is an Electron standalone Next.js app. The app should keep rendering a
 - rendered outputs
 - posters/previews if useful
 
-This is **not** a plan to deploy the app to Oracle, Vercel, or any hosted server. The app remains local-first.
+This is **not** a plan to deploy the app to a specific cloud VM vendor, Vercel, or any hosted server. The app remains local-first.
 
 ---
 

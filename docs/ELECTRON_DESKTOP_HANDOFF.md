@@ -88,6 +88,12 @@ Renderer / CI:
 | `src/test/server-manager.test.ts` | Pure server-manager path resolution coverage. |
 | `.github/workflows/desktop.yml` | macOS + Windows desktop packaging smoke workflow. |
 
+## R2 (use with this handoff)
+
+The Electron app is where most users enter **R2 gateway URL**, **tenant**, **bucket**, and **HTTP Basic Auth** (Worker `appUsername` / `appPassword`). Those flows live in `SettingsModal`, `StorageOnboardingGate`, and the desktop bridge types in `src/shared/desktop.ts`.
+
+For architecture, live status, conflict semantics, object-key layout (`tenantKey`), Pulumi, and CLI scripts that push catalogs or segment posters, read **[`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md)** and the doc index section **[Cloudflare R2 (optional cloud mirror)](DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror)**. Operator commands for the stack: **[`infra/cloudflare/README.md`](../infra/cloudflare/README.md)**.
+
 ## Sharp edges
 
 1. **`turbopack.root` must be pinned.** The host repo (`claude-creative-stack`) has its own `package-lock.json` one level above this project. Without `turbopack: { root: __dirname }` in `next.config.ts`, Next infers the workspace root from that lockfile and emits `.next/standalone/claude-creative-stack/weatherv1-next/server.js` — breaking `electron/server-manager.cjs`'s standalone resolution. Don't remove the pin.

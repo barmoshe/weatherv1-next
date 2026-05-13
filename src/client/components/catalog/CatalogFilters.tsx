@@ -11,6 +11,7 @@ export interface FilterState {
   activeTags: string[];
   activeSource: string | null;
   untaggedOnly: boolean;
+  multiSegmentOnly: boolean;
   sort: SortOrder;
 }
 
@@ -19,9 +20,16 @@ interface CatalogFiltersProps {
   onChange: (patch: Partial<FilterState>) => void;
   totalCount: number;
   filteredCount: number;
+  multiSegmentCount: number;
 }
 
-export function CatalogFilters({ filters, onChange, totalCount, filteredCount }: CatalogFiltersProps) {
+export function CatalogFilters({
+  filters,
+  onChange,
+  totalCount,
+  filteredCount,
+  multiSegmentCount,
+}: CatalogFiltersProps) {
   const { data: tagData } = useTagCounts();
 
   const untaggedCount = useMemo(() => {
@@ -49,11 +57,21 @@ export function CatalogFilters({ filters, onChange, totalCount, filteredCount }:
   const hasFilters =
     filters.activeTags.length > 0 ||
     filters.activeSource !== null ||
-    filters.untaggedOnly;
+    filters.untaggedOnly ||
+    filters.multiSegmentOnly;
 
   return (
     <aside className="catalog-filters" id="catalog-filters" aria-label="מסננים">
       <div className="filter-section">
+        <button
+          type="button"
+          className="filter-chip"
+          aria-pressed={filters.multiSegmentOnly}
+          onClick={() => onChange({ multiSegmentOnly: !filters.multiSegmentOnly })}
+        >
+          הצג קליפים עם 2+ מקטעים
+          <span className="chip-count">{multiSegmentCount}</span>
+        </button>
         <button
           type="button"
           className="filter-chip filter-untagged"
@@ -93,7 +111,14 @@ export function CatalogFilters({ filters, onChange, totalCount, filteredCount }:
             type="button"
             className="btn btn--ghost btn--sm"
             id="filter-clear"
-            onClick={() => onChange({ activeTags: [], activeSource: null, untaggedOnly: false })}
+            onClick={() =>
+              onChange({
+                activeTags: [],
+                activeSource: null,
+                untaggedOnly: false,
+                multiSegmentOnly: false,
+              })
+            }
           >
             נקה הכל
           </button>

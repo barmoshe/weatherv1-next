@@ -14,6 +14,7 @@ const DEFAULT_FILTERS: FilterState = {
   activeTags: [],
   activeSource: null,
   untaggedOnly: false,
+  multiSegmentOnly: false,
   sort: "newest",
 };
 
@@ -156,8 +157,18 @@ export function CatalogPanel() {
       result = result.filter((v) => !hasAnySegmentTag(v));
     }
 
+    // Videos with 2+ catalog segments only
+    if (filters.multiSegmentOnly) {
+      result = result.filter((v) => (v.segments?.length ?? 0) >= 2);
+    }
+
     return sortVideos(result, filters.sort);
   }, [videos, filters]);
+
+  const multiSegmentCount = useMemo(
+    () => videos.filter((v) => (v.segments?.length ?? 0) >= 2).length,
+    [videos]
+  );
 
   const handleVideoClick = useCallback((video: ParsedVideo) => {
     setSelectedVideo(video);
@@ -348,6 +359,7 @@ export function CatalogPanel() {
           onChange={patchFilters}
           totalCount={videos.length}
           filteredCount={filtered.length}
+          multiSegmentCount={multiSegmentCount}
         />
 
         <div className="catalog-main">

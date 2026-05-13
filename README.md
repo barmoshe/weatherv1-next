@@ -78,6 +78,8 @@ flowchart LR
 
 Long-lived **Node**, **ffmpeg subprocesses**, **disk**, **multi-minute encodes**, and **large uploads** push against typical FaaS limits. Run it on a **real VM/container with ffmpeg**, or on the **desktop** via Electron. Full rationale: [`docs/DESIGN_DEPLOYMENT.md`](docs/DESIGN_DEPLOYMENT.md).
 
+**Optional Cloudflare R2:** the catalog and media can mirror to R2 via a Worker gateway (short-lived credentials; local-first ffmpeg). Start at [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md) and the doc index section [Cloudflare R2](docs/DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror).
+
 ---
 
 ## Repository map
@@ -92,7 +94,8 @@ weatherv1-next/
 │   │   ├── jobs/         # queue · store · plan bundles
 │   │   ├── pipeline/     # planner · picker · validator · beats
 │   │   ├── catalog/      # v1Drive-backed storage
-│   │   └── runtime/      # paths · config · desktop auth
+│   │   ├── sync/r2/      # optional Cloudflare R2 sidecar (catalog · media · posters)
+│   │   └── runtime/      # paths · config · desktop auth · R2 env
 │   ├── shared/
 │   └── proxy.ts          # desktop token guard
 ├── electron/
@@ -100,7 +103,10 @@ weatherv1-next/
 ├── runtime/              # local state (gitignored)
 ├── build/                # app icons
 ├── docs/
+│   ├── DOCS_INDEX.md       # agent/human router (incl. R2 section)
+│   ├── R2_PULUMI_HANDOFF.md
 │   └── readme-assets/      # SVG banners for this README
+├── infra/cloudflare/       # Pulumi: R2 bucket + Worker gateway
 ├── Dockerfile
 ├── docker-compose.yml
 └── package.json
@@ -114,6 +120,7 @@ Agents and humans should start with:
 | --- | --- |
 | Current goal and success criteria | [`docs/PROJECT_GOAL.md`](docs/PROJECT_GOAL.md) |
 | Docs router and code map | [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md) |
+| Cloudflare R2, Worker gateway, Pulumi | [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md), [`infra/cloudflare/README.md`](infra/cloudflare/README.md) |
 | Agent guardrails and verification commands | [`AGENTS.md`](AGENTS.md) |
 | Claude project goal skill | [`.claude/skills/weatherv1-goal/SKILL.md`](.claude/skills/weatherv1-goal/SKILL.md) |
 
@@ -127,7 +134,7 @@ For larger Claude Code sessions, invoke `/weatherv1-goal` first, then set a buil
 | --- | --- |
 | **Hack the web app** | [Local dev (web)](#local-dev-web) |
 | **Ship desktop** | [Electron](#desktop-electron) · bundled ffmpeg · user workspace |
-| **Ops / cloud VM** | [Docker](#docker) · [`docs/DEPLOY_ORACLE_CLOUD.md`](docs/DEPLOY_ORACLE_CLOUD.md) |
+| **Ops / cloud VM** | [Docker](#docker) · [`docs/DESIGN_DEPLOYMENT.md`](docs/DESIGN_DEPLOYMENT.md) |
 
 ---
 

@@ -2,6 +2,8 @@
 
 You are a Claude agent picking up a catalog-enrichment job.
 
+**R2 context:** posters and catalog pushes use the same R2 sidecar as the main app. See [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) and [`docs/DOCS_INDEX.md`](DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror) for credentials, `tenantKey` layout, and CLI examples.
+
 The catalog has just been re-segmented (see [scripts/resegment-catalog.ts](../scripts/resegment-catalog.ts) and [src/server/catalog/resegment.ts](../src/server/catalog/resegment.ts)). Long single segments were split into ~10-second windows. The first window of each split inherited the original tags/description; the remaining windows were left **blank** — empty `tags` array and empty `description`.
 
 **Your job:** for every segment whose `tags` is empty *and* `description` is empty, generate a poster, then fill in a short Hebrew description and a list of catalog tags from the closed vocabulary.

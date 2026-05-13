@@ -1,6 +1,6 @@
 # Deployment design — weatherV1-next on a single Node host
 
-This document explains the architecture choices behind the `Dockerfile`, the `docker-compose.yml`, and the Oracle Cloud target. The companion operational guide is `DEPLOY_ORACLE_CLOUD.md`.
+This document explains the architecture choices behind the `Dockerfile` and `docker-compose.yml` for running the **Next.js app** as a long-lived process on a VM or metal. **Optional Cloudflare R2** (catalog/media mirror) is a separate stack; see [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) and [`docs/DOCS_INDEX.md`](DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror).
 
 ## Why a single-box deploy, not split serverless
 
@@ -14,7 +14,7 @@ The Next.js port is a long-running Node service with five traits that disqualify
 | Multi-minute encodes inside a request | `renderer.ts:162-185` | Pro + Fluid Compute caps at 800 s; real renders blow past that. |
 | Large audio uploads | `src/app/api/transcribe/route.ts` | Vercel body cap is 4.5 MB. |
 
-The simplest fix that preserves the existing code is to run it on a real VM with `ffmpeg` installed and a persistent disk attached. That is what the Dockerfile and compose file deliver, and what Oracle Cloud Always Free hosts for free.
+The simplest fix that preserves the existing code is to run it on a real VM or container host with `ffmpeg` installed and a persistent disk attached. That is what the Dockerfile and compose file deliver.
 
 ## Container image structure
 
@@ -88,15 +88,11 @@ A future cleanup is to point this at `v1Drive/weather/music/` (which already exi
 
 The image hardcodes production-safe defaults and lets the user override anything via `.env` (loaded by docker-compose's `env_file`).
 
-## How this maps to Oracle Cloud A1
+## Production host shape
 
-The Always Free Ampere A1 envelope:
+Typical single-box deploy: **2+ vCPU**, **4+ GB RAM**, **enough disk** for `v1Drive/` plus `runtime/` (jobs, uploads, outputs, caches), **ffmpeg + ffprobe** on the image or host, and ports **80/443** (or your reverse proxy) open to the container. The Dockerfile targets **multi-arch** (`linux/amd64` and `linux/arm64`); pick an ARM or x86 VM from any provider. No application code under `src/` is architecture-specific.
 
-- **4 ARM OCPUs** — comfortably handles a 1080×1920 H.264 encode at ~2× realtime. Concurrent renders fit.
-- **24 GB RAM** — far more than any single ffmpeg encode needs (~500 MB working set); the rest absorbs Node heap and OS page cache for media.
-- **200 GB block storage** — the current `v1Drive/` weighs ~30 GB; rendered outputs at ~20-30 MB each leave headroom for thousands of forecasts before rotation is needed.
-- **10 TB / month egress** — at ~25 MB per output, the cap binds at roughly 400K downloads/month.
-- **ARM64** — the Dockerfile uses arm64-compatible base images and `apt` ffmpeg (no x86 binary anywhere). No code in `weatherV1-next/src/` is architecture-dependent.
+**Media growth:** keep large libraries on disk, or enable **Cloudflare R2** as an optional sidecar for catalog and object storage — see [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) — without changing the ffmpeg-first design.
 
 ## Trade-offs and follow-ups
 
@@ -105,7 +101,7 @@ The Always Free Ampere A1 envelope:
 | `output: "standalone"` in `next.config.ts` | not done | Shrinks the image from ~250 MB to ~80 MB; drops the need to copy `node_modules` into the runner. |
 | Move bg-music to `v1Drive/weather/music/` in `renderer.ts:89` | not done | Drops the cross-project filesystem dependency on the Flask `app/` tree. |
 | GitHub Actions image publish | not done | Would push `weatherv1-next:arm64` to GHCR so the VM does `docker pull` instead of building. |
-| Off-load media to S3 / R2 / B2 | not needed yet | 30 GB fits comfortably in the 200 GB free disk. |
+| Off-load media to object storage | optional | **Cloudflare R2** sidecar is implemented (`src/server/sync/r2/`). Use when you want a remote mirror, not as a ffmpeg remote-read path. |
 | Replace in-process queue with Inngest / QStash | not needed | Single-instance + in-memory queue is the right shape for one VM. Only needed if multi-instance HA is ever required. |
 | Pin ffmpeg to a static build | not needed | Debian's ffmpeg 5.1 has every filter the renderer uses. |
 
@@ -113,9 +109,8 @@ The Always Free Ampere A1 envelope:
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
-| A1 capacity in your home region | high | Try US-Ashburn or US-Phoenix first; use the `hitrov` retry script; fall back to Hetzner CX22. |
-| Accidental upgrade to PAYG | low | Never click "Upgrade" in the Console banner; A1 doesn't auto-upgrade on idle. |
-| 10 TB egress overshoot | low | Monitor OCI billing; rate-limit `/outputs` if needed. |
-| Single-instance failure (no HA) | medium | Weekly block-volume backups (5 free); nightly `rclone` of catalog to R2 / B2. |
+| VM SKU unavailable in region | medium | Retry another region or provider; same `docker compose` layout. |
+| Egress or disk overshoot | low | Monitor usage; rate-limit `/outputs`; prune old outputs; use R2 for cold catalog backup if needed. |
+| Single-instance failure (no HA) | medium | Back up `runtime/` and `v1Drive/`; optional R2 catalog mirror (`docs/R2_PULUMI_HANDOFF.md`). |
 | ffmpeg version regression on apt update | low | Rebuilding the image pulls the latest Debian ffmpeg. Pin the base image to a digest in `FROM` if it ever breaks. |
 | Catalog corruption from concurrent writes | low | `proper-lockfile` on `catalog.json`; single-instance container means one writer at a time. |

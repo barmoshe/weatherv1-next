@@ -6,10 +6,12 @@
 - Keep the current Next.js App Router UI and `/api/*` flows.
 - Run the app inside Electron with a bundled local Next server.
 - Target `macOS + Windows` first.
-- Keep media assets local in v1, but support optional Google Drive sync for `catalog.json` through a catalog-store boundary.
+- Keep media assets local in v1, but support optional **Cloudflare R2** sync for catalog and media through a Worker gateway (short-lived credentials; see [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md)).
 - Ship installers from GitHub Actions on `v*` tags, attach stable-named assets to GitHub Releases, and publish a simple download page from GitHub Pages.
 
-## Repo Facts Driving The Design
+## Cloudflare R2 (current sync model)
+
+**Google Drive** references later in this document describe a **superseded** design. The shipped system uses **R2** + a **Worker** (HTTP Basic Auth to the Worker; temporary S3 credentials for object I/O). Read [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) and [`docs/DOCS_INDEX.md`](DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror) for the live architecture, env vars, and Pulumi operator steps.
 
 - The app is `Next 16.2.6` with the App Router and route handlers in `src/app/api/**`.
 - The app depends on local filesystem state and an in-process worker:

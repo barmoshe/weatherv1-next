@@ -2,6 +2,8 @@
 
 Pulumi TypeScript project for the WeatherV1 R2 asset layer.
 
+**Related project docs:** [`docs/R2_PULUMI_HANDOFF.md`](../../docs/R2_PULUMI_HANDOFF.md) (Worker behavior, app sync, live status) · [`docs/DOCS_INDEX.md`](../../docs/DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror) (full R2 doc map).
+
 ## Resources
 
 - R2 bucket, default `weatherv1-media`

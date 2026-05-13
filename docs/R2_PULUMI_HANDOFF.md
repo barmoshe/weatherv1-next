@@ -1,5 +1,27 @@
 # R2 + Pulumi Asset Manager Handoff
 
+## Where this doc sits
+
+| Need | Doc |
+| --- | --- |
+| Repo-wide router (tasks, code map, **R2 table**) | [DOCS_INDEX.md](DOCS_INDEX.md) — section *Cloudflare R2 (optional cloud mirror)* |
+| Product goals + R2 invariants | [PROJECT_GOAL.md](PROJECT_GOAL.md) |
+| Docker / long-lived **app** host (separate concern from R2 infra) | [DESIGN_DEPLOYMENT.md](DESIGN_DEPLOYMENT.md) |
+| Desktop Settings + onboarding (gateway URL, Basic Auth) | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md) |
+| Bulk segment posters + catalog push to R2 from CLI | [CATALOG_TAGGING_HANDOFF.md](CATALOG_TAGGING_HANDOFF.md) |
+| Pulumi keys and `pulumi` commands | [infra/cloudflare/README.md](../infra/cloudflare/README.md) |
+
+### Object key layout (R2)
+
+All uploads use `tenantKey(relative)` in [`src/server/sync/r2/client.ts`](../src/server/sync/r2/client.ts), which prefixes keys as `tenants/<tenantId>/` + `relative`. Examples of `relative`:
+
+- `catalog/catalog.json`
+- `videos/<videoId>/<filename>`
+- `posters/clips/<videoId>.jpg`
+- `posters/segments/<segmentId>.jpg`
+
+So the full object key for a segment poster is `tenants/default/posters/segments/<segmentId>.jpg` when `tenantId` is `default`.
+
 ## Current Goal
 
 Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and Pulumi-managed Cloudflare infrastructure, while keeping WeatherV1 local-first for ffmpeg, previews, render inputs, uploads, and active catalog editing.
@@ -22,10 +44,10 @@ Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and 
 - Removed Google Drive from Electron config/main/preload, desktop bridge types, catalog tests, runtime desktop tests, and deleted Drive-specific source files/routes.
 - Replaced the Settings modal Drive section with an R2 sync section for gateway URL, tenant ID, bucket name, app token, pull, push, and replace-remote conflict action.
 - Added catalog UX pieces: R2 sync strip, skeleton catalog loading, debounced search with `/` focus, grid/list toggle, per-asset availability badges, and materialize/download actions for cloud-only assets.
-- Added R2 poster sync for generated clip posters and every segment poster. Keys use `posters/clips/<videoId>.jpg` and `posters/segments/<segmentId>.jpg`.
+- Added R2 poster sync for generated clip posters and every segment poster. Logical keys use `posters/clips/<videoId>.jpg` and `posters/segments/<segmentId>.jpg` under `tenantKey()` (full keys include `tenants/<tenantId>/`).
 - Added initial Pulumi project under `infra/cloudflare/`, including R2 bucket, lifecycle, optional CORS, Worker script, optional route, and README config instructions.
 - Added Worker gateway source under `infra/cloudflare/worker/r2-gateway.js` with health, temporary credentials, and catalog GET/PUT endpoints.
-- Verification: `npx tsc --noEmit` passes; `npm test` passes with 13 files / 72 tests; `npm run build` passes; `npm run standalone:prep` passes; final `npx tsc --noEmit` after route regeneration passes.
+- Verification: `npx tsc --noEmit` passes; `npm test` passes (see current count in CI or `npm test` footer); `npm run build` passes; `npm run standalone:prep` passes.
 - Pulumi: `dev` stack initialized with account `f73ae3550198c571ad20f9fd06632200`; `pulumi up --non-interactive --yes` created R2 bucket `weatherv1-media`, R2 lifecycle rule, and Worker script `weatherv1-r2-gateway`.
 - Pulumi project was changed to CommonJS (`infra/cloudflare/package.json`, `tsconfig.json`) because the installed Pulumi runtime could not load ESM TypeScript directly.
 - Pulumi Worker deploy required `compatibilityDate: "2026-05-12"` because Cloudflare rejects future dates in UTC, and `mainModule: "worker.js"` so the ES module Worker is not parsed as classic service-worker syntax.
@@ -76,15 +98,15 @@ Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and 
 
 ## Next Steps
 
-1. Smoke-test Electron settings with gateway URL `https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev`, tenant `default`, bucket `weatherv1-media`, and the Pulumi `appToken` value.
+1. Smoke-test Electron settings with the deployed Worker URL, tenant `default`, bucket `weatherv1-media`, and the **Basic Auth** username/password from Pulumi (`appUsername` / `appPassword` — see [infra/cloudflare/README.md](../infra/cloudflare/README.md)).
 2. Smoke-test catalog pull and materialize/download flows against R2 from the desktop UI.
-3. Rotate the exposed R2 S3 credential pair after smoke testing because the secret access key was pasted into chat.
-4. Update or archive `docs/ELECTRON_DESKTOP_PLAN.md`, which still describes the old Drive plan.
+3. Periodically rotate the Worker `appPassword` secret after operational use (`pulumi config set --secret appPassword` + `pulumi up`).
+4. Optionally rewrite remaining **Google Drive** sections in `docs/ELECTRON_DESKTOP_PLAN.md` to match the shipped R2 design (summary + R2 section already point agents to the right place).
 
 ## Known Risks
 
 - `tenantKey()` depends on runtime config, so avoid module-level constants that call it before env is loaded.
 - `parseCatalog()` now returns remote-only rows; render and preview paths must materialize or gracefully reject cloud-only assets before touching ffmpeg.
-- `docs/ELECTRON_DESKTOP_PLAN.md` still references the old Drive plan. It should be treated as historical until revised.
+- `docs/ELECTRON_DESKTOP_PLAN.md` still contains historical **Google Drive** sections; the summary now points at R2 as current. Prefer `R2_PULUMI_HANDOFF.md` for sync behavior.
 - Pulumi Worker binding enum strings and `WorkersScriptSubdomain` were accepted by Cloudflare during deploy.
 - Segment poster sync currently runs after local imports and catalog segment edits when the source video exists locally. Remote-only assets must be materialized before poster generation.

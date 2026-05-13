@@ -2,7 +2,7 @@
 
 Step-by-step instructions for splitting the Next.js port at `weatherV1-next/` out of this monorepo into a standalone repository. After extraction the new repo can have its own CI, releases, contributors, and issue tracker; the parent repo keeps the Flask app and the canonical media tree.
 
-The companion docs are `DEPLOY_ORACLE_CLOUD.md` (where the new repo will live in production) and `DESIGN_DEPLOYMENT.md` (architecture rationale).
+The companion docs are `DESIGN_DEPLOYMENT.md` (Docker / long-lived Node host) and `R2_PULUMI_HANDOFF.md` (optional Cloudflare R2 mirror + Worker).
 
 ## Goal
 
@@ -17,7 +17,7 @@ Two files in `weatherV1-next/src/` reach **above** the Next.js directory using `
 
 | File | Line | Current resolution | What to do |
 |---|---|---|---|
-| `src/server/catalog/storage.ts` | 11-25 | `process.cwd()/../v1Drive/weather/{notouch!,videos}` | Keep, but document that the deploy must place a `v1Drive/` *sibling* next to the cloned repo (this is what the Oracle deploy already does at `/opt/weatherV1/v1Drive/`). Optionally add a `CATALOG_DIR` / `VIDEOS_DIR` env override so the path is configurable. |
+| `src/server/catalog/storage.ts` | 11-25 | `process.cwd()/../v1Drive/weather/{notouch!,videos}` | Keep, but document that the deploy must place a `v1Drive/` *sibling* next to the cloned repo (for example `/opt/weather/weatherv1-next` with `/opt/weather/v1Drive/` beside it). Optionally add a `CATALOG_DIR` / `VIDEOS_DIR` env override so the path is configurable. |
 | `src/server/ffmpeg/renderer.ts` | 89 | `process.cwd()/../app/music/…` | The Flask `app/` tree won't exist in the new repo. Change the fallback to `process.cwd()/../v1Drive/weather/music/…` (which already exists in the canonical media tree) **before** extraction. Optionally also accept a `BG_MUSIC_PATH` env override. |
 
 Do these as **one final commit on the monorepo** before extraction. Once extracted, retrofitting them onto the new history is messier.
@@ -93,7 +93,8 @@ cd weatherv1-next
 Replace the boilerplate `README.md` (it's still the create-next-app default) with a project README that includes:
 
 - One-paragraph what-this-is
-- Link to `docs/DEPLOY_ORACLE_CLOUD.md` for the production deploy
+- Link to `docs/DESIGN_DEPLOYMENT.md` for the production Docker host
+- Link to `docs/R2_PULUMI_HANDOFF.md` if using Cloudflare R2
 - Link to `docs/DESIGN_DEPLOYMENT.md` for the architecture
 - Local dev quickstart: `npm install`, `cp .env.example .env`, `npm run dev` (note that the catalog + media tree must live at `../v1Drive/weather/` even in dev)
 
@@ -103,27 +104,27 @@ Add a `.github/workflows/ci.yml` with three jobs:
 
 1. **Lint + typecheck** — `npm ci && npx tsc --noEmit` (and any ruff/eslint if added later)
 2. **Test** — `npm test` (vitest)
-3. **Docker build + push to GHCR** — on tagged releases only, builds `linux/arm64` and `linux/amd64` and pushes to `ghcr.io/<owner>/weatherv1-next:<tag>`. The Oracle VM can then `docker pull` instead of building.
+3. **Docker build + push to GHCR** — on tagged releases only, builds `linux/arm64` and `linux/amd64` and pushes to `ghcr.io/<owner>/weatherv1-next:<tag>`. A production VM can then `docker pull` instead of building.
 
 Enable branch protection on `main`: require CI green, require PR review for non-trivial changes.
 
-## 6. Update the deploy guide URL
+## 6. Deploy layout on the server
 
-`docs/DEPLOY_ORACLE_CLOUD.md` currently references `https://github.com/barmoshe/weatherv1.git` in the clone step. Update it to the new repo URL:
+Use a layout where `v1Drive/` stays a **sibling** of the clone (required by `process.cwd()/../v1Drive/...`):
 
 ```bash
-git clone https://github.com/<owner>/weatherv1-next.git /opt/weatherv1-next
+git clone https://github.com/<owner>/weatherv1-next.git /opt/weather/weatherv1-next
 ```
 
-And update the rsync target path from `/opt/weatherV1/v1Drive/` to `/opt/weatherv1-next/../v1Drive/` (one dir up from the clone), since the `process.cwd()/../v1Drive/...` resolution still expects `v1Drive/` to be a *sibling* of the clone, not a child. The simplest layout on the VM becomes:
+Document `rsync` or volume mounts so media lives next to the repo, for example:
 
 ```
 /opt/weather/
   ├── weatherv1-next/   (git clone)
-  └── v1Drive/          (rsynced media)
+  └── v1Drive/        (media)
 ```
 
-Update the corresponding paths in the deploy guide once.
+Update any internal runbooks that still reference the old monorepo clone URL.
 
 ## 7. Data plane: where does `v1Drive/` live?
 
@@ -131,7 +132,7 @@ Three options, in order of complexity:
 
 | Option | Setup | Notes |
 |---|---|---|
-| **Sibling dir, rsync'd** (current) | Place `v1Drive/` next to the clone on every host (laptop, Oracle VM). Sync with rsync when it changes. | Zero code change. What `DEPLOY_ORACLE_CLOUD.md` already documents. Recommended for now. |
+| **Sibling dir, rsync'd** (current) | Place `v1Drive/` next to the clone on every host (laptop, server). Sync with rsync when it changes. | Zero code change. Recommended for now. |
 | **Sibling dir, git-lfs in a second repo** | New repo `weatherv1-data` with LFS-tracked videos. Clone alongside `weatherv1-next/`. | Versioned history. LFS bandwidth fees on GitHub if heavy. |
 | **Object storage (S3/R2/B2)** | Add an S3 client in `src/server/catalog/storage.ts`, swap `fs.readFileSync` for signed-URL fetches. | Cleanest long-term, biggest refactor. Tracked in `DESIGN_DEPLOYMENT.md` follow-ups. |
 
@@ -161,7 +162,7 @@ Once the new repo is pushed and the deploy guide URL is updated, do an end-to-en
 1. **Clone fresh** — `git clone git@github.com:<owner>/weatherv1-next.git` on a clean machine.
 2. **Build the image** — `docker buildx build --platform linux/arm64 -t weatherv1-next:test .` succeeds.
 3. **Run tests** — `npm ci && npm test` passes (vitest, the existing suite under `src/test/`).
-4. **Smoke deploy on Oracle** — follow `docs/DEPLOY_ORACLE_CLOUD.md` end-to-end from a blank VM. The transcribe → plan → render pipeline produces a forecast video.
+4. **Smoke deploy** — on a blank VM or laptop: `docker compose up` (or your orchestrator) with `v1Drive/` mounted per `DESIGN_DEPLOYMENT.md`. Confirm transcribe → plan → render produces a forecast video.
 5. **Confirm git history preserved** — `git log` in the new repo shows the commits that touched `weatherV1-next/` (including the recent Dockerfile/docs commit), with their original authors and dates.
 6. **Confirm parent is clean** — `weatherV1-next/` is gone (or tombstoned) in the monorepo, and the Flask app's tests / build still pass.
 
@@ -190,8 +191,8 @@ weatherv1-next/
 ├── README.md           ← rewrite during step 5
 ├── docker-compose.yml
 ├── docs/
-│   ├── DEPLOY_ORACLE_CLOUD.md
 │   ├── DESIGN_DEPLOYMENT.md
+│   ├── R2_PULUMI_HANDOFF.md
 │   └── HANDOFF_NEW_REPO.md   (this file — keep for the record)
 ├── instrumentation.ts
 ├── next.config.ts
@@ -213,7 +214,7 @@ The following items from this guide are **done** and committed to the monorepo:
 - **Step 1 — Cross-repo path fix**: `renderer.ts:89` updated to `../v1Drive/weather/music/…` with `BG_MUSIC_PATH` env override.
 - **Step 5 — README**: `README.md` rewritten (project description, dev quickstart, doc links).
 - **Step 5 — CI workflow**: `.github/workflows/ci.yml` added (lint/typecheck, test, Docker multi-arch on tags).
-- **Step 6 — Deploy guide URLs**: `docs/DEPLOY_ORACLE_CLOUD.md` updated to new `/opt/weather/` layout and `barmoshe/weatherv1-next` clone URL.
+- **Step 6 — Deploy layout**: server clone + sibling `v1Drive/` documented; references point at `barmoshe/weatherv1-next` and `DESIGN_DEPLOYMENT.md`.
 
 **Remaining** (to be done in the extraction iteration):
 
