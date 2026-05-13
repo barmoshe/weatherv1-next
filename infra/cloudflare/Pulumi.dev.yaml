@@ -5,8 +5,6 @@ config:
   weatherv1-cloudflare:tenantId: default
   weatherv1-cloudflare:workerName: weatherv1-r2-gateway
   weatherv1-cloudflare:allowedOrigin: '*'
-  weatherv1-cloudflare:appToken:
-    secure: v1:yLc+VFPuMJBmI/0s:WVz9KK4VaSayGDDV980xE2ov3oC2nP0HiI/XzCnIDyKAfa/EwDX1RGJzp8F4trxXVPdh/48/fHLI8f9kLh8m+pXW7m/dH0YM32NYPeMWpIg=
   cloudflare:apiToken:
     secure: v1:ibVMfrB/aQqVtiGW:TPPCjLe80WmQDlzW54WZeFNlN5dZG58BKeGFTayW+FcoI5KXB+OrqBuY2GmOSno8zvA3w1GYm6X6IOnk0RVoSbUvRe8y
   weatherv1-cloudflare:cloudflareApiToken:
@@ -14,3 +12,6 @@ config:
   weatherv1-cloudflare:r2ParentAccessKeyId:
     secure: v1:Hs50rqpBzGN10BDB:RDMFJpqBk/m+doPQdganIY+hvByqKyOHCP3aIT9/byHbFW+qtYudq0N3vd/VgH0i
   weatherv1-cloudflare:workersDevSubdomain: barprojectsandbuilds
+  weatherv1-cloudflare:appUsername: v1editor
+  weatherv1-cloudflare:appPassword:
+    secure: v1:Xoa8pTiEZC0ao2jw:5H6mYNCvIO/SBysGu3+WpumPR/pQqw5Aj2q3
