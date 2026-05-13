@@ -19,12 +19,13 @@
 //      never holds the token directly.
 //   8. Handle desktop:* IPC for the preload bridge (pickWorkspace,
 //      pickAudioFile, importCatalogVideo, openPath, getAppInfo,
-//      getUpdateState, saveSettings).
+//      getUpdateState, saveSettings, beginUninstall).
 
 "use strict";
 
 const path = require("node:path");
 const fs = require("node:fs");
+const { spawn } = require("node:child_process");
 const { app, BrowserWindow, autoUpdater, dialog, ipcMain, session, shell, safeStorage } = require("electron");
 
 // Windows Squirrel runs the installed app briefly during install/uninstall
@@ -261,6 +262,77 @@ ipcMain.handle("desktop:getAppInfo", async () => ({
 }));
 
 ipcMain.handle("desktop:getUpdateState", async () => state.updateState);
+
+ipcMain.handle("desktop:beginUninstall", async () => {
+  if (!app.isPackaged) {
+    return { ok: false, reason: "זמין רק בגרסה ארוזה." };
+  }
+
+  const parentWindow = state.window && !state.window.isDestroyed() ? state.window : null;
+  const showBox = (opts) =>
+    parentWindow ? dialog.showMessageBox(parentWindow, opts) : dialog.showMessageBox(opts);
+
+  if (process.platform === "win32") {
+    const updateExe = path.join(path.dirname(process.execPath), "..", "Update.exe");
+    if (!fs.existsSync(updateExe)) {
+      await shell.openExternal("ms-settings:appsfeatures");
+      return {
+        ok: false,
+        reason: "לא נמצא מסיר ההתקנה. נפתחו הגדרות יישומים — ניתן להסיר את WeatherV1 משם.",
+      };
+    }
+
+    const { response } = await showBox({
+      type: "warning",
+      buttons: ["ביטול", "הסר התקנה"],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      message: "להסיר את WeatherV1 מהמחשב?",
+      detail: "האפליקציה תיסגר ויופעל מסיר ההתקנה של Windows.",
+    });
+    if (response !== 1) {
+      return { ok: false, reason: "בוטל" };
+    }
+
+    const child = spawn(updateExe, ["--uninstall"], { detached: true, stdio: "ignore" });
+    child.unref();
+    setImmediate(() => {
+      app.quit();
+    });
+    return { ok: true };
+  }
+
+  if (process.platform === "darwin") {
+    const userData = app.getPath("userData");
+    const { response } = await showBox({
+      type: "warning",
+      buttons: ["ביטול", "פתח ב-Finder"],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      message: "הסרת WeatherV1",
+      detail: `לאחר סגירת האפליקציה, גרור את WeatherV1.app לסל המחזור.\nנתונים מקומיים עלולים להישאר ב:\n${userData}`,
+    });
+    if (response !== 1) {
+      return { ok: false, reason: "בוטל" };
+    }
+
+    const bundlePath = path.join(path.dirname(process.execPath), "..", "..");
+    shell.showItemInFolder(bundlePath);
+    return { ok: true };
+  }
+
+  await showBox({
+    type: "info",
+    buttons: ["אישור"],
+    defaultId: 0,
+    noLink: true,
+    message: "הסרת האפליקציה",
+    detail: "מחק את תיקיית ההתקנה של WeatherV1 מהמחשב. נתונים מקומיים עלולים להישאר בתיקיית הנתונים של האפליקציה.",
+  });
+  return { ok: true };
+});
 
 async function restartChildWithCurrentSettings() {
   const env = cfg.buildChildEnv({

@@ -174,6 +174,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [saving, setSaving] = useState(false);
   const [syncingR2, setSyncingR2] = useState(false);
   const [exportR2JobsLoading, setExportR2JobsLoading] = useState(false);
+  const [uninstallBusy, setUninstallBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const loadHealth = useCallback(async () => {
@@ -253,6 +254,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setSaving(false);
     }
   }, [loadDesktopStatus, loadHealth]);
+
+  const beginUninstall = useCallback(async () => {
+    if (!desktop) return;
+    setUninstallBusy(true);
+    setDesktopError(null);
+    try {
+      const r = await desktop.beginUninstall();
+      if (!r.ok && r.reason && r.reason !== "בוטל") {
+        setDesktopError(r.reason);
+      }
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setUninstallBusy(false);
+    }
+  }, []);
 
   const saveDesktopSettings = useCallback(async () => {
     if (!desktop) return;
@@ -798,6 +815,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   חסרים בתיקייה: {desktopStatus.workspace.missing.join(", ")}
                 </p>
               )}
+            </section>
+          )}
+
+          {isDesktop && appInfo?.packaged && (
+            <section className="settings-section">
+              <div className="settings-section-header">
+                <h3>הסרת אפליקציה</h3>
+              </div>
+              <p className="settings-hint">
+                ב-Windows יופעל מסיר ההתקנה של המערכת. ב-macOS ייפתח Finder ליד WeatherV1.app — סגור את האפליקציה
+                וגרור את היישום לסל המחזור.
+              </p>
+              <div className="settings-actions-row">
+                <button
+                  type="button"
+                  className="btn btn--danger"
+                  onClick={() => void beginUninstall()}
+                  disabled={saving || desktopLoading || uninstallBusy}
+                >
+                  {uninstallBusy ? "מעבד…" : "הסר את WeatherV1"}
+                </button>
+              </div>
             </section>
           )}
 

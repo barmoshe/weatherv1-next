@@ -51,6 +51,11 @@ export interface DesktopSettingsUpdate {
   r2AppPassword?: string;
 }
 
+export interface DesktopBeginUninstallResult {
+  ok: boolean;
+  reason?: string;
+}
+
 export interface DesktopBridge {
   pickWorkspace(): Promise<DesktopWorkspacePick | null>;
   pickAudioFile(): Promise<DesktopFilePick | null>;
@@ -59,4 +64,5 @@ export interface DesktopBridge {
   getAppInfo(): Promise<DesktopAppInfo>;
   getUpdateState(): Promise<DesktopUpdateState>;
   saveSettings(update: DesktopSettingsUpdate): Promise<{ success: true }>;
+  beginUninstall(): Promise<DesktopBeginUninstallResult>;
 }

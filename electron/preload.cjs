@@ -19,6 +19,7 @@ const bridge = {
   getAppInfo: () => ipcRenderer.invoke("desktop:getAppInfo"),
   getUpdateState: () => ipcRenderer.invoke("desktop:getUpdateState"),
   saveSettings: (update) => ipcRenderer.invoke("desktop:saveSettings", update),
+  beginUninstall: () => ipcRenderer.invoke("desktop:beginUninstall"),
 };
 
 contextBridge.exposeInMainWorld("desktop", bridge);
