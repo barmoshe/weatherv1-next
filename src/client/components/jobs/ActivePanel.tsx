@@ -7,10 +7,9 @@ interface ActivePanelProps {
   jobs: HistoryEntry[];
   onRestore?: (entry: HistoryEntry) => void;
   onRemove?: (jobId: string) => void;
-  onExportJobsJson?: () => void;
 }
 
-export function ActivePanel({ hidden, jobs, onRestore, onRemove, onExportJobsJson }: ActivePanelProps) {
+export function ActivePanel({ hidden, jobs, onRestore, onRemove }: ActivePanelProps) {
   const active = jobs.filter((j) => ACTIVE_JOB_STATUSES.has(j.status));
   return (
     <section
@@ -36,18 +35,6 @@ export function ActivePanel({ hidden, jobs, onRestore, onRemove, onExportJobsJso
           ))
         )}
       </ul>
-      {onExportJobsJson ? (
-        <div className="tab-panel-footer">
-          <button
-            id="export-jobs-json-active"
-            className="btn btn--secondary btn--sm"
-            type="button"
-            onClick={onExportJobsJson}
-          >
-            Export JSON
-          </button>
-        </div>
-      ) : null}
     </section>
   );
 }

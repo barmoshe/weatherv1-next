@@ -111,6 +111,27 @@ describe("planScenes", () => {
     expect(out[0].start_sec).toBe(0.0);
   });
 
+  it("coerces homogeneous multi-region list scenes to heterogeneous", async () => {
+    const mockCompleteJson = await getMockCompleteJson();
+    const whisper = segs(4, 3.0);
+    const rawScenes = [
+      {
+        start_sec: 0.0,
+        end_sec: 12.0,
+        title_he: "multi",
+        kind: "list",
+        heterogeneous: false,
+        narration: "מעונן וטפטוף בצפון ובמרכז.",
+      },
+    ];
+    mockCompleteJson.mockResolvedValueOnce({ scenes: rawScenes });
+
+    const out = await planScenes("transcript", whisper, 12.0);
+    expect(out).toHaveLength(1);
+    expect(out[0].kind).toBe("list");
+    expect(out[0].heterogeneous).toBe(true);
+  });
+
   it("preserves heterogeneous flag through post-processing", async () => {
     const mockCompleteJson = await getMockCompleteJson();
     const whisper = segs(4, 3.0);

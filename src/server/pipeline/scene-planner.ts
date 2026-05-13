@@ -30,11 +30,13 @@ CRITICAL HEURISTICS — these are the failure modes to fix:
 
 1. **Multi-region narration** — when one Whisper segment carries ≥2 distinct entries in its \`regions\` annotation (e.g. \`["gaza", "northern-border"]\`, or "במרכז שמש, בצפון עננים"), prefer SPLIT at the closest Whisper segment boundary even if the cut bleeds ≤2s of one region's tail into the neighbor's narration. A ≤2s thematic bleed is acceptable; a 16s mashed multi-region scene is not. The segment-level \`multi_region: true\` flag is your primary signal.
 
+   **Concurrent regions + weather** — if the same stretch of audio ties **place names** (צפון / מרכז / דרום / חוף) to **different simultaneous conditions** (מעונן, טפטוף, שמש, חם), do NOT label it a homogeneous \`list\` of generic facts; prefer split scenes or \`kind: "list"\` with \`heterogeneous: true\` so the downstream picker can assign one visual per region+weather.
+
 2. **Time-of-day shifts inside one Whisper segment** ("היום חם, בערב גשם") with NO multi-region split available → keep one scene + \`kind: "list"\`.
 
 3. **A coherent visual idea spanning multiple Whisper segments** ("קור עם שלג בחרמון" + "ברוחות עזות") → MERGE into ONE scene with \`kind: "prose"\`.
 
-4. **\`kind: "list"\` is HOMOGENEOUS only** — ≥3 distinct fact-units of the SAME KIND (city-by-city temperature roll, day-of-week recap, percentage breakdown). Multi-region narration enumerating ≥2 different regions is NOT a \`list\`; it is \`prose\` if you can split it, or — if unsplittable — \`kind: "list"\` with \`heterogeneous: true\` so the picker knows to choose one shot per region. Hebrew connectives "ו" / "," alone do NOT make a list.
+4. **\`kind: "list"\` is HOMOGENEOUS only** — ≥3 distinct fact-units of the SAME KIND (city-by-city temperature roll, day-of-week recap, percentage breakdown). Multi-region narration enumerating ≥2 different regions is NOT a \`list\`; it is \`prose\` if you can split it, or — if unsplittable — \`kind: "list"\` with \`heterogeneous: true\` so the picker knows to choose one shot per region. Hebrew connectives "ו" / "," alone do NOT make a list. **Concrete smell:** "בצפון ובמרכז" (or similar) plus weather wording (מעונן / טפטוף / גשם) → MUST use \`heterogeneous: true\`, never homogeneous \`list\`.
 
 5. **Brief transitions** ("לסיכום", "ועכשיו", "אז") under 2s → MERGE into the neighbor scene (don't make 1-second standalone scenes).
 
@@ -171,6 +173,16 @@ function mergeShort(scenes: Scene[]): Scene[] {
   return out;
 }
 
+/** Homogeneous `list` + ≥2 macro-regions triggers ONE-ambient picks that ignore facts; coerce to heterogeneous. */
+function coerceHeterogeneousForMultiRegionLists(scenes: Scene[]): Scene[] {
+  return scenes.map((s) => {
+    if (s.kind !== "list" || s.heterogeneous) return s;
+    const slugs = new Set(detectRegions(s.narration ?? "").map((h) => h.slug));
+    if (slugs.size >= 2) return { ...s, heterogeneous: true };
+    return s;
+  });
+}
+
 function validateScenes(
   rawScenes: unknown[],
   whisperSegs: WhisperSegment[],
@@ -254,7 +266,7 @@ function validateScenes(
     }
   }
 
-  return merged;
+  return coerceHeterogeneousForMultiRegionLists(merged);
 }
 
 // ---------------------------------------------------------------------------

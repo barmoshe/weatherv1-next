@@ -8,6 +8,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { getRuntimePaths } from "@/server/runtime/paths";
+import { putR2Text, r2Configured, tenantKey } from "@/server/sync/r2/client";
+import { planBundlePath } from "./plan-bundle";
+
+/** Drop old drafts that never got a plan bundle (phantom seeds / abandoned). */
+const DRAFT_WITHOUT_PLAN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 export type JobStatus = "draft" | "queued" | "processing" | "completed" | "failed";
 
@@ -40,6 +45,11 @@ function save(): void {
   const data = JSON.stringify(Object.fromEntries(store), null, 2);
   fs.writeFileSync(tmp, data, "utf8");
   fs.renameSync(tmp, jobsPath);
+
+  if (r2Configured()) {
+    const key = tenantKey("jobs/jobs.json");
+    void putR2Text(key, data).catch((e) => console.warn("[jobs] R2 mirror failed:", e));
+  }
 }
 
 function load(): void {
@@ -100,6 +110,23 @@ export function upsertJob(record: JobRecord): void {
   save();
 }
 
+function sweepStaleDraftsWithoutPlan(): boolean {
+  let changed = false;
+  const toRemove: string[] = [];
+  for (const job of store.values()) {
+    if (job.status !== "draft") continue;
+    if (fs.existsSync(planBundlePath(job.job_id))) continue;
+    const ts = job.created_at ? Date.parse(job.created_at) : NaN;
+    if (!Number.isFinite(ts)) continue;
+    if (Date.now() - ts < DRAFT_WITHOUT_PLAN_MAX_AGE_MS) continue;
+    toRemove.push(job.job_id);
+  }
+  for (const id of toRemove) {
+    if (store.delete(id)) changed = true;
+  }
+  return changed;
+}
+
 /** On boot: flip any lingering "processing" jobs to "failed" (crash recovery). */
 export function crashRecoverySweep(): void {
   load();
@@ -111,5 +138,6 @@ export function crashRecoverySweep(): void {
       changed = true;
     }
   }
+  if (sweepStaleDraftsWithoutPlan()) changed = true;
   if (changed) save();
 }

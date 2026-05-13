@@ -61,18 +61,6 @@ describe("lost jobs", () => {
     expect(onRemove).toHaveBeenCalledWith("job-lost");
   });
 
-  it("invokes export callback from Export JSON on active and history panels", () => {
-    const onExport = vi.fn();
-    const { unmount } = render(<ActivePanel jobs={[]} onExportJobsJson={onExport} />);
-    fireEvent.click(screen.getByRole("button", { name: "Export JSON" }));
-    expect(onExport).toHaveBeenCalledTimes(1);
-    unmount();
-
-    render(<HistoryPanel jobs={[lostJob]} onExportJobsJson={onExport} />);
-    fireEvent.click(screen.getByRole("button", { name: "Export JSON" }));
-    expect(onExport).toHaveBeenCalledTimes(2);
-  });
-
   it("imports persisted server jobs while preserving richer local metadata", () => {
     const merged = mergeHistoryEntries(
       [

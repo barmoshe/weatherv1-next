@@ -153,6 +153,16 @@
         }
         .settings-btn:active { transform: translateY(0); }
         .settings-btn:focus-visible { outline: 3px solid var(--v1-paper); outline-offset: 2px; }
+        .settings-btn:disabled {
+            opacity: 0.48;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .settings-btn:disabled:hover {
+            background: transparent;
+            color: var(--v1-ink);
+            transform: none;
+        }
         .settings-btn .settings-glyph,
         .settings-btn .cta-glyph {
             display: block;
@@ -378,8 +388,7 @@
         .storage-gate__step {
             display: inline-block;
             font-size: 0.72rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.02em;
             color: var(--v1-ink-muted);
             font-weight: 700;
         }
@@ -401,6 +410,7 @@
             padding: 0.1rem 0.35rem;
             border-radius: var(--radius-sm);
             font-size: 0.85em;
+            direction: ltr;
         }
         .storage-gate__form {
             display: flex;
@@ -1059,8 +1069,15 @@
             border-radius: var(--radius-md);
             max-width: 480px;
             width: 100%;
+            max-height: calc(100vh - 2rem);
             box-shadow: 0 20px 40px rgb(0 0 0 / .25);
             overflow: hidden;
+        }
+        .modal-dialog > form {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            min-height: 0;
         }
         .modal-header {
             background: var(--v1-coral);
@@ -1084,7 +1101,7 @@
         }
         .modal-close:hover { background: rgb(0 0 0 / .1); }
         .modal-close:focus-visible { outline: 2px solid var(--v1-ink); outline-offset: 1px; }
-        .modal-body { padding: 1.1rem; color: var(--v1-ink); font-size: 0.95rem; line-height: 1.55; max-height: 70vh; overflow-y: auto; }
+        .modal-body { flex: 1; min-height: 0; padding: 1.1rem; color: var(--v1-ink); font-size: 0.95rem; line-height: 1.55; overflow-y: auto; }
         .modal-body code {
             background: var(--v1-cream);
             padding: 0.1rem 0.4rem;
@@ -1093,8 +1110,101 @@
             font-size: 0.88rem;
         }
         .modal-dialog { max-width: 560px; }
-        .modal-dialog--settings { max-width: 680px; }
-        .settings-section { margin-block-end: 1.5rem; }
+        .modal-dialog--settings {
+            display: flex;
+            flex-direction: column;
+            max-width: 760px;
+        }
+        .settings-overview {
+            display: grid;
+            grid-template-columns: minmax(14rem, 0.85fr) minmax(0, 1.3fr);
+            gap: 1rem;
+            align-items: stretch;
+            padding: 1rem;
+            margin-block-end: 1rem;
+            border: 1.5px solid rgb(0 0 0 / .12);
+            border-radius: var(--radius-md);
+            background:
+                radial-gradient(circle at 100% 0%, var(--v1-coral-soft), transparent 42%),
+                var(--v1-cream);
+            text-align: start;
+        }
+        .settings-eyebrow {
+            margin: 0 0 0.25rem;
+            color: var(--v1-red);
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            direction: ltr;
+            text-align: start;
+        }
+        .settings-intro {
+            margin: 0;
+            color: var(--v1-ink);
+            font-size: 0.96rem;
+            font-weight: 700;
+            line-height: 1.55;
+            text-wrap: pretty;
+        }
+        .settings-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+        .settings-stat-card {
+            min-width: 0;
+            padding: 0.7rem 0.75rem;
+            border: 1px solid rgb(0 0 0 / .1);
+            border-radius: var(--radius-sm);
+            background: rgb(255 255 255 / .78);
+        }
+        .settings-stat-card-top {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: var(--v1-ink-muted);
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+        .settings-stat-card .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex: none;
+        }
+        .settings-stat-card .dot.is-healthy { background: var(--v1-success); }
+        .settings-stat-card .dot.is-missing { background: var(--v1-danger); }
+        .settings-stat-card strong {
+            display: block;
+            margin-block-start: 0.18rem;
+            overflow: hidden;
+            color: var(--v1-ink);
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .settings-stat-card small {
+            display: block;
+            margin-block-start: 0.18rem;
+            overflow: hidden;
+            color: var(--v1-ink-muted);
+            font-size: 0.74rem;
+            line-height: 1.3;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .settings-section {
+            margin-block-end: 1rem;
+            padding: 1rem;
+            border: 1px solid rgb(0 0 0 / .1);
+            border-radius: var(--radius-md);
+            background: var(--v1-paper);
+            box-shadow: 0 1px 2px rgb(0 0 0 / .04);
+            text-align: start;
+        }
         .settings-section:last-child { margin-block-end: 0; }
         .settings-section-header {
             display: flex; align-items: center; justify-content: space-between;
@@ -1114,8 +1224,26 @@
             cursor: pointer; padding: 0.15rem 0.3rem; border-radius: var(--radius-sm);
         }
         .settings-link:hover { background: var(--v1-coral-soft); }
+        .settings-link:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
         .settings-hint {
             margin: 0 0 0.6rem; font-size: 0.85rem; color: var(--v1-ink-muted); line-height: 1.5;
+            text-align: start;
+        }
+        .modal-dialog--settings .settings-ltr-seg {
+            display: inline-block;
+            direction: ltr;
+            unicode-bidi: isolate;
+        }
+        .modal-dialog--settings .settings-ltr-snippet {
+            display: inline-block;
+            max-width: 100%;
+            direction: ltr;
+            unicode-bidi: isolate;
+            text-align: left;
+            word-break: break-word;
         }
         .settings-section textarea {
             min-height: 180px;
@@ -1158,12 +1286,21 @@
             align-items: center;
             margin-block: 0.45rem;
         }
+        .settings-field-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+        .settings-field-grid .settings-field {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+        }
         .settings-field span {
             font-weight: 800;
             color: var(--v1-ink);
             font-size: 0.86rem;
         }
-        .settings-field input {
+        .settings-field input:not([type="radio"]):not([type="checkbox"]) {
             min-width: 0;
             width: 100%;
             border: 1px solid rgb(0 0 0 / .16);
@@ -1175,9 +1312,17 @@
             direction: ltr;
             text-align: left;
         }
-        .settings-field input:focus {
+        .settings-field input:not([type="radio"]):not([type="checkbox"]):focus {
             outline: 2px solid var(--v1-coral);
             outline-offset: 1px;
+        }
+        .settings-input-group {
+            display: flex;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+        .settings-input-group input {
+            flex: 1;
         }
         .settings-reloading {
             position: absolute;
@@ -1192,7 +1337,11 @@
             padding: 1rem;
         }
         fieldset.settings-field {
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.35rem;
+            margin-inline: 0;
             border: 1px solid rgb(0 0 0 / .12);
             border-radius: var(--radius-sm);
             padding: 0.55rem 0.8rem 0.7rem;
@@ -1205,16 +1354,32 @@
         }
         .settings-radio {
             display: flex;
-            align-items: center;
+            flex-direction: row;
+            align-items: flex-start;
             gap: 0.55rem;
             font-size: 0.92rem;
             padding-block: 0.18rem;
             cursor: pointer;
+            text-align: start;
         }
-        .settings-radio input { accent-color: var(--v1-coral); }
-        /* Reused as a generic action row inside settings cards (e.g. Drive). */
+        .settings-field .settings-radio-label {
+            font-weight: 600;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            min-width: 0;
+        }
+        .settings-radio input[type="radio"],
+        .settings-radio input[type="checkbox"] {
+            flex: none;
+            width: 1.05rem;
+            height: 1.05rem;
+            margin-block-start: 0.12rem;
+            accent-color: var(--v1-coral);
+        }
+        .settings-actions-row,
         .settings-model-row__actions {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.4rem;
             margin-top: 0.25rem;
         }
@@ -1258,6 +1423,53 @@
         .settings-password__toggle:focus-visible {
             outline: 2px solid var(--v1-coral);
             outline-offset: 1px;
+        }
+        .dot.is-muted { opacity: 0.4; }
+        .dot.is-warn { background: var(--v1-warning); }
+        .settings-stat-card .dot.is-warn,
+        .settings-status-row .dot.is-warn,
+        .catalog-card .dot.is-warn {
+            background: var(--v1-warning);
+        }
+        @media (max-width: 720px) {
+            .modal {
+                align-items: stretch;
+                padding: 0.65rem;
+            }
+            .modal-dialog--settings {
+                max-height: calc(100vh - 1.3rem);
+            }
+            .settings-overview,
+            .settings-stat-grid,
+            .settings-field-grid {
+                grid-template-columns: 1fr;
+            }
+            .settings-section {
+                padding: 0.85rem;
+            }
+            .settings-field {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+            .settings-status-row {
+                grid-template-columns: auto minmax(5.5rem, 0.8fr) minmax(0, 1.2fr);
+            }
+            .settings-input-group,
+            .settings-password {
+                flex-wrap: wrap;
+            }
+            .settings-input-group input,
+            .settings-password__input {
+                flex-basis: 100%;
+            }
+            .modal-footer {
+                position: sticky;
+                bottom: 0;
+                flex-wrap: wrap;
+            }
+            .modal-footer .btn {
+                flex: 1 1 10rem;
+            }
         }
 
         /* ── Login screen (R2 sign-in gate) ───────────────── */
@@ -1322,9 +1534,11 @@
         }
         .login-card__subtitle {
             margin: 0;
+            margin-inline: auto;
+            max-width: 40ch;
             color: var(--v1-ink-muted);
             font-size: 0.92rem;
-            line-height: 1.5;
+            line-height: 1.6;
         }
         .login-card__form {
             display: flex;
@@ -1341,8 +1555,7 @@
         .login-field__label {
             font-size: 0.78rem;
             font-weight: 800;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
+            letter-spacing: 0.02em;
             color: var(--v1-ink-muted);
         }
         .login-field__input {
@@ -1366,6 +1579,7 @@
         }
         .login-field__password {
             position: relative;
+            direction: ltr;
         }
         .login-field__password .login-field__input {
             padding-inline-end: 4.2rem;
@@ -1442,11 +1656,72 @@
         }
         .catalog-card .dot.is-healthy { background: var(--v1-success); }
         .catalog-card .dot.is-missing { background: var(--v1-danger); }
+        .catalog-card .dot.is-warn { background: var(--v1-warning); }
         .catalog-card .count { font-variant-numeric: tabular-nums; font-weight: 800; }
         .catalog-card .ver  { color: var(--v1-ink-muted); font-size: 0.82rem; font-family: ui-monospace, "SF Mono", monospace; }
+        .catalog-card.catalog-card--multiline {
+            align-items: flex-start;
+        }
+        .catalog-card__lines {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            min-width: 0;
+        }
+        .catalog-card__sub {
+            font-size: 0.82rem;
+            color: var(--v1-ink-muted);
+            line-height: 1.35;
+        }
         .catalog-missing-list {
             margin-block-start: 0.5rem; font-size: 0.82rem; color: var(--v1-ink-muted);
             font-family: ui-monospace, "SF Mono", monospace; word-break: break-all;
+        }
+        .catalog-missing-details {
+            margin-block-start: 0.55rem;
+            border: 1px solid rgb(0 0 0 / .1);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.65rem;
+            background: var(--v1-cream);
+            font-size: 0.84rem;
+            color: var(--v1-ink-muted);
+            direction: rtl;
+            text-align: start;
+        }
+        .catalog-missing-summary {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.35rem;
+            cursor: pointer;
+            list-style-position: outside;
+            line-height: 1.45;
+        }
+        .catalog-missing-summary::-webkit-details-marker {
+            color: var(--v1-ink-muted);
+        }
+        .catalog-missing-preview {
+            display: block;
+            direction: ltr;
+            unicode-bidi: isolate;
+            font-family: ui-monospace, "SF Mono", monospace;
+            font-size: 0.78rem;
+            color: var(--v1-ink);
+            text-align: left;
+        }
+        .catalog-missing-list-scroll {
+            margin-block-start: 0.45rem;
+            padding: 0.5rem 0.55rem;
+            max-height: 10rem;
+            overflow: auto;
+            font-family: ui-monospace, "SF Mono", monospace;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            word-break: break-all;
+            color: var(--v1-ink-muted);
+            background: rgb(255 255 255 / .72);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgb(0 0 0 / .08);
         }
         .modal-footer {
             padding: 0.85rem 1.1rem;

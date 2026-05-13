@@ -19,6 +19,7 @@ import type { ResolvedPick } from "@/shared/types";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { uploadRuntimeFile } from "@/server/sync/r2/service";
 import { prepareRenderMedia } from "./render-media";
+import { sortTimelineForRender } from "@/server/pipeline/validator";
 
 const queue: string[] = [];
 let draining = false;
@@ -61,6 +62,7 @@ async function runJob(jobId: string, audioFilename: string): Promise<void> {
     const { readPlanBundle } = await import("./plan-bundle");
     const bundle = readPlanBundle(jobId);
     const timeline = (bundle.timeline ?? []) as ResolvedPick[];
+    sortTimelineForRender(timeline);
 
     if (!timeline.length) {
       updateJob(jobId, { status: "failed", error: "No timeline in plan bundle" });

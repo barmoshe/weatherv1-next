@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export interface HistoryEntry {
   job_id: string;
@@ -57,33 +57,55 @@ export function mergeHistoryEntries(local: HistoryEntry[], persisted: HistoryEnt
 
 export function useLocalHistory() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const historyRef = useRef<HistoryEntry[]>(history);
+
+  const syncFromServer = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const res = await fetch("/api/jobs", { signal });
+      if (!res.ok) return;
+      const data = (await res.json()) as JobsResponse;
+      if (!data.success || !Array.isArray(data.jobs)) return;
+      setHistory((prev) => {
+        const next = mergeHistoryEntries(prev, data.jobs ?? []);
+        save(next);
+        return next;
+      });
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      // Local browser history is still usable if the server-side import fails.
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    const local = load();
-    setHistory(local);
+    historyRef.current = history;
+  }, [history]);
 
-    (async () => {
-      try {
-        const res = await fetch("/api/jobs");
-        if (!res.ok) return;
-        const data = (await res.json()) as JobsResponse;
-        if (!data.success || !Array.isArray(data.jobs)) return;
-        if (cancelled) return;
-        setHistory((prev) => {
-          const next = mergeHistoryEntries(prev, data.jobs ?? []);
-          save(next);
-          return next;
-        });
-      } catch {
-        // Local browser history is still usable if the server-side import fails.
-      }
-    })();
+  useEffect(() => {
+    const ac = new AbortController();
+    setHistory(load());
+    void syncFromServer(ac.signal);
+    return () => ac.abort();
+  }, [syncFromServer]);
 
-    return () => {
-      cancelled = true;
+  // Jobs list updates from many places (worker, APIs). Studio only polls `/api/status`
+  // for the current transcript job — keep dashboard rows (Active/History tabs) aligned.
+  useEffect(() => {
+    const hasActive = history.some((j) => ACTIVE_JOB_STATUSES.has(j.status));
+    if (!hasActive) return;
+    const id = window.setInterval(() => void syncFromServer(), 2000);
+    return () => window.clearInterval(id);
+  }, [history, syncFromServer]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      const h = historyRef.current;
+      if (!h.some((j) => ACTIVE_JOB_STATUSES.has(j.status))) return;
+      void syncFromServer();
     };
-  }, []);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [syncFromServer]);
 
   const addEntry = useCallback((entry: HistoryEntry) => {
     setHistory((prev) => {
@@ -101,17 +123,23 @@ export function useLocalHistory() {
     });
   }, []);
 
-  const removeEntry = useCallback((jobId: string) => {
-    setHistory((prev) => {
-      const next = prev.filter((e) => e.job_id !== jobId);
-      save(next);
-      return next;
-    });
-    void fetch(`/api/jobs/${jobId}`, { method: "DELETE" }).catch(() => {
-      // The local row is removed immediately; a failed server delete can be
-      // retried by refreshing and deleting the re-imported row.
-    });
-  }, []);
+  const removeEntry = useCallback(
+    (jobId: string) => {
+      setHistory((prev) => {
+        const next = prev.filter((e) => e.job_id !== jobId);
+        save(next);
+        return next;
+      });
+      void fetch(`/api/jobs/${jobId}`, { method: "DELETE" })
+        .then((res) => {
+          if (res.ok) return syncFromServer();
+        })
+        .catch(() => {
+          // Local row removed; optional follow-up poll will heal drift.
+        });
+    },
+    [syncFromServer],
+  );
 
-  return { history, addEntry, updateEntry, removeEntry };
+  return { history, addEntry, updateEntry, removeEntry, syncFromServer };
 }

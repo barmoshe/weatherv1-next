@@ -15,11 +15,8 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import {
-  type CompleteJsonArgs,
-  type LlmProvider,
-  LlmProviderError,
-} from "./types";
+import { usageFromAnthropicMessage } from "@/shared/usage";
+import type { CompleteJsonResult } from "@/shared/usage";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 8192;
@@ -43,7 +40,8 @@ export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProv
 
   return {
     id: "anthropic",
-    async completeJson<T>(args: CompleteJsonArgs<T>): Promise<T> {
+    model,
+    async completeJson<T>(args: CompleteJsonArgs<T>): Promise<CompleteJsonResult<T>> {
       const inputSchema = zodToJsonSchema(args.schema, {
         // Anthropic tool input_schema is a JSON Schema object — strip the
         // top-level $schema/definitions wrapper the library adds by default.
@@ -100,6 +98,12 @@ export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProv
         );
       }
 
+      const usage = usageFromAnthropicMessage(
+        response.usage as Record<string, unknown> | undefined,
+        "anthropic",
+        model,
+      );
+
       const parsed = args.schema.safeParse(toolUse.input);
       if (!parsed.success) {
         throw new LlmProviderError(
@@ -109,7 +113,7 @@ export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProv
           parsed.error,
         );
       }
-      return parsed.data;
+      return { data: parsed.data, usage };
     },
   };
 }

@@ -44,6 +44,8 @@ export interface MutablePick {
   reason?: string;
   /** Set before validateAndSwap; preserved for UI (LLM editorial copy). */
   picker_reason?: string;
+  /** Hebrew editorial copy generated when validator changes or fills a pick. */
+  fallback_reason?: string;
 }
 
 type SegmentEntry = {
@@ -233,6 +235,24 @@ function segmentVisualText(segment: SegmentEntry | null | undefined, video: Cata
   if (desc) parts.push(String(desc));
   parts.push(...entryTagWords(segment, video));
   return parts.filter(Boolean).join(" ");
+}
+
+function shortVisualLabel(segment: SegmentEntry | null | undefined, video: CatalogClip | null | undefined): string {
+  const desc = String(segment?.description ?? video?.description ?? "").trim();
+  if (desc) return desc.length > 80 ? `${desc.slice(0, 77)}...` : desc;
+  const words = entryTagWords(segment, video)
+    .map((w) => String(w).trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  return words.length ? words.join(", ") : "צילום שמתאים לאופי הסצינה";
+}
+
+function validatorEditorialReason(
+  segment: SegmentEntry | null | undefined,
+  video: CatalogClip | null | undefined,
+  action = "נבחר לאחר בדיקת התאמה אוטומטית",
+): string {
+  return `${action}: הקטע מציג ${shortVisualLabel(segment, video)}.`;
 }
 
 function entryTagWordsForPick(
@@ -425,9 +445,10 @@ function bestLegacyCandidate(
     excludedIds: Set<string>;
     excludedVideoIds?: Set<string>;
     allowClothing: boolean;
+    requireMinOverlap?: number;
   },
 ): [CatalogClip | null, number] {
-  const { targetText: tText, usedCounts, excludedIds, excludedVideoIds, allowClothing } = opts;
+  const { targetText: tText, usedCounts, excludedIds, excludedVideoIds, allowClothing, requireMinOverlap = 0 } = opts;
   const targetLower = (tText ?? "").toLowerCase();
   let best: CatalogClip | null = null;
   let bestOverlap = -1;
@@ -446,6 +467,7 @@ function bestLegacyCandidate(
     const overlap = targetLower
       ? words.reduce((sum, w) => (w && targetLower.includes(w.toLowerCase()) ? sum + 1 : sum), 0)
       : 0;
+    if (overlap < requireMinOverlap) continue;
     const better =
       overlap > bestOverlap || (overlap === bestOverlap && (bestUsed === null || used < bestUsed));
     if (better) {
@@ -477,7 +499,11 @@ function swapPickToSegment(
   clip.video_id = newClip.id;
   clip.video_start = segStart;
   clip.video_end = aLen > 0 ? Math.min(maxEnd, segStart + aLen) : maxEnd;
-  if (swapReason) clip.reason = swapReason;
+  if (swapReason) {
+    clip.reason = swapReason;
+    delete clip.picker_reason;
+    clip.fallback_reason = validatorEditorialReason(newSegment, newClip);
+  }
 }
 
 function applyLegacySwap(clip: MutablePick, best: CatalogClip, swapReason?: string): void {
@@ -485,7 +511,11 @@ function applyLegacySwap(clip: MutablePick, best: CatalogClip, swapReason?: stri
   clip.video_start = 0.0;
   clip.video_end = Math.min(safeFloat(best.duration_sec), audioLen(clip));
   delete clip.segment_id;
-  if (swapReason) clip.reason = swapReason;
+  if (swapReason) {
+    clip.reason = swapReason;
+    delete clip.picker_reason;
+    clip.fallback_reason = validatorEditorialReason(null, best);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -593,6 +623,7 @@ function enforceClothingRule(
         allowClothing: false,
         rejectClimateMismatch: true,
         requireMinDuration: aLen,
+        requireMinOverlap: candidates.length ? 1 : 0,
       });
     } else {
       const [legacyBest, legacyOverlap] = bestLegacyCandidate(catalog, {
@@ -600,6 +631,7 @@ function enforceClothingRule(
         usedCounts,
         excludedIds: new Set([clip.video_id ?? ""]),
         allowClothing: false,
+        requireMinOverlap: candidates.length ? 1 : 0,
       });
       if (legacyBest) {
         applyLegacySwap(clip, legacyBest, `${swapReasonPrefix} — הוחלף מ-${segId ?? clip.video_id} (חפיפת תגיות=${legacyOverlap})`);
@@ -763,6 +795,7 @@ function enforceAntiClipReuse(
         excludedVideoIds: new Set([swapVideoId]),
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
+        requireMinOverlap: candidates.length ? 1 : 0,
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -790,6 +823,7 @@ function enforceAntiClipReuse(
         excludedIds: new Set(key ? [key] : []),
         excludedVideoIds: new Set([swapVideoId]),
         allowClothing: beatIsClothing,
+        requireMinOverlap: candidates.length ? 1 : 0,
       });
       if (legacyBest) {
         applyLegacySwap(
@@ -860,6 +894,7 @@ function enforceAntiRepeat(
         excludedIds: new Set([key]),
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
+        requireMinOverlap: candidates.length ? 1 : 0,
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -875,6 +910,7 @@ function enforceAntiRepeat(
         usedCounts: counts,
         excludedIds: new Set([key]),
         allowClothing: beatIsClothing,
+        requireMinOverlap: 0,
       });
       if (legacyBest) {
         applyLegacySwap(clip, legacyBest, `validator: חזרה — הוחלף מ-${key} (חפיפת תגיות=${legacyOverlap})`);
@@ -920,6 +956,7 @@ function enforceAntiConsecutive(
         excludedIds: new Set([prev]),
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
+        requireMinOverlap: 1,
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -934,6 +971,7 @@ function enforceAntiConsecutive(
         usedCounts: counts,
         excludedIds: new Set([prev]),
         allowClothing: beatIsClothing,
+        requireMinOverlap: 0,
       });
       if (legacyBest) {
         applyLegacySwap(timeline[i], legacyBest, `validator: רצף — הוחלף מ-${prev} (חפיפת תגיות=${legacyOverlap})`);
@@ -999,6 +1037,7 @@ function enforceRecency(
         excludedIds: new Set([key]),
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
+        requireMinOverlap: 1,
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -1016,6 +1055,7 @@ function enforceRecency(
         usedCounts: counts,
         excludedIds: new Set([key]),
         allowClothing: beatIsClothing,
+        requireMinOverlap: 0,
       });
       if (legacyBest) {
         applyLegacySwap(clip, legacyBest, `validator: שימוש חוזר קרוב — הוחלף מ-${key} (סצנה ${prevScene}→${sidx}, חפיפת תגיות=${legacyOverlap})`);
@@ -1117,6 +1157,7 @@ function enforceCoverage(
         allowClothing: beatIsClothing,
         rejectClimateMismatch: rejectClimate,
         rejectCloudsIntent: rejectClouds,
+        requireMinOverlap: 1,
       });
     }
 
@@ -1138,6 +1179,7 @@ function enforceCoverage(
       video_start: newSegStart,
       video_end: Math.min(newSegEnd, newSegStart + residualLen),
       reason: `validator: מילוי כיסוי ל-${segId} (${residualLen.toFixed(1)}s, חפיפת תגיות=${residualOverlap})`,
+      fallback_reason: validatorEditorialReason(newSeg, newClip, "נבחר להשלמת משך הסצינה"),
     };
     inserts.push([i + 1, residualPick]);
     fixes.push({ issue: "coverage gap", original: segId, split_residual_to: newSegId, swap_reason: `split: original ${vLen.toFixed(1)}s + residual ${residualLen.toFixed(1)}s (overlap=${residualOverlap})`, fixed: true });
@@ -1330,6 +1372,8 @@ function fillSceneGaps(
       excludedIds: new Set(),
       allowClothing: sceneIsClothing,
       rejectClimateMismatch: sceneIsClothing && sceneHasClimate,
+      requireMinDuration: end - start,
+      requireMinOverlap: 1,
     });
 
     if (!best) {
@@ -1349,7 +1393,8 @@ function fillSceneGaps(
       audio_end: Math.round(end * 100) / 100,
       video_start: segStart,
       video_end: aLen > 0 ? Math.min(segEnd, segStart + aLen) : segEnd,
-      reason: `מילוי אוטומטי: סצנה ${sceneIdx}`,
+      reason: `validator: מילוי אוטומטי לסצנה ${sceneIdx}`,
+      fallback_reason: validatorEditorialReason(newSeg, newClip, "נבחר כמילוי אוטומטי לסצינה"),
     };
 
     let insertAt = timeline.length;
@@ -1367,6 +1412,31 @@ function fillSceneGaps(
 }
 
 // ---------------------------------------------------------------------------
+// Timeline order (concat / UI consistency)
+// ---------------------------------------------------------------------------
+
+/** Stable narrative order: matches ffmpeg concat and the Plan card's per-scene sort. */
+export function sortTimelineForRender(
+  timeline: Array<{
+    audio_start?: number;
+    audio_end?: number;
+    scene_idx?: number | null;
+  }>,
+): void {
+  timeline.sort((a, b) => {
+    const cmpStart = safeFloat(a.audio_start) - safeFloat(b.audio_start);
+    if (cmpStart !== 0) return cmpStart;
+    const cmpEnd = safeFloat(a.audio_end) - safeFloat(b.audio_end);
+    if (cmpEnd !== 0) return cmpEnd;
+    const ai = a.scene_idx;
+    const bi = b.scene_idx;
+    const an = ai == null ? Number.POSITIVE_INFINITY : Number(ai);
+    const bn = bi == null ? Number.POSITIVE_INFINITY : Number(bi);
+    return an - bn;
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -1377,6 +1447,7 @@ export function validateAndSwap(
     videoMap?: Record<string, CatalogClip>;
     segmentMap?: Record<string, SegmentMapEntry>;
     scenes?: SceneDict[];
+    allowSceneGapFill?: boolean;
   } = {},
 ): ValidatorBundle {
   const videoMap = opts.videoMap ?? {};
@@ -1398,9 +1469,26 @@ export function validateAndSwap(
 
   for (const w of resolvePicks(timeline, segmentMap)) warnings.push(w);
 
-  if (opts.scenes?.length) {
+  if (opts.scenes?.length && opts.allowSceneGapFill) {
     for (const fill of fillSceneGaps(timeline, opts.scenes, segmentMap, beatsByIdx)) {
       gapFilled.push(fill);
+      warnings.push({
+        issue: "automatic scene fill",
+        scene_idx: fill.scene_idx,
+        segment_id: fill.filled_with,
+        message: String(fill.fill_reason ?? ""),
+      });
+    }
+  } else if (opts.scenes?.length) {
+    const have = new Set(timeline.map((c) => c.scene_idx).filter((x) => x != null));
+    for (const scene of opts.scenes) {
+      if (!have.has(scene.idx)) {
+        warnings.push({
+          issue: "scene has no pick",
+          scene_idx: scene.idx,
+          message: "Scene gap fill disabled because the picker did not return usable coverage.",
+        });
+      }
     }
   }
 
@@ -1435,6 +1523,8 @@ export function validateAndSwap(
 
   const merges = mergeShortClips(timeline, beatsByIdx, videoMap, segmentMap, scenesByIdx);
   for (const m of merges) hardViolationsFixed.push({ ...m, issue: "clip too short", fixed: true });
+
+  sortTimelineForRender(timeline);
 
   for (const flag of flagThematicAdjacency(timeline, videoMap, segmentMap)) warnings.push(flag);
 
@@ -1473,7 +1563,12 @@ export function validateAndSwap(
     catalogHealth = { loaded: catalog.length, tagged, untagged_picks: untaggedPicks };
   }
 
-  const score = Math.max(0, 100 - 10 * hardViolationsKept.length - 3 * warnings.length);
+  const fixedGapCount = gapFilled.filter((g) => g.fixed).length;
+  const failedGapCount = gapFilled.filter((g) => !g.fixed).length;
+  const score = Math.max(
+    0,
+    100 - 10 * hardViolationsKept.length - 3 * warnings.length - 8 * fixedGapCount - 12 * failedGapCount,
+  );
   const out: ValidatorBundle = {
     score,
     hard_violations_fixed: hardViolationsFixed,

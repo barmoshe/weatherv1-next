@@ -24,7 +24,8 @@ The same product can run in two modes:
 1. [PROJECT_GOAL.md](PROJECT_GOAL.md) — product intent, success criteria, invariants, copy-ready `/goal` conditions.
 2. [README.md](../README.md) — overview, quick start, high-level repo map.
 3. [AGENTS.md](../AGENTS.md) — project guardrails, especially modern Next.js behavior.
-4. The doc for your task:
+4. [NOTEBOOKLM.md](NOTEBOOKLM.md) — pack the repo into Markdown for Google NotebookLM (`npm run notebooklm:export:chunks`).
+5. The doc for your task:
    - **R2 / Worker / Pulumi / catalog mirror:** [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md) and [infra/cloudflare/README.md](../infra/cloudflare/README.md)
    - **Desktop architecture:** [ELECTRON_DESKTOP_PLAN.md](ELECTRON_DESKTOP_PLAN.md)
    - **Desktop operational state:** [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md)

@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { downloadJsonFile } from "@/client/lib/download-json-file";
 import { desktop } from "@/client/lib/desktop";
 import type {
   DesktopAppInfo,
@@ -72,8 +73,73 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-function StatusDot({ ok }: { ok: boolean }) {
-  return <span className={`dot ${ok ? "is-healthy" : "is-missing"}`} />;
+type DotVariant = "ok" | "warn" | "danger";
+
+function StatusDot({ variant }: { variant: DotVariant }) {
+  const cls =
+    variant === "ok" ? "is-healthy" : variant === "warn" ? "is-warn" : "is-missing";
+  return <span className={`dot ${cls}`} />;
+}
+
+interface SettingsStatCardProps {
+  label: string;
+  value: ReactNode;
+  dotVariant: DotVariant;
+  hint?: string;
+}
+
+function SettingsStatCard({ label, value, dotVariant, hint }: SettingsStatCardProps) {
+  return (
+    <div className="settings-stat-card">
+      <div className="settings-stat-card-top">
+        <StatusDot variant={dotVariant} />
+        <span>{label}</span>
+      </div>
+      <strong>{value}</strong>
+      {hint && <small>{hint}</small>}
+    </div>
+  );
+}
+
+interface SecretFieldProps {
+  label: string;
+  value: string;
+  configured: boolean;
+  placeholder: string;
+  disabled: boolean;
+  onValueChange: (value: string) => void;
+  onClear: () => void;
+}
+
+function SecretField({
+  label,
+  value,
+  configured,
+  placeholder,
+  disabled,
+  onValueChange,
+  onClear,
+}: SecretFieldProps) {
+  return (
+    <label className="settings-field">
+      <span>{label}</span>
+      <div className="settings-input-group">
+        <input
+          type="password"
+          value={value}
+          onChange={(e) => onValueChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {configured && (
+          <button type="button" className="btn btn--ghost" onClick={onClear} disabled={disabled}>
+            נקה
+          </button>
+        )}
+      </div>
+    </label>
+  );
 }
 
 function shortPath(value: string | null | undefined): string {
@@ -107,6 +173,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [llmProvider, setLlmProvider] = useState<LlmProviderPreference>("auto");
   const [saving, setSaving] = useState(false);
   const [syncingR2, setSyncingR2] = useState(false);
+  const [exportR2JobsLoading, setExportR2JobsLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const loadHealth = useCallback(async () => {
@@ -295,27 +362,106 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [loadDesktopStatus, loadHealth]);
 
+  const exportJobsFromR2 = useCallback(async () => {
+    setExportR2JobsLoading(true);
+    setDesktopError(null);
+    try {
+      const res = await fetch("/api/jobs/export-r2");
+      let data: {
+        success?: boolean;
+        error?: string;
+        detail?: string;
+        jobs?: Record<string, unknown>;
+        objectKey?: string;
+        etag?: string;
+        updatedAt?: string;
+        exportedAt?: string;
+      };
+      try {
+        data = (await res.json()) as typeof data;
+      } catch {
+        throw new Error(`בעיית תשובה מהשרת · HTTP ${res.status}`);
+      }
+      if (!res.ok || !data.success || data.jobs === undefined) {
+        const msg = data.error ?? `HTTP ${res.status}`;
+        const detail = data.detail ? ` ${data.detail}` : "";
+        throw new Error(`${msg}${detail}`);
+      }
+      const now = new Date();
+      const stamp = now.toISOString().replace(/[:]/g, "-").slice(0, 19);
+      downloadJsonFile(`weatherv1-jobs-r2-${stamp}.json`, {
+        exportedAt: data.exportedAt ?? now.toISOString(),
+        source: "weatherv1-r2-jobs-snapshot",
+        objectKey: data.objectKey,
+        etag: data.etag,
+        updatedAt: data.updatedAt,
+        jobs: data.jobs,
+      });
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExportR2JobsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
     void loadHealth();
     void loadDesktopStatus();
   }, [isOpen, loadDesktopStatus, loadHealth]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
-  const loaded = health?.loaded_count ?? 0;
   const claimed = health?.claimed_count ?? 0;
   const missing = health?.missing_ids ?? [];
   const ver = health?.version ? health.version.slice(0, 8) : "?";
-  const healthy = missing.length === 0;
+  const onDiskCount = Math.max(0, claimed - missing.length);
   const isDesktop = Boolean(desktop);
   const workspaceReady = desktopStatus?.workspace.ready ?? false;
   const ffmpegReady = appInfo?.ffmpeg.ok ?? false;
+  const catalogKnown = Boolean(health);
+  const configuredKeysCount = [
+    desktopStatus?.keys.anthropic_configured,
+    desktopStatus?.keys.openai_configured,
+    desktopStatus?.keys.gemini_configured,
+  ].filter(Boolean).length;
+  const r2Ready = Boolean(desktopStatus?.r2?.ready);
+  const r2EnabledFlag = Boolean(desktopStatus?.r2?.enabled);
+  const r2ErrorCount = desktopStatus?.r2?.counts.error ?? 0;
+  const catalogHealthBlocked =
+    Boolean(healthError) || (r2EnabledFlag && r2ErrorCount > 0);
+  let catalogDotVariant: DotVariant = "ok";
+  if (catalogHealthBlocked) {
+    catalogDotVariant = "danger";
+  } else if (missing.length === 0) {
+    catalogDotVariant = "ok";
+  } else if (r2Ready) {
+    catalogDotVariant = "warn";
+  } else {
+    catalogDotVariant = "danger";
+  }
+  const catalogStatHint = (() => {
+    if (healthError) return "שגיאה בטעינה";
+    if (r2EnabledFlag && r2ErrorCount > 0) return `${r2ErrorCount} שגיאות סנכרון בענן`;
+    if (!catalogKnown) return "בודק קטלוג";
+    if (missing.length === 0) return "הקטלוג מוכן לעבודה";
+    if (r2Ready) return `מטמון מקומי חלקי — הרנדר מוריד מקטעים מ-R2 לפי הצורך`;
+    return `${missing.length} קבצי מקור חסרים במטמון המקומי`;
+  })();
 
   return (
-    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby="settings-description">
       <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal-dialog modal-dialog--settings">
+      <div className="modal-dialog modal-dialog--settings" aria-busy={saving || desktopLoading || exportR2JobsLoading}>
         {saving && (
           <div className="settings-reloading" role="status">
             שומר ומרענן את השרת המקומי…
@@ -332,7 +478,62 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             ×
           </button>
         </header>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (isDesktop && !saving && !desktopLoading) void saveDesktopSettings();
+          }}
+        >
         <div className="modal-body">
+          <section className="settings-overview" aria-label="תקציר הגדרות">
+            <div>
+              <p className="settings-eyebrow">WeatherV1 Control Center</p>
+              <p className="settings-intro" id="settings-description">
+                בדיקה מהירה של מצב הקטלוג, הדסקטופ, מפתחות ה-AI והסנכרון לענן לפני שינוי הגדרות.
+              </p>
+            </div>
+            <div className="settings-stat-grid">
+              <SettingsStatCard
+                label="קטלוג"
+                value={
+                  healthLoading ? (
+                    "טוען…"
+                  ) : catalogKnown ? (
+                    <>
+                      <bdi>{claimed}</bdi> קליפים בקטלוג
+                    </>
+                  ) : (
+                    "ממתין"
+                  )
+                }
+                dotVariant={
+                  healthLoading || !catalogKnown
+                    ? "warn"
+                    : catalogDotVariant
+                }
+                hint={healthLoading || !catalogKnown ? "בודק קטלוג" : catalogStatHint}
+              />
+              <SettingsStatCard
+                label="דסקטופ"
+                value={desktopLoading ? "טוען…" : isDesktop ? (workspaceReady ? "מוכן" : "דורש בדיקה") : "לא פעיל"}
+                dotVariant={isDesktop && workspaceReady ? "ok" : "danger"}
+                hint={isDesktop ? shortPath(desktopStatus?.workspace.workspaceDir) : "פתח דרך Electron"}
+              />
+              <SettingsStatCard
+                label="AI"
+                value={<span dir="ltr">{configuredKeysCount}/3</span>}
+                dotVariant={configuredKeysCount > 0 ? "ok" : "danger"}
+                hint={configuredKeysCount > 0 ? "מפתח אחד לפחות מוגדר" : "צריך מפתח לתכנון"}
+              />
+              <SettingsStatCard
+                label="R2"
+                value={r2Ready ? "מחובר" : desktopStatus?.r2?.enabled ? "חסר פרטים" : "כבוי"}
+                dotVariant={r2Ready ? "ok" : "danger"}
+                hint={desktopStatus?.r2?.lastSyncAt ? `סונכרן ${desktopStatus.r2.lastSyncAt}` : "טרם סונכרן"}
+              />
+            </div>
+          </section>
+
           <section className="settings-section">
             <div className="settings-section-header">
               <h3>קטלוג קליפים</h3>
@@ -346,34 +547,70 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </button>
             </div>
             <p className="settings-hint">
-              מצב הקטלוג בשרת — כמה כניסות מתוך הרשימה הוגדרו עם קובץ וידאו אמיתי על הדיסק.
+              <strong>שורות בקטלוג</strong> — כמה קליפים מוגדרים ב־{' '}
+              <span dir="ltr" lang="en" className="settings-ltr-seg">
+                catalog
+              </span>
+              {' '}
+              (מטא-דאטה ומקטעים).{' '}
+              <strong>קבצי מקור במטמון</strong> — האם קובץ הווידאו המלא קיים בתיקיית הווידאו של סביבת העבודה.
+            </p>
+            <p className="settings-hint">
+              כש־<span dir="ltr" className="settings-ltr-seg">R2</span> מחובר, הרנדר יכול למשוך את קובץ המקור מהענן לתיקייה זמנית לצורך החיתוך — מטמון מקומי מלא אינו תנאי לרנדר.
             </p>
             <div id="catalog-status">
               {healthLoading && (
                 <div className="catalog-card">
-                  <span className="dot is-healthy" style={{ opacity: 0.4 }} />
-                  <span>טוען...</span>
+                  <span className="dot is-healthy is-muted" />
+                  <span>טוען…</span>
                 </div>
               )}
               {!healthLoading && healthError && (
                 <div className="catalog-card">
                   <span className="dot is-missing" />
-                  <span>שגיאה בטעינת מצב הקטלוג: {healthError}</span>
+                  <span>
+                    שגיאה בטעינת מצב הקטלוג:{' '}
+                    <span dir="ltr" lang="en" className="settings-ltr-snippet">
+                      {healthError}
+                    </span>
+                  </span>
                 </div>
               )}
               {!healthLoading && !healthError && health && (
                 <>
-                  <div className="catalog-card">
-                    <StatusDot ok={healthy} />
-                    <span>
-                      <span className="count">{loaded}/{claimed}</span> קליפים נטענו
-                    </span>
-                    <span className="ver">· {ver}</span>
+                  <div className="catalog-card catalog-card--multiline">
+                    <StatusDot variant={catalogDotVariant} />
+                    <div className="catalog-card__lines" dir="rtl">
+                      <div className="catalog-card__line">
+                        <span className="count">
+                          <bdi>{claimed}</bdi>
+                        </span>{' '}
+                        קליפים בקטלוג
+                        <span className="ver" dir="ltr" lang="en">
+                          {' '}
+                          · {ver}
+                        </span>
+                      </div>
+                      <div className="catalog-card__sub">
+                        <bdi>{onDiskCount}</bdi> מתוך <bdi>{claimed}</bdi> קבצי מקור במטמון המקומי
+                      </div>
+                    </div>
                   </div>
                   {missing.length > 0 && (
-                    <div className="catalog-missing-list">
-                      <strong>חסרים בדיסק ({missing.length}):</strong> {missing.join(", ")}
-                    </div>
+                    <details className="catalog-missing-details">
+                      <summary className="catalog-missing-summary">
+                        <span className="catalog-missing-summary__he">
+                          חסרים במטמון (<bdi>{missing.length}</bdi>) — לחץ להרחבה
+                        </span>
+                        <span dir="ltr" lang="en" className="catalog-missing-preview">
+                          {missing.slice(0, 6).join(", ")}
+                          {missing.length > 6 ? "…" : ""}
+                        </span>
+                      </summary>
+                      <div className="catalog-missing-list-scroll" dir="ltr" lang="en">
+                        {missing.join(", ")}
+                      </div>
+                    </details>
                   )}
                 </>
               )}
@@ -404,54 +641,50 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {isDesktop && desktopError && (
               <div className="catalog-card">
                 <span className="dot is-missing" />
-                <span>שגיאה בטעינת מצב הדסקטופ: {desktopError}</span>
+                <span>
+                  שגיאה בטעינת מצב הדסקטופ:{' '}
+                  <span dir="ltr" lang="en" className="settings-ltr-snippet">
+                    {desktopError}
+                  </span>
+                </span>
               </div>
             )}
             {isDesktop && !desktopError && (
               <div className="settings-status-grid">
                 <div className="settings-status-row">
-                  <StatusDot ok={workspaceReady} />
+                  <StatusDot variant={workspaceReady ? "ok" : "danger"} />
                   <span>סביבת עבודה</span>
                   <code title={desktopStatus?.workspace.workspaceDir}>{shortPath(desktopStatus?.workspace.workspaceDir)}</code>
                 </div>
                 <div className="settings-status-row">
-                  <StatusDot ok={ffmpegReady} />
+                  <StatusDot variant={ffmpegReady ? "ok" : "danger"} />
                   <span>FFmpeg</span>
                   <code title={appInfo?.ffmpeg.ffmpegPath ?? undefined}>{shortPath(appInfo?.ffmpeg.ffmpegPath)}</code>
                 </div>
                 <div className="settings-status-row">
-                  <StatusDot ok={Boolean(desktopStatus?.keys.anthropic_configured)} />
+                  <StatusDot variant={Boolean(desktopStatus?.keys.anthropic_configured) ? "ok" : "danger"} />
                   <span>Anthropic</span>
                   <span>{desktopStatus?.keys.anthropic_configured ? "מוגדר" : "לא מוגדר"}</span>
                 </div>
                 <div className="settings-status-row">
-                  <StatusDot ok={Boolean(desktopStatus?.keys.openai_configured)} />
+                  <StatusDot variant={Boolean(desktopStatus?.keys.openai_configured) ? "ok" : "danger"} />
                   <span>OpenAI</span>
                   <span>{desktopStatus?.keys.openai_configured ? "מוגדר" : "לא מוגדר"}</span>
                 </div>
                 <div className="settings-status-row">
-                  <StatusDot ok={Boolean(desktopStatus?.keys.gemini_configured)} />
+                  <StatusDot variant={Boolean(desktopStatus?.keys.gemini_configured) ? "ok" : "danger"} />
                   <span>Gemini</span>
                   <span>{desktopStatus?.keys.gemini_configured ? "מוגדר" : "לא מוגדר"}</span>
                 </div>
                 <div className="settings-status-row">
                   <span className="dot is-healthy" />
                   <span>גרסה</span>
-                  <span>{appInfo ? `${appInfo.appVersion} · Electron ${appInfo.electronVersion}` : "טוען..."}</span>
+                  <span>{appInfo ? `${appInfo.appVersion} · Electron ${appInfo.electronVersion}` : "טוען…"}</span>
                 </div>
                 <div className="settings-status-row">
                   <span className="dot is-healthy" />
                   <span>עדכונים</span>
-                  <span>{updateState ? updateState.status : "טוען..."}</span>
-                </div>
-                <div className="settings-status-row">
-                  <StatusDot ok={Boolean(desktopStatus?.r2?.ready)} />
-                  <span>Cloudflare R2</span>
-                  <span>
-                    {desktopStatus?.r2?.ready
-                      ? `מחובר · ${desktopStatus.r2.lastSyncAt ? "סונכרן" : "ממתין לסנכרון"}`
-                      : desktopStatus?.r2?.enabled ? "חסר קונפיגורציה" : "לא פעיל"}
-                  </span>
+                  <span>{updateState ? updateState.status : "טוען…"}</span>
                 </div>
               </div>
             )}
@@ -466,72 +699,42 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 הזן לפחות מפתח אחד מבין Anthropic או OpenAI לתכנון. תמלול האודיו רץ דרך OpenAI Whisper
                 בענן, ולכן צריך OPENAI_API_KEY כדי לתמלל.
               </p>
-              <label className="settings-field">
-                <span>ANTHROPIC_API_KEY</span>
-                <div style={{ display: "flex", gap: "8px", flex: 1 }}>
-                  <input
-                    type="password"
-                    style={{ flex: 1 }}
-                    value={anthropicKey}
-                    onChange={(e) => {
-                      setAnthropicKey(e.target.value);
-                      setSaved(false);
-                    }}
-                    placeholder={
-                      desktopStatus?.keys.anthropic_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"
-                    }
-                  />
-                  {desktopStatus?.keys.anthropic_configured && (
-                    <button type="button" className="btn btn--ghost" onClick={() => clearKey("anthropic")} disabled={saving}>
-                      נקה
-                    </button>
-                  )}
-                </div>
-              </label>
-              <label className="settings-field">
-                <span>OPENAI_API_KEY</span>
-                <div style={{ display: "flex", gap: "8px", flex: 1 }}>
-                  <input
-                    type="password"
-                    style={{ flex: 1 }}
-                    value={openaiKey}
-                    onChange={(e) => {
-                      setOpenaiKey(e.target.value);
-                      setSaved(false);
-                    }}
-                    placeholder={
-                      desktopStatus?.keys.openai_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"
-                    }
-                  />
-                  {desktopStatus?.keys.openai_configured && (
-                    <button type="button" className="btn btn--ghost" onClick={() => clearKey("openai")} disabled={saving}>
-                      נקה
-                    </button>
-                  )}
-                </div>
-              </label>
-              <label className="settings-field">
-                <span>GEMINI_API_KEY</span>
-                <div style={{ display: "flex", gap: "8px", flex: 1 }}>
-                  <input
-                    type="password"
-                    style={{ flex: 1 }}
-                    value={geminiKey}
-                    onChange={(e) => {
-                      setGeminiKey(e.target.value);
-                      setSaved(false);
-                    }}
-                    placeholder={
-                      desktopStatus?.keys.gemini_configured ? "מוגדר — הקלד כדי להחליף" : "אופציונלי"
-                    }
-                  />
-                  {desktopStatus?.keys.gemini_configured && (
-                    <button type="button" className="btn btn--ghost" onClick={() => clearKey("gemini")} disabled={saving}>
-                      נקה
-                    </button>
-                  )}
-                </div>
-              </label>
+              <SecretField
+                label="ANTHROPIC_API_KEY"
+                value={anthropicKey}
+                configured={Boolean(desktopStatus?.keys.anthropic_configured)}
+                placeholder={desktopStatus?.keys.anthropic_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"}
+                disabled={saving}
+                onValueChange={(value) => {
+                  setAnthropicKey(value);
+                  setSaved(false);
+                }}
+                onClear={() => void clearKey("anthropic")}
+              />
+              <SecretField
+                label="OPENAI_API_KEY"
+                value={openaiKey}
+                configured={Boolean(desktopStatus?.keys.openai_configured)}
+                placeholder={desktopStatus?.keys.openai_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"}
+                disabled={saving}
+                onValueChange={(value) => {
+                  setOpenaiKey(value);
+                  setSaved(false);
+                }}
+                onClear={() => void clearKey("openai")}
+              />
+              <SecretField
+                label="GEMINI_API_KEY"
+                value={geminiKey}
+                configured={Boolean(desktopStatus?.keys.gemini_configured)}
+                placeholder={desktopStatus?.keys.gemini_configured ? "מוגדר — הקלד כדי להחליף" : "אופציונלי"}
+                disabled={saving}
+                onValueChange={(value) => {
+                  setGeminiKey(value);
+                  setSaved(false);
+                }}
+                onClear={() => void clearKey("gemini")}
+              />
             </section>
           )}
 
@@ -569,7 +772,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 />
               </label>
               {appInfo?.packaged && !desktopStatus?.storage?.localCache.isDefault && (
-                <div className="settings-model-row__actions">
+                <div className="settings-actions-row">
                   <button
                     type="button"
                     className="btn btn--ghost"
@@ -580,14 +783,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </button>
                 </div>
               )}
-              <label className="settings-field">
-                <span>FFmpeg</span>
-                <input value={ffmpegPath} onChange={(e) => { setFfmpegPath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
-              </label>
-              <label className="settings-field">
-                <span>FFprobe</span>
-                <input value={ffprobePath} onChange={(e) => { setFfprobePath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
-              </label>
+              <div className="settings-field-grid">
+                <label className="settings-field">
+                  <span>FFmpeg</span>
+                  <input value={ffmpegPath} onChange={(e) => { setFfmpegPath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
+                </label>
+                <label className="settings-field">
+                  <span>FFprobe</span>
+                  <input value={ffprobePath} onChange={(e) => { setFfprobePath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
+                </label>
+              </div>
               {desktopStatus && desktopStatus.workspace.missing.length > 0 && (
                 <p className="settings-hint">
                   חסרים בתיקייה: {desktopStatus.workspace.missing.join(", ")}
@@ -616,7 +821,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </p>
                   <div className="settings-status-grid">
                     <div className="settings-status-row">
-                      <StatusDot ok={Boolean(desktopStatus?.r2?.ready)} />
+                      <StatusDot variant={Boolean(desktopStatus?.r2?.ready) ? "ok" : "danger"} />
                       <span>סטטוס</span>
                       <span>
                         {desktopStatus?.r2?.ready
@@ -654,7 +859,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </div>
                   </div>
                   {desktopStatus?.r2?.ready && (
-                    <div className="settings-model-row__actions">
+                    <div className="settings-actions-row">
                       <button type="button" className="btn btn--ghost" onClick={() => clearKey("r2")} disabled={saving}>
                         התנתק (נקה סיסמה)
                       </button>
@@ -757,7 +962,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </label>
                 </>
               )}
-              <div className="settings-model-row__actions">
+              {desktopStatus?.r2?.enabled ? (
+                <p className="settings-hint">
+                  כפתור Export JSON מוריד את snapshot של המשימות מתוך R2 (<code dir="ltr">jobs/jobs.json</code>) — מה שהשרת משחזר לענן.
+                </p>
+              ) : null}
+              <div className="settings-actions-row">
+                {desktopStatus?.r2?.enabled ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    id="export-jobs-json-r2"
+                    onClick={() => void exportJobsFromR2()}
+                    disabled={exportR2JobsLoading || syncingR2 || saving || !desktopStatus?.r2?.ready}
+                    title={
+                      desktopStatus?.r2?.ready
+                        ? "ייצוא jobs.json מ-R2"
+                        : "נדרש חיבור תקף ל-R2"
+                    }
+                  >
+                    {exportR2JobsLoading ? "טוען…" : "Export JSON"}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="btn btn--ghost"
@@ -790,16 +1016,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {isDesktop && (
             <section className="settings-section">
               <div className="settings-section-header">
-                <h3>בחירת ספק LLM</h3>
+                <h3 id="settings-llm-provider-title">בחירת ספק LLM</h3>
               </div>
-              <fieldset className="settings-field">
-                <legend>ספק LLM (תכנון סצנות וקליפים)</legend>
+              <fieldset
+                className="settings-field"
+                aria-labelledby="settings-llm-provider-title"
+              >
+                <legend className="sr-only">ספק LLM לתכנון סצנות וקליפים</legend>
                 {(
                   [
                     ["auto", "אוטומטי — לפי המפתחות הקיימים"],
-                    ["anthropic", "Anthropic (Claude)"],
-                    ["openai", "OpenAI (GPT-4o)"],
-                  ] as Array<[LlmProviderPreference, string]>
+                    [
+                      "anthropic",
+                      <span dir="ltr">Anthropic (Claude)</span>,
+                    ],
+                    [
+                      "openai",
+                      <span dir="ltr">OpenAI (GPT-4o)</span>,
+                    ],
+                  ] as Array<[LlmProviderPreference, ReactNode]>
                 ).map(([id, label]) => (
                   <label key={id} className="settings-radio">
                     <input
@@ -812,24 +1047,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         setSaved(false);
                       }}
                     />
-                    <span>{label}</span>
+                    <span className="settings-radio-label">{label}</span>
                   </label>
                 ))}
               </fieldset>
               <p className="settings-hint">
-                תמלול האודיו רץ דרך OpenAI Whisper בענן (אין מודל מקומי בגרסה הזו).
+                תמלול האודיו (Whisper) דורש מפתח OpenAI לפי הסעיף &quot;מפתחות API&quot; למעלה.
               </p>
             </section>
           )}
         </div>
         <footer className="modal-footer">
           {isDesktop && (
-            <button className="btn" type="button" onClick={saveDesktopSettings} disabled={saving || desktopLoading}>
+            <button className="btn" type="submit" disabled={saving || desktopLoading}>
               {saving ? "שומר…" : "שמור דסקטופ"}
             </button>
           )}
           <button className="btn btn--ghost" type="button" onClick={onClose}>סגור</button>
         </footer>
+        </form>
       </div>
     </div>
   );

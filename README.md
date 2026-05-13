@@ -123,6 +123,7 @@ Agents and humans should start with:
 | Cloudflare R2, Worker gateway, Pulumi | [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md), [`infra/cloudflare/README.md`](infra/cloudflare/README.md) |
 | Agent guardrails and verification commands | [`AGENTS.md`](AGENTS.md) |
 | Claude project goal skill | [`.claude/skills/weatherv1-goal/SKILL.md`](.claude/skills/weatherv1-goal/SKILL.md) |
+| NotebookLM / staff briefings from the repo | [`docs/NOTEBOOKLM.md`](docs/NOTEBOOKLM.md) (`npm run notebooklm:export:chunks`) |
 
 For larger Claude Code sessions, invoke `/weatherv1-goal` first, then set a built-in `/goal` condition using one of the templates in [`docs/PROJECT_GOAL.md`](docs/PROJECT_GOAL.md).
 

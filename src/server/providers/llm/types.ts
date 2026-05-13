@@ -11,6 +11,7 @@
 // underlying API call (Anthropic vs OpenAI) to honour the schema.
 
 import type { ZodSchema } from "zod";
+import type { CompleteJsonResult } from "@/shared/usage";
 
 export type LlmProviderId = "anthropic" | "openai";
 
@@ -46,13 +47,14 @@ export interface CompleteJsonArgs<T> {
 
 export interface LlmProvider {
   readonly id: LlmProviderId;
+  readonly model?: string;
   /**
    * Get a structured JSON response from the provider. Always returns parsed,
    * schema-validated data — implementations are responsible for retries and
    * for translating provider-specific JSON-mode features into a uniform
    * Zod-validated shape.
    */
-  completeJson<T>(args: CompleteJsonArgs<T>): Promise<T>;
+  completeJson<T>(args: CompleteJsonArgs<T>): Promise<CompleteJsonResult<T>>;
 }
 
 /**

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "include": [
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/**/*.md",
+    ".claude/skills/**/*.md"
+  ],
+  "output": {
+    "filePath": "notebooklm-dist/chunk-01-docs.md",
+    "style": "markdown",
+    "headerText": "WeatherV1-next — docs and product context (NotebookLM chunk 1/4). Pair with chunk-02–04 or use notebooklm:export for one file."
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": ["notebooklm-dist/**"]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

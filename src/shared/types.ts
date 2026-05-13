@@ -156,6 +156,8 @@ export const TimelinePickSchema = z.object({
   reason: z.string().optional().default(""),
   /** LLM editorial "why this segment" before validator mutates `reason` (optional, stamped server-side). */
   picker_reason: z.string().optional(),
+  /** Hebrew editorial explanation generated for validator fills/swaps when no LLM reason exists. */
+  fallback_reason: z.string().optional(),
 });
 export type TimelinePick = z.infer<typeof TimelinePickSchema>;
 
@@ -236,6 +238,7 @@ export const PlanBundleSchema = z.object({
   scenes: z.array(SceneSchema).optional(),
   timeline: z.array(ResolvedPickSchema).default([]),
   validator: ValidatorBundleSchema.optional(),
+  picker_status: z.unknown().optional(),
   system_prompt: z.string().optional(),
   catalog_snapshot: z.unknown().optional(),
 });

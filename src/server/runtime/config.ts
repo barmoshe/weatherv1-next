@@ -39,6 +39,12 @@ function resolveFrom(baseDir: string, value: string | undefined): string | undef
 }
 
 function defaultWorkspaceDir(projectRoot: string): string {
+  // Dev (`next dev`) uses an in-repo cache so a sibling `v1Drive/` tree is
+  // optional; production/Docker keeps the historical sibling layout unless
+  // overridden with WEATHER_WORKSPACE_DIR.
+  if (process.env.NODE_ENV === "development") {
+    return path.join(projectRoot, "runtime", "workspace");
+  }
   return path.resolve(projectRoot, "..", "v1Drive", "weather");
 }
 

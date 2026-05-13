@@ -16,6 +16,8 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 
 const SETTINGS_FILE = "settings.json";
+/** Repo root (parent of `electron/`) — stable regardless of process cwd. */
+const PROJECT_ROOT = path.join(__dirname, "..");
 const DEFAULT_PORT = 3765;
 const FALLBACK_PORTS = [3766, 3767, 3768];
 const SESSION_PARTITION = "persist:weatherv1";
@@ -52,6 +54,10 @@ function settingsPath() {
  */
 function defaultLocalCacheDir() {
   return path.join(getUserDataDir(), "local-cache");
+}
+
+function defaultDevWorkspaceDir() {
+  return path.join(PROJECT_ROOT, "runtime", "workspace");
 }
 
 function defaultSettings() {
@@ -186,13 +192,12 @@ function buildChildEnv(args) {
     NODE_ENV: process.env.NODE_ENV || "production",
   };
 
-  // In packaged builds we always have a workspace path: either the explicit
-  // user choice, or the app-managed local cache under userData. In dev we
-  // leave the env var unset so getRuntimeConfig() falls back to the repo's
-  // sibling v1Drive/weather folder (the historical local-only default).
+  // Packaged: explicit user workspace, else app-managed cache under userData.
+  // Unpackaged dev: explicit user workspace, else in-repo `runtime/workspace`
+  // (same R2-first layout as prod; no sibling v1Drive requirement).
   const workspaceDir = settings.workspaceDir && settings.workspaceDir.trim()
     ? settings.workspaceDir.trim()
-    : (args.productionMode ? defaultLocalCacheDir() : null);
+    : (args.productionMode ? defaultLocalCacheDir() : defaultDevWorkspaceDir());
   if (workspaceDir) {
     env.WEATHER_WORKSPACE_DIR = workspaceDir;
     try {
@@ -209,6 +214,22 @@ function buildChildEnv(args) {
 
   env.WEATHER_USER_DATA_DIR = getUserDataDir();
 
+  // Standalone Next cwd is `.next/standalone`; default `runtime/` would live
+  // inside the app bundle and inherit any traced `jobs.json` seed. Sentinels
+  // go under userData alongside R2 state paths.
+  if (args.productionMode) {
+    const serverRuntimeDir = path.join(getUserDataDir(), "server-runtime");
+    env.WEATHER_RUNTIME_DIR = serverRuntimeDir;
+    try {
+      fs.mkdirSync(serverRuntimeDir, { recursive: true });
+    } catch (err) {
+      console.warn(
+        `[config] failed to ensure server runtime dir ${serverRuntimeDir}:`,
+        err && err.message ? err.message : err,
+      );
+    }
+  }
+
   // In packaged builds Forge copies repo `assets/` into the app under
   // `Contents/Resources/`. The server uses this to locate the bundled
   // bg-music file (`bg-music/מוזיקת אנדר לתחזית.mp3`) regardless of the
@@ -216,9 +237,17 @@ function buildChildEnv(args) {
   if (args.productionMode && process.resourcesPath) {
     env.WEATHER_RESOURCES_DIR = process.resourcesPath;
   }
+  const fromSettings = settings.r2 || {};
   const r2 = args.productionMode
-    ? { ...(settings.r2 || {}), ...PRODUCTION_R2, enabled: true }
-    : settings.r2;
+    ? { ...fromSettings, ...PRODUCTION_R2, enabled: true }
+    : {
+        ...PRODUCTION_R2,
+        ...fromSettings,
+        gatewayUrl: fromSettings.gatewayUrl || PRODUCTION_R2.gatewayUrl,
+        tenantId: fromSettings.tenantId || PRODUCTION_R2.tenantId,
+        bucketName: fromSettings.bucketName || PRODUCTION_R2.bucketName,
+        enabled: Boolean(fromSettings.enabled),
+      };
   if (r2.enabled && r2.gatewayUrl && r2.tenantId) {
     env.R2_SYNC_ENABLED = "1";
     env.R2_GATEWAY_URL = r2.gatewayUrl;

@@ -24,7 +24,7 @@ function segClip(id: string, segments: SegEntry[], duration = 30) {
 }
 
 interface SegEntry {
-  id: string; start_sec: number; end_sec: number; tags?: string[]; description?: string;
+  id: string; start_sec: number; end_sec: number; tags?: string[]; description?: string; concepts?: any;
 }
 
 function seg(segId: string, startSec: number, endSec: number, tags?: string[], description = ""): SegEntry {
@@ -143,12 +143,12 @@ describe("enforceAntiClipReuse", () => {
       ],
       30
     );
-    const other = segClip("OTH", [seg("OTH-s0", 0, 20, ["urban", "night"])], 20);
+    const other = segClip("OTH", [seg("OTH-s0", 0, 20, ["weather", "urban", "night"])], 20);
     const sm = segmentMapFrom([dup, other]);
     const beats = [
-      { idx: 0, text: "weather", start: 0, end: 3 },
-      { idx: 1, text: "weather", start: 3, end: 6 },
-      { idx: 2, text: "weather", start: 6, end: 9 },
+      { idx: 0, text: "urban weather", start: 0, end: 3 },
+      { idx: 1, text: "urban weather", start: 3, end: 6 },
+      { idx: 2, text: "urban weather", start: 6, end: 9 },
     ];
     const timeline: MutablePick[] = [
       { ...tSeg("DUP-s0", 0, 0, 3), scene_idx: 0 },
@@ -352,5 +352,130 @@ describe("enforceSemanticFit", () => {
 
     expect(timeline[0].segment_id).toBe("GOOD-s0");
     expect(out.hard_violations_fixed.some((v) => v.issue === "semantic mismatch")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Scene gap fill
+// ---------------------------------------------------------------------------
+
+describe("fillSceneGaps", () => {
+  it("does not auto-fill an empty picker result unless explicitly allowed", () => {
+    const heat = segClip("HEAT", [
+      seg("HEAT-s0", 0, 8, ["שמש", "חם"], "שמש חזקה מעל אזור יבש"),
+    ]);
+    const timeline: MutablePick[] = [];
+
+    const out = validateAndSwap(timeline, {
+      segmentMap: segmentMapFrom([heat]),
+      videoMap: { HEAT: heat },
+      scenes: [{
+        idx: 0,
+        start_sec: 0,
+        end_sec: 8,
+        narration: "שרב ועומס חום",
+        keywords: ["שרב"],
+      }],
+    });
+
+    expect(timeline).toHaveLength(0);
+    expect(out.gap_filled).toBeUndefined();
+    expect(out.warnings.some((w) => w.issue === "scene has no pick")).toBe(true);
+  });
+
+  it("fills only when allowed and there is positive Hebrew concept overlap", () => {
+    const heat = segClip("HEAT", [
+      seg("HEAT-s0", 0, 8, ["שמש", "חם"], "שמש חזקה מעל אזור יבש"),
+    ]);
+    const autumn = segClip("AUTUMN", [
+      seg("AUTUMN-s0", 0, 8, ["טבע"], "עלי שלכת בשביל"),
+    ]);
+    const timeline: MutablePick[] = [{ ...tSeg("HEAT-s0", 0, 0, 8), scene_idx: 0 }];
+
+    const out = validateAndSwap(timeline, {
+      segmentMap: segmentMapFrom([heat, autumn]),
+      videoMap: { HEAT: heat, AUTUMN: autumn },
+      allowSceneGapFill: true,
+      scenes: [
+        {
+          idx: 0,
+          start_sec: 0,
+          end_sec: 8,
+          narration: "שרב ועומס חום",
+          keywords: ["שרב"],
+        },
+        {
+          idx: 1,
+          start_sec: 8,
+          end_sec: 16,
+          narration: "קרינת שמש גבוהה",
+          keywords: ["שמש"],
+        },
+      ],
+    });
+
+    expect(timeline).toHaveLength(2);
+    expect(timeline[1].segment_id).toBe("HEAT-s0");
+    expect(timeline[1].fallback_reason).toContain("נבחר כמילוי אוטומטי");
+    expect(out.gap_filled).toHaveLength(1);
+    expect(out.score).toBeLessThan(100);
+  });
+
+  it("does not fill with zero-overlap catalog order candidates", () => {
+    const autumn = segClip("AUTUMN", [
+      seg("AUTUMN-s0", 0, 8, ["טבע"], "עלי שלכת בשביל"),
+    ]);
+    const timeline: MutablePick[] = [];
+
+    const out = validateAndSwap(timeline, {
+      segmentMap: segmentMapFrom([autumn]),
+      videoMap: { AUTUMN: autumn },
+      allowSceneGapFill: true,
+      scenes: [{
+        idx: 0,
+        start_sec: 0,
+        end_sec: 8,
+        narration: "קרינת שמש גבוהה",
+        keywords: ["שמש"],
+      }],
+    });
+
+    expect(timeline).toHaveLength(0);
+    expect(out.gap_filled?.[0]).toMatchObject({ fixed: false });
+  });
+});
+
+describe("timeline render order", () => {
+  it("sorts picks by audio_start after validation (matches concat / Plan order)", () => {
+    const c = segClip(
+      "CLIP",
+      [
+        seg("CLIP-s0", 0, 15, ["חורפי"], "שקדייה פרחים"),
+        seg("CLIP-s1", 15, 30, ["ים"], "גלים"),
+      ],
+      30,
+    );
+    const sm = segmentMapFrom([c]);
+    const beats = [
+      { idx: 0, text: "קריר", start: 0, end: 5 },
+      { idx: 1, text: "ים", start: 5, end: 10 },
+    ];
+    const scenes = [{ idx: 0, start_sec: 0, end_sec: 10, narration: "מזג", keywords: [] as string[] }];
+    const timeline: MutablePick[] = [
+      { ...tSeg("CLIP-s1", 1, 5, 10, 0), scene_idx: 0 },
+      { ...tSeg("CLIP-s0", 0, 0, 5, 0), scene_idx: 0 },
+    ];
+
+    validateAndSwap(timeline, {
+      beats,
+      segmentMap: sm,
+      videoMap: { CLIP: c },
+      scenes,
+      allowSceneGapFill: true,
+    });
+
+    expect(timeline.map((p) => p.segment_id)).toEqual(["CLIP-s0", "CLIP-s1"]);
+    expect(timeline[0]!.audio_start).toBe(0);
+    expect(timeline[1]!.audio_start).toBe(5);
   });
 });

@@ -10,6 +10,25 @@ type Phase = "loading" | "cloud-connect" | "cloud-ready" | "local-cache" | "read
 
 const LAST_USERNAME_KEY = "weatherv1.r2.lastUsername";
 
+function RtlTechnicalLine({
+  className,
+  role,
+  prefix,
+  message,
+}: {
+  className: string;
+  role?: "alert";
+  prefix: string;
+  message: string;
+}) {
+  return (
+    <p className={className} role={role}>
+      {prefix}{" "}
+      <span dir="ltr">{message}</span>
+    </p>
+  );
+}
+
 export function StorageOnboardingGate() {
   const { data: storage, refetch } = useStorageStatus();
   const qc = useQueryClient();
@@ -143,19 +162,28 @@ export function StorageOnboardingGate() {
 
   if (phase === "cloud-connect") {
     const versionLine = appInfo
-      ? `WeatherV1 ${appInfo.appVersion}`
+      ? `WeatherV1 · גרסה ${appInfo.appVersion}`
       : "WeatherV1";
     return (
-      <div className="login-screen" role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <div
+        className="login-screen"
+        dir="rtl"
+        lang="he"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-title"
+      >
         <div className="login-screen__backdrop" aria-hidden="true" />
         <div className="login-card">
           <div className="login-card__brand" aria-hidden="true">
             <span className="login-card__brand-mark">WV1</span>
           </div>
-          <h1 className="login-card__title" id="login-title">Sign in to WeatherV1</h1>
+          <h1 className="login-card__title" id="login-title">
+            כניסה ל־WeatherV1
+          </h1>
           <p className="login-card__subtitle">
-            Connect this desktop app to the Cloudflare R2 catalog. Your credentials are stored
-            in the OS keychain on this machine and sent only to the WeatherV1 worker.
+            חברו את אפליקציית השולחן לקטלוג Cloudflare R2. פרטי ההתחברות נשמרים במחסנית המפתחות של
+            מערכת ההפעלה ונשלחים רק ל־Worker של WeatherV1.
           </p>
 
           <form
@@ -166,7 +194,7 @@ export function StorageOnboardingGate() {
             }}
           >
             <label className="login-field">
-              <span className="login-field__label">Username</span>
+              <span className="login-field__label">שם משתמש</span>
               <input
                 className="login-field__input"
                 type="text"
@@ -186,7 +214,7 @@ export function StorageOnboardingGate() {
             </label>
 
             <label className="login-field">
-              <span className="login-field__label">Password</span>
+              <span className="login-field__label">סיסמה</span>
               <div className="login-field__password">
                 <input
                   className="login-field__input"
@@ -205,40 +233,55 @@ export function StorageOnboardingGate() {
                   type="button"
                   className="login-field__toggle"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? "הסתרת סיסמה" : "הצגת סיסמה"}
                   aria-pressed={showPassword}
-                  tabIndex={-1}
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? "הסתר" : "הצג"}
                 </button>
               </div>
             </label>
 
             {storage?.cloud.gatewayUrl && (
               <p className="login-card__hint">
-                Gateway: <code>{storage.cloud.gatewayUrl}</code>
+                שער (URL): <code dir="ltr">{storage.cloud.gatewayUrl}</code>
               </p>
             )}
 
             {storage?.cloud.error && !signInError && !signInOk && (
-              <p className="login-card__error" role="alert">{storage.cloud.error}</p>
+              <RtlTechnicalLine
+                className="login-card__error"
+                role="alert"
+                prefix="לא ניתן להתחבר:"
+                message={storage.cloud.error}
+              />
             )}
-            {signInError && <p className="login-card__error" role="alert">{signInError}</p>}
-            {signInOk && <p className="login-card__ok" role="status">Connected. Loading the catalog…</p>}
+            {signInError && (
+              <RtlTechnicalLine
+                className="login-card__error"
+                role="alert"
+                prefix="לא ניתן להתחבר:"
+                message={signInError}
+              />
+            )}
+            {signInOk && (
+              <p className="login-card__ok" role="status">
+                מחובר. טוען את הקטלוג…
+              </p>
+            )}
 
             <button
               type="submit"
               className="btn btn--primary login-card__submit"
               disabled={!canSubmit}
             >
-              {submitting ? "Signing in…" : "Sign in"}
+              {submitting ? "מתחבר…" : "התחברות"}
             </button>
           </form>
 
           <footer className="login-card__footer">
             <span>{versionLine}</span>
             <span aria-hidden="true">·</span>
-            <span>Cloudflare R2 · Basic Auth</span>
+            <span>Cloudflare R2 · אימות בסיסי</span>
           </footer>
         </div>
       </div>
@@ -250,24 +293,36 @@ export function StorageOnboardingGate() {
       <section
         className="storage-gate storage-gate--cache"
         role="region"
-        aria-label="Choose local cache folder"
+        dir="rtl"
+        lang="he"
+        aria-label="בחירת תיקיית מטמון מקומית"
       >
         <div className="storage-gate__copy">
-          <span className="storage-gate__step">Step 2 of 2</span>
-          <h2>Pick a local cache folder</h2>
+          <span className="storage-gate__step">שלב 2 מתוך 2</span>
+          <h2>בחירת תיקיית מטמון מקומית</h2>
           <p>
-            WeatherV1 will download clips, posters, uploads, and renders into this folder.
-            It is a cache of your cloud library, not the source of truth.
+            WeatherV1 יוריד לתיקייה זו קטעים, פוסטרים, העלאות ורינדורים. זו תיקיית מטמון של ספריית
+            הענן — לא המקור הרשמי.
           </p>
           {storage?.localCache.workspaceDir && (
             <p className="storage-gate__hint">
-              Current: <code>{storage.localCache.workspaceDir}</code>
+              נוכחי: <code dir="ltr">{storage.localCache.workspaceDir}</code>
               {storage.localCache.missing.length > 0 && (
-                <> · missing: {storage.localCache.missing.join(", ")}</>
+                <>
+                  {" "}
+                  · חסרים:{" "}
+                  <span dir="ltr">{storage.localCache.missing.join(", ")}</span>
+                </>
               )}
             </p>
           )}
-          {cacheError && <p className="storage-gate__error">{cacheError}</p>}
+          {cacheError && (
+            <RtlTechnicalLine
+              className="storage-gate__error"
+              prefix="אירעה שגיאה:"
+              message={cacheError}
+            />
+          )}
         </div>
         <div className="storage-gate__form">
           <button
@@ -276,7 +331,7 @@ export function StorageOnboardingGate() {
             onClick={() => void handleUseDefaultCache()}
             disabled={pickingCache}
           >
-            {pickingCache ? "Working…" : "Use default local cache"}
+            {pickingCache ? "עובד…" : "השתמש במטמון המקומי כברירת מחדל"}
           </button>
           <button
             type="button"
@@ -284,7 +339,7 @@ export function StorageOnboardingGate() {
             onClick={() => void handlePickFolder()}
             disabled={pickingCache}
           >
-            Choose folder…
+            בחר תיקייה…
           </button>
         </div>
       </section>

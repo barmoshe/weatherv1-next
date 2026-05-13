@@ -1,0 +1,28 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "include": [
+    "electron/**/*",
+    "scripts/**/*",
+    "infra/**/*",
+    "package.json",
+    "next.config.ts",
+    "tsconfig.json",
+    "vitest.config.ts",
+    "forge.config.cjs",
+    "Dockerfile",
+    "docker-compose.yml"
+  ],
+  "output": {
+    "filePath": "notebooklm-dist/chunk-04-electron-scripts-infra.md",
+    "style": "markdown",
+    "headerText": "WeatherV1-next — Electron, scripts, Cloudflare infra, build config (NotebookLM chunk 4/4)."
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": ["notebooklm-dist/**", "**/package-lock.json"]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

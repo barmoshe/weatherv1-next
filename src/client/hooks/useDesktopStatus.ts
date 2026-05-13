@@ -1,9 +1,17 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 
+/** Subset of server `R2SyncStatus` needed in the renderer */
+export interface DesktopR2Brief {
+  enabled: boolean;
+  ready: boolean;
+  error?: string;
+}
+
 export interface DesktopStatusResponse {
   success: boolean;
   desktop_mode: boolean;
+  r2?: DesktopR2Brief;
   keys: {
     openai_configured: boolean;
     anthropic_configured: boolean;

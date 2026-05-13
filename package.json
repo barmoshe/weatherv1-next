@@ -1,6 +1,6 @@
 {
   "name": "weatherv1-next",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "WeatherV1 local desktop video production app",
   "author": "Barmoshe",
   "private": true,
@@ -14,7 +14,10 @@
     "standalone:prep": "node scripts/prepare-standalone.cjs",
     "electron:dev": "node scripts/run-electron.cjs .",
     "electron:build": "next build && npm run standalone:prep && electron-forge package",
-    "electron:make": "next build && npm run standalone:prep && electron-forge make"
+    "electron:make": "next build && npm run standalone:prep && electron-forge make",
+    "notebooklm:export": "mkdir -p notebooklm-dist && repomix -o notebooklm-dist/weatherv1-full.md --style markdown",
+    "notebooklm:export:chunks": "mkdir -p notebooklm-dist && repomix -c repomix.notebooklm-docs.json && repomix -c repomix.notebooklm-server.json && repomix -c repomix.notebooklm-app.json && repomix -c repomix.notebooklm-tooling.json",
+    "notebooklm:export:chunks:txt": "mkdir -p notebooklm-dist && repomix -c repomix.notebooklm-docs.json -o notebooklm-dist/chunk-01-docs.txt --style plain && repomix -c repomix.notebooklm-server.json -o notebooklm-dist/chunk-02-src-server.txt --style plain && repomix -c repomix.notebooklm-app.json -o notebooklm-dist/chunk-03-src-app-client-tests.txt --style plain && repomix -c repomix.notebooklm-tooling.json -o notebooklm-dist/chunk-04-electron-scripts-infra.txt --style plain"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.2",
@@ -56,6 +59,7 @@
     "@vitest/coverage-v8": "^2",
     "electron": "^33",
     "jsdom": "^25",
+    "repomix": "^1.14.0",
     "typescript": "^5",
     "vitest": "^2"
   }

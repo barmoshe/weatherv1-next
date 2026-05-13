@@ -171,6 +171,49 @@ describe("desktop auth", () => {
 });
 
 describe("electron config R2 settings", () => {
+  it("uses in-repo runtime/workspace and Cloudflare R2 defaults when unpackaged", () => {
+    const userData = makeTempDir("electron-config-dev-defaults");
+    electronConfig.setUserDataDir(userData);
+
+    const env = electronConfig.buildChildEnv({
+      port: 3765,
+      token: "desktop-token",
+      ffmpeg: { ffmpegPath: null, ffprobePath: null },
+      productionMode: false,
+    });
+
+    expect(env.WEATHER_WORKSPACE_DIR).toBe(
+      path.join(path.resolve(__dirname, "../.."), "runtime", "workspace"),
+    );
+    expect(env.R2_SYNC_ENABLED).toBeUndefined();
+  });
+
+  it("injects production gateway/tenant/bucket in dev when R2 is enabled in settings", () => {
+    const userData = makeTempDir("electron-config-dev-r2");
+    electronConfig.setUserDataDir(userData);
+
+    electronConfig.writeSettings({
+      r2: { enabled: true, appUsername: "v1editor" },
+      keys: {
+        r2AppPassword: electronConfig.encryptSecret("pw", {}),
+      },
+    });
+
+    const env = electronConfig.buildChildEnv({
+      port: 3765,
+      token: "desktop-token",
+      ffmpeg: { ffmpegPath: null, ffprobePath: null },
+      productionMode: false,
+    });
+
+    expect(env.R2_SYNC_ENABLED).toBe("1");
+    expect(env.R2_GATEWAY_URL).toBe(electronConfig.PRODUCTION_R2.gatewayUrl);
+    expect(env.R2_TENANT_ID).toBe("default");
+    expect(env.R2_BUCKET_NAME).toBe("weatherv1-media");
+    expect(env.R2_APP_USERNAME).toBe("v1editor");
+    expect(env.R2_APP_PASSWORD).toBe("pw");
+  });
+
   it("persists R2 settings and injects username/password env without leaking the password to renderer settings", () => {
     const userData = makeTempDir("electron-config");
     electronConfig.setUserDataDir(userData);
@@ -212,6 +255,36 @@ describe("electron config R2 settings", () => {
     expect(env.R2_STATE_PATH).toBe(path.join(userData, "r2-sync-state.json"));
     // Sanity: legacy single-token env must not be set.
     expect(env.R2_SESSION_TOKEN).toBeUndefined();
+  });
+
+  it("sets WEATHER_RUNTIME_DIR under userData when packaged (productionMode)", () => {
+    const userData = makeTempDir("electron-config-prod-runtime");
+    electronConfig.setUserDataDir(userData);
+
+    const env = electronConfig.buildChildEnv({
+      port: 3765,
+      token: "desktop-token",
+      ffmpeg: { ffmpegPath: null, ffprobePath: null },
+      productionMode: true,
+    });
+
+    const expected = path.join(userData, "server-runtime");
+    expect(env.WEATHER_RUNTIME_DIR).toBe(expected);
+    expect(fs.existsSync(expected)).toBe(true);
+  });
+
+  it("does not set WEATHER_RUNTIME_DIR when unpackaged (productionMode false)", () => {
+    const userData = makeTempDir("electron-config-dev-runtime");
+    electronConfig.setUserDataDir(userData);
+
+    const env = electronConfig.buildChildEnv({
+      port: 3765,
+      token: "desktop-token",
+      ffmpeg: { ffmpegPath: null, ffprobePath: null },
+      productionMode: false,
+    });
+
+    expect(env.WEATHER_RUNTIME_DIR).toBeUndefined();
   });
 
   it("drops a legacy r2SessionToken on read instead of exposing it", () => {

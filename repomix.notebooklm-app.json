@@ -1,0 +1,17 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "include": ["src/app/**/*", "src/client/**/*", "src/test/**/*", "src/proxy.ts"],
+  "output": {
+    "filePath": "notebooklm-dist/chunk-03-src-app-client-tests.md",
+    "style": "markdown",
+    "headerText": "WeatherV1-next — App Router UI, API routes, client studio, tests, proxy (NotebookLM chunk 3/4)."
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": ["notebooklm-dist/**"]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

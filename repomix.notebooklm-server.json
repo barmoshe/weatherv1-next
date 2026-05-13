@@ -1,0 +1,17 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "include": ["src/server/**/*", "src/shared/**/*"],
+  "output": {
+    "filePath": "notebooklm-dist/chunk-02-src-server.md",
+    "style": "markdown",
+    "headerText": "WeatherV1-next — server, pipeline, jobs, ffmpeg, providers (NotebookLM chunk 2/4)."
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": ["notebooklm-dist/**"]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

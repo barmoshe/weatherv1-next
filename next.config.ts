@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
   // server in the Next sense, it's an external supervisor.
   output: "standalone",
 
+  // Do not ship dev `runtime/jobs.json` into traced standalone (Electron still
+  // prefers userData `WEATHER_RUNTIME_DIR`; this avoids seeding installers).
+  // Key must match picomatch against `next-server` — see Next's collect-build-traces.
+  outputFileTracingExcludes: {
+    "next-server": ["**/runtime/jobs.json"],
+  },
+
   // Pin Next's tracing root to this project. Without this, Next auto-detects
   // the workspace root by walking up looking for lockfiles, and lands on the
   // host repo's package-lock.json one level up — which lands the standalone

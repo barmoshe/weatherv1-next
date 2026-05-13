@@ -6,6 +6,8 @@
 // pipeline shipped with; override via `OPENAI_MODEL` env.
 
 import OpenAI from "openai";
+import { usageFromOpenAiChat } from "@/shared/usage";
+import type { CompleteJsonResult } from "@/shared/usage";
 import {
   type CompleteJsonArgs,
   type LlmProvider,
@@ -33,10 +35,12 @@ export function createOpenAiProvider(opts: OpenAiProviderOptions): LlmProvider {
 
   return {
     id: "openai",
-    async completeJson<T>(args: CompleteJsonArgs<T>): Promise<T> {
+    model,
+    async completeJson<T>(args: CompleteJsonArgs<T>): Promise<CompleteJsonResult<T>> {
       let raw: unknown;
+      let response: Awaited<ReturnType<(typeof client)["chat"]["completions"]["create"]>>;
       try {
-        const response = await client.chat.completions.create({
+        response = await client.chat.completions.create({
           model,
           messages: [
             { role: "system", content: args.systemPrompt },
@@ -53,6 +57,8 @@ export function createOpenAiProvider(opts: OpenAiProviderOptions): LlmProvider {
         throw translateOpenAiError(err);
       }
 
+      const usage = usageFromOpenAiChat(response?.usage as Record<string, unknown> | undefined, "openai", model);
+
       const parsed = args.schema.safeParse(raw);
       if (!parsed.success) {
         throw new LlmProviderError(
@@ -62,7 +68,7 @@ export function createOpenAiProvider(opts: OpenAiProviderOptions): LlmProvider {
           parsed.error,
         );
       }
-      return parsed.data;
+      return { data: parsed.data, usage };
     },
   };
 }

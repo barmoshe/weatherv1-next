@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { planScenes, fallbackSingleScene } from "@/server/pipeline/scene-planner";
-import { pickSegments } from "@/server/pipeline/picker";
-import { validateAndSwap, type MutablePick } from "@/server/pipeline/validator";
+import { PickerFailureError, pickSegmentsDetailed, type PickerRunStatus } from "@/server/pipeline/picker";
+import { validateAndSwap, type MutablePick, type ValidatorBundle } from "@/server/pipeline/validator";
 import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/parser";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
 import type { Scene } from "@/shared/types";
+
+function pickerFailureResponse(pickerStatus: PickerRunStatus, status = 502) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "בחירת הקליפים נכשלה. לא נוצר ציר זמן אוטומטי כדי לא להציג בחירות מטעות.",
+      error_code: pickerStatus.error_code ?? "picker_failed",
+      picker_status: pickerStatus,
+    },
+    { status },
+  );
+}
 
 export async function POST(req: NextRequest) {
   const denied = assertDesktopAuth(req);
@@ -47,11 +59,21 @@ export async function POST(req: NextRequest) {
       scenes = fallbackSingleScene(transcript, transcriptSegments, duration);
     }
 
-    const rawTimeline = await pickSegments(transcript, videos, duration, {
+    const pickerResult = await pickSegmentsDetailed(transcript, videos, duration, {
       customPrompt: customPickerPrompt,
       transcriptSegments,
       scenes,
+      validationContext: {
+        segmentMap,
+        videoMap,
+        scenes,
+        beats: transcriptSegments.map((s, i) => ({ idx: i, start: s.start, end: s.end, text: s.text })),
+      },
     });
+    const rawTimeline = pickerResult.timeline;
+    if (scenes.length && rawTimeline.length === 0) {
+      return pickerFailureResponse(pickerResult.picker_status, 422);
+    }
 
     const timeline: MutablePick[] = rawTimeline.map((p) => {
       const m: MutablePick = { ...p };
@@ -59,22 +81,38 @@ export async function POST(req: NextRequest) {
       if (trimmed) m.picker_reason = trimmed;
       return m;
     });
-    const validatorResult = validateAndSwap(timeline, {
-      beats: transcriptSegments.map((s, i) => ({ idx: i, start: s.start, end: s.end, text: s.text })),
-      videoMap,
-      segmentMap,
-      scenes,
-    });
+    let validatorResult = pickerResult.validator;
+    if (!validatorResult && rawTimeline.length > 0) {
+      validatorResult = validateAndSwap(timeline, {
+        beats: transcriptSegments.map((s, i) => ({ idx: i, start: s.start, end: s.end, text: s.text })),
+        videoMap,
+        segmentMap,
+        scenes,
+        allowSceneGapFill: rawTimeline.length > 0,
+      });
+    }
+    if (!validatorResult) {
+      validatorResult = {
+        score: 100,
+        hard_violations_fixed: [],
+        hard_violations_kept: [],
+        warnings: [],
+        gap_filled: [],
+        catalog_health: {},
+      };
+    }
 
     updatePlanBundle(jobId, {
       scenes,
       timeline,
       validator: validatorResult,
+      picker_status: pickerResult.picker_status,
       system_prompt: data.system_prompt,
     });
 
-    return NextResponse.json({ success: true, scenes, timeline, validator: validatorResult });
+    return NextResponse.json({ success: true, scenes, timeline, validator: validatorResult, picker_status: pickerResult.picker_status });
   } catch (err) {
+    if (err instanceof PickerFailureError) return pickerFailureResponse(err.picker_status);
     const handled = mapProviderError(err);
     if (handled) return NextResponse.json(handled.body, { status: handled.status });
     console.error("[plan]", err);
