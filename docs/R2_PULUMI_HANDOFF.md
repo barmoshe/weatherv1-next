@@ -31,6 +31,7 @@ Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and 
 - Pulumi Worker deploy required `compatibilityDate: "2026-05-12"` because Cloudflare rejects future dates in UTC, and `mainModule: "worker.js"` so the ES module Worker is not parsed as classic service-worker syntax.
 - Cloudflare account `workers.dev` subdomain is `barprojectsandbuilds`; Pulumi now manages `WorkersScriptSubdomain` and outputs the real gateway URL: `https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev`.
 - Worker smoke tests pass: `/v1/health` returns bucket `weatherv1-media` / tenant `default`, and `/v1/r2/temporary-credentials` returns scoped temporary credentials for `tenants/default/`.
+- Local `v1Drive/weather` upload to R2 is in progress. Source has 212 catalog videos totaling about 12.13 GiB; upload target is `tenants/default/videos/<videoId>/<filename>`, followed by `tenants/default/catalog/catalog.json` with `remote` metadata. Latest observed progress: 151 / 212 complete, about 7.92 GiB uploaded, 0 failures.
 
 ## Important Decisions
 
@@ -64,10 +65,11 @@ Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and 
 
 ## Next Steps
 
-1. Smoke-test Electron settings with gateway URL `https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev`, tenant `default`, bucket `weatherv1-media`, and the Pulumi `appToken` value.
-2. Smoke-test catalog push/pull and materialize/download flows against R2.
-3. Rotate the exposed R2 S3 credential pair after smoke testing because the secret access key was pasted into chat.
-4. Update or archive `docs/ELECTRON_DESKTOP_PLAN.md`, which still describes the old Drive plan.
+1. Let the local `v1Drive/weather` upload finish, then verify the remote catalog is present and includes `remote` metadata for all 212 videos.
+2. Smoke-test Electron settings with gateway URL `https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev`, tenant `default`, bucket `weatherv1-media`, and the Pulumi `appToken` value.
+3. Smoke-test catalog pull and materialize/download flows against R2 from the desktop UI.
+4. Rotate the exposed R2 S3 credential pair after smoke testing because the secret access key was pasted into chat.
+5. Update or archive `docs/ELECTRON_DESKTOP_PLAN.md`, which still describes the old Drive plan.
 
 ## Known Risks
 

@@ -25,6 +25,7 @@ Ship a reliable desktop alpha that a non-developer can install, open, point at a
 - Packaged child-server failures include useful diagnostics from `next-child.log`.
 - A `v*` tag creates macOS and Windows installer artifacts in GitHub Actions.
 - The release publisher attaches `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe`.
+- Optional R2 sync can reach the deployed Worker gateway, mint short-lived credentials, push/pull the catalog, and materialize cloud-only videos back to local disk.
 - Docs explain the current goal, release procedure, and known smoke-test gaps.
 
 ## Non-Goals For Now
@@ -59,6 +60,10 @@ Use these as copy-ready completion conditions when running a long agent session:
 
 ```text
 /goal Documentation is AI-native: AGENTS.md, docs/DOCS_INDEX.md, docs/PROJECT_GOAL.md, README.md, and relevant specialist docs route agents to the correct source of truth with verification commands.
+```
+
+```text
+/goal Cloudflare R2 sync is production-smoked: Pulumi stack outputs the real Worker URL, /v1/health succeeds, temporary credentials mint for tenant default, the v1Drive catalog is uploaded, and an Electron pull/materialize flow is manually verified.
 ```
 
 ## Maintenance Rule

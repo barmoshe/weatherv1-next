@@ -28,6 +28,7 @@ The same product can run in two modes:
 4. The doc for your task:
    - desktop architecture: [ELECTRON_DESKTOP_PLAN.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_PLAN.md)
    - desktop operational state: [ELECTRON_DESKTOP_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_HANDOFF.md)
+   - Cloudflare R2 asset sync and Pulumi infrastructure: [R2_PULUMI_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/R2_PULUMI_HANDOFF.md)
    - desktop UX guidance: [ELECTRON_UXUI_RESEARCH.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_UXUI_RESEARCH.md)
    - LLM + transcription providers (Anthropic/OpenAI for planning, OpenAI Whisper cloud for transcription): [PROVIDERS.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/PROVIDERS.md)
    - server/cloud deployment: [DESIGN_DEPLOYMENT.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/DESIGN_DEPLOYMENT.md), [DEPLOY_ORACLE_CLOUD.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/DEPLOY_ORACLE_CLOUD.md)
@@ -42,6 +43,7 @@ The same product can run in two modes:
 | Modify Electron behavior | [ELECTRON_DESKTOP_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_HANDOFF.md) | `electron/`, `forge.config.cjs`, `src/shared/desktop.ts` |
 | Understand why Electron was designed this way | [ELECTRON_DESKTOP_PLAN.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_PLAN.md) | `electron/`, `src/server/runtime`, `src/proxy.ts` |
 | Change desktop UI flows | [ELECTRON_UXUI_RESEARCH.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_UXUI_RESEARCH.md) | `src/client/components/**`, `src/client/lib/desktop.ts` |
+| Work on R2 asset sync or Cloudflare infrastructure | [R2_PULUMI_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/R2_PULUMI_HANDOFF.md) | `src/server/sync/r2`, `src/app/api/sync/r2`, `infra/cloudflare` |
 | Package or release installers | [ELECTRON_DESKTOP_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_HANDOFF.md) | `.github/workflows/desktop*.yml`, `forge.config.cjs`, `build/` |
 | Deploy the web/server version | [DESIGN_DEPLOYMENT.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/DESIGN_DEPLOYMENT.md) | `Dockerfile`, `docker-compose.yml`, `src/server/**` |
 | Do the actual Oracle Cloud setup | [DEPLOY_ORACLE_CLOUD.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/DEPLOY_ORACLE_CLOUD.md) | `Dockerfile`, `docker-compose.yml`, `.env.example` |
@@ -54,6 +56,7 @@ The same product can run in two modes:
 | `src/app/` | Next App Router UI and route handlers |
 | `src/client/` | Studio UI components and browser/desktop renderer helpers |
 | `src/server/catalog/` | Catalog parsing and persistence |
+| `src/server/sync/r2/` | Cloudflare R2 catalog/media sidecar sync |
 | `src/server/ffmpeg/` | Probe, binary resolution, preview/poster generation, render pipeline |
 | `src/server/jobs/` | Job queue, store, worker lifecycle |
 | `src/server/pipeline/` | Planning and scene-selection logic (delegates LLM + transcription to providers) |
@@ -61,6 +64,7 @@ The same product can run in two modes:
 | `src/server/runtime/` | Runtime config, derived paths, desktop auth |
 | `src/shared/` | Cross-boundary types shared by preload and renderer |
 | `electron/` | Electron main/preload/config/server-manager/ffmpeg verify |
+| `infra/cloudflare/` | Pulumi-managed Cloudflare R2 bucket and Worker gateway |
 | `scripts/` | Standalone prep and Electron launch helpers |
 | `.github/workflows/` | CI, packaging, release publishing, Pages |
 | `.claude/skills/` | Project skills for goal routing and repeatable agent workflows |
