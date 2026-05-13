@@ -54,6 +54,12 @@ module.exports = {
     // Forge appends the platform-correct extension (.icns on macOS, .ico on
     // Windows) — supply the path without extension.
     icon: path.join(__dirname, "build", "icon"),
+    // Bundled assets that ship inside the app at `Contents/Resources/<name>`
+    // (macOS) / `resources/<name>` (Windows/Linux). The Next child server
+    // resolves these via `WEATHER_RESOURCES_DIR` (set in
+    // `electron/config.cjs:buildChildEnv`). Kept outside asar so files
+    // (e.g. ffmpeg-friendly mp3) don't need unpack rules.
+    extraResource: [path.join(__dirname, "assets", "bg-music")],
     asar: {
       // Executables under these paths MUST live in `app.asar.unpacked`.
       // `ffmpeg-verify.cjs` rewrites `app.asar → app.asar.unpacked` at call

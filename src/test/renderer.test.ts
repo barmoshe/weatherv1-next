@@ -89,6 +89,34 @@ describe("buildRendererArgs", () => {
     expect(filterComplex).toContain("amix=inputs=2");
   });
 
+  it("maps voiceover audio as a bare input stream when bg music is absent", async () => {
+    mockExistsSync.mockReturnValue(false);
+    mockProbeVideo.mockResolvedValue(makeProbeResult(8));
+    const result = await buildRendererArgs([pick("W001", 0, 8, 0, 8)], { W001: vid("W001") }, AUDIO, OUT);
+    expect(result).not.toBeNull();
+    const args = result!.args;
+    const mapArgs: string[] = [];
+    for (let i = 0; i < args.length - 1; i++) {
+      if (args[i] === "-map") mapArgs.push(args[i + 1]);
+    }
+    // resolved.length === 1, so audio input index is 1.
+    expect(mapArgs).toContain("1:a");
+    expect(mapArgs).not.toContain("[1:a]");
+  });
+
+  it("uses [aout] filter label for -map when bg music is present", async () => {
+    mockExistsSync.mockReturnValue(true);
+    mockProbeVideo.mockResolvedValue(makeProbeResult(8));
+    const result = await buildRendererArgs([pick("W001", 0, 8, 0, 8)], { W001: vid("W001") }, AUDIO, OUT);
+    expect(result).not.toBeNull();
+    const args = result!.args;
+    const mapArgs: string[] = [];
+    for (let i = 0; i < args.length - 1; i++) {
+      if (args[i] === "-map") mapArgs.push(args[i + 1]);
+    }
+    expect(mapArgs).toContain("[aout]");
+  });
+
   it("handles two-clip timeline with 2x same source clip (no -shortest)", async () => {
     mockProbeVideo.mockResolvedValue(makeProbeResult(20));
     const timeline = [

@@ -208,6 +208,14 @@ function buildChildEnv(args) {
   if (gemini) env.GEMINI_API_KEY = gemini;
 
   env.WEATHER_USER_DATA_DIR = getUserDataDir();
+
+  // In packaged builds Forge copies repo `assets/` into the app under
+  // `Contents/Resources/`. The server uses this to locate the bundled
+  // bg-music file (`bg-music/מוזיקת אנדר לתחזית.mp3`) regardless of the
+  // user's workspace state.
+  if (args.productionMode && process.resourcesPath) {
+    env.WEATHER_RESOURCES_DIR = process.resourcesPath;
+  }
   const r2 = args.productionMode
     ? { ...(settings.r2 || {}), ...PRODUCTION_R2, enabled: true }
     : settings.r2;

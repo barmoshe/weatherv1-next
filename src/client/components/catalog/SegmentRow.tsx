@@ -42,72 +42,70 @@ export function SegmentRow({ segment, onChange, readOnly = false }: SegmentRowPr
   const posterUrl = `/api/catalog/segment-poster/${encodeURIComponent(segment.id)}`;
 
   return (
-    <div className="segment-row" data-segment-id={segment.id}>
-      <div className="segment-row__thumb">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={posterUrl}
-          alt={`תמונה ממקטע ${segment.id}`}
-          className="segment-row__poster"
-          loading="lazy"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).style.display = "none";
-          }}
-        />
+    <div className="segment-block" data-segment-id={segment.id}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={posterUrl}
+        alt={`תמונה ממקטע ${segment.id}`}
+        className="segment-thumb"
+        loading="lazy"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+        }}
+      />
+
+      <div className="segment-header">
+        <span className="segment-id">{segment.id}</span>
+        <span className="segment-time">
+          {formatTimecode(segment.start_sec)} – {formatTimecode(segment.end_sec)}
+        </span>
+        {segment.confidence != null && (
+          <span
+            className="segment-conf"
+            title={`ביטחון: ${Math.round(segment.confidence * 100)}%`}
+          >
+            {Math.round(segment.confidence * 100)}%
+          </span>
+        )}
       </div>
 
-      <div className="segment-row__info">
-        <div className="segment-row__header">
-          <span className="segment-row__id">{segment.id}</span>
-          <span className="segment-row__timecode">
-            {formatTimecode(segment.start_sec)} – {formatTimecode(segment.end_sec)}
+      {segment.description ? (
+        <p className="segment-desc-input segment-desc-text">{segment.description}</p>
+      ) : (
+        <span className="segment-desc-spacer" aria-hidden="true" />
+      )}
+
+      <div className="segment-tags-input">
+        {tags.map((tag) => (
+          <span key={tag} className="tag-pill">
+            {tag}
+            {!readOnly && (
+              <button
+                type="button"
+                className="tag-pill__remove"
+                aria-label={`הסר תגית ${tag}`}
+                onClick={() => removeTag(tag)}
+              >
+                ×
+              </button>
+            )}
           </span>
-          {segment.confidence != null && (
-            <span
-              className="segment-row__confidence"
-              title={`ביטחון: ${Math.round(segment.confidence * 100)}%`}
-            >
-              {Math.round(segment.confidence * 100)}%
-            </span>
-          )}
-        </div>
+        ))}
 
-        {segment.description && (
-          <p className="segment-row__desc">{segment.description}</p>
+        {!readOnly && (
+          <input
+            type="text"
+            className="segment-tag-add"
+            placeholder="הוסף תגית..."
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              if (tagInput.trim()) addTag(tagInput);
+            }}
+            aria-label="הוסף תגית למקטע"
+          />
         )}
-
-        <div className="segment-row__tags">
-          {tags.map((tag) => (
-            <span key={tag} className="tag-pill">
-              {tag}
-              {!readOnly && (
-                <button
-                  type="button"
-                  className="tag-pill__remove"
-                  aria-label={`הסר תגית ${tag}`}
-                  onClick={() => removeTag(tag)}
-                >
-                  ×
-                </button>
-              )}
-            </span>
-          ))}
-
-          {!readOnly && (
-            <input
-              type="text"
-              className="segment-row__tag-input"
-              placeholder="הוסף תגית..."
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={() => {
-                if (tagInput.trim()) addTag(tagInput);
-              }}
-              aria-label="הוסף תגית למקטע"
-            />
-          )}
-        </div>
       </div>
     </div>
   );

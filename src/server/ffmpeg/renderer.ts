@@ -4,7 +4,6 @@ import { probeVideo } from "./probe";
 import { getFFmpegPath } from "./binaries";
 import type { ResolvedPick, ParsedVideo } from "@/shared/types";
 import { getAssetSource } from "@/server/assets/source";
-import { getRuntimeConfig } from "@/server/runtime/config";
 
 const PAD_THRESHOLD_SEC = 0.04;
 
@@ -87,10 +86,9 @@ export async function buildRendererArgs(
   inputFiles.push(audioPath);
 
   let bgMusicInputIdx: number | null = null;
-  const bgMusicPath =
-    opts.bgMusicPath ??
-    getRuntimeConfig().bgMusicPath ??
-    getAssetSource().getDefaultBgMusicPath();
+  // Resolve via the asset source so it can fall back to the bundled
+  // canonical file shipped with the app when the workspace copy is missing.
+  const bgMusicPath = opts.bgMusicPath ?? getAssetSource().getDefaultBgMusicPath();
   if (fs.existsSync(bgMusicPath)) {
     args.push("-stream_loop", "-1", "-i", bgMusicPath);
     bgMusicInputIdx = resolved.length + 1;
@@ -143,7 +141,11 @@ export async function buildRendererArgs(
     );
     audioOut = "[aout]";
   } else {
-    audioOut = `[${audioInputIdx}:a]`;
+    // Bare input stream reference: `-map N:a`. Wrapping it in brackets makes
+    // ffmpeg look up a filter-graph label named `N:a`, which does not exist
+    // and fails with "Output with label 'N:a' does not exist in any defined
+    // filter graph" → "Error opening output files: Invalid argument".
+    audioOut = `${audioInputIdx}:a`;
   }
 
   args.push("-filter_complex", filterParts.join(";"));

@@ -22,6 +22,7 @@ const ENV_KEYS = [
   "FFMPEG_PATH",
   "FFPROBE_PATH",
   "BG_MUSIC_PATH",
+  "WEATHER_RESOURCES_DIR",
   "R2_SYNC_ENABLED",
   "R2_GATEWAY_URL",
   "R2_TENANT_ID",
@@ -90,6 +91,36 @@ describe("desktop runtime config", () => {
     expect(paths.uploadsDir).toBe(path.join(runtime, "uploads"));
     expect(paths.outputsDir).toBe(path.join(runtime, "outputs"));
     expect(paths.segmentPostersDir).toBe(path.join(runtime, "cache", "segment_posters"));
+  });
+
+  it("falls back to the bundled bg-music file when the workspace copy is missing", () => {
+    const workspace = makeTempDir("bg-music-workspace");
+    const resources = makeTempDir("bg-music-resources");
+    const bgFilename = "מוזיקת אנדר לתחזית.mp3";
+    fs.mkdirSync(path.join(resources, "bg-music"), { recursive: true });
+    fs.writeFileSync(path.join(resources, "bg-music", bgFilename), "bundled");
+
+    process.env.WEATHER_WORKSPACE_DIR = workspace;
+    process.env.WEATHER_RESOURCES_DIR = resources;
+    resetRuntimeState();
+
+    expect(getAssetSource().getDefaultBgMusicPath()).toBe(
+      path.join(resources, "bg-music", bgFilename),
+    );
+  });
+
+  it("prefers the workspace bg-music file when present", () => {
+    const workspace = makeTempDir("bg-music-workspace-present");
+    const bgFilename = "מוזיקת אנדר לתחזית.mp3";
+    fs.mkdirSync(path.join(workspace, "music"), { recursive: true });
+    fs.writeFileSync(path.join(workspace, "music", bgFilename), "workspace");
+
+    process.env.WEATHER_WORKSPACE_DIR = workspace;
+    resetRuntimeState();
+
+    expect(getAssetSource().getDefaultBgMusicPath()).toBe(
+      path.join(workspace, "music", bgFilename),
+    );
   });
 
   it("scaffolds and validates a local workspace", () => {

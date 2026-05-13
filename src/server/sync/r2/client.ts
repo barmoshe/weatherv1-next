@@ -190,3 +190,49 @@ export async function downloadR2File(
     updatedAt: result.LastModified?.toISOString(),
   };
 }
+
+export interface R2Stream {
+  body: ReadableStream<Uint8Array>;
+  contentType?: string;
+  contentLength?: number;
+  etag?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Stream an R2 object straight through without writing to local disk.
+ * Returns null when the object does not exist. Throws on transport / auth
+ * failure so callers can decide whether to retry or fall through.
+ */
+export async function getR2Stream(key: string): Promise<R2Stream | null> {
+  const { client, credentials } = await makeS3Client();
+  try {
+    const result = await client.send(new GetObjectCommand({ Bucket: credentials.bucketName, Key: key }));
+    if (!result.Body) return null;
+    let body: ReadableStream<Uint8Array>;
+    if (result.Body instanceof Readable) {
+      body = Readable.toWeb(result.Body) as unknown as ReadableStream<Uint8Array>;
+    } else if (result.Body instanceof Uint8Array) {
+      const bytes = result.Body;
+      body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(bytes);
+          controller.close();
+        },
+      });
+    } else {
+      body = result.Body as unknown as ReadableStream<Uint8Array>;
+    }
+    return {
+      body,
+      contentType: result.ContentType,
+      contentLength: result.ContentLength,
+      etag: normalizeEtag(result.ETag),
+      updatedAt: result.LastModified?.toISOString(),
+    };
+  } catch (err: any) {
+    const status = err?.$metadata?.httpStatusCode;
+    if (status === 404 || err?.name === "NoSuchKey" || err?.name === "NotFound") return null;
+    throw err;
+  }
+}

@@ -2,6 +2,27 @@ import fs from "node:fs";
 import path from "node:path";
 import { getRuntimeConfig } from "@/server/runtime/config";
 
+const BG_MUSIC_FILENAME = "מוזיקת אנדר לתחזית.mp3";
+
+/**
+ * Resolve the canonical bundled bg-music file shipped with the app.
+ *
+ * - Packaged Electron app: Electron main copies `assets/bg-music/` to
+ *   `Contents/Resources/bg-music/` via Forge `extraResource` and forwards
+ *   `process.resourcesPath` to the Next child as `WEATHER_RESOURCES_DIR`.
+ * - Dev / server runs: the file lives in the repo at `assets/bg-music/`.
+ *
+ * Both call sites return the same filename so renders are byte-identical
+ * regardless of how the app is launched.
+ */
+function getBundledBgMusicPath(): string {
+  const resourcesDir = process.env.WEATHER_RESOURCES_DIR;
+  if (resourcesDir) {
+    return path.join(resourcesDir, "bg-music", BG_MUSIC_FILENAME);
+  }
+  return path.join(getRuntimeConfig().projectRoot, "assets", "bg-music", BG_MUSIC_FILENAME);
+}
+
 export interface WorkspaceValidation {
   workspaceDir: string;
   catalogPath: string;
@@ -43,7 +64,9 @@ export class LocalWorkspaceAssetSource implements AssetSource {
   }
 
   getDefaultBgMusicPath(): string {
-    return getRuntimeConfig().bgMusicPath;
+    const configured = getRuntimeConfig().bgMusicPath;
+    if (fs.existsSync(configured)) return configured;
+    return getBundledBgMusicPath();
   }
 
   ensureWorkspaceScaffold(): void {
