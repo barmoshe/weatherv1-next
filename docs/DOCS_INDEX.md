@@ -29,6 +29,7 @@ The same product can run in two modes:
    - desktop architecture: [ELECTRON_DESKTOP_PLAN.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_PLAN.md)
    - desktop operational state: [ELECTRON_DESKTOP_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_DESKTOP_HANDOFF.md)
    - Cloudflare R2 asset sync and Pulumi infrastructure: [R2_PULUMI_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/R2_PULUMI_HANDOFF.md)
+   - catalog segment tagging job (poster + tags + description for empty segments): [CATALOG_TAGGING_HANDOFF.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/CATALOG_TAGGING_HANDOFF.md)
    - desktop UX guidance: [ELECTRON_UXUI_RESEARCH.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/ELECTRON_UXUI_RESEARCH.md)
    - LLM + transcription providers (Anthropic/OpenAI for planning, OpenAI Whisper cloud for transcription): [PROVIDERS.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/PROVIDERS.md)
    - server/cloud deployment: [DESIGN_DEPLOYMENT.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/DESIGN_DEPLOYMENT.md), [DEPLOY_ORACLE_CLOUD.md](/Users/barmoshe/claude-creative-stack/weatherv1-next/docs/DEPLOY_ORACLE_CLOUD.md)
@@ -54,6 +55,7 @@ The same product can run in two modes:
 | Path | Role |
 | --- | --- |
 | `src/app/` | Next App Router UI and route handlers |
+| `src/app/globals.css` | Styling source of truth — canonical class names for modals, fields, segment editor, buttons, catalog grid |
 | `src/client/` | Studio UI components and browser/desktop renderer helpers |
 | `src/server/catalog/` | Catalog parsing and persistence |
 | `src/server/sync/r2/` | Cloudflare R2 catalog/media sidecar sync |
@@ -81,6 +83,7 @@ The same product can run in two modes:
 - `README.md` should stay short enough to onboard a new reader quickly; deeper edge cases belong in the specialized docs.
 - `PROJECT_GOAL.md` is the active goal and invariants file. Update it when “done” changes.
 - `.claude/skills/weatherv1-goal/SKILL.md` is the project-specific goal router. Invoke it as `/weatherv1-goal` in Claude Code.
+- `src/app/globals.css` is the only styling source of truth for renderer components. Before adding a new class name to JSX, grep `globals.css` for a canonical equivalent; new BEM `__`-style names without matching rules will render unstyled.
 
 ## Agent workflow
 

@@ -245,8 +245,15 @@ win.once("ready-to-show", () => win.show());
 
 ## 4. Styling Approach Inside The Renderer
 
-The Next.js project today is plain CSS-in-JSX + module styles. The desktop port
-should not force a framework rewrite. Recommendations, in order of preference:
+The Next.js project today is **a single global stylesheet** (`src/app/globals.css`)
+plus a couple of CSS modules. There is no Tailwind, no CSS-in-JS runtime, and
+no per-component stylesheet. New components must reuse the class names that
+already exist there — see "Canonical class names" below — otherwise they will
+render unstyled (the catalog `DetailModal` shipped briefly with BEM `__`-style
+names that had no matching rules, with exactly that result).
+
+The desktop port should not force a framework rewrite. Recommendations, in
+order of preference:
 
 1. **Keep the current styling system.** Add a small `desktop.css` layer that
    only activates when `<html data-runtime="desktop">` is present. Use it for
@@ -274,7 +281,27 @@ should not force a framework rewrite. Recommendations, in order of preference:
    - Avoid heavy component kits (MUI, Chakra, AntD) — they ship a lot of
      CSS, fight tokens, and are tuned for web rather than desktop density.
 
-### 4.1 Desktop Density
+### 4.1 Canonical Class Names
+
+`src/app/globals.css` is the single source of truth. Before adding a new class
+name to JSX, grep it for a canonical equivalent. The patterns below are the
+ones renderer code is expected to reuse:
+
+| Concern | Pattern |
+| --- | --- |
+| Modal | `modal` (overlay) → `modal-backdrop` + `modal-dialog` (optionally `modal-dialog--wide` / `modal-dialog--settings`) → `modal-header` / `modal-title` / `modal-subtitle` / `modal-close` / `modal-body` / `modal-footer` |
+| Form field | `field` wrapping `field-label` + bare `textarea` / `select` / `input` (the `.field textarea, .field select` rule styles them) |
+| Catalog detail body | `detail-form-grid` + `detail-segments` + `detail-footer` (`detail-footer .btn--primary` is coral) |
+| Segment row | `segment-block` (grid: thumb / header / desc / tags) with `segment-thumb`, `segment-header`, `segment-time`, `segment-conf`, `segment-desc-input`, `segment-tags-input`, `tag-pill`, `tag-pill__remove`, `segment-tag-add` |
+| Buttons | `btn` + `btn--primary` (coral) / `btn--secondary` (bordered) / `btn--danger` (red) / `btn--ghost` (outlined) / `btn--sm`. `btn--confirm` adds the pulse animation used for two-step destructive confirms |
+| Inline error | `error-banner` (inside `modal-body` or panels) |
+
+BEM `__`-style names (`modal-overlay`, `modal__header`, `field-group`,
+`field-input`, `segments-list`, `segment-row__*`) are **not** part of the
+convention and have no CSS — components using them will render with no
+background, no padding, and a broken layout.
+
+### 4.2 Desktop Density
 
 - Native desktop UIs are denser than typical web UIs. Reduce default spacing
   scale by ~15–25% under `data-runtime="desktop"`.
@@ -285,13 +312,13 @@ should not force a framework rewrite. Recommendations, in order of preference:
   `1px solid color-mix(in srgb, var(--fg) 12%, transparent)` or
   `0.5px` where supported.
 
-### 4.2 Scrollbars
+### 4.3 Scrollbars
 
 - macOS hides scrollbars by default; Windows shows them. Style with
   `::-webkit-scrollbar` to a thin overlay that matches the theme, and respect
   `prefers-reduced-motion` for fades.
 
-### 4.3 Focus And Keyboard
+### 4.4 Focus And Keyboard
 
 - Keep focus rings visible. Desktop users keyboard-navigate more than web
   users.

@@ -49,3 +49,4 @@ npm run electron:make
 - Do not move ffmpeg/ffprobe back inside `app.asar`.
 - Do not store API keys in renderer `localStorage`.
 - Do not mix generated runtime artifacts into release commits unless the user explicitly asks for fixture updates.
+- Do not invent new CSS class names for renderer components without adding matching rules. The styling source of truth is `src/app/globals.css`. Reuse the canonical patterns it already defines (modal: `modal` / `modal-backdrop` / `modal-dialog` / `modal-header` / `modal-title` / `modal-body` / `modal-close` / `modal-footer`; forms: `field` + `field-label` with bare `textarea`/`select`; segment editor: `segment-block` / `segment-thumb` / `segment-header` / `segment-time` / `segment-desc-input` / `segment-tags-input`; buttons: `btn` + `btn--primary` / `btn--secondary` / `btn--danger` / `btn--ghost` / `btn--sm`). BEM `__`-style names have no CSS in this repo and will render unstyled.

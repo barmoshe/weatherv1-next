@@ -32,6 +32,8 @@ Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and 
 - Cloudflare account `workers.dev` subdomain is `barprojectsandbuilds`; Pulumi now manages `WorkersScriptSubdomain` and outputs the real gateway URL: `https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev`.
 - Worker smoke tests pass: `/v1/health` returns bucket `weatherv1-media` / tenant `default`, and `/v1/r2/temporary-credentials` returns scoped temporary credentials for `tenants/default/`.
 - Local `v1Drive/weather` upload to R2 completed. Source had 212 catalog videos totaling about 12.13 GiB; upload target was `tenants/default/videos/<videoId>/<filename>`, followed by `tenants/default/catalog/catalog.json` with `remote` metadata. Verified remote catalog has 212 videos and 212 `remote.key` values. Local catalog was updated from the verified remote catalog, with a backup saved next to it.
+- 2026-05-13: Empty segments tagged + described: 193 (1 skipped as uninformative). Local-only — `pushCatalogToR2()` and the 194 segment posters at `tenants/default/posters/segments/<segId>.jpg` are deferred until the user re-enables R2 credentials in this environment.
+- 2026-05-13 (later): R2 mirror completed via CLI. `scripts/sync-segment-posters.ts --skip-clips` uploaded all 406 segment posters (193 new, 213 already present, 0 failed). Catalog pushed with `replaceRemoteCatalog()` — etag `36ff8fc768c910974647b7c3075f63e1`. Remote verified at 212 videos / 406 segments / 405 tagged / 1 empty (`IB019-s33`). The standard `pushCatalogToR2` tripped its conflict guard because the fresh CLI session had no `lastCatalogEtag` cached — `replaceRemote: true` was the safe bypass since the local catalog was authoritative.
 
 ## 2026-05-13 update — Worker Basic Auth + login screen
 
