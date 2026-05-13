@@ -7,6 +7,8 @@ import {
   catalogDurationLabel,
   catalogVideoMeta,
   catalogVideoTitle,
+  segmentListStats,
+  segmentTimeRange,
 } from "@/client/lib/catalog-display";
 import { labelFor } from "@/client/lib/tag-labels";
 import type { ParsedVideo, NormalisedSegment } from "@/shared/types";
@@ -16,6 +18,10 @@ import { SegmentRow } from "./SegmentRow";
 interface DetailModalProps {
   video: ParsedVideo;
   onClose: () => void;
+}
+
+function segmentDomId(videoId: string, segmentId: string): string {
+  return `detail-segment-${videoId}-${segmentId}`.replace(/[^A-Za-z0-9_-]/g, "-");
 }
 
 export function DetailModal({ video, onClose }: DetailModalProps) {
@@ -97,6 +103,7 @@ export function DetailModal({ video, onClose }: DetailModalProps) {
 
   const title = catalogVideoTitle(video);
   const meta = catalogVideoMeta(video);
+  const segmentStats = segmentListStats(segments);
 
   return (
     <div
@@ -142,6 +149,20 @@ export function DetailModal({ video, onClose }: DetailModalProps) {
                   </span>
                 )}
               </div>
+              <div className="detail-asset-stat-grid" aria-label="סיכום מקטעים">
+                <span>
+                  <strong>{segmentStats.total}</strong>
+                  מקטעים
+                </span>
+                <span>
+                  <strong>{segmentStats.tagged}</strong>
+                  מתויגים
+                </span>
+                <span>
+                  <strong>{segmentStats.empty}</strong>
+                  חסרים
+                </span>
+              </div>
 
               <div className="field">
                 <label className="field-label" htmlFor="detail-description">
@@ -185,14 +206,42 @@ export function DetailModal({ video, onClose }: DetailModalProps) {
               <header className="detail-segment-header">
                 <div>
                   <h3>מקטעים</h3>
-                  <p>{segments.length ? `${segments.length} מקטעים לעריכה` : "אין מקטעים בקליפ הזה"}</p>
+                  <p>{segments.length ? `${segments.length} מקטעים לעריכה לפי זמן ותוכן` : "אין מקטעים בקליפ הזה"}</p>
                 </div>
+                {segmentStats.total > 0 && (
+                  <div className="detail-segment-stats" aria-label="מצב מקטעים">
+                    <span>{segmentStats.described} עם תיאור</span>
+                    <span>{segmentStats.tagged} מתויגים</span>
+                    {segmentStats.empty > 0 && <span className="is-warning">{segmentStats.empty} חסרים</span>}
+                  </div>
+                )}
               </header>
+              {segments.length > 0 && (
+                <div className="detail-segment-strip" aria-label="ניווט מהיר בין מקטעים">
+                  {segments.map((seg, index) => {
+                    const domId = segmentDomId(video.id, seg.id);
+                    return (
+                      <button
+                        key={seg.id}
+                        type="button"
+                        className="detail-segment-jump"
+                        onClick={() => document.getElementById(domId)?.scrollIntoView({ behavior: "smooth", block: "nearest" })}
+                        aria-label={`עבור למקטע ${index + 1}`}
+                      >
+                        <span>{index + 1}</span>
+                        <span dir="ltr">{segmentTimeRange(seg)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <div className="detail-segments">
-                {segments.map((seg) => (
+                {segments.map((seg, index) => (
                   <SegmentRow
                     key={seg.id}
                     segment={seg}
+                    index={index}
+                    domId={segmentDomId(video.id, seg.id)}
                     onChange={handleSegmentChange}
                   />
                 ))}

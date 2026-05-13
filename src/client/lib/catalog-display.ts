@@ -1,5 +1,19 @@
-import type { ParsedVideo } from "@/shared/types";
+import type { NormalisedSegment, ParsedVideo } from "@/shared/types";
 import { labelFor } from "./tag-labels";
+
+export interface CatalogSegmentStats {
+  total: number;
+  tagged: number;
+  described: number;
+  empty: number;
+}
+
+export interface CatalogSegmentPreview {
+  id: string;
+  description: string;
+  timeRange: string;
+  tags: string[];
+}
 
 export function catalogVideoTitle(video: ParsedVideo): string {
   const description = (video.description ?? "").trim();
@@ -20,6 +34,17 @@ export function catalogVideoMeta(video: ParsedVideo): string {
 export function catalogDurationLabel(seconds?: number | null): string {
   if (!seconds || seconds <= 0) return "";
   return `${Math.round(seconds)} שנ׳`;
+}
+
+function formatSegmentTime(seconds: number): string {
+  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+  const mins = Math.floor(safeSeconds / 60);
+  const secs = Math.floor(safeSeconds % 60);
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+export function segmentTimeRange(segment: Pick<NormalisedSegment, "start_sec" | "end_sec">): string {
+  return `${formatSegmentTime(segment.start_sec)}-${formatSegmentTime(segment.end_sec)}`;
 }
 
 export function availabilityLabel(video: ParsedVideo): string {
@@ -78,6 +103,70 @@ export function topCatalogTags(video: ParsedVideo, limit: number): string[] {
     .sort((a, b) => b[1] - a[1] || labelFor(a[0]).localeCompare(labelFor(b[0]), "he"))
     .slice(0, limit)
     .map(([tag]) => tag);
+}
+
+export function segmentListStats(segments: NormalisedSegment[]): CatalogSegmentStats {
+  return segments.reduce<CatalogSegmentStats>(
+    (stats, segment) => {
+      const hasDescription = Boolean((segment.description ?? "").trim());
+      const hasTags = (segment.tags ?? []).length > 0;
+
+      stats.total += 1;
+      if (hasTags) stats.tagged += 1;
+      if (hasDescription) stats.described += 1;
+      if (!hasDescription && !hasTags) stats.empty += 1;
+      return stats;
+    },
+    { total: 0, tagged: 0, described: 0, empty: 0 }
+  );
+}
+
+export function catalogSegmentStats(video: ParsedVideo): CatalogSegmentStats {
+  return segmentListStats(video.segments ?? []);
+}
+
+function segmentSearchText(segment: NormalisedSegment): string {
+  return [
+    segment.id,
+    segment.description,
+    ...(segment.tags ?? []),
+    ...(segment.tags ?? []).map(labelFor),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLocaleLowerCase("he");
+}
+
+function segmentPreviewScore(segment: NormalisedSegment, needle: string): number {
+  let score = 0;
+  const description = (segment.description ?? "").trim();
+  const tags = segment.tags ?? [];
+
+  if (needle && segmentSearchText(segment).includes(needle)) score += 100;
+  if (description) score += 10;
+  if (tags.length > 0) score += 5;
+  score += Math.max(0, 2 - Math.abs(segment.start_sec));
+  return score;
+}
+
+export function catalogSegmentPreviews(
+  video: ParsedVideo,
+  query = "",
+  limit = 3
+): CatalogSegmentPreview[] {
+  const needle = query.trim().toLocaleLowerCase("he");
+  return [...(video.segments ?? [])]
+    .sort((a, b) => {
+      const score = segmentPreviewScore(b, needle) - segmentPreviewScore(a, needle);
+      return score || a.start_sec - b.start_sec || a.id.localeCompare(b.id);
+    })
+    .slice(0, limit)
+    .map((segment) => ({
+      id: segment.id,
+      description: (segment.description ?? "").trim(),
+      timeRange: segmentTimeRange(segment),
+      tags: segment.tags ?? [],
+    }));
 }
 
 export function matchesCatalogSearch(video: ParsedVideo, query: string): boolean {

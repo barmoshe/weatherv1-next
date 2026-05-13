@@ -8,6 +8,8 @@ interface SegmentRowProps {
   segment: NormalisedSegment;
   onChange?: (updated: NormalisedSegment) => void;
   readOnly?: boolean;
+  index?: number;
+  domId?: string;
 }
 
 function formatTimecode(secs: number): string {
@@ -16,7 +18,7 @@ function formatTimecode(secs: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export function SegmentRow({ segment, onChange, readOnly = false }: SegmentRowProps) {
+export function SegmentRow({ segment, onChange, readOnly = false, index, domId }: SegmentRowProps) {
   const [tagInput, setTagInput] = useState("");
   const tags = segment.tags ?? [];
 
@@ -43,7 +45,7 @@ export function SegmentRow({ segment, onChange, readOnly = false }: SegmentRowPr
   const posterUrl = `/api/catalog/segment-poster/${encodeURIComponent(segment.id)}`;
 
   return (
-    <div className="segment-block" data-segment-id={segment.id}>
+    <div className="segment-block" id={domId} data-segment-id={segment.id}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={posterUrl}
@@ -56,6 +58,7 @@ export function SegmentRow({ segment, onChange, readOnly = false }: SegmentRowPr
       />
 
       <div className="segment-header">
+        {index != null && <span className="segment-index">מקטע {index + 1}</span>}
         <span className="segment-id">{segment.id}</span>
         <span className="segment-time">
           {formatTimecode(segment.start_sec)} – {formatTimecode(segment.end_sec)}

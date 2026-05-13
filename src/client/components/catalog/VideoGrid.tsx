@@ -9,9 +9,10 @@ interface VideoGridProps {
   onVideoClick: (video: ParsedVideo) => void;
   onMaterialize?: (video: ParsedVideo) => void;
   pageSize?: number;
+  searchQuery?: string;
 }
 
-export function VideoGrid({ videos, onVideoClick, onMaterialize, pageSize = 24 }: VideoGridProps) {
+export function VideoGrid({ videos, onVideoClick, onMaterialize, pageSize = 24, searchQuery = "" }: VideoGridProps) {
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +52,13 @@ export function VideoGrid({ videos, onVideoClick, onMaterialize, pageSize = 24 }
     <>
       <div className="catalog-grid" id="catalog-grid" role="list" aria-label={`${videos.length} סרטונים`}>
         {visible.map((v) => (
-          <VideoCard key={v.id} video={v} onClick={onVideoClick} onMaterialize={onMaterialize} />
+          <VideoCard
+            key={v.id}
+            video={v}
+            onClick={onVideoClick}
+            onMaterialize={onMaterialize}
+            searchQuery={searchQuery}
+          />
         ))}
       </div>
 

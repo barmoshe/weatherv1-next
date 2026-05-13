@@ -6,6 +6,8 @@ import { labelFor } from "@/client/lib/tag-labels";
 import {
   availabilityLabel,
   catalogDurationLabel,
+  catalogSegmentPreviews,
+  catalogSegmentStats,
   catalogVideoMeta,
   catalogVideoTitle,
   hasAnyCatalogTag,
@@ -16,9 +18,10 @@ interface VideoCardProps {
   video: ParsedVideo;
   onClick: (video: ParsedVideo) => void;
   onMaterialize?: (video: ParsedVideo) => void;
+  searchQuery?: string;
 }
 
-export function VideoCard({ video, onClick, onMaterialize }: VideoCardProps) {
+export function VideoCard({ video, onClick, onMaterialize, searchQuery = "" }: VideoCardProps) {
   const cardRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [posterVisible, setPosterVisible] = useState(false);
@@ -72,7 +75,8 @@ export function VideoCard({ video, onClick, onMaterialize }: VideoCardProps) {
   const dur = catalogDurationLabel(video.duration_sec);
   const untagged = !hasAnyCatalogTag(video);
   const tags = topCatalogTags(video, 3);
-  const segCount = (video.segments ?? []).length;
+  const segmentStats = catalogSegmentStats(video);
+  const segmentPreviews = catalogSegmentPreviews(video, searchQuery, 2);
   const title = catalogVideoTitle(video);
   const meta = catalogVideoMeta(video);
 
@@ -129,9 +133,9 @@ export function VideoCard({ video, onClick, onMaterialize }: VideoCardProps) {
             {meta}
           </span>
           <div className="video-card-tags">
-            {segCount > 1 && (
-              <span className="segment-count-badge" title={`${segCount} מקטעים`}>
-                {segCount} מקטעים
+            {segmentStats.total > 1 && (
+              <span className="segment-count-badge" title={`${segmentStats.total} מקטעים`}>
+                {segmentStats.total} מקטעים
               </span>
             )}
             {tags.map((tag) => (
@@ -140,6 +144,27 @@ export function VideoCard({ video, onClick, onMaterialize }: VideoCardProps) {
               </span>
             ))}
           </div>
+          {segmentStats.total > 0 && (
+            <div className="video-card-segment-summary" aria-label="סיכום מקטעים">
+              <span>{segmentStats.total} מקטעים</span>
+              <span>{segmentStats.tagged} מתויגים</span>
+              {segmentStats.empty > 0 && <span className="is-warning">{segmentStats.empty} חסרים</span>}
+            </div>
+          )}
+          {segmentPreviews.length > 0 && (
+            <ol className="video-card-segments" aria-label="מקטעים בולטים">
+              {segmentPreviews.map((segment) => (
+                <li key={segment.id} className="video-card-segment-row">
+                  <span className="video-card-segment-time" dir="ltr">
+                    {segment.timeRange}
+                  </span>
+                  <span className="video-card-segment-desc" dir="auto">
+                    {segment.description || "מקטע ללא תיאור"}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
       </button>
 

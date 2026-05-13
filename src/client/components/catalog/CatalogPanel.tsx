@@ -7,6 +7,7 @@ import { useCatalog, useR2SyncStatus } from "@/client/hooks/useCatalog";
 import {
   hasAnyCatalogTag,
   matchesCatalogSearch,
+  segmentListStats,
   videoMatchesTags,
 } from "@/client/lib/catalog-display";
 import type { ParsedVideo } from "@/shared/types";
@@ -149,6 +150,10 @@ export function CatalogPanel() {
     () => videos.filter((v) => (v.segments?.length ?? 0) >= 2).length,
     [videos]
   );
+  const filteredSegmentStats = useMemo(
+    () => segmentListStats(filtered.flatMap((v) => v.segments ?? [])),
+    [filtered]
+  );
   const syncText = r2StatusText(r2Status, materializingId);
 
   const handleVideoClick = useCallback((video: ParsedVideo) => {
@@ -263,10 +268,21 @@ export function CatalogPanel() {
       <header className="catalog-bar">
         <div className="catalog-heading">
           <div>
-            <h2 className="catalog-title">קטלוג קליפים</h2>
+            <h2 className="catalog-title">קטלוג מקטעים וקליפים</h2>
             <p className="catalog-progress" id="catalog-progress">
-              {isLoading ? "טוען קטלוג…" : `${filtered.length} מתוך ${videos.length} קליפים`}
+              {isLoading
+                ? "טוען קטלוג…"
+                : `${filtered.length} מתוך ${videos.length} קליפים · ${filteredSegmentStats.total} מקטעים`}
             </p>
+            {!isLoading && filteredSegmentStats.total > 0 && (
+              <div className="catalog-segment-stats" aria-label="מצב מקטעים בתוצאות">
+                <span>{filteredSegmentStats.tagged} מתויגים</span>
+                <span>{filteredSegmentStats.described} עם תיאור</span>
+                {filteredSegmentStats.empty > 0 && (
+                  <span className="is-warning">{filteredSegmentStats.empty} חסרים</span>
+                )}
+              </div>
+            )}
           </div>
           {syncText && (
             <span className={`catalog-sync-pill${r2Status?.conflict ? " is-conflict" : ""}${r2Status?.error ? " is-error" : ""}`}>
@@ -352,6 +368,7 @@ export function CatalogPanel() {
               videos={filtered}
               onVideoClick={handleVideoClick}
               onMaterialize={handleMaterialize}
+              searchQuery={filters.search}
             />
           )}
         </div>
