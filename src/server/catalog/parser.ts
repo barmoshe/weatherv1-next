@@ -171,6 +171,18 @@ export interface TagCounts {
   segment_counts: Record<string, number>;
   source_counts: Record<string, number>;
   total: number;
+  total_clips: number;
+  total_segments: number;
+  multi_segment_clips: number;
+  single_segment_clips: number;
+  clips_with_no_segments: number;
+  remote_available_clips: number;
+  remote_missing_clips: number;
+  cached_local_clips: number;
+  not_cached_local_clips: number;
+  cloud_only_clips: number;
+  syncing_clips: number;
+  error_clips: number;
   untagged: number;
 }
 
@@ -179,8 +191,34 @@ export function computeTagCounts(videos: ParsedVideo[]): TagCounts {
   const segmentCounts: Record<string, number> = {};
   const sourceCounts: Record<string, number> = {};
   let untagged = 0;
+  let totalSegments = 0;
+  let multiSegmentClips = 0;
+  let singleSegmentClips = 0;
+  let clipsWithNoSegments = 0;
+  let remoteAvailableClips = 0;
+  let remoteMissingClips = 0;
+  let cachedLocalClips = 0;
+  let notCachedLocalClips = 0;
+  let cloudOnlyClips = 0;
+  let syncingClips = 0;
+  let errorClips = 0;
 
   for (const v of videos) {
+    const segmentCount = v.segments?.length ?? 0;
+    totalSegments += segmentCount;
+    if (segmentCount >= 2) multiSegmentClips++;
+    else if (segmentCount === 1) singleSegmentClips++;
+    else clipsWithNoSegments++;
+
+    if (v.remote?.key) remoteAvailableClips++;
+    else remoteMissingClips++;
+
+    if (v.availability === "local") cachedLocalClips++;
+    else notCachedLocalClips++;
+    if (v.availability === "cloud_only") cloudOnlyClips++;
+    if (v.availability === "syncing") syncingClips++;
+    if (v.availability === "error") errorClips++;
+
     // Clip-level legacy tags
     const lt = v.tags;
     if (lt) {
@@ -210,6 +248,18 @@ export function computeTagCounts(videos: ParsedVideo[]): TagCounts {
     segment_counts: segmentCounts,
     source_counts: sourceCounts,
     total: videos.length,
+    total_clips: videos.length,
+    total_segments: totalSegments,
+    multi_segment_clips: multiSegmentClips,
+    single_segment_clips: singleSegmentClips,
+    clips_with_no_segments: clipsWithNoSegments,
+    remote_available_clips: remoteAvailableClips,
+    remote_missing_clips: remoteMissingClips,
+    cached_local_clips: cachedLocalClips,
+    not_cached_local_clips: notCachedLocalClips,
+    cloud_only_clips: cloudOnlyClips,
+    syncing_clips: syncingClips,
+    error_clips: errorClips,
     untagged,
   };
 }

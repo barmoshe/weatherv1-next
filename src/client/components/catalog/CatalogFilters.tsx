@@ -11,6 +11,7 @@ export interface FilterState {
   search: string;
   activeTags: string[];
   activeSource: string | null;
+  activeAvailability: "not_cached" | "cloud_only" | null;
   untaggedOnly: boolean;
   multiSegmentOnly: boolean;
   sort: SortOrder;
@@ -31,7 +32,7 @@ export function CatalogFilters({
   filteredCount,
   multiSegmentCount,
 }: CatalogFiltersProps) {
-  const { data: tagData } = useTagCounts();
+  const { data: tagData, isLoading: tagCountsLoading, isError: tagCountsError } = useTagCounts();
 
   const untaggedCount = useMemo(() => {
     return tagData?.untagged ?? 0;
@@ -57,8 +58,12 @@ export function CatalogFilters({
   const hasFilters =
     filters.activeTags.length > 0 ||
     filters.activeSource !== null ||
+    filters.activeAvailability !== null ||
     filters.untaggedOnly ||
     filters.multiSegmentOnly;
+  const multiSegmentChipCount = tagData?.multi_segment_clips ?? (tagCountsLoading ? "…" : multiSegmentCount);
+  const notCachedCount = tagData?.not_cached_local_clips ?? (tagCountsLoading || tagCountsError ? "…" : 0);
+  const cloudOnlyCount = tagData?.cloud_only_clips ?? (tagCountsLoading || tagCountsError ? "…" : 0);
 
   return (
     <details
@@ -83,7 +88,25 @@ export function CatalogFilters({
             onClick={() => onChange({ multiSegmentOnly: !filters.multiSegmentOnly })}
           >
             2+ מקטעים
-            <span className="chip-count">{multiSegmentCount}</span>
+            <span className="chip-count">{multiSegmentChipCount}</span>
+          </button>
+          <button
+            type="button"
+            className="filter-chip"
+            aria-pressed={filters.activeAvailability === "not_cached"}
+            onClick={() => onChange({ activeAvailability: filters.activeAvailability === "not_cached" ? null : "not_cached" })}
+          >
+            לא במטמון
+            <span className="chip-count">{notCachedCount}</span>
+          </button>
+          <button
+            type="button"
+            className="filter-chip"
+            aria-pressed={filters.activeAvailability === "cloud_only"}
+            onClick={() => onChange({ activeAvailability: filters.activeAvailability === "cloud_only" ? null : "cloud_only" })}
+          >
+            בענן בלבד
+            <span className="chip-count">{cloudOnlyCount}</span>
           </button>
           <button
             type="button"
@@ -144,6 +167,7 @@ export function CatalogFilters({
               onChange({
                 activeTags: [],
                 activeSource: null,
+                activeAvailability: null,
                 untaggedOnly: false,
                 multiSegmentOnly: false,
               })

@@ -21,6 +21,18 @@ export interface CatalogTagCounts {
   segment_counts: Record<string, number>;
   source_counts: Record<string, number>;
   total: number;
+  total_clips: number;
+  total_segments: number;
+  multi_segment_clips: number;
+  single_segment_clips: number;
+  clips_with_no_segments: number;
+  remote_available_clips: number;
+  remote_missing_clips: number;
+  cached_local_clips: number;
+  not_cached_local_clips: number;
+  cloud_only_clips: number;
+  syncing_clips: number;
+  error_clips: number;
   untagged: number;
 }
 

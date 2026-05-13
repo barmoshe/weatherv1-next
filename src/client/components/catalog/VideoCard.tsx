@@ -17,20 +17,15 @@ import {
 interface VideoCardProps {
   video: ParsedVideo;
   onClick: (video: ParsedVideo) => void;
-  onMaterialize?: (video: ParsedVideo) => void;
   searchQuery?: string;
 }
 
-export function VideoCard({ video, onClick, onMaterialize, searchQuery = "" }: VideoCardProps) {
+export function VideoCard({ video, onClick, searchQuery = "" }: VideoCardProps) {
   const cardRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [posterVisible, setPosterVisible] = useState(false);
-  const [videoSrc, setVideoSrc] = useState<string | null>(null);
-  const [hovered, setHovered] = useState(false);
 
   const safeId = encodeURIComponent(video.id || "");
   const posterUrl = `/api/catalog/poster/${safeId}`;
-  const previewUrl = `/api/catalog/preview/${safeId}`;
 
   useEffect(() => {
     const el = cardRef.current;
@@ -48,27 +43,7 @@ export function VideoCard({ video, onClick, onMaterialize, searchQuery = "" }: V
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (hovered && posterVisible && !videoSrc) {
-      setVideoSrc(previewUrl);
-    }
-  }, [hovered, posterVisible, videoSrc, previewUrl]);
-
-  useEffect(() => {
-    const vid = videoRef.current;
-    if (!vid || !videoSrc) return;
-    if (hovered) {
-      vid.play().catch(() => {});
-    } else {
-      vid.pause();
-      vid.currentTime = 0;
-    }
-  }, [hovered, videoSrc]);
-
   const handleClick = useCallback(() => onClick(video), [onClick, video]);
-  const handleMaterialize = useCallback(() => {
-    onMaterialize?.(video);
-  }, [onMaterialize, video]);
 
   const orientation = video.orientation || "H";
   const orientLabel = orientation === "V" ? "אנכי" : "אופקי";
@@ -85,8 +60,6 @@ export function VideoCard({ video, onClick, onMaterialize, searchQuery = "" }: V
       ref={cardRef}
       className="video-card"
       data-video-id={video.id}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       data-availability={video.availability}
     >
       <button
@@ -95,7 +68,7 @@ export function VideoCard({ video, onClick, onMaterialize, searchQuery = "" }: V
         aria-label={`פתח קליפ: ${title}`}
         onClick={handleClick}
       >
-        <div className="video-thumb" data-video-src={previewUrl}>
+        <div className="video-thumb">
           {posterVisible && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -104,17 +77,6 @@ export function VideoCard({ video, onClick, onMaterialize, searchQuery = "" }: V
               loading="lazy"
               decoding="async"
               alt=""
-            />
-          )}
-          {videoSrc && (
-            <video
-              ref={videoRef}
-              src={videoSrc}
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              aria-hidden="true"
             />
           )}
           <span className="orient-badge">{orientLabel}</span>
@@ -167,17 +129,6 @@ export function VideoCard({ video, onClick, onMaterialize, searchQuery = "" }: V
           )}
         </div>
       </button>
-
-      {video.availability === "cloud_only" && (
-        <div className="video-card-footer">
-          <button type="button" className="video-card-download" onClick={handleMaterialize}>
-            הורד מהענן
-            <span dir="ltr" className="technical-inline">
-              {video.id}
-            </span>
-          </button>
-        </div>
-      )}
     </article>
   );
 }

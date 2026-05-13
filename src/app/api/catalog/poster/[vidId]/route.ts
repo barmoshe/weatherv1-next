@@ -4,7 +4,7 @@ import { parseCatalog, buildVideoMap } from "@/server/catalog/parser";
 import { getVideosDir } from "@/server/catalog/storage";
 import { generatePoster, posterPath } from "@/server/ffmpeg/posters";
 import { getRuntimePaths } from "@/server/runtime/paths";
-import { getR2Stream, r2Configured, tenantKey } from "@/server/sync/r2/client";
+import { downloadR2File, r2Configured, tenantKey } from "@/server/sync/r2/client";
 
 function clipPosterKey(videoId: string): string {
   return tenantKey(`posters/clips/${videoId}.jpg`);
@@ -30,8 +30,8 @@ export async function GET(
   }
 
   // Local cache fast path: serve cached poster regardless of availability.
+  const cached = posterPath(vidId, postersDir);
   if (!force) {
-    const cached = posterPath(vidId, postersDir);
     if (fs.existsSync(cached)) {
       const buf = fs.readFileSync(cached);
       return new NextResponse(buf, {
@@ -44,8 +44,28 @@ export async function GET(
     }
   }
 
-  // Local video present: ffmpeg-generate as before.
-  if (video.availability === "local") {
+  // R2-first: fetch and cache posters from R2 for browsing, without
+  // materializing the source video into the permanent videos directory.
+  if (r2Configured()) {
+    try {
+      await downloadR2File(clipPosterKey(vidId), cached);
+      if (fs.existsSync(cached)) {
+        const buf = fs.readFileSync(cached);
+        return new NextResponse(buf, {
+          headers: {
+            "Content-Type": "image/jpeg",
+            "Cache-Control": "public, max-age=3600",
+            "X-Poster-Source": "r2-cache",
+          },
+        });
+      }
+    } catch (err) {
+      console.warn(`poster: R2 poster fetch failed for ${vidId}:`, err);
+    }
+  }
+
+  // Explicit force=1 local regeneration remains available for maintenance.
+  if (force && video.availability === "local") {
     const posterFilePath = await generatePoster(video.path, vidId, postersDir, force);
     if (posterFilePath && fs.existsSync(posterFilePath)) {
       const buf = fs.readFileSync(posterFilePath);
@@ -56,26 +76,6 @@ export async function GET(
           "X-Poster-Source": "ffmpeg-local",
         },
       });
-    }
-    // ffmpeg failed — fall through to R2 in case a stale R2 poster is around.
-  }
-
-  // Cloud-only or local generation failed: stream the poster from R2 if present.
-  if (r2Configured()) {
-    try {
-      const stream = await getR2Stream(clipPosterKey(vidId));
-      if (stream) {
-        const headers: Record<string, string> = {
-          "Content-Type": stream.contentType ?? "image/jpeg",
-          "Cache-Control": "public, max-age=3600",
-          "X-Poster-Source": "r2",
-        };
-        if (stream.contentLength != null) headers["Content-Length"] = String(stream.contentLength);
-        if (stream.etag) headers["ETag"] = stream.etag;
-        return new NextResponse(stream.body, { headers });
-      }
-    } catch (err) {
-      console.warn(`poster: R2 stream failed for ${vidId}:`, err);
     }
   }
 

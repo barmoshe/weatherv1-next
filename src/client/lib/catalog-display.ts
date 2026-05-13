@@ -48,14 +48,15 @@ export function segmentTimeRange(segment: Pick<NormalisedSegment, "start_sec" | 
 }
 
 export function availabilityLabel(video: ParsedVideo): string {
-  if (video.availability === "local") return "מקומי";
+  if (video.availability === "local") return "במטמון";
   if (video.availability === "cloud_only") return "בענן";
   if (video.availability === "syncing") return "מסנכרן";
   return "שגיאה";
 }
 
 export function availabilityLongLabel(video: ParsedVideo): string {
-  if (video.availability === "cloud_only") return "בענן בלבד";
+  if (video.availability === "cloud_only") return "בענן, לא במטמון המקומי";
+  if (video.availability === "local") return "זמין במטמון המקומי";
   return availabilityLabel(video);
 }
 

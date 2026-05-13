@@ -17,7 +17,8 @@ import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildVideoMap } from "@/server/catalog/parser";
 import type { ResolvedPick } from "@/shared/types";
 import { getRuntimePaths } from "@/server/runtime/paths";
-import { materializeVideo, uploadRuntimeFile } from "@/server/sync/r2/service";
+import { uploadRuntimeFile } from "@/server/sync/r2/service";
+import { prepareRenderMedia } from "./render-media";
 
 const queue: string[] = [];
 let draining = false;
@@ -66,16 +67,19 @@ async function runJob(jobId: string, audioFilename: string): Promise<void> {
       return;
     }
 
-    for (const videoId of Array.from(new Set(timeline.map((pick) => pick.video_id)))) {
-      await materializeVideo(videoId);
-    }
-
     // Build video map from current catalog
     const catalog = readCatalog();
     const videos = parseCatalog(catalog);
     const videoMap = buildVideoMap(videos);
 
-    const success = await renderVideo(timeline, videoMap, audioPath, outputPath);
+    const prepared = await prepareRenderMedia(timeline, videoMap, jobId);
+    let success = false;
+    try {
+      success = await renderVideo(prepared.timeline, prepared.videoMap, audioPath, outputPath);
+    } finally {
+      await prepared.cleanup();
+    }
+
     if (success) {
       updateJob(jobId, {
         status: "completed",

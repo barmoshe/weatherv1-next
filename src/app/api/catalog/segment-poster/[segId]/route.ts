@@ -6,7 +6,7 @@ import { getVideosDir } from "@/server/catalog/storage";
 import { generateSegmentPoster } from "@/server/ffmpeg/segment-posters";
 import { posterPath } from "@/server/ffmpeg/posters";
 import { getRuntimePaths } from "@/server/runtime/paths";
-import { getR2Stream, r2Configured, tenantKey } from "@/server/sync/r2/client";
+import { downloadR2File, r2Configured, tenantKey } from "@/server/sync/r2/client";
 
 function segmentPosterKey(segId: string): string {
   return tenantKey(`posters/segments/${segId}.jpg`);
@@ -28,10 +28,10 @@ export async function GET(
   const videoMap = buildVideoMap(videos);
   const clipId = segId.includes("-s") ? segId.slice(0, segId.lastIndexOf("-s")) : segId;
   const clip = videoMap[clipId];
+  const cachedSeg = path.join(segmentPostersDir, `${segId}.jpg`);
 
   // Local cache fast path: per-segment, then per-clip fallback.
   if (!force) {
-    const cachedSeg = path.join(segmentPostersDir, `${segId}.jpg`);
     if (fs.existsSync(cachedSeg)) {
       const buf = fs.readFileSync(cachedSeg);
       return new NextResponse(buf, {
@@ -57,8 +57,44 @@ export async function GET(
     }
   }
 
-  // Local video present: ffmpeg-generate the segment poster.
-  if (clip && clip.availability === "local") {
+  // R2-first browse path: fetch poster objects only, never source video.
+  if (r2Configured()) {
+    try {
+      await downloadR2File(segmentPosterKey(segId), cachedSeg);
+      if (fs.existsSync(cachedSeg)) {
+        const buf = fs.readFileSync(cachedSeg);
+        return new NextResponse(buf, {
+          headers: {
+            "Content-Type": "image/jpeg",
+            "Cache-Control": "public, max-age=3600",
+            "X-Poster-Source": "r2-cache",
+          },
+        });
+      }
+    } catch {
+      // Many single-segment clips only have a clip-level poster.
+    }
+
+    try {
+      const cachedClip = posterPath(clipId, postersDir);
+      await downloadR2File(clipPosterKey(clipId), cachedClip);
+      if (fs.existsSync(cachedClip)) {
+        const buf = fs.readFileSync(cachedClip);
+        return new NextResponse(buf, {
+          headers: {
+            "Content-Type": "image/jpeg",
+            "Cache-Control": "public, max-age=3600",
+            "X-Poster-Source": "r2-cache",
+          },
+        });
+      }
+    } catch (err) {
+      console.warn(`segment-poster: R2 poster fetch failed for ${segId}:`, err);
+    }
+  }
+
+  // Explicit force=1 local regeneration remains available for maintenance.
+  if (force && clip && clip.availability === "local") {
     const posterFilePath = await generateSegmentPoster(segId, videoMap, force);
     if (posterFilePath && fs.existsSync(posterFilePath)) {
       const buf = fs.readFileSync(posterFilePath);
@@ -69,29 +105,6 @@ export async function GET(
           "X-Poster-Source": "ffmpeg-local",
         },
       });
-    }
-    // fall through to R2 in case a generated poster is already there
-  }
-
-  // Cloud-only / generation failed: stream from R2.
-  if (r2Configured()) {
-    try {
-      // Try the segment poster first; fall back to clip poster (single-segment clips
-      // are often only stored under posters/clips/<id>.jpg).
-      let stream = await getR2Stream(segmentPosterKey(segId));
-      if (!stream) stream = await getR2Stream(clipPosterKey(clipId));
-      if (stream) {
-        const headers: Record<string, string> = {
-          "Content-Type": stream.contentType ?? "image/jpeg",
-          "Cache-Control": "public, max-age=3600",
-          "X-Poster-Source": "r2",
-        };
-        if (stream.contentLength != null) headers["Content-Length"] = String(stream.contentLength);
-        if (stream.etag) headers["ETag"] = stream.etag;
-        return new NextResponse(stream.body, { headers });
-      }
-    } catch (err) {
-      console.warn(`segment-poster: R2 stream failed for ${segId}:`, err);
     }
   }
 

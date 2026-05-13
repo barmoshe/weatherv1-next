@@ -90,6 +90,7 @@ describe("desktop runtime config", () => {
     expect(config.ffmpegPath).toBe("/usr/local/bin/ffmpeg");
     expect(paths.uploadsDir).toBe(path.join(runtime, "uploads"));
     expect(paths.outputsDir).toBe(path.join(runtime, "outputs"));
+    expect(paths.renderTmpDir).toBe(path.join(runtime, "tmp", "renders"));
     expect(paths.segmentPostersDir).toBe(path.join(runtime, "cache", "segment_posters"));
   });
 

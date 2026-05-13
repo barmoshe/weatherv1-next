@@ -7,12 +7,12 @@ import { VideoCard } from "./VideoCard";
 interface VideoGridProps {
   videos: ParsedVideo[];
   onVideoClick: (video: ParsedVideo) => void;
-  onMaterialize?: (video: ParsedVideo) => void;
   pageSize?: number;
   searchQuery?: string;
+  emptyMessage?: string;
 }
 
-export function VideoGrid({ videos, onVideoClick, onMaterialize, pageSize = 24, searchQuery = "" }: VideoGridProps) {
+export function VideoGrid({ videos, onVideoClick, pageSize = 24, searchQuery = "", emptyMessage = "לא נמצאו סרטונים" }: VideoGridProps) {
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +43,7 @@ export function VideoGrid({ videos, onVideoClick, onMaterialize, pageSize = 24, 
   if (videos.length === 0) {
     return (
       <div className="catalog-grid" id="catalog-grid">
-        <div className="catalog-empty">לא נמצאו סרטונים</div>
+        <div className="catalog-empty">{emptyMessage}</div>
       </div>
     );
   }
@@ -56,7 +56,6 @@ export function VideoGrid({ videos, onVideoClick, onMaterialize, pageSize = 24, 
             key={v.id}
             video={v}
             onClick={onVideoClick}
-            onMaterialize={onMaterialize}
             searchQuery={searchQuery}
           />
         ))}

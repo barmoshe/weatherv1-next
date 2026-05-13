@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { desktop } from "@/client/lib/desktop";
-import { useCatalog, useR2SyncStatus } from "@/client/hooks/useCatalog";
+import { useCatalog, useR2SyncStatus, useTagCounts } from "@/client/hooks/useCatalog";
 import {
   hasAnyCatalogTag,
   matchesCatalogSearch,
@@ -19,6 +19,7 @@ const DEFAULT_FILTERS: FilterState = {
   search: "",
   activeTags: [],
   activeSource: null,
+  activeAvailability: null,
   untaggedOnly: false,
   multiSegmentOnly: false,
   sort: "newest",
@@ -66,9 +67,9 @@ function sortVideos(videos: ParsedVideo[], sort: SortOrder): ParsedVideo[] {
   }
 }
 
-function r2StatusText(r2Status: ReturnType<typeof useR2SyncStatus>["data"], materializingId: string | null): string | null {
+function r2StatusText(r2Status: ReturnType<typeof useR2SyncStatus>["data"]): string | null {
   if (!r2Status?.enabled) return null;
-  const base = r2Status.conflict
+  return r2Status.conflict
     ? "הקטלוג בענן השתנה"
     : r2Status.error
       ? r2Status.error
@@ -77,19 +78,23 @@ function r2StatusText(r2Status: ReturnType<typeof useR2SyncStatus>["data"], mate
         : r2Status.ready
           ? "מסונכרן"
           : "R2 לא מחובר";
+}
 
-  return materializingId ? `${base} · מוריד ${materializingId}` : base;
+function availabilityMatches(video: ParsedVideo, filter: FilterState["activeAvailability"]): boolean {
+  if (!filter) return true;
+  if (filter === "cloud_only") return video.availability === "cloud_only";
+  return video.availability !== "local";
 }
 
 export function CatalogPanel() {
   const qc = useQueryClient();
   const { data: videos = [], isLoading, isError, error } = useCatalog();
   const { data: r2Status } = useR2SyncStatus();
+  const { data: tagStats } = useTagCounts();
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [searchText, setSearchText] = useState(DEFAULT_FILTERS.search);
   const [selectedVideo, setSelectedVideo] = useState<ParsedVideo | null>(null);
   const [importing, setImporting] = useState(false);
-  const [materializingId, setMaterializingId] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +138,10 @@ export function CatalogPanel() {
       result = result.filter((v) => v.source === filters.activeSource);
     }
 
+    if (filters.activeAvailability) {
+      result = result.filter((v) => availabilityMatches(v, filters.activeAvailability));
+    }
+
     // Untagged only
     if (filters.untaggedOnly) {
       result = result.filter((v) => !hasAnyCatalogTag(v));
@@ -154,7 +163,18 @@ export function CatalogPanel() {
     () => segmentListStats(filtered.flatMap((v) => v.segments ?? [])),
     [filtered]
   );
-  const syncText = r2StatusText(r2Status, materializingId);
+  const syncText = r2StatusText(r2Status);
+  const catalogStatsText = isLoading
+    ? "טוען קטלוג…"
+    : tagStats
+      ? `${filtered.length} מתוך ${tagStats.total_clips} קליפים · ${tagStats.total_segments} מקטעים · ${tagStats.multi_segment_clips} עם 2+ · ${tagStats.not_cached_local_clips} לא במטמון`
+      : `${filtered.length} מתוך ${videos.length} קליפים · ${filteredSegmentStats.total} מקטעים`;
+  const emptyMessage =
+    filters.activeAvailability === "not_cached"
+      ? "נמצאו פריטים בקטלוג שאינם במטמון המקומי. הפוסטרים נטענים מהענן, והרנדר יוריד רק את המקטעים הדרושים."
+      : filters.activeAvailability === "cloud_only"
+        ? "אין תוצאות בענן בלבד למסננים הנוכחיים."
+        : "לא נמצאו סרטונים";
 
   const handleVideoClick = useCallback((video: ParsedVideo) => {
     setSelectedVideo(video);
@@ -163,26 +183,6 @@ export function CatalogPanel() {
   const handleModalClose = useCallback(() => {
     setSelectedVideo(null);
   }, []);
-
-  const handleMaterialize = useCallback(async (video: ParsedVideo) => {
-    setMaterializingId(video.id);
-    setImportError(null);
-    try {
-      const res = await fetch("/api/sync/r2/materialize", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ video_id: video.id }),
-      });
-      const data = await res.json() as { success: boolean; error?: string };
-      if (!res.ok || !data.success) throw new Error(data.error ?? `HTTP ${res.status}`);
-      await qc.invalidateQueries({ queryKey: ["catalog"] });
-      await qc.invalidateQueries({ queryKey: ["r2-sync-status"] });
-    } catch (err) {
-      setImportError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setMaterializingId(null);
-    }
-  }, [qc]);
 
   const completeImport = useCallback(async (res: Response) => {
     const data = await res.json() as { success: boolean; error?: string };
@@ -270,9 +270,7 @@ export function CatalogPanel() {
           <div>
             <h2 className="catalog-title">קטלוג מקטעים וקליפים</h2>
             <p className="catalog-progress" id="catalog-progress">
-              {isLoading
-                ? "טוען קטלוג…"
-                : `${filtered.length} מתוך ${videos.length} קליפים · ${filteredSegmentStats.total} מקטעים`}
+              {catalogStatsText}
             </p>
             {!isLoading && filteredSegmentStats.total > 0 && (
               <div className="catalog-segment-stats" aria-label="מצב מקטעים בתוצאות">
@@ -367,8 +365,8 @@ export function CatalogPanel() {
             <VideoGrid
               videos={filtered}
               onVideoClick={handleVideoClick}
-              onMaterialize={handleMaterialize}
               searchQuery={filters.search}
+              emptyMessage={emptyMessage}
             />
           )}
         </div>
