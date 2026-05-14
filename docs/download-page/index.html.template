@@ -1592,8 +1592,8 @@
             {
               x: () => (rtlFlip ? 0 : -getMaxScroll()),
               ease: "none",
-              invalidateOnRefresh: true,
               scrollTrigger: {
+                invalidateOnRefresh: true,
                 trigger: "#story",
                 pin: true,
                 scrub: 1,
