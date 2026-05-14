@@ -4,6 +4,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "מחולל תחזית · V1",
   description: "Weather forecast video generator",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/weather-v1-icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/weather-v1-icon-512.png", sizes: "512x512", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
