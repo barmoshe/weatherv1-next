@@ -611,7 +611,23 @@
     }
 
     #thinking .pitch-lead-well {
+      margin-block-end: 0;
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(239 242 252 / 0.82));
+    }
+
+    #thinking h2 {
+      margin-block-end: clamp(10px, 1.4vw, 16px);
+    }
+
+    #thinking .bullets {
+      margin-block-start: 4px;
+      width: 100%;
+    }
+
+    #thinking .bullets li {
+      width: 100%;
+      min-width: 0;
+      justify-self: stretch;
     }
 
     #render .pitch-lead-well {
@@ -620,14 +636,6 @@
 
     #local-first .pitch-lead-well {
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(238 242 249 / 0.85));
-    }
-
-    #analytics .pitch-lead-well {
-      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(237 233 254 / 0.82));
-    }
-
-    #pricing .pitch-lead-well {
-      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(232 249 242 / 0.82));
     }
 
     #v1-next .pitch-lead-well {
@@ -795,136 +803,6 @@
       line-height: 1.45;
       color: rgb(108 112 120 / 1);
       text-align: center;
-    }
-
-    /* —— Pitch: analytics tab mock (`#analytics`) —— */
-    .pitch-app-shell--analytics {
-      background: linear-gradient(
-        180deg,
-        rgb(255 255 255 / 0.99) 0%,
-        rgb(248 246 255 / 1) 55%,
-        rgb(252 251 255 / 1) 100%
-      );
-    }
-
-    .pitch-analytics-workspace {
-      display: grid;
-      gap: 12px;
-    }
-
-    .pitch-analytics-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .pitch-analytics-screen-title {
-      font-size: 0.88rem;
-      font-weight: 920;
-      letter-spacing: -0.02em;
-      color: rgb(38 42 48 / 1);
-    }
-
-    .pitch-analytics-beta {
-      padding: 4px 9px;
-      border-radius: 999px;
-      font-size: 0.56rem;
-      font-weight: 900;
-      text-transform: lowercase;
-      letter-spacing: 0.04em;
-      background: color-mix(in srgb, var(--panel-accent, #4f46e5) 14%, rgb(255 255 255));
-      border: 1px solid rgb(0 0 0 / 0.08);
-      color: rgb(67 56 202 / 1);
-    }
-
-    .pitch-analytics-cards {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: 1fr;
-    }
-
-    @media (min-width: 440px) {
-      .pitch-analytics-cards {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    .pitch-analytics-card {
-      padding: 11px 12px 12px;
-      border-radius: 14px;
-      border: 1px solid rgb(0 0 0 / 0.08);
-      background: linear-gradient(165deg, rgb(255 255 255 / 0.96), rgb(246 245 255 / 0.88));
-      box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
-      display: grid;
-      gap: 5px;
-    }
-
-    .pitch-analytics-card__label {
-      font-size: 0.61rem;
-      font-weight: 820;
-      color: rgb(82 86 98 / 1);
-      line-height: 1.35;
-    }
-
-    .pitch-analytics-card__value {
-      font-size: 1.05rem;
-      font-weight: 950;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.02em;
-      color: rgb(30 34 42 / 1);
-    }
-
-    .pitch-analytics-card__hint {
-      font-size: 0.56rem;
-      font-weight: 760;
-      color: rgb(118 122 134 / 1);
-      line-height: 1.4;
-    }
-
-    .pitch-analytics-card__split {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 10px;
-      font-size: 0.62rem;
-      font-weight: 800;
-      color: rgb(52 56 66 / 1);
-    }
-
-    .pitch-analytics-card__sub {
-      font-size: 0.58rem;
-      font-weight: 780;
-      color: rgb(92 96 108 / 1);
-      line-height: 1.35;
-    }
-
-    .pitch-analytics-meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      justify-content: flex-start;
-    }
-
-    .pitch-analytics-chip {
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 0.54rem;
-      font-weight: 820;
-      background: rgb(255 255 255 / 0.85);
-      border: 1px solid rgb(0 0 0 / 0.07);
-      color: rgb(72 78 90 / 1);
-    }
-
-    .pitch-analytics-disclaimer {
-      margin: 0;
-      font-size: 0.58rem;
-      font-weight: 820;
-      line-height: 1.45;
-      color: rgb(90 94 108 / 1);
-      padding-top: 10px;
-      border-top: 1px dashed rgb(0 0 0 / 0.1);
     }
 
     /* —— Pitch: local-first pillars (`#local-first`) —— */
@@ -1244,13 +1122,16 @@
     }
 
     .pitch-scene-chip {
-      padding: 5px 11px;
+      padding: 6px 12px;
       border-radius: 999px;
       font-size: 0.58rem;
       font-weight: 820;
-      background: color-mix(in srgb, var(--panel-accent, #4338ca) 9%, rgb(247 248 252));
-      border: 1px solid rgb(0 0 0 / 0.06);
-      color: rgb(78 86 94 / 1);
+      background: rgb(255 255 255 / 0.94);
+      border: 1px solid color-mix(in srgb, var(--panel-accent, #4338ca) 22%, rgb(0 0 0 / 0.08));
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.05),
+        0 0 0 1px rgb(255 255 255 / 0.65) inset;
+      color: rgb(52 58 68 / 1);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2204,14 +2085,31 @@
       font-size: 0.5rem;
     }
 
-    .pitch-segment-strip-img {
+    .pitch-segment-cell {
       flex: 1;
-      width: 0;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 3px;
+    }
+
+    .pitch-segment-strip-img {
+      width: 100%;
       height: 28px;
+      flex: 0 0 auto;
       object-fit: cover;
       border-radius: 8px;
       border: 1px solid rgb(0 0 0 / 0.08);
+    }
+
+    .pitch-segment-label {
+      font-size: 0.48rem;
+      font-weight: 820;
+      line-height: 1.2;
+      text-align: center;
+      color: rgb(88 92 108 / 1);
+      text-wrap: balance;
     }
 
     .pitch-detail-poster-img {
@@ -2230,6 +2128,11 @@
       font-weight: 720;
       line-height: 1.45;
       color: rgb(68 72 88 / 1);
+    }
+
+    .pitch-detail-desc--tight {
+      margin-top: 4px;
+      margin-bottom: 0;
     }
 
     .pitch-catalog-card-meta {
@@ -3698,14 +3601,12 @@
       {
         id: "catalog",
         kicker: "קטלוג",
-        title: "הקטלוג — אוצר החומרים של V1",
+        title: "קליפים ומקטעים",
         lead:
-          "הקטלוג הוא לא רק תיקייה: זה מסך עבודה לחיפוש, סינון וצפייה בקליפים. משם נבחרים רקעים והתאמות לסצנות בציר הזמן — בלי להיכנס לסקריפטים או לשמות כלים פנימיים.",
+          "לכל וידאו בקטלוג יכולים להיות כמה מקטעים שונים — בוחרים מקטע מתאים לכל חלון בציר, לא רק «כל הקובץ».",
         bullets: [
-          "סרגל עליון: חיפוש · מיון (למשל מה שנוסף לאחרונה) · העלאת וידאו",
-          "רשת כרטיסים ופריט פתוח עם מקטעים, פוסטר / תצוגה מקדימה, תיאור ותגיות",
-          "מסננים לפי תגיות, מקור וזמינות מקומית או ענן — התאמה לצרכי הארגון",
-          "לפעמים מוצג סנכרון מול ענן בלי פירוט טכני — ההדגשה כאן על מה רואים במסך"
+          "כרטיס לכל קליפ; בפרט שנפתח רואים את המקטעים של אותו קובץ",
+          "חיפוש, מיון והעלאה — בלי להיכנס לפרטים טכניים"
         ],
         visual: "catalogBrowser",
         transition: "ttb",
@@ -3806,67 +3707,6 @@
         visual: "v1NextChecklist",
         transition: "ttb",
         theme: { paper: "#faf8f5", accent: "#78716c" }
-      },
-      {
-        id: "llm-sample",
-        kicker: "דוגמת מעבר",
-        title: "טוקנים ומחירון מודלים",
-        lead: "שקופית לדוגמה לבדיקת מעברים בין פרקים. המספרים להמחשה בלבד — החליפו למקור הפיננסי הרשמי שלכם.",
-        bullets: ["חישוב לפי קלט+פלט בטוקנים", "השוו מודלים לפני בחירה", "שריינו אלרט כשמתקרבים לתקרה"],
-        visual: "llmPricing",
-        transition: "rtl",
-        theme: { paper: "#eef1ff", accent: "#4f52c8" }
-      },
-      {
-        id: "tutorial-sample",
-        kicker: "דוגמת מעבר",
-        title: "מדריך קצר",
-        lead: "שלבים פשוטים כדי להרגיש את אנימציית הגלילה והזזת השקופיות בגרסת שולחן העבודה.",
-        bullets: [
-          "גללו לאט ובמכוון למדוד scrub",
-          "במובייל הפרקים נערמים אנכית",
-          'בנתוני השקופית: `transition: "ttb"` ← כניסת TTB בולטת; `transition: "rtl"` ← מעבר צדדי',
-          'לאותה מחרוזת ב־`desktopCluster` ב־2+ פרקים עוקבים: עמודה אופקית אחת עם גלילה אנכית פנימית (בדסקטופ אופקי)',
-          "TTB בדסקטופ: בהגדרות המחבר במקור — `AUTHOR_DESKTOP_STORY_AXIS` ← `\"vertical\"`",
-          "אפשר למחוק את פרקי `pitch-test-*` והמדריך הזה אחרי הבדיקה"
-        ],
-        visual: "tutorialDemo",
-        transition: "ttb",
-        theme: { paper: "#f2fff7", accent: "#169a62" }
-      },
-      {
-        id: "pitch-test-01",
-        kicker: "דוגמת מעבר · 01",
-        title: "שקופית בדיקה 01",
-        lead: "כרטיס עם מספר גדול — קל לאמת סדר פרקים בגלילה אופקית או מאלף למטה.",
-        bullets: ["מפריד בין פרקים בלי משחקי עיצוב", "שלוש הראשונות: אותו `desktopCluster` = עמודה אופקית אחת + גלילה אנכית פנימית"],
-        visual: "numberedSample",
-        sampleNumber: 1,
-        desktopCluster: "pitch-vertical-stack-demo",
-        theme: { paper: "#f0f4ff", accent: "#3940ad" }
-      },
-      {
-        id: "pitch-test-02",
-        kicker: "דוגמת מעבר · 02",
-        title: "שקופית בדיקה 02",
-        lead: "המשיכו לגלול — מה שאתם רואים כאן אמור לעקוב בסדר הנכון בסרגל וב־snap.",
-        bullets: ["02 → 03 באותה עמודה — גלילת גלגל בתוך המסך סוגרות לפני המשך האופקי", "מעבר צדדי: בשקיפית יש גם transition: rtl בהנפתכניסה"],
-        visual: "numberedSample",
-        transition: "rtl",
-        sampleNumber: 2,
-        desktopCluster: "pitch-vertical-stack-demo",
-        theme: { paper: "#fff4f8", accent: "#c7155a" }
-      },
-      {
-        id: "pitch-test-03",
-        kicker: "דוגמת מעבר · 03",
-        title: "שקופית בדיקה 03",
-        lead: "סיום הבלוק של שלוש השקופיות הממוזגות — אחר כך ממשיכים בפרקי המוצר הרגילים.",
-        bullets: ["בדיקת scrub איטית (במצב דסקטופ אופקי)", "במצב TTB: שלוש השקופיות האלה מתפרסות ברצף אנכי"],
-        visual: "numberedSample",
-        sampleNumber: 3,
-        desktopCluster: "pitch-vertical-stack-demo",
-        theme: { paper: "#f2fffc", accent: "#0f8f7f" }
       }
     ];
 
@@ -4181,16 +4021,14 @@
       return pitchPosterRelPath(clipPosterFile);
     }
 
-    /** Catalog slide: mock SKUs; IB001–IB003 mirror PITCH_STUDIO_DEMO timeline segments. */
+    /** Catalog slide: mock SKUs; segments[] = several cuts per clip (labels in UI). */
     const PITCH_CATALOG_MOCK = {
       jobId: "fixture_demo_complete",
-      searchHint: "IB001 · מוקד חום · mock",
-      searchMeta: "מקושר לתוכנית דמו · לא פלט ייצור",
+      searchHint: "IB002 · mock",
+      searchMeta: "דמו בלבד",
       filterChips: [
-        { label: "mock · fixture", isMock: true },
-        { label: "עננות · יום", isMock: false },
-        { label: "לילה · סופה", isMock: false },
-        { label: "גשם · קיצון", isMock: false }
+        { label: "mock", isMock: true },
+        { label: "ענן · גשם · לילה", isMock: false }
       ],
       selectedClipId: "IB002",
       clips: [
@@ -4198,67 +4036,88 @@
           clipId: "IB001",
           titleHe: "מוקד חום · מרכז",
           posterFile: "IB001-s0.jpg",
-          segmentIds: ["IB001-s0"],
-          tags: ["מרכז", "חום", "בוקר"],
-          mockTags: ["mock", "fixture"],
-          descriptionHe:
-            "קטע רקע מדומה לסצנה «מוקד חום במרכז» בתוכנית fixture_demo_complete (0–6 שניות)."
+          segments: [
+            { id: "IB001-s0", labelHe: "כניסה · מוקד" },
+            { id: "IB001-s1", labelHe: "מרכז מסך" },
+            { id: "IB001-s2", labelHe: "סיום מקטע" }
+          ],
+          tags: ["חום", "בוקר"],
+          mockTags: ["mock"],
+          descriptionHe: "שלושה מקטעים מאותו קובץ — לכל חלון בציר אפשר לבחור אחר."
         },
         {
           clipId: "IB002",
           titleHe: "המשך בצפון · רוח",
           posterFile: "IB002-s0.jpg",
-          segmentIds: ["IB002-s0"],
-          tags: ["צפון", "רוח", "מעבר"],
-          mockTags: ["mock", "fixture"],
-          descriptionHe:
-            "קטע רקע מדומה לסצנה «המשך בצפון» בתוכנית fixture_demo_complete (6–11 שניות)."
+          segments: [
+            { id: "IB002-s0", labelHe: "פתיחה צפון" },
+            { id: "IB002-s1", labelHe: "רוח · מעבר" }
+          ],
+          tags: ["צפון", "רוח"],
+          mockTags: ["mock"],
+          descriptionHe: "שני מקטעים ברצף — אחד לפתיחה ואחד למעבר דינמי."
         },
         {
           clipId: "IB003",
           titleHe: "חוף רגוע · ערב",
           posterFile: "IB003-s0.jpg",
-          segmentIds: ["IB003-s0"],
-          tags: ["חוף", "ערב", "התמתקות"],
-          mockTags: ["mock", "fixture"],
-          descriptionHe:
-            "קטע רקע מדומה לסצנה «חוף רגוע» בתוכנית fixture_demo_complete (11–16 שניות)."
+          segments: [
+            { id: "IB003-s0", labelHe: "חוף קרוב" },
+            { id: "IB003-s1", labelHe: "ריחוף · ערב" },
+            { id: "IB003-s2", labelHe: "אופק רחוק" }
+          ],
+          tags: ["חוף", "ערב"],
+          mockTags: ["mock"],
+          descriptionHe: "שלושה חיתוכים מאותו וידאו — מרחק שונה מהחוף."
         },
         {
           clipId: "IB-w01",
           titleHe: "מפת עננות · יום",
           posterFile: "IB-w01-catalog.jpg",
-          segmentIds: ["IB-w01-s0", "IB-w01-s1"],
-          tags: ["עננות", "יום", "לווין"],
-          mockTags: ["mock", "SKU"],
-          descriptionHe: "דמו ויזואלי: שכבת עננות יומית לבחירה בציר הזמן."
+          segments: [
+            { id: "IB-w01-s0", labelHe: "שכבה רחבה" },
+            { id: "IB-w01-s1", labelHe: "זום אזור" }
+          ],
+          tags: ["עננות", "יום"],
+          mockTags: ["mock"],
+          descriptionHe: "שני מקטעים: סקירה ואז התמקדות באזור."
         },
         {
           clipId: "IB-n14",
           titleHe: "תצוגת רדאר · לילה",
           posterFile: "IB-n14-catalog.jpg",
-          segmentIds: ["IB-n14-s0", "IB-n14-s1", "IB-n14-s2"],
-          tags: ["רדאר", "לילה", "בזק"],
-          mockTags: ["mock", "SKU"],
-          descriptionHe: "דמו ויזואלי: קליפ לילי עם הדגשת מורדות וסוללות."
+          segments: [
+            { id: "IB-n14-s0", labelHe: "מסגרת לילה" },
+            { id: "IB-n14-s1", labelHe: "ליבת רדאר" },
+            { id: "IB-n14-s2", labelHe: "בזק וקווים" }
+          ],
+          tags: ["רדאר", "לילה"],
+          mockTags: ["mock"],
+          descriptionHe: "שלושה חלונות מאותו לילה — שונים בקצב ובפרט."
         },
         {
           clipId: "IB-r08",
           titleHe: "שכבת גשם · קיצון",
           posterFile: "IB-r08-catalog.jpg",
-          segmentIds: ["IB-r08-s0", "IB-r08-s1"],
-          tags: ["גשם", "קיצון", "שכבה"],
-          mockTags: ["mock", "SKU"],
-          descriptionHe: "דמו ויזואלי: קיצון משקעים לאזורי אזהרה."
+          segments: [
+            { id: "IB-r08-s0", labelHe: "שטח גשם" },
+            { id: "IB-r08-s1", labelHe: "קיצון · אזהרה" }
+          ],
+          tags: ["גשם", "קיצון"],
+          mockTags: ["mock"],
+          descriptionHe: "שני מקטעים: שטח רחב ואז הדגשת קיצון."
         },
         {
           clipId: "IB-c02",
           titleHe: "שוליים קרים · חורף",
           posterFile: "IB-c02-catalog.jpg",
-          segmentIds: ["IB-c02-s0"],
-          tags: ["קור", "חורף", "שוליים"],
-          mockTags: ["mock", "SKU"],
-          descriptionHe: "דמו ויזואלי: אווירה קרה ומסגרת חורפית לסיפור."
+          segments: [
+            { id: "IB-c02-s0", labelHe: "שוליים קרים" },
+            { id: "IB-c02-s1", labelHe: "שכבת עומק" }
+          ],
+          tags: ["קור", "חורף"],
+          mockTags: ["mock"],
+          descriptionHe: "שני מקטעים מאותו חורף — שוליים מול ליבה."
         }
       ]
     };
@@ -4285,10 +4144,16 @@
             `<span class="pitch-filter-chip${f.isMock ? " pitch-filter-chip--mock" : ""}" role="presentation">${escapeHtml(f.label)}</span>`
         )
         .join("");
-      const stripHtml = selected.segmentIds
+      const segmentRows = Array.isArray(selected.segments)
+        ? selected.segments
+        : (selected.segmentIds || []).map(id => ({ id, labelHe: id }));
+      const stripHtml = segmentRows
         .map(
-          sid =>
-            `<img class="pitch-segment-strip-img" src="${escapeHtml(segmentThumbUrl(sid, selected.posterFile))}" alt="" width="64" height="28" decoding="async" loading="lazy" />`
+          seg =>
+            `<div class="pitch-segment-cell" role="presentation">
+                <img class="pitch-segment-strip-img" src="${escapeHtml(segmentThumbUrl(seg.id, selected.posterFile))}" alt="" width="64" height="28" decoding="async" loading="lazy" />
+                <span class="pitch-segment-label">${escapeHtml(seg.labelHe)}</span>
+              </div>`
         )
         .join("");
       const tagsHtml = [
@@ -4307,14 +4172,14 @@
                 <span class="pitch-catalog-search-ico" aria-hidden="true">🔍</span>
                 <div class="pitch-catalog-search-copy">
                   <span class="pitch-catalog-search-text">${escapeHtml(data.searchHint)}</span>
-                  <span class="pitch-catalog-search-meta">${escapeHtml(data.searchMeta)} · <span class="mixed-ltr" lang="en" dir="ltr">job: ${escapeHtml(data.jobId)}</span></span>
+                  <span class="pitch-catalog-search-meta">${escapeHtml(data.searchMeta)} · <span class="mixed-ltr" lang="en" dir="ltr">${escapeHtml(data.jobId)}</span></span>
                 </div>
               </div>
               <span class="pitch-catalog-pill pitch-catalog-pill--sort" role="presentation">מה שנוסף לאחרונה</span>
               <span class="pitch-catalog-upload" role="presentation">העלאת וידאו</span>
             </div>
           </header>
-          <p class="pitch-catalog-sync-hint">לעיתים מוצג סנכרון מול ענן — ללא פירוט טכני במצגת</p>
+          <p class="pitch-catalog-sync-hint">סנכרון ענן (אם מופעל) — בלי פירוט כאן.</p>
           <div class="pitch-catalog-filters" role="presentation">
             ${filtersHtml}
           </div>
@@ -4324,24 +4189,21 @@
             </div>
             <aside class="pitch-catalog-detail">
               <div class="pitch-catalog-detail-head">
-                <span class="pitch-detail-eyebrow">פריט נבחר (mock)</span>
+                <span class="pitch-detail-eyebrow">בחירה (דמו)</span>
                 <strong class="pitch-detail-title">${escapeHtml(selected.titleHe)}</strong>
               </div>
               <section class="pitch-detail-block">
-                <h4 class="pitch-detail-label">מקטעים</h4>
+                <h4 class="pitch-detail-label">מקטעים באותו קובץ</h4>
                 <div class="pitch-segment-strip" aria-hidden="true">
                   ${stripHtml}
                 </div>
+                <p class="pitch-detail-desc pitch-detail-desc--tight">${escapeHtml(selected.descriptionHe)}</p>
               </section>
               <section class="pitch-detail-block">
-                <h4 class="pitch-detail-label">פוסטר · תצוגה מקדימה</h4>
+                <h4 class="pitch-detail-label">פוסטר</h4>
                 <div class="pitch-detail-poster" aria-hidden="true">
                   <img class="pitch-detail-poster-img" src="${escapeHtml(detailPosterSrc)}" alt="" width="320" height="180" decoding="async" loading="lazy" />
                 </div>
-              </section>
-              <section class="pitch-detail-block">
-                <h4 class="pitch-detail-label">תיאור</h4>
-                <p class="pitch-detail-desc">${escapeHtml(selected.descriptionHe)}</p>
               </section>
               <section class="pitch-detail-block">
                 <h4 class="pitch-detail-label">תגיות</h4>
@@ -4349,7 +4211,7 @@
                   ${tagsHtml}
                 </div>
               </section>
-              <p class="pitch-catalog-bridge">מהקטלוג המערכת בוחרת רקע מתאים לתכנון הסצנות בציר הזמן.</p>
+              <p class="pitch-catalog-bridge">בציר — אפשר לשייך לכל סצנה מקטע אחר מאותו קליפ.</p>
             </aside>
           </div>
         </div>`;
@@ -4543,7 +4405,7 @@
       }
       if (type === "analyticsSimple") {
         return `<div class="pricing-board visual-board" dir="rtl">
-          <div class="pricing-head"><span>מדד (דוגמה)</span><span>ערך</span></div>
+          <div class="pricing-head"><span>מדד</span><span>ערך להמחשה</span></div>
           <div class="pricing-row"><span>עבודות עם נתוני שימוש</span><small class="mixed-ltr" lang="en" dir="ltr">12</small></div>
           <div class="pricing-row"><span>טוקנים משוערים (קלט+פלט)</span><small class="mixed-ltr" lang="en" dir="ltr">420K in · 160K out</small></div>
           <div class="pricing-row"><span>הערכת עלות כוללת</span><small class="mixed-ltr" lang="en" dir="ltr">~$47.20</small></div>
@@ -4634,39 +4496,6 @@
             <span class="intro-pipeline-node intro-pipeline-node--e">הורדה</span>
           </div>
         </div>`;
-      }
-      if (type === "llmPricing") {
-        return `<div class="pricing-board visual-board">
-          <div class="pricing-head"><span>מודל</span><span class="mixed-ltr" lang="en" dir="ltr">$/1M טוקנים</span></div>
-          <div class="pricing-row"><span class="mixed-ltr" lang="en" dir="ltr">NovaLite · מהיר</span><small class="mixed-ltr">$2.50 in / $5 out</small></div>
-          <div class="pricing-row"><span class="mixed-ltr" lang="en" dir="ltr">NovaPro · איכות</span><small class="mixed-ltr">$12 in / $24 out</small></div>
-          <div class="pricing-row"><span>ממוצע שימוש בשבוע (דמו)</span><small class="mixed-ltr">~420K in · 160K out</small></div>
-          <div class="token-chip"><span>ארנק פרויקט</span><span class="mixed-ltr" lang="en" dir="ltr">-18% מתקרה</span></div>
-        </div>`;
-      }
-      if (type === "tutorialDemo") {
-        return `<div class="tutorial-panel">
-          <ul class="tutorial-list">
-            <li class="tutorial-item">
-              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">1</span>
-              <div class="tutorial-body"><strong>התחזית הראשונה</strong><span>גללו מטה בצעד רגוע ובדקו שנעימות ה־snap מחברת פרק לפרק.</span></div>
-            </li>
-            <li class="tutorial-item">
-              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">2</span>
-              <div class="tutorial-body"><strong>דילוג פרקים</strong><span>לחצו על “הורדה” בשורת הניווט — הקפיצה חוזרת לעמודת ההורדה בשקופית הפתיחה (#download-hero).</span></div>
-            </li>
-            <li class="tutorial-item">
-              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">3</span>
-              <div class="tutorial-body"><strong>נסו הפוך</strong><span>גללו למעלה שוב ובדקו ש־snap מחזיר אתכם בצורה ברורה בין פרקים.</span></div>
-            </li>
-          </ul>
-          <p class="tutorial-tip"><span class="mixed-ltr" lang="en" dir="ltr">prefers-reduced-motion</span>: כבו אנימציה במערכת כדי לראות פריסה סטטית.</p>
-        </div>`;
-      }
-      if (type === "numberedSample") {
-        const raw = Number(section.sampleNumber);
-        const n = Number.isFinite(raw) ? String(Math.trunc(raw)) : "?";
-        return `<div class="numbered-sample-visual"><span class="numbered-sample-num mixed-ltr" lang="en" dir="ltr">${escapeHtml(n)}</span></div>`;
       }
       return `<div class="visual-board"><div class="mini-card"><span>${escapeHtml(section.title)}</span><small>Placeholder</small></div></div>`;
     }
@@ -5231,8 +5060,8 @@
         const start = i / (n + 0.35);
         const width = 0.26;
         const t = Math.min(1, Math.max(0, (progress - start) / width));
-        el.style.opacity = String(0.2 + 0.8 * t);
-        el.style.transform = `translateY(${(1 - t) * 14}px) scale(${0.97 + 0.03 * t})`;
+        el.style.opacity = "1";
+        el.style.transform = `translateY(${(1 - t) * 10}px) scale(${0.985 + 0.015 * t})`;
         el.classList.toggle("pitch-flow-step--hot", t > 0.68 && t < 1);
       });
 
