@@ -18,7 +18,8 @@ import {
   tenantKey,
   uploadR2File,
 } from "./client";
-import { writeJobsJsonFromHydration } from "@/server/jobs/store";
+import { hydratePlanBundleFromR2 } from "@/server/jobs/plan-bundle";
+import { getAllJobs, writeJobsJsonFromHydration } from "@/server/jobs/store";
 import { patchObjectProgress, readR2SyncState, writeR2SyncState } from "./state";
 import type { R2SyncStatus } from "./types";
 
@@ -218,6 +219,50 @@ export async function pullJobsFromR2(opts?: { force?: boolean }): Promise<void> 
 /** Test-only: reset the in-process jobs hydrate guard. */
 export function resetR2JobsBootstrapForTests(): void {
   jobsHydrateAttempted = false;
+}
+
+const PLAN_HYDRATE_CONCURRENCY = 6;
+
+async function mapPool<T>(items: readonly T[], concurrency: number, fn: (item: T) => Promise<void>): Promise<void> {
+  if (items.length === 0) return;
+  const workerCount = Math.max(1, Math.min(concurrency, items.length));
+  let nextIndex = 0;
+  const worker = async (): Promise<void> => {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      await fn(items[i]!);
+    }
+  };
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+}
+
+/**
+ * Hydrate `forecast_<jobId>.plan.json` from R2 for every row in the local jobs store.
+ * Call after `pullJobsFromR2({ force: true })` so the store matches cloud `jobs.json`.
+ */
+export async function hydrateAllJobPlansFromR2(opts?: { force?: boolean; concurrency?: number }): Promise<void> {
+  if (!r2Configured()) return;
+  const force = Boolean(opts?.force);
+  const concurrency = opts?.concurrency ?? PLAN_HYDRATE_CONCURRENCY;
+  const list = getAllJobs();
+  await mapPool(list, concurrency, async (job) => {
+    try {
+      await hydratePlanBundleFromR2(job.job_id, force ? { force: true } : undefined);
+    } catch (e) {
+      console.warn("[r2:plans] hydrate failed:", job.job_id.slice(0, 8), e);
+    }
+  });
+}
+
+/**
+ * Match local persistence to R2: catalog, jobs.json, then each job's plan.json (cloud wins).
+ */
+export async function pullFullStateFromR2(): Promise<R2SyncStatus> {
+  await pullCatalogFromR2();
+  await pullJobsFromR2({ force: true });
+  await hydrateAllJobPlansFromR2({ force: true });
+  return getR2SyncStatus();
 }
 
 export async function pushCatalogToR2(args: { replaceRemote?: boolean } = {}): Promise<R2SyncStatus> {

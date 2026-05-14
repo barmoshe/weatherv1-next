@@ -1705,6 +1705,73 @@
                 padding: 1.4rem 1.2rem 1.15rem;
             }
         }
+
+        /* Full-screen bootstrap / R2 sync (above login gate when layer sync) */
+        .app-bootstrap {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: grid;
+            place-items: center;
+            padding: 1.25rem;
+        }
+        .app-bootstrap--sync {
+            z-index: 210;
+        }
+        .app-bootstrap__backdrop {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(120% 80% at 50% 0%, rgb(252 233 228 / .88), transparent 70%),
+                rgb(244 243 239 / .97);
+            backdrop-filter: blur(8px);
+        }
+        .app-bootstrap__card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 1.75rem 1.5rem;
+            min-width: min(320px, 100%);
+            background: var(--v1-paper);
+            border: 2px solid var(--v1-ink);
+            border-radius: var(--radius-md);
+            box-shadow: 0 14px 40px rgb(0 0 0 / .18);
+            text-align: center;
+        }
+        .app-bootstrap__spinner {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 50%;
+            border: 3px solid rgb(0 0 0 / .12);
+            border-top-color: var(--v1-ink);
+            animation: app-bootstrap-spin 720ms linear infinite;
+        }
+        @keyframes app-bootstrap-spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .app-bootstrap__spinner {
+                animation: none;
+                border-top-color: var(--v1-ink-muted);
+                opacity: 0.85;
+            }
+        }
+        .app-bootstrap__title {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 900;
+            line-height: var(--lh-heading);
+        }
+        .app-bootstrap__subtitle {
+            margin: 0;
+            max-width: 36ch;
+            font-size: 0.88rem;
+            color: var(--v1-ink-muted);
+            line-height: 1.55;
+        }
+
         .catalog-card {
             background: var(--v1-cream); border-radius: var(--radius-sm);
             padding: 0.7rem 0.85rem; display: flex; align-items: center; gap: 0.6rem;

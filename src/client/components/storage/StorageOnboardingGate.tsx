@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { desktop } from "@/client/lib/desktop";
 import { useStorageStatus } from "@/client/hooks/useStorageStatus";
 import type { DesktopAppInfo } from "@/shared/desktop";
+import { AppBootstrapShell } from "@/client/components/storage/AppBootstrapShell";
 
 type Phase = "loading" | "cloud-connect" | "cloud-ready" | "local-cache" | "ready" | "hidden";
 
@@ -160,8 +161,16 @@ export function StorageOnboardingGate() {
     [username, password, submitting],
   );
 
+  if (phase === "loading") {
+    return (
+      <AppBootstrapShell
+        title="טוען…"
+        subtitle="טוען את הגדרות האחסון והענן…"
+      />
+    );
+  }
+
   if (phase === "hidden" || phase === "ready") return null;
-  if (phase === "loading") return null;
 
   if (phase === "cloud-connect") {
     const versionLine = appInfo

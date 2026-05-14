@@ -53,10 +53,13 @@ function localPlanBundleComplete(jobId: string): boolean {
 /**
  * When R2 holds `jobs/<jobId>/plan.json`, write it to the local forecast_*.plan.json
  * so restores work on a fresh machine (jobs.json alone is not enough).
+ *
+ * @param opts.force When true, replace local from R2 even if a complete local bundle exists (cloud wins).
  */
-export async function hydratePlanBundleFromR2(jobId: string): Promise<boolean> {
+export async function hydratePlanBundleFromR2(jobId: string, opts?: { force?: boolean }): Promise<boolean> {
   if (!r2Configured()) return false;
-  if (localPlanBundleComplete(jobId)) return false;
+  const force = Boolean(opts?.force);
+  if (!force && localPlanBundleComplete(jobId)) return false;
 
   const key = tenantKey(`jobs/${jobId}/plan.json`);
   try {

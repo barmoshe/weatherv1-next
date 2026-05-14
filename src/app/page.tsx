@@ -14,6 +14,7 @@ import { TabNav } from "@/client/components/TabNav";
 import { StudioPanel } from "@/client/components/studio/StudioPanel";
 import { SettingsModal } from "@/client/components/studio/SettingsModal";
 import { StorageOnboardingGate } from "@/client/components/storage/StorageOnboardingGate";
+import { DesktopR2BootstrapOverlay } from "@/client/components/storage/DesktopR2BootstrapOverlay";
 import { ActivePanel } from "@/client/components/jobs/ActivePanel";
 import { HistoryPanel } from "@/client/components/jobs/HistoryPanel";
 import { AnalyticsPanel } from "@/client/components/jobs/AnalyticsPanel";
@@ -98,6 +99,7 @@ function AppInner() {
         historyBadge={historyCount}
       />
       <main className="container">
+        <DesktopR2BootstrapOverlay />
         <StorageOnboardingGate />
         <StudioPanel
           hidden={tab !== "studio"}
