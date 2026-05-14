@@ -2622,381 +2622,8 @@
       overflow: visible;
     }
 
-    #intro .bullets {
-      margin-top: 4px;
-      gap: 10px;
-      font-size: clamp(0.84rem, 0.9vw, 1.02rem);
-    }
-
-    #intro .bullets li::before {
-      margin-top: 0.45em;
-    }
-
-    #intro .intro-pipeline-wrap {
-      margin-top: 4px;
-    }
-
-    /* Intro: four-phase sketch flow (Excalidraw/Mermaid-style), interactive tabs + readout */
-    .intro-pipeline-wrap {
-      margin: 0;
-      width: 100%;
-      max-width: min(100%, 44rem);
-    }
-
-    .intro-pipeline-diagram.intro-sketch-board.intro-phase-flow {
-      position: relative;
-      isolation: isolate;
-      margin: 0;
-      padding: clamp(16px, 2.4vw, 24px);
-      border: 2px solid var(--v1-ink);
-      border-radius: clamp(22px, 4vw, 28px);
-      background-color: rgb(255 255 255 / 0.97);
-      background-image:
-        radial-gradient(rgb(249 84 62 / 0.055) 1px, transparent 1px),
-        linear-gradient(
-          160deg,
-          rgb(255 255 255 / 0.99) 0%,
-          rgb(255 246 243 / 0.88) 38%,
-          rgb(252 228 223 / 0.55) 100%
-        ),
-        radial-gradient(120% 80% at 15% -10%, rgb(249 84 62 / 0.12), transparent 55%);
-      background-size:
-        22px 22px,
-        auto,
-        auto;
-      box-shadow:
-        0 18px 40px rgb(15 23 42 / 0.08),
-        0 0 0 1px rgb(255 255 255 / 0.85) inset,
-        5px 5px 0 rgb(0 0 0 / 0.1);
-      overflow: clip;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      grid-template-rows: auto auto auto;
-      column-gap: clamp(10px, 2vw, 16px);
-      row-gap: clamp(14px, 2.2vw, 20px);
-      align-items: start;
-      direction: rtl;
-    }
-
-    .intro-phase-flow .intro-sketch-flow-svg {
-      grid-column: 1 / -1;
-      grid-row: 1;
-      width: 100%;
-      height: auto;
-      min-height: clamp(52px, 10vw, 72px);
-      display: block;
-      overflow: visible;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .intro-phase-steps {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: clamp(8px, 1.8vw, 14px);
-      align-items: start;
-      position: relative;
-      z-index: 1;
-      margin: 0;
-      padding: 0;
-    }
-
-    .intro-flow-segment,
-    .intro-sketch-node {
-      transition:
-        opacity 0.35s ease,
-        filter 0.35s ease;
-    }
-
-    .intro-sketch-flow-svg .intro-sketch-link {
-      stroke: #1f1f1f;
-      stroke-width: 2.1;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      opacity: 0.88;
-    }
-
-    .intro-sketch-flow-svg .intro-sketch-node-shape {
-      fill: rgb(255 255 255 / 0.97);
-      stroke: #121212;
-      stroke-width: 2.15;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .intro-sketch-flow-svg .intro-sketch-node-num {
-      font-family: ui-rounded, "Segoe UI", system-ui, sans-serif;
-      font-size: 15px;
-      font-weight: 800;
-      fill: var(--v1-coral);
-      stroke: none;
-      text-anchor: middle;
-      dominant-baseline: central;
-    }
-
-    /* Dim segments ahead of current phase (progressive emphasis) */
-    .intro-phase-flow[data-intro-phase="0"] .intro-flow-segment--2,
-    .intro-phase-flow[data-intro-phase="0"] .intro-flow-segment--3,
-    .intro-phase-flow[data-intro-phase="0"] .intro-sketch-node--2,
-    .intro-phase-flow[data-intro-phase="0"] .intro-sketch-node--3 {
-      opacity: 0.34;
-    }
-
-    .intro-phase-flow[data-intro-phase="1"] .intro-flow-segment--3,
-    .intro-phase-flow[data-intro-phase="1"] .intro-sketch-node--3 {
-      opacity: 0.38;
-    }
-
-    .intro-phase-flow[data-intro-phase="1"] .intro-flow-segment--1,
-    .intro-phase-flow[data-intro-phase="1"] .intro-sketch-node--0,
-    .intro-phase-flow[data-intro-phase="1"] .intro-sketch-node--1 {
-      opacity: 1;
-      filter: drop-shadow(0 0 4px rgb(249 84 62 / 0.35));
-    }
-
-    .intro-phase-flow[data-intro-phase="2"] .intro-flow-segment--1,
-    .intro-phase-flow[data-intro-phase="2"] .intro-flow-segment--2,
-    .intro-phase-flow[data-intro-phase="2"] .intro-sketch-node--0,
-    .intro-phase-flow[data-intro-phase="2"] .intro-sketch-node--1,
-    .intro-phase-flow[data-intro-phase="2"] .intro-sketch-node--2 {
-      opacity: 1;
-      filter: drop-shadow(0 0 3px rgb(249 84 62 / 0.32));
-    }
-
-    .intro-phase-flow[data-intro-phase="3"] .intro-flow-segment,
-    .intro-phase-flow[data-intro-phase="3"] .intro-sketch-node {
-      opacity: 1;
-      filter: drop-shadow(0 0 3px rgb(249 84 62 / 0.28));
-    }
-    button.intro-phase-step {
-      appearance: none;
-      font: inherit;
-      margin: 0;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      text-align: center;
-      padding: 10px 6px 12px;
-      border: none;
-      border-radius: clamp(14px, 2.4vw, 20px);
-      background: rgb(255 255 255 / 0.45);
-      color: var(--v1-ink);
-      box-shadow: 0 0 0 1.5px rgb(15 23 42 / 0.07) inset;
-      outline: none;
-      transition:
-        background 0.3s ease,
-        box-shadow 0.32s ease,
-        transform 0.32s ease;
-    }
-
-    .intro-phase-step__ring {
-      display: grid;
-      place-items: center;
-      width: clamp(42px, 7vw, 52px);
-      height: clamp(42px, 7vw, 52px);
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.95), rgb(252 232 226 / 0.75));
-      box-shadow:
-        0 0 0 2px rgb(15 23 42 / 0.92),
-        3px 3px 0 rgb(15 23 42 / 0.12),
-        inset 0 3px 8px rgb(249 84 62 / 0.08);
-      transition: transform 0.32s ease;
-    }
-
-    .intro-phase-step__num {
-      font-variant-numeric: tabular-nums;
-      font-weight: 950;
-      font-size: clamp(1rem, 0.4vw + 0.92rem, 1.28rem);
-      line-height: 1;
-      color: var(--v1-coral);
-      letter-spacing: -0.02em;
-    }
-
-    .intro-phase-step__label {
-      font-weight: 850;
-      font-size: clamp(0.72rem, 0.35vw + 0.62rem, 0.94rem);
-      line-height: 1.35;
-      max-width: 11em;
-      hyphens: auto;
-      color: rgb(28 31 43 / 0.92);
-    }
-
-    button.intro-phase-step:hover {
-      background: rgb(255 255 255 / 0.85);
-      box-shadow:
-        0 0 0 2px rgb(249 84 62 / 0.25) inset,
-        4px 4px 0 rgb(249 84 62 / 0.12);
-    }
-
-    button.intro-phase-step:focus-visible {
-      box-shadow:
-        0 0 0 3px rgb(249 84 62 / 0.45),
-        0 0 0 7px rgb(255 255 255 / 0.95),
-        0 0 0 1.5px var(--v1-ink) inset;
-      z-index: 2;
-      position: relative;
-    }
-
-    .intro-phase-step.is-complete .intro-phase-step__ring {
-      background: linear-gradient(155deg, rgb(255 253 246), rgb(220 246 229 / 0.92));
-      box-shadow:
-        0 0 0 2px rgb(52 146 106 / 0.55),
-        3px 3px 0 rgb(52 146 106 / 0.15),
-        inset 0 1px 0 rgb(255 255 255 / 0.8);
-    }
-
-    .intro-phase-step.is-complete .intro-phase-step__num {
-      color: rgb(28 126 94);
-    }
-
-    .intro-phase-step.is-active .intro-phase-step__ring {
-      background:
-        radial-gradient(circle at 30% 20%, rgb(255 246 237), rgb(251 216 207 / 0.85)),
-        conic-gradient(
-          from 220deg,
-          rgb(249 84 62 / 0.25),
-          transparent 52%,
-          rgb(249 84 62 / 0.2)
-        );
-      box-shadow:
-        0 0 0 2.5px var(--v1-coral),
-        5px 5px 0 rgb(249 84 62 / 0.22),
-        inset 0 2px 10px rgb(255 255 255 / 0.75);
-      transform: scale(1.04);
-    }
-
-    .intro-phase-step.is-active .intro-phase-step__label {
-      color: var(--v1-ink);
-      font-weight: 950;
-    }
-
-    .intro-phase-readout {
-      grid-column: 1 / -1;
-      grid-row: 3;
-      margin: 0;
-      padding: clamp(14px, 2.5vw, 18px) clamp(16px, 2.4vw, 22px);
-      border-radius: clamp(14px, 2.8vw, 20px);
-      background: rgb(255 253 251 / 0.82);
-      box-shadow:
-        0 0 0 1.5px rgb(15 23 42 / 0.08),
-        inset 0 12px 32px rgb(249 84 62 / 0.04);
-      border: 1px solid rgb(249 84 62 / 0.16);
-      min-height: 3.75em;
-      position: relative;
-      z-index: 1;
-    }
-
-    .intro-phase-readout::before {
-      content: "";
-      position: absolute;
-      inset-inline-start: 18px;
-      top: -6px;
-      width: clamp(72px, 18%, 120px);
-      height: 3px;
-      border-radius: 3px;
-      background: linear-gradient(90deg, var(--v1-coral), rgb(249 84 62 / 0));
-      opacity: 0.9;
-      pointer-events: none;
-      transition:
-        inset-inline-start 0.42s cubic-bezier(0.22, 0.92, 0.25, 1),
-        opacity 0.38s ease;
-    }
-
-    .intro-phase-flow[data-intro-phase="0"] .intro-phase-readout::before {
-      inset-inline-start: 8%;
-    }
-
-    .intro-phase-flow[data-intro-phase="1"] .intro-phase-readout::before {
-      inset-inline-start: 34%;
-    }
-
-    .intro-phase-flow[data-intro-phase="2"] .intro-phase-readout::before {
-      inset-inline-start: 56%;
-    }
-
-    .intro-phase-flow[data-intro-phase="3"] .intro-phase-readout::before {
-      inset-inline-start: 78%;
-    }
-
-    .intro-phase-detail {
-      margin: 0;
-      font-weight: 700;
-      font-size: clamp(0.94rem, 0.45vw + 0.76rem, 1.06rem);
-      line-height: 1.62;
-      color: rgb(25 31 43 / 0.92);
-      display: none;
-    }
-
-    .intro-phase-flow[data-intro-phase="0"] .intro-phase-detail--0,
-    .intro-phase-flow[data-intro-phase="1"] .intro-phase-detail--1,
-    .intro-phase-flow[data-intro-phase="2"] .intro-phase-detail--2,
-    .intro-phase-flow[data-intro-phase="3"] .intro-phase-detail--3 {
-      display: block;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .intro-pipeline-diagram.intro-sketch-board .intro-flow-segment,
-      .intro-pipeline-diagram.intro-sketch-board .intro-sketch-node {
-        filter: none !important;
-      }
-
-      button.intro-phase-step,
-      button.intro-phase-step .intro-phase-step__ring {
-        transition-duration: 0.01ms !important;
-      }
-
-      button.intro-phase-step.is-active .intro-phase-step__ring {
-        transform: none;
-      }
-
-      .intro-phase-readout::before {
-        transition: none;
-      }
-    }
-
-    @media (max-width: 930px) {
-      .intro-pipeline-diagram.intro-sketch-board.intro-phase-flow {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: auto auto auto;
-      }
-
-      .intro-phase-flow .intro-sketch-flow-svg {
-        min-height: clamp(48px, 14vw, 64px);
-      }
-
-      .intro-phase-steps {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .intro-phase-flow[data-intro-phase="0"] .intro-phase-readout::before {
-        inset-inline-start: 22%;
-      }
-
-      .intro-phase-flow[data-intro-phase="1"] .intro-phase-readout::before {
-        inset-inline-start: 74%;
-      }
-
-      .intro-phase-flow[data-intro-phase="2"] .intro-phase-readout::before {
-        inset-inline-start: 26%;
-      }
-
-      .intro-phase-flow[data-intro-phase="3"] .intro-phase-readout::before {
-        inset-inline-start: 72%;
-      }
-    }
-
-    .intro-pipeline-flow,
-    .intro-pipeline-arrow {
-      display: none;
-    }
-
     #intro .hero-downloads {
-      margin-top: 6px;
+      margin-top: clamp(12px, 2.2vw, 22px);
       max-width: none;
       width: 100%;
       padding: clamp(16px, 2.5vw, 20px) clamp(18px, 2.8vw, 22px);
@@ -3771,7 +3398,6 @@
       /* Text-first mobile pitch: hide decorative mockups (desktop keeps full layout).
          Exception: #studio keeps mock + hint so phase picks stay meaningful. */
       .story-panel:not(#studio) .panel-visual,
-      .intro-pipeline-wrap,
       .story-panel:not(#studio):not(#catalog) .pitch-studio-wiz-controls-wrap,
       .story-panel:not(#catalog) .pitch-catalog-wiz-controls-wrap,
       .pitch-pricing-quote {
@@ -4234,10 +3860,11 @@
         id: "intro",
         kicker: "Weather V1",
         title: "מה זה בקצרה",
-        lead: "מסלול אחד, ארבעה שלבים — בחרו שלב כדי לראות את הפירוט.",
-        mobileSummary: "העלאה → תמלול → תכנון והחלטות → רינדור והורדה.",
-        bullets: ["העלאה → תמלול → תכנון והחלטות → רינדור והורדה"],
-        visual: "introPipeline",
+        lead:
+          "האפליקציה מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו רקע מתוך הקטלוג, ומאפשרת ליצור בסיס לסרטון תחזית.",
+        mobileSummary:
+          "קריינות תחזית, תמלול, פירוק לסצנות, רקע מהקטלוג, ובסיס לסרטון תחזית.",
+        bullets: [],
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
       },
@@ -5074,70 +4701,6 @@
           <p class="excal-caption">ניתן להחליף ב־SVG שייצא מהכלי הציבורי <a href="https://dai-shi.github.io/excalidraw-animate" target="_blank" rel="noreferrer">excalidraw-animate</a> (<a href="https://github.com/dai-shi/excalidraw-animate" target="_blank" rel="noreferrer">מקור</a>).</p>
         </div>`;
       }
-      if (type === "introPipeline") {
-        return `<div class="intro-pipeline-diagram intro-sketch-board intro-phase-flow" data-intro-phase="0" dir="rtl">
-          <svg class="intro-sketch-flow-svg" viewBox="0 0 400 58" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <marker id="introSketchArrow" markerWidth="7.5" markerHeight="7.5" refX="6.2" refY="3.75" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M0,0 L6.5,3.75 L0,7.5 z" fill="#181818"/>
-              </marker>
-            </defs>
-            <g class="intro-sketch-connectors" fill="none" stroke="#1f1f1f" stroke-linecap="round" stroke-linejoin="round">
-              <g class="intro-flow-segment intro-flow-segment--1">
-                <path class="intro-sketch-link" stroke-width="2.15" marker-end="url(#introSketchArrow)" d="M 318,28 C 304,42 297,42 289,28"/>
-              </g>
-              <g class="intro-flow-segment intro-flow-segment--2">
-                <path class="intro-sketch-link" stroke-width="2.2" marker-end="url(#introSketchArrow)" d="M 214,31 C 200,46 187,43 173,31"/>
-              </g>
-              <g class="intro-flow-segment intro-flow-segment--3">
-                <path class="intro-sketch-link" stroke-width="2.1" marker-end="url(#introSketchArrow)" d="M 120,29 C 108,43 103,43 93,29"/>
-              </g>
-            </g>
-            <g class="intro-sketch-nodes-group">
-              <g class="intro-sketch-node intro-sketch-node--0">
-                <path class="intro-sketch-node-shape" d="M 317,13 C 315,17 314,21 317,29 L 319,45 C 322,50 331,53 342,52 L 365,49 C 375,46 379,41 379,31 L 378,19 C 376,12 369,10 356,11 L 330,11 C 324,11 319,11 317,13 Z"/>
-                <text class="intro-sketch-node-num" x="348" y="31">1</text>
-              </g>
-              <g class="intro-sketch-node intro-sketch-node--1">
-                <path class="intro-sketch-node-shape" d="M 222,13 C 218,17 217,21 219,29 L 223,43 C 226,48 237,52 257,51 L 276,48 C 287,43 289,39 289,31 L 288,20 C 286,12 279,11 267,11 L 241,11 C 229,11 224,11 222,13 Z"/>
-                <text class="intro-sketch-node-num" x="252" y="31">2</text>
-              </g>
-              <g class="intro-sketch-node intro-sketch-node--2">
-                <path class="intro-sketch-node-shape" d="M 128,12 C 123,17 121,21 124,31 L 127,43 C 130,49 146,53 157,52 L 175,49 C 186,43 187,39 187,31 L 186,20 C 184,13 173,11 162,11 L 146,11 C 136,11 129,11 128,12 Z"/>
-                <text class="intro-sketch-node-num" x="156" y="31">3</text>
-              </g>
-              <g class="intro-sketch-node intro-sketch-node--3">
-                <path class="intro-sketch-node-shape" d="M 36,13 C 32,17 31,21 34,31 L 37,45 C 41,52 53,53 71,52 L 84,48 C 93,42 93,39 93,31 L 93,21 C 90,13 82,11 67,11 L 53,11 C 43,11 38,11 36,13 Z"/>
-                <text class="intro-sketch-node-num" x="61" y="31">4</text>
-              </g>
-            </g>
-          </svg>
-          <div class="intro-phase-steps" role="tablist" aria-label="שלבי העבודה במערכת">
-            <button type="button" role="tab" id="intro-step-0" class="intro-phase-step is-active" data-intro-step="0" aria-selected="true" aria-controls="intro-readout-panel" tabindex="0">
-              <span class="intro-phase-step__ring"><span class="intro-phase-step__num">1</span></span>
-              <span class="intro-phase-step__label">העלאה</span>
-            </button>
-            <button type="button" role="tab" id="intro-step-1" class="intro-phase-step" data-intro-step="1" aria-selected="false" aria-controls="intro-readout-panel" tabindex="-1">
-              <span class="intro-phase-step__ring"><span class="intro-phase-step__num">2</span></span>
-              <span class="intro-phase-step__label">תמלול</span>
-            </button>
-            <button type="button" role="tab" id="intro-step-2" class="intro-phase-step" data-intro-step="2" aria-selected="false" aria-controls="intro-readout-panel" tabindex="-1">
-              <span class="intro-phase-step__ring"><span class="intro-phase-step__num">3</span></span>
-              <span class="intro-phase-step__label">תכנון והחלטות</span>
-            </button>
-            <button type="button" role="tab" id="intro-step-3" class="intro-phase-step" data-intro-step="3" aria-selected="false" aria-controls="intro-readout-panel" tabindex="-1">
-              <span class="intro-phase-step__ring"><span class="intro-phase-step__num">4</span></span>
-              <span class="intro-phase-step__label">רינדור והורדה</span>
-            </button>
-          </div>
-          <div class="intro-phase-readout" id="intro-readout-panel" role="tabpanel" aria-labelledby="intro-step-0">
-            <p class="intro-phase-detail intro-phase-detail--0" aria-hidden="false">מתחילים מקובץ קריינות התחזית.</p>
-            <p class="intro-phase-detail intro-phase-detail--1" aria-hidden="true">הקריינות הופכת לטקסט לעבודה.</p>
-            <p class="intro-phase-detail intro-phase-detail--2" aria-hidden="true">חלוקה לסצנות והתאמה לקטלוג.</p>
-            <p class="intro-phase-detail intro-phase-detail--3" aria-hidden="true">בסוף מתקבל וידאו אנכי מוכן.</p>
-          </div>
-        </div>`;
-      }
       return `<div class="visual-board"><div class="mini-card"><span>${escapeHtml(section.title)}</span><small>Placeholder</small></div></div>`;
     }
 
@@ -5208,7 +4771,7 @@
     }
 
     function bulletsMarkup(section) {
-      if (section.id === "intro" && section.visual === "introPipeline") return "";
+      if (section.id === "intro") return "";
 
       const mobileList = Array.isArray(section.mobileBullets) ? section.mobileBullets : null;
       const hasMobileBullets = mobileList && mobileList.length > 0;
@@ -5263,10 +4826,6 @@
         section.id === "intro" || section.id === "v1-next"
           ? ""
           : `<div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>`;
-      const introPipelineBlock =
-        section.id === "intro" && section.visual === "introPipeline"
-          ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ארבעה שלבים: העלאה, תמלול, תכנון והחלטות, רינדור והורדה">${visualMarkup("introPipeline", section)}</figure>`
-          : "";
       const bulletsBlock = bulletsMarkup(section);
       const pitchProductLayout = isPitchProductSection(section);
       const pricingPullquoteBlock =
@@ -5306,7 +4865,6 @@
             <div class="kicker">${escapeHtml(section.kicker)}</div>
             ${heading}
             ${leadBlock}
-            ${introPipelineBlock}
             ${bulletsBlock}
             ${pricingPullquoteBlock}
             ${studioWizardToolbar}
@@ -5384,63 +4942,6 @@
     }
 
     trackRoll.innerHTML = buildStoryRollHtml(storySections);
-
-    (function wireIntroPhaseFlow() {
-      const root = document.querySelector("#intro .intro-phase-flow");
-      const panel = document.getElementById("intro-readout-panel");
-      if (!root || !panel) return;
-
-      const clampPhase = idx => Math.max(0, Math.min(3, idx));
-
-      const selectPhase = phase => {
-        const n = clampPhase(phase);
-        root.dataset.introPhase = String(n);
-        const tabs = [...root.querySelectorAll("button.intro-phase-step[data-intro-step]")];
-        tabs.forEach((tab, i) => {
-          const selected = i === n;
-          tab.setAttribute("aria-selected", selected ? "true" : "false");
-          tab.tabIndex = selected ? 0 : -1;
-          if (selected) tab.setAttribute("aria-current", "step");
-          else tab.removeAttribute("aria-current");
-          tab.classList.toggle("is-active", selected);
-          tab.classList.toggle("is-complete", i < n);
-        });
-        panel.setAttribute("aria-labelledby", `intro-step-${n}`);
-        root.querySelectorAll(".intro-phase-detail").forEach((el, i) => {
-          el.setAttribute("aria-hidden", i === n ? "false" : "true");
-        });
-      };
-
-      selectPhase(Number.parseInt(root.dataset.introPhase || "0", 10) || 0);
-
-      root.addEventListener("click", e => {
-        const btn = e.target && e.target.closest && e.target.closest("button[data-intro-step]");
-        if (!btn || !root.contains(btn)) return;
-        const idx = Number.parseInt(btn.getAttribute("data-intro-step") || "", 10);
-        if (Number.isNaN(idx)) return;
-        selectPhase(idx);
-        btn.focus();
-      });
-
-      root.addEventListener("keydown", e => {
-        const tabs = [...root.querySelectorAll("button.intro-phase-step[data-intro-step]")];
-        const cur = tabs.indexOf(document.activeElement);
-        if (cur < 0) return;
-
-        const move = delta => {
-          const nextIdx = clampPhase(cur + delta);
-          selectPhase(nextIdx);
-          const t = tabs[nextIdx];
-          if (t) t.focus();
-          e.preventDefault();
-        };
-
-        if (e.key === "ArrowRight") move(1);
-        else if (e.key === "ArrowLeft") move(-1);
-        else if (e.key === "Home") move(-cur);
-        else if (e.key === "End") move(tabs.length - 1 - cur);
-      });
-    })();
 
     (function initMobileDesktopCta() {
       const btn = document.getElementById("pitch-copy-page-url");
@@ -5798,7 +5299,7 @@
 
     /** Panel reveal: studio steps are copy-column `.pitch-studio-phase-pick` items. */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-studio-phase-pick, .pitch-catalog-card, .pitch-catalog-detail, .intro-phase-step, .intro-phase-detail, .intro-flow-segment, .hero-downloads, .panel-visual > *";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-studio-phase-pick, .pitch-catalog-card, .pitch-catalog-detail, .hero-downloads, .panel-visual > *";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
