@@ -968,6 +968,59 @@
       color: rgb(42 48 56 / 1);
     }
 
+    /* Render slide — column balance, larger phone, calmer bullet rows */
+    #render .panel-inner {
+      width: min(1260px, 96vw);
+      gap: clamp(22px, 3.5vw, 56px);
+    }
+
+    #render .pitch-final-output {
+      width: min(100%, min(520px, 92vw));
+      padding: 20px 18px 22px;
+      gap: clamp(14px, 2vw, 18px);
+    }
+
+    #render .pitch-final-output .pitch-device {
+      width: min(82vw, 268px);
+      padding: 12px;
+    }
+
+    #render .bullets li {
+      align-items: center;
+      min-height: 3rem;
+      padding-block: 11px;
+    }
+
+    @media (min-width: 861px) {
+      #render .panel-inner {
+        align-items: center;
+        grid-template-columns: minmax(0, 1.02fr) minmax(300px, 0.98fr);
+      }
+
+      #render .panel-visual {
+        align-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        place-items: unset;
+        min-height: min(54svh, 540px);
+      }
+
+      #render .panel-copy {
+        align-self: center;
+      }
+
+      #render .pitch-final-output .pitch-device {
+        width: min(32vw, 300px);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      #render .pitch-final-output .pitch-device {
+        width: min(28vw, 320px);
+      }
+    }
+
     /* —— Pitch: cognition-flow diagram (`#thinking`) —— */
     .pitch-thinking-visual {
       position: relative;
@@ -4274,7 +4327,7 @@
       </div>
       <div class="pitch-device">
         <div class="pitch-device-screen pitch-device-screen--preview">
-          <img class="pitch-device-poster" src="${escapeHtml(firstPosterSrc)}" alt="" width="180" height="320" decoding="async" loading="lazy" />
+          <img class="pitch-device-poster" src="${escapeHtml(firstPosterSrc)}" alt="" width="270" height="480" decoding="async" loading="lazy" />
           <span class="pitch-device-play" aria-hidden="true">▶</span>
         </div>
       </div>
