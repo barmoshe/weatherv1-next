@@ -561,7 +561,7 @@
 
     #studio .panel-visual,
     #catalog .panel-visual {
-      min-height: min(60svh, 560px);
+      min-height: min(52svh, 480px);
       align-items: stretch;
       place-items: stretch;
     }
@@ -569,6 +569,11 @@
     @media (min-width: 861px) {
       [data-pitch-layout="product-app"] .panel-inner {
         align-items: start;
+      }
+
+      #studio .panel-inner,
+      #catalog .panel-inner {
+        grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
       }
 
       #studio .panel-visual,
@@ -584,7 +589,7 @@
     /* —— Shared app chrome (catalog can reuse .pitch-app-shell + toolbar/tabs) —— */
     .pitch-app-shell {
       --pitch-app-r: 20px;
-      width: min(100%, 548px);
+      width: min(100%, 720px);
       margin-inline: auto;
       border-radius: var(--pitch-app-r);
       border: 1px solid rgb(0 0 0 / 0.1);
@@ -1240,7 +1245,6 @@
 
     /* Catalog slide — extends shared product-app copy + app shell */
     .pitch-app-shell--catalog {
-      width: min(100%, 600px);
       display: grid;
       gap: 0;
     }
@@ -2896,14 +2900,20 @@
         theme: { paper: "#f4f6fb", accent: "#3d55b8" }
       },
       {
-        id: "promise",
-        kicker: "הפתרון",
-        title: "סטודיו אחד לסרטון מוכן",
-        lead: "{{כאן נוסיף את הבטחת המוצר: מקול או טקסט לסרטון תחזית מסודר ומוכן להפצה}}",
-        bullets: ["מכניסים קריינות", "בונים סיפור חזותי", "מקבלים MP4 אנכי"],
-        visual: "workflow",
+        id: "thinking",
+        kicker: "מהלך חשיבה",
+        title: "מה קורה לקריינות מהרגע שהיא נכנסת ועד לסצנות",
+        lead:
+          "מאזין לקריינות, הופך אותה לטקסט, מבין את המשמעות ומנסח תכנית עבודה, מחלק את הסיפור לסצנות עם טווחי זמן והקשר — ואז מתאים קטעים מהקטלוג לכל רגע בציר. הכול כאן בשפה אנושית, בלי להיכנס למונחים טכניים.",
+        bullets: [
+          "חמישה שלבים בציר הלוגי: קול → טקסט → הבנה ותכנית → סצנות → התאמה מהקטלוג",
+          "הקטלוג מתויג כשכבת ידע: מה יש בכל קטע, לאיזה סוג סצנה הוא מתאים, ואיך הוא משתלב בציר",
+          "ברמת הריפו (בלי פירוט פנימי): סצנות עם טווחי זמן, תגיות ומילות מפתח, ובחירות קליפ מהקטלוג לאורך הציר",
+          "סוגי סצנה לדוגמה בתכנון: תיאור · רשימה · מעבר"
+        ],
+        visual: "cognitionFlow",
         transition: "ttb",
-        theme: { paper: "#ffffff", accent: "#1fa871" }
+        theme: { paper: "#eef8f6", accent: "#0f766e" }
       },
       {
         id: "workflow",
@@ -3059,6 +3069,9 @@
     /** Studio slide: scroll-synced wizard highlight on `.pitch-app-shell` + bullets. */
     let studioWizardScrollTrigger = null;
     let studioWizardPassiveCleanup = null;
+    /** Thinking slide: scrub sync on cognition-flow diagram (same lifecycle as studio wizard). */
+    let thinkingFlowScrollTrigger = null;
+    let thinkingFlowPassiveCleanup = null;
 
     function teardownPassiveProgress() {
       if (typeof passiveProgressCleanup === "function") {
@@ -3307,6 +3320,51 @@
             </div>
           </div>
         </div>`;
+    }
+
+    function cognitionFlowHtml() {
+      const steps = [
+        "קריינות",
+        "תמלול",
+        'הבנת משמעות<span class="pitch-flow-step-break"></span>וניסוח תכנית',
+        "חלוקה לסצנות",
+        "התאמת קטעים מהקטלוג"
+      ];
+      const parts = [];
+      steps.forEach((labelInner, i) => {
+        parts.push(`<div class="pitch-flow-step pitch-flow-step--${i + 1}" data-step="${i + 1}">
+        <span class="pitch-flow-step-num" aria-hidden="true">${i + 1}</span>
+        <span class="pitch-flow-step-label">${labelInner}</span>
+      </div>`);
+        if (i < steps.length - 1) {
+          parts.push(`<div class="pitch-flow-connector" aria-hidden="true">
+        <svg class="pitch-flow-connector-svg" viewBox="0 0 40 56" preserveAspectRatio="none">
+          <defs>
+            <marker id="pitch-flow-amk-${i}" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <path class="pitch-flow-path" d="M20 5 L20 48" fill="none" stroke-width="2.75" stroke-linecap="round" vector-effect="non-scaling-stroke" marker-end="url(#pitch-flow-amk-${i})"></path>
+        </svg>
+      </div>`);
+        }
+      });
+      return `<div class="pitch-thinking-visual" dir="rtl">
+      <div class="pitch-thinking-visual__bg" aria-hidden="true"></div>
+      <div class="pitch-thinking-visual__noise" aria-hidden="true"></div>
+      <div class="pitch-thinking-flow">
+        ${parts.join("")}
+        <aside class="pitch-thinking-callout" aria-hidden="true">
+          <div class="pitch-thinking-callout__title">קטלוג כשכבת ידע</div>
+          <p class="pitch-thinking-callout__body">כל קטע מקבל תיוגים כדי שהמערכת תדע מה מתאים לאיזו סצנה בציר — בלי רשימות פנימיות על המסך.</p>
+        </aside>
+        <div class="pitch-scene-hint-chips" aria-hidden="true">
+          <span class="pitch-scene-chip">תיאור</span>
+          <span class="pitch-scene-chip">רשימה</span>
+          <span class="pitch-scene-chip">מעבר</span>
+        </div>
+      </div>
+    </div>`;
     }
 
     function downloadLinksMarkup(links) {

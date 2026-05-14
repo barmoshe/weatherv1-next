@@ -561,7 +561,7 @@
 
     #studio .panel-visual,
     #catalog .panel-visual {
-      min-height: min(60svh, 560px);
+      min-height: min(52svh, 480px);
       align-items: stretch;
       place-items: stretch;
     }
@@ -569,6 +569,11 @@
     @media (min-width: 861px) {
       [data-pitch-layout="product-app"] .panel-inner {
         align-items: start;
+      }
+
+      #studio .panel-inner,
+      #catalog .panel-inner {
+        grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
       }
 
       #studio .panel-visual,
@@ -584,7 +589,7 @@
     /* —— Shared app chrome (catalog can reuse .pitch-app-shell + toolbar/tabs) —— */
     .pitch-app-shell {
       --pitch-app-r: 20px;
-      width: min(100%, 548px);
+      width: min(100%, 720px);
       margin-inline: auto;
       border-radius: var(--pitch-app-r);
       border: 1px solid rgb(0 0 0 / 0.1);
@@ -1240,7 +1245,6 @@
 
     /* Catalog slide — extends shared product-app copy + app shell */
     .pitch-app-shell--catalog {
-      width: min(100%, 600px);
       display: grid;
       gap: 0;
     }
