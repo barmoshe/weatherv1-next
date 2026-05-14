@@ -644,7 +644,7 @@
       font-size: 0.9rem;
     }
 
-    /* Intro hero: reading column + device preview; stacks below ~1024px */
+    /* Intro hero: copy + hero downloads only (no device mockup) */
     #intro.story-panel {
       padding-block: calc(var(--nav-height) + 22px) clamp(28px, 5vh, 52px);
       padding-inline: clamp(18px, 4vw, 64px);
@@ -652,30 +652,32 @@
 
     #intro .panel-inner {
       width: min(1220px, 100%);
-      align-items: center;
-      gap: clamp(24px, 4.5vw, 64px);
-      grid-template-columns: minmax(260px, 1.22fr) minmax(236px, min(34vw, 360px));
+      grid-template-columns: 1fr;
+      align-items: start;
+      justify-items: stretch;
+      gap: clamp(18px, 3.5vw, 36px);
       box-sizing: border-box;
+      max-width: min(47rem, 92vw);
+      margin-inline: auto;
     }
 
-    #intro .panel-copy {
-      gap: clamp(12px, 1.8vw, 20px);
+    #intro .panel-copy--intro {
+      gap: clamp(14px, 1.6vw, 22px);
       min-height: 0;
-      align-self: center;
       width: 100%;
-      max-width: min(40rem, 100%);
+      max-width: none;
     }
 
     #intro h1 {
       font-size: clamp(2rem, 0.35rem + 3.5vw, 4.1rem);
-      max-width: min(100%, 19rem);
+      max-width: min(100%, 18.5rem);
       line-height: 1.03;
       text-wrap: balance;
     }
 
     #intro .lead {
       font-size: clamp(0.98rem, 0.35vw + 0.9rem, 1.32rem);
-      max-width: 38rem;
+      max-width: min(100%, 44rem);
       line-height: 1.45;
       display: block;
       margin: 0;
@@ -683,8 +685,8 @@
     }
 
     #intro .bullets {
-      margin-top: 2px;
-      gap: 8px;
+      margin-top: 4px;
+      gap: 10px;
       font-size: clamp(0.84rem, 0.9vw, 1.02rem);
     }
 
@@ -693,19 +695,23 @@
     }
 
     #intro .hero-downloads {
-      margin-top: 12px;
+      margin-top: 6px;
       max-width: none;
       width: 100%;
-      padding: 14px 16px;
+      padding: 16px 18px;
       border: 2px solid var(--v1-ink);
       border-radius: 16px;
-      background: rgb(255 255 255 / 0.62);
+      background: rgb(255 255 255 / 0.68);
       box-shadow: 4px 4px 0 rgb(0 0 0 / 0.07);
     }
 
     #intro .hero-downloads-title {
-      margin: 0 0 10px;
-      font-size: clamp(0.82rem, 1vw, 1rem);
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgb(0 0 0 / 0.08);
+      font-size: clamp(0.86rem, 1.05vw, 1.05rem);
+      font-weight: 950;
+      letter-spacing: 0.02em;
     }
 
     #intro .download-links--hero {
@@ -715,7 +721,7 @@
     }
 
     #intro .download-links--hero a {
-      min-height: 42px;
+      min-height: 44px;
       padding: 0 12px;
       font-size: clamp(0.72rem, 0.55vw + 0.65rem, 0.88rem);
       border-radius: 12px;
@@ -725,25 +731,10 @@
       text-align: center;
     }
 
-    #intro .panel-visual {
-      min-height: min(280px, 44svh);
-      max-height: min(62svh, 540px);
-      align-self: center;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #intro .phone-frame {
-      width: min(100%, clamp(196px, 26vw, 300px));
-      margin-inline: auto;
-      padding: clamp(14px, 1.8vw, 20px);
-      box-shadow: var(--shadow);
-    }
-
-    #intro .phone-screen {
-      font-size: clamp(0.82rem, 1vw + 0.65rem, 1.08rem);
+    #intro .download-links--hero a.primary {
+      min-height: 48px;
+      font-size: clamp(0.78rem, 0.5vw + 0.68rem, 0.92rem);
+      font-weight: 950;
     }
 
     @media (max-height: 720px) {
@@ -753,49 +744,13 @@
 
       #intro h1 {
         font-size: clamp(1.55rem, 3.5vh, 2.9rem);
-        max-width: min(100%, 18rem);
-      }
-
-      #intro .panel-visual {
-        max-height: min(46svh, 340px);
-      }
-
-      #intro .phone-frame {
-        width: min(100%, clamp(170px, 22vw, 240px));
+        max-width: min(100%, 17.5rem);
       }
     }
 
     @media (min-width: 861px) and (max-width: 1024px) {
       #intro .panel-inner {
-        grid-template-columns: 1fr;
-        gap: clamp(22px, 4vh, 36px);
-        max-width: 36.5rem;
-        margin-inline: auto;
-      }
-
-      #intro .panel-visual {
-        order: -1;
-        max-height: min(50svh, 400px);
-        min-height: min(220px, 36svh);
-      }
-
-      #intro .phone-frame {
-        width: min(260px, 48vw);
-      }
-
-      #intro .panel-copy {
-        max-width: none;
-      }
-
-      #intro .download-links--hero {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (min-width: 1025px) and (max-width: 1180px) {
-      #intro .panel-inner {
-        grid-template-columns: minmax(240px, 1.12fr) minmax(220px, min(36vw, 300px));
-        gap: clamp(20px, 3.5vw, 44px);
+        max-width: min(47rem, 92vw);
       }
     }
 
@@ -1298,24 +1253,15 @@
 
       #intro .panel-inner {
         max-height: none;
-        gap: clamp(20px, 5.5vw, 30px);
+        gap: clamp(18px, 5vw, 28px);
         align-content: start;
       }
 
-      /* Hero: device preview first — compact band so copy + CTAs get space */
-      #intro .panel-visual {
-        order: -1;
-        max-height: min(42svh, 300px);
-        min-height: 0;
+      #intro .panel-copy--intro {
         width: 100%;
-        justify-items: center;
-        padding-block: 2px 6px;
-      }
-
-      #intro .panel-copy {
-        width: 100%;
-        max-width: 26.5rem;
+        max-width: min(100%, 28rem);
         margin-inline: auto;
+        gap: clamp(14px, 4vw, 20px);
       }
 
       #intro .lead {
@@ -1326,9 +1272,17 @@
       }
 
       #intro .hero-downloads {
-        padding: 12px 14px;
-        margin-top: 4px;
+        padding: 14px 16px;
+        margin-top: 6px;
         border-radius: 14px;
+      }
+
+      #intro .hero-downloads-title {
+        margin: 0 0 12px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgb(0 0 0 / 0.08);
+        font-weight: 950;
+        letter-spacing: 0.02em;
       }
 
       #intro .download-links--hero {
@@ -1345,13 +1299,9 @@
         padding-inline: 14px;
       }
 
-      #intro .phone-frame {
-        width: min(216px, 70vw);
-        max-width: 100%;
-        max-height: 100%;
-        margin-inline: auto;
-        padding: 13px;
-        aspect-ratio: 9 / 16;
+      #intro .download-links--hero a.primary {
+        min-height: 52px;
+        font-size: 0.88rem;
       }
 
       .panel-copy {
@@ -1463,6 +1413,11 @@
         font-size: 0.8rem;
         min-height: 46px;
       }
+
+      #intro .download-links--hero a.primary {
+        min-height: 50px;
+        font-size: 0.84rem;
+      }
     }
 
     /* Ultra-narrow: hide subtitle under logo to keep one-line nav density. */
@@ -1489,15 +1444,6 @@
       h1, h2 {
         font-size: clamp(1.45rem, 5.2vh, 2.4rem);
       }
-
-      #intro .panel-visual {
-        max-height: min(38svh, 260px);
-      }
-
-      #intro .phone-frame {
-        width: min(200px, 52vw);
-        padding: 12px;
-      }
     }
 
     @media (max-width: 860px) and (orientation: landscape) {
@@ -1506,41 +1452,16 @@
       }
 
       #intro .panel-inner {
-        display: grid;
-        grid-template-columns: minmax(120px, 32vw) minmax(0, 1fr);
-        gap: clamp(14px, 3vw, 22px);
-        align-items: start;
-        direction: ltr;
-      }
-
-      #intro .panel-visual {
-        grid-column: 1;
-        grid-row: 1 / -1;
-        order: 0;
-        max-height: min(85vh, 440px);
-        align-self: center;
-        padding-block: 0;
-      }
-
-      #intro .panel-copy {
-        grid-column: 2;
-        grid-row: 1;
-        direction: rtl;
-        margin-inline: 0;
-        max-width: none;
-      }
-
-      #intro .phone-frame {
-        width: min(128px, 28vw);
-        padding: 10px;
+        max-width: min(42rem, 94vw);
+        margin-inline: auto;
       }
 
       #intro h1 {
-        font-size: clamp(1.32rem, 3.6vw, 1.95rem);
+        font-size: clamp(1.28rem, 3.2vw, 1.88rem);
       }
 
       #intro .lead {
-        font-size: clamp(0.9rem, 2.4vw, 1.06rem);
+        font-size: clamp(0.88rem, 2.2vw, 1.05rem);
       }
 
       #intro .hero-downloads {
@@ -1555,6 +1476,11 @@
       #intro .download-links--hero a {
         min-height: 42px;
         font-size: 0.74rem;
+      }
+
+      #intro .download-links--hero a.primary {
+        min-height: 46px;
+        font-size: 0.78rem;
       }
     }
 
@@ -1592,13 +1518,6 @@
         overflow: visible;
       }
 
-      #intro .panel-visual {
-        max-height: none;
-      }
-
-      #intro .phone-frame {
-        max-height: none;
-      }
       .scroll-progress {
         display: none;
       }
@@ -1686,7 +1605,7 @@
         title: "אפליקציה מוכנה למכירה",
         lead: "{{כאן נוסיף משפט פתיחה שיסביר ללקוח מה הוא מקבל בלי מילים טכניות}}",
         bullets: ["יוצרים סרטוני תחזית אנכיים", "מתאים לעמודים, עסקים וצוותי תוכן", "תהליך עבודה ברור וחוזר"],
-        visual: "phone",
+        visual: "none",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
       },
@@ -1906,6 +1825,9 @@
     }
 
     function visualMarkup(type, section) {
+      if (type === "none" || type == null) {
+        return "";
+      }
       if (type === "phone") {
         return `<div class="phone-frame"><div class="phone-screen"><span class="mixed-ltr" lang="en" dir="ltr">MP4<br>9:16</span><br><small>תחזית מוכנה</small></div></div>`;
       }
@@ -2045,10 +1967,15 @@
       const bullets = section.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join("");
       const heroDownloads = section.id === "intro" ? heroDownloadsBlock() : "";
       const visualAria = section.visual === "excalidrawDemo" ? "" : " aria-hidden=\"true\"";
+      const copyClass = section.id === "intro" ? "panel-copy panel-copy--intro" : "panel-copy";
       const heading =
         section.id === "intro"
           ? `<h1>${escapeHtml(section.title)}</h1>`
           : `<h2>${escapeHtml(section.title)}</h2>`;
+      const visualBlock =
+        section.id === "intro"
+          ? ""
+          : `<div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>`;
       return `<section
         class="story-panel"
         id="${escapeHtml(section.id)}"
@@ -2058,14 +1985,14 @@
         data-transition="${escapeHtml(panelTransition(section))}"
       >
         <div class="panel-inner">
-          <div class="panel-copy">
+          <div class="${copyClass}">
             <div class="kicker">${escapeHtml(section.kicker)}</div>
             ${heading}
             <p class="lead">${escapeHtml(section.lead)}</p>
             <ul class="bullets">${bullets}</ul>
             ${heroDownloads}
           </div>
-          <div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>
+          ${visualBlock}
         </div>
       </section>`;
     }
