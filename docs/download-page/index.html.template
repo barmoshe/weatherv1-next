@@ -915,6 +915,32 @@
       body.pitch-vertical .story-panel {
         scroll-snap-align: start;
       }
+
+      /** `desktopCluster` ב־TTB (שולחן עבודה): פרקים ממוסגרים מתפרקים לרצף snap אנכי — לא עמודה אופקית עם גלילה פנימית. */
+      body.pitch-vertical .story-panel.story-panel--vcluster {
+        padding: 0;
+        min-height: 0;
+      }
+
+      body.pitch-vertical .story-panel.story-panel--vcluster > .story-vstack {
+        overflow: visible;
+        height: auto;
+        scroll-snap-type: y proximity;
+      }
+
+      body.pitch-vertical .story-panel.story-panel--vcluster .story-subslide {
+        min-height: 100svh;
+        scroll-snap-align: start;
+        box-sizing: border-box;
+        padding-block: calc(var(--nav-height) + 36px) 64px;
+        padding-inline: clamp(20px, 5vw, 72px);
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(90deg, rgb(0 0 0 / .028) 1px, transparent 1px) 0 0 / 34px 34px,
+          linear-gradient(0deg, rgb(0 0 0 / .022) 1px, transparent 1px) 0 0 / 34px 34px,
+          var(--panel-paper, var(--v1-paper));
+      }
     }
 
     @media (min-width: 861px) and (prefers-reduced-motion: no-preference) {
@@ -1470,8 +1496,9 @@
           "גללו לאט ובמכוון למדוד scrub",
           "במובייל הפרקים נערמים אנכית",
           'בנתוני השקופית: `transition: "ttb"` ← כניסת TTB בולטת; `transition: "rtl"` ← מעבר צדדי',
-          'לאותה מחרוזת ב־`desktopCluster` ב־2+ פרקים עוקבים: עמודה אופקית אחת עם גלילה אנכית פנימית',
-          "אפשר למחוק את שקופיות הדוגמה אחרי הבדיקה"
+          'לאותה מחרוזת ב־`desktopCluster` ב־2+ פרקים עוקבים: עמודה אופקית אחת עם גלילה אנכית פנימית (בדסקטופ אופקי)',
+          "TTB בדסקטופ: בהגדרות המחבר במקור — `AUTHOR_DESKTOP_STORY_AXIS` ← `\"vertical\"`",
+          "אפשר למחוק את פרקי `pitch-test-*` והמדריך הזה אחרי הבדיקה"
         ],
         visual: "tutorialDemo",
         transition: "ttb",
@@ -1504,62 +1531,12 @@
         id: "pitch-test-03",
         kicker: "דוגמת מעבר · 03",
         title: "שקופית בדיקה 03",
-        lead: "שלושה פרקים נוספים אחרים מסוג זה מאפשרים לגבש תחושת מעבר ארוכה יותר.",
-        bullets: ["בדיקת scrub איטית", "גלילת גלגל כאן — עד הקצה, ואז המשיכו את הסיפור אופקית"],
+        lead: "סיום הבלוק של שלוש השקופיות הממוזגות — אחר כך ממשיכים בפרקי המוצר הרגילים.",
+        bullets: ["בדיקת scrub איטית (במצב דסקטופ אופקי)", "במצב TTB: שלוש השקופיות האלה מתפרסות ברצף אנכי"],
         visual: "numberedSample",
         sampleNumber: 3,
         desktopCluster: "pitch-vertical-stack-demo",
         theme: { paper: "#f2fffc", accent: "#0f8f7f" }
-      },
-      {
-        id: "pitch-test-04",
-        kicker: "דוגמת מעבר · 04",
-        title: "שקופית בדיקה 04",
-        lead: "אם פרק לא מופיע, המספר הזה מסמן שהבעיה היא במדידת רוחב / pin ולא בהנפשת התוכן.",
-        bullets: ["מספר בסגנון LTR בתוך לוח RTL", "הקפידו שהמראה מתאימה בהעדפת reduced-motion"],
-        visual: "numberedSample",
-        sampleNumber: 4,
-        theme: { paper: "#fff9e9", accent: "#b57700" }
-      },
-      {
-        id: "pitch-test-05",
-        kicker: "דוגמת מעבר · 05",
-        title: "שקופית בדיקה 05",
-        lead: "אמצע סדרת הדוגמה — טוב למדידת מתח בין פרקים רחוקים בציר אופקי.",
-        bullets: ["05 מתוך 08 בשורה זו בלבד", "גלילה מהירה + snap שנתפס מתחילת המסך"],
-        visual: "numberedSample",
-        sampleNumber: 5,
-        theme: { paper: "#f4f2ff", accent: "#5c3dbf" }
-      },
-      {
-        id: "pitch-test-06",
-        kicker: "דוגמת מעבר · 06",
-        title: "שקופית בדיקה 06",
-        lead: "המשיכו למטה בסטאק מאלף — אם יש טלטול, הבעיה בהגדרות scroll-snap או ב־viewport.",
-        bullets: ["TTB בשולחן עבודה: `AUTHOR_DESKTOP_STORY_AXIS` ← `\"vertical\"`", "אופקי באנגלית/LTR פיזי: `AUTHOR_HORIZONTAL_SCROLL_DIRECTION` ← `\"ltr\"`"],
-        visual: "numberedSample",
-        sampleNumber: 6,
-        theme: { paper: "#eaf7ff", accent: "#1a73b5" }
-      },
-      {
-        id: "pitch-test-07",
-        kicker: "דוגמת מעבר · 07",
-        title: "שקופית בדיקה 07",
-        lead: "מהדקים את סדר 07 ואחריו 08 בלי דילוג פרק — אחרי הסדרה ההורדה רק בשקופית הפתיחה.",
-        bullets: ["לקישורי הורדה חזרו ל־#download-hero", "מתאים לבדוק anchor מ־#/pitch-test-01 עד 08"],
-        visual: "numberedSample",
-        sampleNumber: 7,
-        theme: { paper: "#f7ffee", accent: "#3d7f1e" }
-      },
-      {
-        id: "pitch-test-08",
-        kicker: "דוגמת מעבר · 08",
-        title: "שקופית בדיקה 08",
-        lead: "הפרק האחרון בשורת הדוגמה — אחריו אין שקופית הורדה נפרפת; ההורדות רק בשקופית הפתיחה.",
-        bullets: ["לקישורים חזרו ל־#intro או #download-hero", "מחקו את פרקי pitch-test כשמתחיל פרודקשן"],
-        visual: "numberedSample",
-        sampleNumber: 8,
-        theme: { paper: "#fff0ee", accent: "#d9432b" }
       }
     ];
 
@@ -1572,7 +1549,7 @@
      * - Per-slide `transition` on `storySections`: "ttb" = כניסת TTB בולטת; "rtl" = מעבר צדדי; השמטה = TTB עדין (מגדיר `data-transition`).
      * - Optional `desktopCluster` (same string on 2+ consecutive slides): one horizontal lane; slides stack vertically inside with snap + trapped wheel until top/bottom, then horizontal scrub resumes.
      */
-    const AUTHOR_DESKTOP_STORY_AXIS = "horizontal"; // "horizontal" | "vertical"
+    const AUTHOR_DESKTOP_STORY_AXIS = "vertical"; // "horizontal" | "vertical" — vertical = TTB על שולחן עבודה
     const AUTHOR_HORIZONTAL_SCROLL_DIRECTION = "rtl"; // "rtl" | "ltr" — ignored when axis is vertical
 
     function authorStoryMotion() {
@@ -1600,6 +1577,8 @@
     let horizontalTween = null;
     /** GSAP timelines / tweens for horizontal-pin panel entrances (linked to horizontalTween). */
     let horizontalPanelRevealAnims = [];
+    /** Vertical-TTB desktop panel entrances (`ScrollTrigger` on viewport scroll). */
+    let verticalPanelRevealAnims = [];
     /** Trapped wheel on merged vertical stacks; cleaned before killing horizontal tween. */
     let verticalClusterWheelCleanups = [];
 
@@ -1726,7 +1705,7 @@
           <ul class="tutorial-list">
             <li class="tutorial-item">
               <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">1</span>
-              <div class="tutorial-body"><strong>התחזית הראשונה</strong><span>גללו מטה בצעד רגוע וראו מתי מתחילה ריצת ההזזה האופקית.</span></div>
+              <div class="tutorial-body"><strong>התחזית הראשונה</strong><span>גללו מטה בצעד רגוע ובדקו שנעימות ה־snap מחברת פרק לפרק.</span></div>
             </li>
             <li class="tutorial-item">
               <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">2</span>
@@ -1876,6 +1855,7 @@
     function teardownHorizontalStory() {
       teardownVerticalClusterWheelCaptures();
       teardownHorizontalPanelReveals();
+      teardownVerticalPanelReveals();
       if (horizontalTween) {
         horizontalTween.kill();
         horizontalTween = null;
@@ -1932,6 +1912,16 @@
         anim.kill();
       });
       horizontalPanelRevealAnims = [];
+    }
+
+    function teardownVerticalPanelReveals() {
+      verticalPanelRevealAnims.forEach(anim => {
+        if (!anim) return;
+        const st = anim.scrollTrigger;
+        if (st) st.kill(false);
+        anim.kill();
+      });
+      verticalPanelRevealAnims = [];
     }
 
     function teardownVerticalClusterWheelCaptures() {
@@ -2050,9 +2040,31 @@
     }
 
     function initVerticalPanelReveals() {
+      teardownVerticalPanelReveals();
       gsap.registerPlugin(ScrollTrigger);
       gsap.utils.toArray(".story-panel").forEach(panel => {
-        gsap.from(panel.querySelectorAll(PANEL_REVEAL_SEL), {
+        if (panel.classList.contains("story-panel--vcluster")) {
+          gsap.utils
+            .toArray(panel.querySelectorAll(":scope > .story-vstack > .story-subslide"))
+            .forEach(subslide => {
+              const targets = subslide.querySelectorAll(PANEL_REVEAL_SEL);
+              if (!targets.length) return;
+              const anim = gsap.from(targets, {
+                ...panelRevealTweenVars(subslide, true),
+                immediateRender: false,
+                scrollTrigger: {
+                  trigger: subslide,
+                  start: "top 86%",
+                  once: true,
+                },
+              });
+              verticalPanelRevealAnims.push(anim);
+            });
+          return;
+        }
+        const targetsPanel = panel.querySelectorAll(PANEL_REVEAL_SEL);
+        if (!targetsPanel.length) return;
+        const anim = gsap.from(targetsPanel, {
           ...panelRevealTweenVars(panel, true),
           immediateRender: false,
           scrollTrigger: {
@@ -2061,6 +2073,7 @@
             once: true,
           },
         });
+        verticalPanelRevealAnims.push(anim);
       });
     }
 
@@ -2112,7 +2125,7 @@
             /**
              * Vertical scroll distance for the pinned horizontal scrub.
              * Must stay in sync with real strip width: if this is too small, scrollY≈0 still maps to progress≈1
-             * and only the last panel (e.g. pitch-test-08) fills the viewport.
+             * and only the last panel fills the viewport.
              */
             const getLanePx = () => {
               void trackRoll.offsetWidth;
@@ -2138,7 +2151,7 @@
             /*
               RTL mode (body.scroll-rtlflow) mirrors .story-mirror + each .story-panel (text un-mirrors).
               Horizontal scrub must stay x: 0 → -getMaxScroll(): if we "swap" from/to, progress 0 maps to
-              translateX(-full) and the viewport lands on the last DOM panel first (pitch-test‑08 bug).
+              translateX(-full) and the viewport lands on the last DOM panel first.
             */
 
             horizontalTween = gsap.fromTo(
