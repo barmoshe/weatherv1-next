@@ -901,14 +901,6 @@
       border: 1px solid rgb(0 0 0 / 0.08);
     }
 
-    #analytics .pitch-lead-well {
-      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(237 235 252 / 0.78));
-    }
-
-    #analytics .pitch-lead-well {
-      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(238 242 249 / 0.85));
-    }
-
     #v1-next .pitch-lead-well {
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(247 243 236 / 0.88));
     }
@@ -4164,22 +4156,6 @@
         theme: { paper: "#f4f6fa", accent: "#475569" }
       },
       {
-        id: "analytics",
-        kicker: "אנליטיקות",
-        title: "אנליטיקות ועלויות — עדיין בפיתוח ובטא",
-        lead:
-          "בטאב האנליטיקות רואים תמונת מצב על כל עבודה או סרטון — בערך כמה טוקנים נוצלו ומה נראית העלות הכספית המשוערת. האזור עדיין בטא; הנתונים להערכה בלבד.",
-        mobileSummary: "בטא: טוקנים ועלות משוערת לעבודה — מספרים להמחשה בלבד.",
-        bullets: [
-          "לכל עבודה / סרטון: טוקנים משוערים ועלות משוערת — למצגת",
-          "להשלמה מהריפו: אילו שדות ומדדים מוצגים בפועל בממשק"
-        ],
-        visual: "analyticsSimple",
-        transition: "ttb",
-        panelLayout: "split-flip",
-        theme: { paper: "#f8f7fc", accent: "#4f46e5" }
-      },
-      {
         id: "pricing",
         kicker: "הצעת מחיר",
         title: "עלות והמשך עבודה",
@@ -4689,15 +4665,6 @@
       if (type === "catalogScreenshot") {
         return catalogScreenshotHtml();
       }
-      if (type === "analyticsSimple") {
-        return `<div class="pricing-board visual-board" dir="rtl">
-          <div class="pricing-head"><span>מדד</span><span>ערך להמחשה</span></div>
-          <div class="pricing-row"><span>עבודות עם נתוני שימוש</span><small class="mixed-ltr" lang="en" dir="ltr">12</small></div>
-          <div class="pricing-row"><span>טוקנים משוערים</span><small class="mixed-ltr" lang="en" dir="ltr">420K in · 160K out</small></div>
-          <div class="pricing-row"><span>עלות משוערת לעבודה</span><small class="mixed-ltr" lang="en" dir="ltr">~$47.20</small></div>
-          <div class="token-chip"><span>בטא · מהיסטוריה מקומית</span><span>להערכה בלבד — לא דוח רשמי או חשבונית</span></div>
-        </div>`;
-      }
       if (type === "pricingHero") {
         return pricingHeroHtml();
       }
@@ -4825,7 +4792,6 @@
         section.id === "studio" ||
         section.id === "catalog" ||
         section.id === "local-first" ||
-        section.id === "analytics" ||
         section.id === "pricing" ||
         section.id === "v1-next"
       );
