@@ -2512,33 +2512,180 @@
       margin-top: 4px;
     }
 
-    /* Excalidraw-ish RTL flow (intro): hand-skewed nodes + chunky arrows */
+    /* Intro flow diagram: dotted board, wired SVG arcs, phased node pulses (RTL logical grid columns) */
     .intro-pipeline-wrap {
       margin: 0;
       width: 100%;
       max-width: min(100%, 44rem);
     }
 
-    .intro-pipeline-excal {
+    .intro-pipeline-diagram.intro-pipeline-excal {
+      position: relative;
       margin: 0;
-      padding: clamp(14px, 2.2vw, 22px);
+      padding: clamp(14px, 2.2vw, 22px) clamp(12px, 2.4vw, 20px) clamp(12px, 2vw, 18px);
       border: 2px solid var(--v1-ink);
       border-radius: 22px;
-      background:
-        linear-gradient(135deg, rgb(255 255 255 / .94), rgb(252 233 228 / .55));
+      background-color: rgb(255 255 255 / 0.96);
+      background-image:
+        radial-gradient(rgb(249 84 62 / 0.07) 1px, transparent 1px),
+        linear-gradient(135deg, rgb(255 255 255 / 0.94), rgb(252 233 228 / 0.55));
+      background-size:
+        20px 20px,
+        auto;
       box-shadow:
         0 14px 34px rgb(15 23 42 / 0.07),
         4px 4px 0 rgb(0 0 0 / 0.1);
+      overflow: clip;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-rows:
+        clamp(34px, 5.5vw, 44px)
+        auto;
+      column-gap: clamp(6px, 1.25vw, 12px);
+      row-gap: 10px;
+      align-items: center;
+      direction: rtl;
+    }
+
+    .intro-pipeline-edge-layer {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      width: 100%;
+      height: 100%;
+      min-height: clamp(34px, 5.5vw, 44px);
+      display: block;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .intro-pipeline-diagram.intro-pipeline-excal:not(.intro-pipeline-diagram--inview) .intro-pipeline-edge {
+      opacity: 0.75;
+      animation-play-state: paused;
+      stroke-dashoffset: 0.35;
+    }
+
+    .intro-pipeline-edge {
+      stroke-dasharray: 0.2 0.8;
+      animation: introPipelineDash 3.2s linear infinite;
+      opacity: 0.96;
+      will-change: stroke-dashoffset;
+    }
+
+    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-edge {
+      animation-play-state: running;
+    }
+
+    .intro-pipeline-edge--1 {
+      animation-delay: -0s;
+    }
+
+    .intro-pipeline-edge--2 {
+      animation-delay: -0.58s;
+    }
+
+    .intro-pipeline-edge--3 {
+      animation-delay: -1.17s;
+    }
+
+    .intro-pipeline-edge--4 {
+      animation-delay: -1.74s;
+    }
+
+    .intro-pipeline-edge--5 {
+      animation-delay: -2.32s;
+    }
+
+    @keyframes introPipelineDash {
+      to {
+        stroke-dashoffset: -1;
+      }
+    }
+
+    @keyframes introPipelineNodePulse {
+      0%,
+      58% {
+        opacity: 0.8;
+      }
+
+      8% {
+        opacity: 1;
+      }
+
+      12% {
+        opacity: 0.88;
+      }
+    }
+
+    .intro-pipeline-node-slot.intro-pipeline-node {
+      grid-row: 2;
+      justify-self: center;
+      align-self: start;
+      position: relative;
+      z-index: 1;
+      max-width: 100%;
+    }
+
+    .intro-pipeline-node-slot--1 {
+      grid-column: 1;
+    }
+
+    .intro-pipeline-node-slot--2 {
+      grid-column: 2;
+    }
+
+    .intro-pipeline-node-slot--3 {
+      grid-column: 3;
+    }
+
+    .intro-pipeline-node-slot--4 {
+      grid-column: 4;
+    }
+
+    .intro-pipeline-node-slot--5 {
+      grid-column: 5;
+    }
+
+    .intro-pipeline-node-slot--6 {
+      grid-column: 6;
+    }
+
+    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--a {
+      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
+      animation-delay: 0s;
+    }
+
+    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--b {
+      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
+      animation-delay: -1.6s;
+    }
+
+    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--c {
+      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
+      animation-delay: -3.2s;
+    }
+
+    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--d {
+      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
+      animation-delay: -4.8s;
+    }
+
+    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--e {
+      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
+      animation-delay: -6.4s;
+    }
+
+    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--f {
+      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
+      animation-delay: -8s;
     }
 
     .intro-pipeline-flow {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 8px 10px;
-      direction: rtl;
+      display: none;
+    }
+
+    .intro-pipeline-arrow {
+      display: none;
     }
 
     .intro-pipeline-node {
@@ -2546,16 +2693,21 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 10px 14px;
+      padding: 10px 12px;
       border: 2px solid var(--v1-ink);
       border-radius: 16px 20px 14px 18px;
-      background: rgb(255 255 255 / .92);
+      background: rgb(255 255 255 / 0.95);
       box-shadow: 2px 2px 0 rgb(0 0 0 / 0.12);
       font-weight: 950;
-      font-size: clamp(0.76rem, 0.32vw + 0.7rem, 0.94rem);
-      line-height: 1.25;
-      max-width: min(100%, 10.5rem);
+      font-size: clamp(0.68rem, 0.22vw + 0.62rem, 0.92rem);
+      line-height: 1.22;
       color: var(--v1-ink);
+      hyphens: auto;
+      box-sizing: border-box;
+      transform-origin: center;
+      transition:
+        opacity 0.35s ease,
+        box-shadow 0.35s ease;
     }
 
     .intro-pipeline-node--a {
@@ -2582,23 +2734,88 @@
       transform: rotate(0.42deg);
     }
 
-    .intro-pipeline-arrow {
-      flex-shrink: 0;
-      font-size: clamp(1.05rem, 0.6vw + 0.85rem, 1.35rem);
-      font-weight: 900;
-      line-height: 1;
-      color: var(--v1-muted);
-      user-select: none;
-    }
+    @media (prefers-reduced-motion: reduce) {
+      .intro-pipeline-diagram.intro-pipeline-excal:not(.intro-pipeline-diagram--inview) .intro-pipeline-edge {
+        opacity: 1;
+      }
 
-    @media (max-width: 520px) {
-      .intro-pipeline-flow {
-        gap: 6px 8px;
+      .intro-pipeline-edge {
+        animation: none !important;
+        opacity: 1 !important;
+        stroke-dashoffset: 0 !important;
+        stroke-dasharray: none !important;
       }
 
       .intro-pipeline-node {
-        padding: 8px 11px;
-        max-width: 100%;
+        animation: none !important;
+      }
+
+      .intro-pipeline-diagram.intro-pipeline-excal .intro-pipeline-node {
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 1110px) {
+      .intro-pipeline-diagram.intro-pipeline-excal .intro-pipeline-node {
+        font-size: clamp(0.62rem, 0.08vw + 0.54rem, 0.74rem);
+        padding: 8px 6px;
+      }
+
+      .intro-pipeline-diagram.intro-pipeline-excal {
+        column-gap: 4px;
+      }
+    }
+
+    @media (max-width: 960px) {
+      .intro-pipeline-diagram.intro-pipeline-excal {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-rows: clamp(34px, 6vw, 42px) auto auto;
+      }
+
+      .intro-pipeline-edge-layer {
+        grid-row: 1;
+      }
+
+      .intro-pipeline-node-slot--1,
+      .intro-pipeline-node-slot--2,
+      .intro-pipeline-node-slot--3 {
+        grid-row: 2;
+      }
+
+      .intro-pipeline-node-slot--4,
+      .intro-pipeline-node-slot--5,
+      .intro-pipeline-node-slot--6 {
+        grid-row: 3;
+      }
+
+      /* RTL: cols 3,2,1 then 6,5,4 for two-row reading */
+      .intro-pipeline-node-slot--1 {
+        grid-column: 1;
+      }
+
+      .intro-pipeline-node-slot--2 {
+        grid-column: 2;
+      }
+
+      .intro-pipeline-node-slot--3 {
+        grid-column: 3;
+      }
+
+      .intro-pipeline-node-slot--4 {
+        grid-column: 1;
+      }
+
+      .intro-pipeline-node-slot--5 {
+        grid-column: 2;
+      }
+
+      .intro-pipeline-node-slot--6 {
+        grid-column: 3;
+      }
+
+      .intro-pipeline-edge-layer .intro-pipeline-edge {
+        opacity: 0.35;
+        animation-duration: 4.25s;
       }
     }
 
@@ -4162,14 +4379,6 @@
               </button>
             </li>
           </ul>
-          <header class="pitch-app-head" aria-hidden="true">
-            <div class="pitch-app-head-brand">
-              <span class="pitch-app-btn pitch-app-btn--dark" role="presentation">תחזית חדשה</span>
-              <span class="pitch-app-pill mixed-ltr" lang="en" dir="ltr">V1</span>
-            </div>
-            <div class="pitch-app-head-title">מחולל תחזית לווידאו אנכי</div>
-            <div class="pitch-app-head-actions"><span class="pitch-app-btn pitch-app-btn--ghost" role="presentation">הגדרות</span></div>
-          </header>
           <div class="pitch-app-main">
             <nav class="pitch-app-tabs" aria-hidden="true">
               <span class="pitch-app-tab is-active">סטודיו</span>
@@ -4623,20 +4832,27 @@
         </div>`;
       }
       if (type === "introPipeline") {
-        return `<div class="intro-pipeline-excal">
-          <div class="intro-pipeline-flow">
-            <span class="intro-pipeline-node intro-pipeline-node--a">קריינות</span>
-            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
-            <span class="intro-pipeline-node intro-pipeline-node--b">תמלול</span>
-            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
-            <span class="intro-pipeline-node intro-pipeline-node--c">תוכנית סצנות</span>
-            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
-            <span class="intro-pipeline-node intro-pipeline-node--d">התאמת סגמנטים</span>
-            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
-            <span class="intro-pipeline-node intro-pipeline-node--e">רינדור</span>
-            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
-            <span class="intro-pipeline-node intro-pipeline-node--f">צפייה בתוצאה</span>
-          </div>
+        return `<div class="intro-pipeline-diagram intro-pipeline-excal" dir="rtl">
+          <svg class="intro-pipeline-edge-layer intro-pipeline-edge-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="introPipelineFlowStroke" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="0" y2="0">
+                <stop offset="0%" stop-color="#f9543e"/>
+                <stop offset="55%" stop-color="#e84232"/>
+                <stop offset="100%" stop-color="#c8202b"/>
+              </linearGradient>
+            </defs>
+            <path class="intro-pipeline-edge intro-pipeline-edge--1" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 91.667 11 C 88.25 14.75 79.42 14.83 75 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--2" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 75 11 C 71.08 14.92 62.92 14.92 58.333 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--3" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 58.333 11 C 54.42 14.92 46.58 14.92 41.667 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--4" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 41.667 11 C 37.75 14.92 29.92 14.92 25 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--5" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 25 11 C 21.08 14.92 12.92 14.92 8.333 11"/>
+          </svg>
+          <span class="intro-pipeline-node intro-pipeline-node--a intro-pipeline-node-slot intro-pipeline-node-slot--1">קריינות</span>
+          <span class="intro-pipeline-node intro-pipeline-node--b intro-pipeline-node-slot intro-pipeline-node-slot--2">תמלול</span>
+          <span class="intro-pipeline-node intro-pipeline-node--c intro-pipeline-node-slot intro-pipeline-node-slot--3">תוכנית סצנות</span>
+          <span class="intro-pipeline-node intro-pipeline-node--d intro-pipeline-node-slot intro-pipeline-node-slot--4">התאמת סגמנטים</span>
+          <span class="intro-pipeline-node intro-pipeline-node--e intro-pipeline-node-slot intro-pipeline-node-slot--5">רינדור</span>
+          <span class="intro-pipeline-node intro-pipeline-node--f intro-pipeline-node-slot intro-pipeline-node-slot--6">צפייה בתוצאה</span>
         </div>`;
       }
       return `<div class="visual-board"><div class="mini-card"><span>${escapeHtml(section.title)}</span><small>Placeholder</small></div></div>`;
@@ -4764,13 +4980,8 @@
           : "";
       const studioWizardToolbar =
         section.id === "studio"
-          ? `<div class="pitch-studio-wiz-controls-wrap" role="group" aria-labelledby="pitch-studio-wiz-legend">
-            <span id="pitch-studio-wiz-legend" class="pitch-studio-wiz-legend">הדגמת שלבים במוקאפ</span>
-            <div class="pitch-studio-wiz-controls">
-              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--play" id="pitch-studio-wiz-play">נגן</button>
-              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--pause" id="pitch-studio-wiz-pause" disabled>השהה</button>
-              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--reset" id="pitch-studio-wiz-reset">איפוס</button>
-            </div>
+          ? `<div class="pitch-studio-wiz-controls-wrap" role="note" aria-labelledby="pitch-studio-wiz-legend">
+            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב בשורת ההתקדמות במוקאפ כדי לראות איך התחזית נבנית — ללא הפעלה אוטומטית.</p>
           </div>`
           : "";
       const pitchLayoutAttr = pitchProductLayout ? ` data-pitch-layout="product-app"` : "";
@@ -4869,6 +5080,66 @@
     }
 
     trackRoll.innerHTML = buildStoryRollHtml(storySections);
+
+    (function initIntroPipelineDiagramInview() {
+      let observer = null;
+      const teardown = () => {
+        if (observer) {
+          observer.disconnect();
+          observer = null;
+        }
+      };
+
+      const sync = () => {
+        teardown();
+        const intro = document.getElementById("intro");
+        const diagram = intro?.querySelector(".intro-pipeline-diagram.intro-pipeline-excal");
+        if (!intro || !diagram) return;
+
+        diagram.classList.remove("intro-pipeline-diagram--inview");
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          diagram.classList.add("intro-pipeline-diagram--inview");
+          return;
+        }
+
+        const markIntroIfIntersectingViewport = () => {
+          const r = intro.getBoundingClientRect();
+          const vh = window.innerHeight || document.documentElement.clientHeight || 1;
+          if (r.bottom > 10 && r.top < vh - 10) diagram.classList.add("intro-pipeline-diagram--inview");
+        };
+
+        markIntroIfIntersectingViewport();
+
+        observer = new IntersectionObserver(
+          ents => {
+            for (let i = 0; i < ents.length; i++) {
+              if (ents[i].isIntersecting) diagram.classList.add("intro-pipeline-diagram--inview");
+            }
+          },
+          { root: null, rootMargin: "-4% 0px -52% 0px", threshold: [0.04, 0.12] }
+        );
+        observer.observe(intro);
+      };
+
+      sync();
+      const mqReduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if (typeof mqReduce.addEventListener === "function") mqReduce.addEventListener("change", sync);
+      else if (typeof mqReduce.addListener === "function") mqReduce.addListener(sync);
+
+      window.addEventListener(
+        "hashchange",
+        () => {
+          const intro = document.getElementById("intro");
+          const diagram = intro?.querySelector(".intro-pipeline-diagram.intro-pipeline-excal");
+          if (!intro || !diagram || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+          const r = intro.getBoundingClientRect();
+          const vh = window.innerHeight || document.documentElement.clientHeight || 1;
+          if (r.bottom > 10 && r.top < vh - 10) diagram.classList.add("intro-pipeline-diagram--inview");
+        },
+        { passive: true }
+      );
+    })();
 
     (function initMobileDesktopCta() {
       const btn = document.getElementById("pitch-copy-page-url");
@@ -5221,7 +5492,7 @@
 
     /** Panel reveal tweens targets in this selector; Studio wizard `.pitch-wiz-step` is included alongside `.panel-visual > *`. */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-edge, .hero-downloads, .panel-visual > *";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
