@@ -416,6 +416,11 @@
         align-self: stretch;
       }
 
+      /* Catalog split: same lane height as copy, but vertically center screenshot + tag CTA beside the text. */
+      #catalog[data-panel-layout^="split-"] .panel-visual {
+        place-items: center stretch;
+      }
+
       /* Split lanes share one row; visual column fills allocated height (no drifting min-heights per slide). */
       .story-panel[data-panel-layout^="split-"] .panel-inner,
       .story-subslide[data-panel-layout^="split-"] .panel-inner {
