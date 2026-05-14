@@ -193,6 +193,14 @@
       overflow: hidden;
     }
 
+    /*
+      Horizontal-strip math must match visible lane width — not raw 100vw (scrollbar / layout viewport differs on desktop).
+    */
+    main.story-shell#story {
+      container-type: inline-size;
+      container-name: story;
+    }
+
     .story-track {
       display: block;
       width: 100%;
@@ -908,14 +916,6 @@
         height: 100svh;
       }
 
-      /*
-        Avoid RTL mirror “last panel” flash before GSAP applies translateX.
-        Removed in JS right after the horizontal tween + first refresh.
-      */
-      body.scrollstory-horizontal-boot.is-scrollstory:not(.pitch-vertical) .story-roll {
-        visibility: hidden;
-      }
-
       body.is-scrollstory:not(.pitch-vertical) .story-roll {
         display: flex;
         flex-wrap: nowrap;
@@ -925,9 +925,16 @@
         unicode-bidi: isolate;
       }
 
-      body.is-scrollstory .story-panel {
-        width: 100vw;
+      body.is-scrollstory:not(.pitch-vertical) .story-panel {
         flex-shrink: 0;
+        width: 100vw;
+      }
+
+      /* Preferred: column width tied to `#story`, same box ScrollTrigger clips to. Falls back to 100vw below. */
+      @supports (width: 100cqw) {
+        body.is-scrollstory:not(.pitch-vertical) .story-panel {
+          width: 100cqw;
+        }
       }
 
       body.scroll-rtlflow.is-scrollstory:not(.pitch-vertical) .story-mirror {
@@ -1335,6 +1342,7 @@
       return section.transition === "rtl" ? "rtl" : "ttb";
     }
 
+    const storyTrackEl = document.getElementById("storyTrack");
     const trackRoll = document.getElementById("storyRoll");
     const progressFill = document.getElementById("progressFill");
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1570,12 +1578,7 @@
 
     function initScrollStory() {
       teardownHorizontalStory();
-      document.body.classList.remove(
-        "is-scrollstory",
-        "scroll-rtlflow",
-        "pitch-vertical",
-        "scrollstory-horizontal-boot"
-      );
+      document.body.classList.remove("is-scrollstory", "scroll-rtlflow", "pitch-vertical");
       document.documentElement.classList.remove("pitch-vertical-desktop");
 
       const cfg = authorStoryMotion();
@@ -1603,69 +1606,80 @@
       gsap.registerPlugin(ScrollTrigger);
       document.body.classList.add("is-scrollstory");
       if (cfg.rtlFlow) document.body.classList.add("scroll-rtlflow");
-      document.body.classList.add("scrollstory-horizontal-boot");
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          try {
+          void trackRoll.offsetWidth;
+          const panels = gsap.utils.toArray("#storyRoll .story-panel");
+          const maxSpan = Math.max(1, panels.length - 1);
+          /** Clip lane = `#storyTrack` (cqw-aligned panels); `innerWidth` alone drifts vs `100vw` on wide desktop. */
+          const getLanePx = () => {
             void trackRoll.offsetWidth;
-            const panels = gsap.utils.toArray(".story-panel");
-            const maxSpan = Math.max(1, panels.length - 1);
-            /**
-             * Panels are fixed at 100vw in the horizontal strip; do not derive span from
-             * scrollWidth (unreliable with nested scaleX mirrors in Chrome/Safari — wrong span
-             * tweens the whole strip off-screen after refresh).
-             */
-            const getMaxScroll = () => Math.max(1, maxSpan * window.innerWidth);
+            const fromTrack = storyTrackEl ? Math.round(storyTrackEl.clientWidth) : 0;
+            const fromWin = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);
+            return Math.max(1, fromTrack || fromWin);
+          };
+          const panelStepPx = () => {
+            void trackRoll.offsetWidth;
+            const p0 = panels[0];
+            if (!p0) return getLanePx();
+            const fw = Math.round(p0.getBoundingClientRect().width);
+            const ow = Math.round(p0.offsetWidth);
+            return Math.max(1, fw || ow || getLanePx());
+          };
+          const getMaxScroll = () => {
+            void trackRoll.offsetWidth;
+            const vp = getLanePx();
+            const floor = Math.max(1, maxSpan * panelStepPx());
+            let measured = trackRoll.scrollWidth - vp;
+            if (!Number.isFinite(measured)) measured = 0;
+            measured = Math.max(0, measured);
+            if (!measured) return floor;
+            const ratio = floor ? measured / floor : 1;
+            if (ratio > 1.14) return floor;
+            if (ratio < 0.66) return floor;
+            return Math.max(measured, 1);
+          };
 
-            /*
-              scroll-rtlflow uses scaleX(-1) on .story-mirror so strip direction matches RTL reading.
-              With translateX unchanged, viewport at progress 0 would show the *mirrored geometry's*
-              physical left (= last DOM panel). Swap tween bounds when rtlFlow so progress 0 = intro.
-            */
-            const rtlFlip = cfg.rtlFlow;
+          /*
+            scroll-rtlflow uses scaleX(-1) on .story-mirror so strip direction matches RTL reading.
+            With translateX unchanged, viewport at progress 0 would show the *mirrored geometry's*
+            physical left (= last DOM panel). Swap tween bounds when rtlFlow so progress 0 = intro.
+          */
+          const rtlFlip = cfg.rtlFlow;
 
-            horizontalTween = gsap.fromTo(
-              trackRoll,
-              {
-                immediateRender: true,
-                x: () => (rtlFlip ? -getMaxScroll() : 0),
+          horizontalTween = gsap.fromTo(
+            trackRoll,
+            {
+              x: () => (rtlFlip ? -getMaxScroll() : 0),
+            },
+            {
+              x: () => (rtlFlip ? 0 : -getMaxScroll()),
+              ease: "none",
+              scrollTrigger: {
+                invalidateOnRefresh: true,
+                trigger: "#story",
+                pin: true,
+                scrub: 1,
+                snap:
+                  panels.length > 1
+                    ? {
+                        snapTo: 1 / maxSpan,
+                        duration: { min: .12, max: .38 },
+                        ease: "power1.inOut",
+                        delay: .02,
+                      }
+                    : false,
+                end: () => "+=" + getMaxScroll(),
+                onUpdate: self => setProgress(self.progress),
               },
-              {
-                x: () => (rtlFlip ? 0 : -getMaxScroll()),
-                ease: "none",
-                scrollTrigger: {
-                  invalidateOnRefresh: true,
-                  trigger: "#story",
-                  pin: true,
-                  scrub: 1,
-                  snap:
-                    panels.length > 1
-                      ? {
-                          snapTo: 1 / maxSpan,
-                          duration: { min: .12, max: .38 },
-                          ease: "power1.inOut",
-                          delay: .02,
-                        }
-                      : false,
-                  end: () => "+=" + getMaxScroll(),
-                  onUpdate: self => setProgress(self.progress),
-                },
-              }
-            );
+            }
+          );
 
-            mainScrollTrigger = horizontalTween.scrollTrigger;
+          mainScrollTrigger = horizontalTween.scrollTrigger;
 
-            ScrollTrigger.refresh();
-            queueScrollTriggerSizingPass();
-          } finally {
-            /* Same depth as sizing pass (double rAF) so unhide runs after first refresh/invalidate wave. */
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                document.body.classList.remove("scrollstory-horizontal-boot");
-              });
-            });
-          }
+          ScrollTrigger.refresh();
+          queueScrollTriggerSizingPass();
         });
       });
     }
