@@ -27,6 +27,8 @@ const SAME_CLIP_TAG_JACCARD_MAX = 0.35;
 /** Description token Jaccard ceiling when both descriptions are substantive. */
 const SAME_CLIP_DESC_TOKEN_JACCARD_MAX = 0.55;
 const MIN_SEGMENT_CONCEPT_DESC_LEN = 8;
+/** Min tag-word hits between beat/scene text and candidate tags for validator swaps/fills (primary segment path). */
+const MIN_SWAP_TAG_OVERLAP = 2;
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -623,7 +625,7 @@ function enforceClothingRule(
         allowClothing: false,
         rejectClimateMismatch: true,
         requireMinDuration: aLen,
-        requireMinOverlap: candidates.length ? 1 : 0,
+        requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
       });
     } else {
       const [legacyBest, legacyOverlap] = bestLegacyCandidate(catalog, {
@@ -631,7 +633,7 @@ function enforceClothingRule(
         usedCounts,
         excludedIds: new Set([clip.video_id ?? ""]),
         allowClothing: false,
-        requireMinOverlap: candidates.length ? 1 : 0,
+        requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
       });
       if (legacyBest) {
         applyLegacySwap(clip, legacyBest, `${swapReasonPrefix} — הוחלף מ-${segId ?? clip.video_id} (חפיפת תגיות=${legacyOverlap})`);
@@ -686,7 +688,7 @@ function enforceSemanticFit(
       excludedIds: new Set([segId]),
       allowClothing: isClothingText(target),
       requireMinDuration: aLen,
-      requireMinOverlap: 1,
+      requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
     });
 
     if (!best) {
@@ -795,7 +797,7 @@ function enforceAntiClipReuse(
         excludedVideoIds: new Set([swapVideoId]),
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
-        requireMinOverlap: candidates.length ? 1 : 0,
+        requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -823,7 +825,7 @@ function enforceAntiClipReuse(
         excludedIds: new Set(key ? [key] : []),
         excludedVideoIds: new Set([swapVideoId]),
         allowClothing: beatIsClothing,
-        requireMinOverlap: candidates.length ? 1 : 0,
+        requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
       });
       if (legacyBest) {
         applyLegacySwap(
@@ -894,7 +896,7 @@ function enforceAntiRepeat(
         excludedIds: new Set([key]),
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
-        requireMinOverlap: candidates.length ? 1 : 0,
+        requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -956,7 +958,7 @@ function enforceAntiConsecutive(
         excludedIds: new Set([prev]),
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
-        requireMinOverlap: 1,
+        requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -1037,7 +1039,7 @@ function enforceRecency(
         excludedIds: new Set([key]),
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
-        requireMinOverlap: 1,
+        requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -1118,7 +1120,7 @@ function enforceCoverage(
       excludedIds: new Set([segId ?? ""]),
       allowClothing: beatIsClothing,
       requireMinDuration: aLen,
-      requireMinOverlap: 1,
+      requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
       rejectClimateMismatch: rejectClimate,
       rejectCloudsIntent: rejectClouds,
     });
@@ -1144,7 +1146,7 @@ function enforceCoverage(
       usedCounts,
       excludedIds: new Set([segId ?? "", pickKey(clip)]),
       allowClothing: beatIsClothing,
-      requireMinOverlap: 1,
+      requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
       rejectClimateMismatch: rejectClimate,
       rejectCloudsIntent: rejectClouds,
     });
@@ -1157,7 +1159,7 @@ function enforceCoverage(
         allowClothing: beatIsClothing,
         rejectClimateMismatch: rejectClimate,
         rejectCloudsIntent: rejectClouds,
-        requireMinOverlap: 1,
+        requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
       });
     }
 
@@ -1373,7 +1375,7 @@ function fillSceneGaps(
       allowClothing: sceneIsClothing,
       rejectClimateMismatch: sceneIsClothing && sceneHasClimate,
       requireMinDuration: end - start,
-      requireMinOverlap: 1,
+      requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
     });
 
     if (!best) {

@@ -92,7 +92,7 @@ describe("enforceAntiClipReuse", () => {
     const sm = segmentMapFrom([dup, other]);
     const beats = [
       { idx: 0, text: "rain in the north", start: 0, end: 5 },
-      { idx: 1, text: "rain in the north", start: 5, end: 10 },
+      { idx: 1, text: "rain and sea in the north", start: 5, end: 10 },
     ];
     const timeline: MutablePick[] = [
       { ...tSeg("DUP-s0", 0, 0, 5), scene_idx: 0 },
@@ -245,13 +245,13 @@ describe("enforceClothingRule", () => {
 
 describe("enforceCoverage", () => {
   it("swaps short clip for longer same-theme candidate", () => {
-    const short = segClip("SHORT", [seg("SHORT-s0", 0, 8, ["clouds"])], 8);
-    const long_ = segClip("LONG", [seg("LONG-s0", 0, 20, ["clouds"])], 20);
+    const short = segClip("SHORT", [seg("SHORT-s0", 0, 8, ["clouds", "blue"])], 8);
+    const long_ = segClip("LONG", [seg("LONG-s0", 0, 20, ["clouds", "blue"])], 20);
     const sm = segmentMapFrom([short, long_]);
     const timeline: MutablePick[] = [{ ...tSeg("SHORT-s0", 0, 0, 12), scene_idx: 0 }];
 
     const out = validateAndSwap(timeline, {
-      beats: [{ idx: 0, start: 0, end: 12, text: "clouds today" }],
+      beats: [{ idx: 0, start: 0, end: 12, text: "blue clouds forecast today" }],
       segmentMap: sm,
       videoMap: { SHORT: short, LONG: long_ },
     });
@@ -265,7 +265,7 @@ describe("enforceCoverage", () => {
 
   it("splits pick into two when no longer candidate exists", () => {
     const short = segClip("SHORT", [seg("SHORT-s0", 0, 8, ["clouds"])], 8);
-    const other = segClip("OTHER", [seg("OTHER-s0", 0, 6, ["sea"])], 6);
+    const other = segClip("OTHER", [seg("OTHER-s0", 0, 6, ["sea", "day"])], 6);
     const sm = segmentMapFrom([short, other]);
     const timeline: MutablePick[] = [{ ...tSeg("SHORT-s0", 0, 0, 12), scene_idx: 0 }];
 
@@ -408,7 +408,7 @@ describe("fillSceneGaps", () => {
           idx: 1,
           start_sec: 8,
           end_sec: 16,
-          narration: "קרינת שמש גבוהה",
+          narration: "קרינת שמש גבוהה חם",
           keywords: ["שמש"],
         },
       ],
