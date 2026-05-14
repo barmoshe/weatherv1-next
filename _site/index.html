@@ -728,6 +728,167 @@
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(236 241 252 / 0.72));
     }
 
+    #local-first .pitch-lead-well {
+      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(240 244 248 / 0.78));
+    }
+
+    .pitch-catalog-screenshot {
+      margin: 0;
+      width: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .pitch-catalog-screenshot img {
+      width: 100%;
+      height: auto;
+      max-height: min(72vh, 640px);
+      object-fit: contain;
+      object-position: top center;
+      border-radius: 14px;
+      border: 1px solid rgb(0 0 0 / 0.09);
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 0.75) inset,
+        0 18px 48px rgb(15 23 42 / 0.12);
+      background: rgb(255 255 255 / 0.96);
+    }
+
+    @media (min-width: 861px) {
+      .pitch-catalog-screenshot img {
+        max-height: min(78vh, 720px);
+      }
+    }
+
+    .pitch-catalog-visual-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+      min-height: 0;
+    }
+
+    .pitch-catalog-tag-modal-open {
+      align-self: start;
+      appearance: none;
+      border: 1px solid color-mix(in srgb, var(--panel-accent, #3d55b8) 55%, rgb(0 0 0 / 0.12));
+      border-radius: 12px;
+      padding: 10px 16px;
+      font: inherit;
+      font-size: clamp(0.82rem, 2.1vw, 0.92rem);
+      font-weight: 650;
+      cursor: pointer;
+      background: linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--panel-accent, #3d55b8) 12%, rgb(255 255 255 / 0.98)),
+        rgb(255 255 255 / 0.94)
+      );
+      color: rgb(28 32 38);
+      box-shadow: 0 1px 0 rgb(255 255 255 / 0.75) inset;
+    }
+
+    .pitch-catalog-tag-modal-open:hover,
+    .pitch-catalog-tag-modal-open:focus-visible {
+      border-color: color-mix(in srgb, var(--panel-accent, #3d55b8) 72%, rgb(0 0 0 / 0.1));
+      outline: none;
+    }
+
+    .pitch-catalog-tag-modal-open:focus-visible {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--panel-accent, #3d55b8) 32%, rgb(255 255 255 / 0.01));
+    }
+
+    dialog.pitch-catalog-tag-modal {
+      max-width: min(96vw, 980px);
+      width: min(96vw, 980px);
+      padding: 0;
+      border: none;
+      border-radius: 16px;
+      background: transparent;
+      box-shadow: none;
+      color: inherit;
+    }
+
+    dialog.pitch-catalog-tag-modal::backdrop {
+      background: rgb(15 23 42 / 0.45);
+      backdrop-filter: blur(3px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      dialog.pitch-catalog-tag-modal::backdrop {
+        backdrop-filter: none;
+      }
+    }
+
+    .pitch-catalog-tag-modal__panel {
+      display: flex;
+      flex-direction: column;
+      max-height: min(90vh, 900px);
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid rgb(0 0 0 / 0.1);
+      background: rgb(255 255 255 / 0.98);
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 0.75) inset,
+        0 28px 70px rgb(15 23 42 / 0.28);
+    }
+
+    .pitch-catalog-tag-modal__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgb(0 0 0 / 0.07);
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--panel-accent, #3d55b8) 8%, rgb(255 255 255 / 0.98)),
+        rgb(255 255 255 / 0.96)
+      );
+    }
+
+    .pitch-catalog-tag-modal__title {
+      margin: 0;
+      font-size: clamp(0.88rem, 2.2vw, 1rem);
+      font-weight: 780;
+    }
+
+    .pitch-catalog-tag-modal__close {
+      appearance: none;
+      border: 1px solid rgb(0 0 0 / 0.12);
+      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      font: inherit;
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+      background: rgb(255 255 255 / 0.92);
+    }
+
+    .pitch-catalog-tag-modal__close:hover,
+    .pitch-catalog-tag-modal__close:focus-visible {
+      border-color: rgb(0 0 0 / 0.2);
+      outline: none;
+    }
+
+    .pitch-catalog-tag-modal__body {
+      padding: 12px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .pitch-catalog-tag-modal__body img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: min(78vh, 780px);
+      object-fit: contain;
+      border-radius: 10px;
+      border: 1px solid rgb(0 0 0 / 0.08);
+    }
+
     #analytics .pitch-lead-well {
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(237 235 252 / 0.78));
     }
@@ -874,18 +1035,18 @@
       color: rgb(56 62 70 / 1);
     }
 
-    /* —— Pitch: local-first pillars (`#local-first`) —— */
+    /* —— Pitch: local-first compare table (`#local-first`) —— */
     .pitch-local-first-visual {
       position: relative;
       isolation: isolate;
-      width: min(100%, 640px);
+      width: min(100%, 720px);
       margin-inline: auto;
       border-radius: 22px;
       border: 1px solid rgb(0 0 0 / 0.09);
       overflow: hidden;
       direction: rtl;
       unicode-bidi: isolate;
-      padding: 18px 14px 20px;
+      padding: 16px 12px 18px;
       background: rgb(255 255 255 / 0.55);
       box-shadow:
         0 22px 44px rgb(15 23 42 / 0.06),
@@ -902,53 +1063,71 @@
         linear-gradient(168deg, rgb(255 255 255 / 0.96), rgb(242 245 250 / 0.82));
     }
 
-    .pitch-local-first-grid {
+    .pitch-local-first-compare-wrap {
       position: relative;
       z-index: 1;
-      display: grid;
-      gap: 12px;
-      grid-template-columns: 1fr;
-    }
-
-    @media (min-width: 520px) {
-      .pitch-local-first-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    .pitch-local-first-pillar {
-      padding: 12px 12px 14px;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       border-radius: 14px;
       border: 1px solid rgb(0 0 0 / 0.08);
-      background: linear-gradient(165deg, rgb(255 255 255 / 0.96), rgb(248 250 253 / 0.92));
-      box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-height: 100%;
+      background: linear-gradient(180deg, rgb(255 255 255 / 0.97), rgb(248 250 252 / 0.94));
+      box-shadow: 0 1px 0 rgb(255 255 255 / 0.7) inset;
     }
 
-    .pitch-local-first-pillar__ico {
-      font-size: 1.15rem;
-      line-height: 1;
-      filter: grayscale(0.15);
-    }
-
-    .pitch-local-first-pillar__title {
-      margin: 0;
-      font-size: 0.74rem;
-      font-weight: 900;
-      letter-spacing: -0.02em;
+    table.pitch-local-first-compare {
+      width: 100%;
+      min-width: min(100%, 520px);
+      border-collapse: collapse;
+      font-size: clamp(0.66rem, 1.65vw, 0.78rem);
+      font-weight: 760;
+      line-height: 1.45;
       color: rgb(38 42 48 / 1);
-      line-height: 1.25;
     }
 
-    .pitch-local-first-pillar__body {
-      margin: 0;
-      font-size: 0.62rem;
-      font-weight: 780;
-      line-height: 1.48;
-      color: rgb(72 78 90 / 1);
+    .pitch-local-first-compare thead th {
+      text-align: start;
+      padding: 11px 12px;
+      font-weight: 880;
+      color: rgb(28 32 38 / 1);
+      background: color-mix(in srgb, var(--panel-accent, #475569) 11%, rgb(255 255 255 / 0.98));
+      border-bottom: 1px solid rgb(0 0 0 / 0.1);
+    }
+
+    .pitch-local-first-compare thead th:not(:last-child) {
+      border-inline-end: 1px solid rgb(0 0 0 / 0.07);
+    }
+
+    .pitch-local-first-compare tbody th[scope="row"] {
+      text-align: start;
+      vertical-align: top;
+      width: 17%;
+      min-width: 5.5rem;
+      padding: 11px 12px;
+      font-weight: 900;
+      color: rgb(28 32 38 / 1);
+      background: color-mix(in srgb, var(--panel-accent, #475569) 5%, rgb(255 255 255 / 0.96));
+      border-bottom: 1px solid rgb(0 0 0 / 0.07);
+      border-inline-end: 1px solid rgb(0 0 0 / 0.06);
+    }
+
+    .pitch-local-first-compare tbody td {
+      text-align: start;
+      vertical-align: top;
+      padding: 11px 12px;
+      font-weight: 740;
+      color: rgb(52 58 68 / 1);
+      border-bottom: 1px solid rgb(0 0 0 / 0.06);
+      border-inline-end: 1px solid rgb(0 0 0 / 0.05);
+    }
+
+    .pitch-local-first-compare tbody td:last-child {
+      border-inline-end: none;
+    }
+
+    .pitch-local-first-compare tbody tr:last-child th,
+    .pitch-local-first-compare tbody tr:last-child td {
+      border-bottom: none;
     }
 
     /* —— Shared app chrome (catalog can reuse .pitch-app-shell + toolbar/tabs) —— */
@@ -3396,9 +3575,11 @@
       }
 
       /* Text-first mobile pitch: hide decorative mockups (desktop keeps full layout).
-         Exception: #studio keeps mock + hint so phase picks stay meaningful. */
-      .story-panel:not(#studio) .panel-visual,
-      .story-panel:not(#studio):not(#catalog) .pitch-studio-wiz-controls-wrap,
+         Exception: #studio keeps mock + hint so phase picks stay meaningful.
+         Exception: #catalog keeps a real screenshot beside / under the copy.
+         Exception: #local-first keeps the compare table under the copy. */
+      .story-panel:not(#studio):not(#catalog):not(#local-first) .panel-visual,
+      .story-panel:not(#studio):not(#catalog):not(#local-first) .pitch-studio-wiz-controls-wrap,
       .story-panel:not(#catalog) .pitch-catalog-wiz-controls-wrap,
       .pitch-pricing-quote {
         display: none !important;
@@ -3415,6 +3596,44 @@
         background: rgb(248 247 244 / 0.65);
         margin-top: 4px;
         touch-action: pan-y;
+      }
+
+      #catalog .panel-visual {
+        display: grid !important;
+        width: 100%;
+        max-height: min(52vh, 460px);
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 16px;
+        outline: 1px solid rgb(0 0 0 / 0.08);
+        background: rgb(255 255 255 / 0.55);
+        margin-top: 6px;
+        touch-action: pan-y;
+        place-items: center;
+      }
+
+      #catalog .pitch-catalog-screenshot img {
+        max-height: min(48vh, 400px);
+      }
+
+      #local-first .panel-visual {
+        display: grid !important;
+        width: 100%;
+        max-height: min(46vh, 420px);
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 16px;
+        outline: 1px solid rgb(0 0 0 / 0.08);
+        background: rgb(255 255 255 / 0.5);
+        margin-top: 6px;
+        touch-action: pan-y;
+        place-items: stretch;
+      }
+
+      #local-first .pitch-local-first-visual {
+        max-height: min(42vh, 380px);
+        overflow: auto;
+        margin-inline: 0;
       }
 
       #studio .pitch-app-shell {
@@ -3898,43 +4117,38 @@
         kicker: "קטלוג",
         title: "טאב הקטלוג — הבסיס החומרים שלכם",
         lead:
-          "הקטלוג שלכם מרכז וידאו ותמונות במקום אחד — עם חיפוש, סינון וצפייה בקטעים. לכל פריט יכולים להיות פוסטר לכל סגמנט, תיאור קצר ותגיות, ואפשר להוסיף חומרים חדשים דרך האפליקציה. מהקטלוג המערכת בוחרת רקע מתאים לכל סצנה. בשלב האחרון רואים איך אותו קטע נראה בתצוגה אנכית לצד רשת הקטלוג.",
+          "הקטלוג שלכם מרכז וידאו ותמונות במקום אחד — עם חיפוש, סינון ותיוג. לכל פריט יכולים להיות פוסטר לסגמנטים, תיאור ותגיות, ואפשר להוסיף חומרים דרך האפליקציה. מהקטלוג המערכת בוחרת רקע מתאים לכל סצנה. בצד המסך — צילום מסך אמיתי מהממשק (רשת, סטטוס וכרטיסי קטעים).",
         mobileSummary:
-          "חומרי רקע מסודרים: סגמנטים, פוסטרים ותגיות — ומהם נבחר רקע לכל סצנה. גללו לשלב 4 לתצוגת אנכית (דמו).",
+          "חומרי רקע מסודרים עם חיפוש ותיוג; בצילום המסך — רשת קליפים אמיתית מהמוצר.",
         bullets: [
-          "רשת הקטעים — כל הקליפים והחיתוכים במבט אחד.",
-          "חיפוש וסינון — מציאת חומר לפי מזהה, תגיות ומילות מפתח.",
-          "פרטי קטע — סגמנטים, פוסטר ותיאור לפני שמשייכים לסצנה.",
-          "תצוגה אנכית — אמולטור אייפון לצד הקטלוג: איך אותו קטע נראה ב־9:16."
+          "רשת קליפים ומקטעים — סטטוס, סינון וספירות במבט אחד.",
+          "חיפוש ומיון — מציאת חומר לפי מזהה, תגיות וטקסט חופשי.",
+          "כרטיס לכל קטע — תיאור, תגיות ומקור (למשל Getty / Artlist) לפי הצורך.",
+          "מהקטלוג נבחרים רקעים לסצנות — לא קבצי מילוי אקראיים."
         ],
         mobileBullets: [
-          "רשת הקטעים במבט אחד.",
-          "חיפוש וסינון.",
-          "פרטי סגמנט ופוסטר.",
-          "תצוגה אנכית ליד הקטלוג."
+          "רשת וסטטוס במבט אחד.",
+          "חיפוש ומיון.",
+          "כרטיס קטע עם תיאור ותגיות.",
+          "בחירת רקע לסצנות מהקטלוג."
         ],
-        visual: "catalogBrowser",
+        visual: "catalogScreenshot",
         transition: "ttb",
-        panelLayout: "split-flip",
+        panelLayout: "split-visual-heavy",
         theme: { paper: "#f4f6fb", accent: "#3d55b8" }
       },
       {
         id: "local-first",
         kicker: "מקומית",
-        title: "למה מקומית עכשיו, ומה אפשר בהמשך",
+        title: "למה האפליקציה מקומית כרגע",
         lead:
-          "כרגע Weather V1 מיועדת להתקנה על מחשב אצלכם — זה הנתיב הפשוט לעבודה עם קבצי מדיה ועם רינדור.",
+          "כרגע Weather V1 היא אפליקציה שמתקינים על מחשב. הסיבה היא שהעבודה עם קבצי המדיה והרינדור מתבצעים לוקלית, והקטלוג צריך להיות זמין לאפליקציה בצורה יציבה ומהירה. בשלב הנוכחי זה הפתרון הכי פשוט להתחיל לעבוד: האפליקציה מותקנת על מחשב, הרינדור קורה על אותו מחשב, והקטלוג יכול להישמר מקומית או לעבור בהמשך לאחסון שלכם.",
         mobileSummary:
-          "התקנה על המחשב שלכם. קטלוג היום לפיתוח בענן פרטי; לשימוש קבוע — מקומי או הענן שלכם. רינדור מקומי.",
-        bullets: [
-          "הקטלוג: כיום בענן פרטי לפיתוח ובדיקות · לשימוש קבוע תבחרו אם לשמור אותו מקומית בסביבת העבודה שלכם או באחסון בענן שלכם",
-          "הרינדור רץ על המחשב שבו האפליקציה מותקנת",
-          "אם בעתיד תרצו לעבוד מהטלפון או ממכשיר מרחוק — זה דורש פתרון ענן מתקדם יותר שבו גם הקטלוג וגם הרינדור זמינים מרחוק",
-          "בשלב הזה התקנה מקומית היא הדרך הישירה ביותר להתחיל לעבוד עם האפליקציה"
-        ],
+          "מקומית כי רינדור ומדיה על המחשב שלכם והקטלוג צריך להיות זמין בצורה יציבה. מרחוק בעתיד — ענן שמרנדר ומאחסן מרחוק. בטבלה: רינדור מול אחסון קטלוג.",
+        bullets: [],
         visual: "localFirstPitch",
         transition: "ttb",
-        panelLayout: "split-balanced",
+        panelLayout: "split-visual-heavy",
         theme: { paper: "#f4f6fa", accent: "#475569" }
       },
       {
@@ -4330,231 +4544,66 @@
       return pitchPosterRelPath(clipPosterFile);
     }
 
-    /** Catalog slide: mock SKUs; segments[] = several cuts per clip (labels in UI). */
-    const PITCH_CATALOG_MOCK = {
-      jobId: "fixture_demo_complete",
-      searchHint: "IB002 · mock",
-      searchMeta: "דמו בלבד",
-      filterChips: [
-        { label: "mock", isMock: true },
-        { label: "ענן · גשם · לילה", isMock: false }
-      ],
-      selectedClipId: "IB002",
-      clips: [
-        {
-          clipId: "IB001",
-          titleHe: "מוקד חום · מרכז",
-          posterFile: "IB001-s0.jpg",
-          segments: [
-            { id: "IB001-s0", labelHe: "כניסה · מוקד" },
-            { id: "IB001-s1", labelHe: "מרכז מסך" },
-            { id: "IB001-s2", labelHe: "סיום מקטע" }
-          ],
-          tags: ["חום", "בוקר"],
-          mockTags: ["mock"],
-          descriptionHe: "שלושה מקטעים מאותו קובץ — לכל חלון בציר אפשר לבחור אחר."
-        },
-        {
-          clipId: "IB002",
-          titleHe: "המשך בצפון · רוח",
-          posterFile: "IB002-s0.jpg",
-          segments: [
-            { id: "IB002-s0", labelHe: "פתיחה צפון" },
-            { id: "IB002-s1", labelHe: "רוח · מעבר" }
-          ],
-          tags: ["צפון", "רוח"],
-          mockTags: ["mock"],
-          descriptionHe: "שני מקטעים ברצף — אחד לפתיחה ואחד למעבר דינמי."
-        },
-        {
-          clipId: "IB003",
-          titleHe: "חוף רגוע · ערב",
-          posterFile: "IB003-s0.jpg",
-          segments: [
-            { id: "IB003-s0", labelHe: "חוף קרוב" },
-            { id: "IB003-s1", labelHe: "ריחוף · ערב" },
-            { id: "IB003-s2", labelHe: "אופק רחוק" }
-          ],
-          tags: ["חוף", "ערב"],
-          mockTags: ["mock"],
-          descriptionHe: "שלושה חיתוכים מאותו וידאו — מרחק שונה מהחוף."
-        },
-        {
-          clipId: "IB-w01",
-          titleHe: "מפת עננות · יום",
-          posterFile: "IB-w01-catalog.jpg",
-          segments: [
-            { id: "IB-w01-s0", labelHe: "שכבה רחבה" },
-            { id: "IB-w01-s1", labelHe: "זום אזור" }
-          ],
-          tags: ["עננות", "יום"],
-          mockTags: ["mock"],
-          descriptionHe: "שני מקטעים: סקירה ואז התמקדות באזור."
-        },
-        {
-          clipId: "IB-n14",
-          titleHe: "תצוגת רדאר · לילה",
-          posterFile: "IB-n14-catalog.jpg",
-          segments: [
-            { id: "IB-n14-s0", labelHe: "מסגרת לילה" },
-            { id: "IB-n14-s1", labelHe: "ליבת רדאר" },
-            { id: "IB-n14-s2", labelHe: "בזק וקווים" }
-          ],
-          tags: ["רדאר", "לילה"],
-          mockTags: ["mock"],
-          descriptionHe: "שלושה חלונות מאותו לילה — שונים בקצב ובפרט."
-        },
-        {
-          clipId: "IB-r08",
-          titleHe: "שכבת גשם · קיצון",
-          posterFile: "IB-r08-catalog.jpg",
-          segments: [
-            { id: "IB-r08-s0", labelHe: "שטח גשם" },
-            { id: "IB-r08-s1", labelHe: "קיצון · אזהרה" }
-          ],
-          tags: ["גשם", "קיצון"],
-          mockTags: ["mock"],
-          descriptionHe: "שני מקטעים: שטח רחב ואז הדגשת קיצון."
-        },
-        {
-          clipId: "IB-c02",
-          titleHe: "שוליים קרים · חורף",
-          posterFile: "IB-c02-catalog.jpg",
-          segments: [
-            { id: "IB-c02-s0", labelHe: "שוליים קרים" },
-            { id: "IB-c02-s1", labelHe: "שכבת עומק" }
-          ],
-          tags: ["קור", "חורף"],
-          mockTags: ["mock"],
-          descriptionHe: "שני מקטעים מאותו חורף — שוליים מול ליבה."
-        }
-      ]
-    };
+    const CATALOG_SLIDE_SCREENSHOT_SRC = "download-page/assets/segments-clips-catalog-screenshot.png";
+    const CATALOG_TAG_MODAL_SCREENSHOT_SRC = "download-page/assets/catalog-segment-tag-modal.png";
 
-    function catalogBrowserHtml() {
-      const data = PITCH_CATALOG_MOCK;
-      const selected =
-        data.clips.find(c => c.clipId === data.selectedClipId) || data.clips[0];
-      const cardsHtml = data.clips
-        .map(c => {
-          const posterSrc = pitchPosterRelPath(c.posterFile);
-          const selClass = c.clipId === data.selectedClipId ? " pitch-catalog-card--selected" : "";
-          return `<article class="pitch-catalog-card${selClass}">
-                <div class="pitch-catalog-card-poster" aria-hidden="true">
-                  <img class="pitch-catalog-card-poster-img" src="${escapeHtml(posterSrc)}" alt="" width="200" height="44" decoding="async" loading="lazy" />
-                </div>
-                <div class="pitch-catalog-card-meta"><span class="pitch-catalog-card-title">${escapeHtml(c.titleHe)}</span><small class="mixed-ltr" lang="en" dir="ltr">${escapeHtml(c.clipId)}</small></div>
-              </article>`;
-        })
-        .join("");
-      const filtersHtml = data.filterChips
-        .map(
-          f =>
-            `<span class="pitch-filter-chip${f.isMock ? " pitch-filter-chip--mock" : ""}" role="presentation">${escapeHtml(f.label)}</span>`
-        )
-        .join("");
-      const segmentRows = Array.isArray(selected.segments)
-        ? selected.segments
-        : (selected.segmentIds || []).map(id => ({ id, labelHe: id }));
-      const stripHtml = segmentRows
-        .map(
-          seg =>
-            `<div class="pitch-segment-cell" role="presentation">
-                <img class="pitch-segment-strip-img" src="${escapeHtml(segmentThumbUrl(seg.id, selected.posterFile))}" alt="" width="64" height="28" decoding="async" loading="lazy" />
-                <span class="pitch-segment-label">${escapeHtml(seg.labelHe)}</span>
-              </div>`
-        )
-        .join("");
-      const tagsHtml = [
-        ...selected.tags.map(t => `<span class="pitch-tag">${escapeHtml(t)}</span>`),
-        ...selected.mockTags.map(
-          t =>
-            `<span class="pitch-tag pitch-tag--mock mixed-ltr" lang="en" dir="ltr">${escapeHtml(t)}</span>`
-        )
-      ].join("");
-      const detailPosterSrc = pitchPosterRelPath(selected.posterFile);
-      const iphonePosterSeg = segmentRows[0];
-      const iphonePosterSrc = iphonePosterSeg
-        ? segmentThumbUrl(iphonePosterSeg.id, selected.posterFile)
-        : detailPosterSrc;
-      return `<div class="pitch-app-shell pitch-app-shell--catalog" data-catalog-phase="grid" aria-hidden="true">
-          <header class="pitch-catalog-toolbar">
-            <div class="pitch-catalog-toolbar-title">קטלוג קליפים</div>
-            <div class="pitch-catalog-toolbar-row">
-              <div class="pitch-catalog-search-faux" role="presentation">
-                <span class="pitch-catalog-search-ico" aria-hidden="true">🔍</span>
-                <div class="pitch-catalog-search-copy">
-                  <span class="pitch-catalog-search-text">${escapeHtml(data.searchHint)}</span>
-                  <span class="pitch-catalog-search-meta">${escapeHtml(data.searchMeta)} · <span class="mixed-ltr" lang="en" dir="ltr">${escapeHtml(data.jobId)}</span></span>
-                </div>
-              </div>
-              <span class="pitch-catalog-pill pitch-catalog-pill--sort" role="presentation">מה שנוסף לאחרונה</span>
-              <span class="pitch-catalog-upload" role="presentation">העלאת וידאו</span>
-            </div>
-          </header>
-          <p class="pitch-catalog-sync-hint">חומר מקומי אצלכם או בענן — בלי הסבר טכני במצגת.</p>
-          <div class="pitch-catalog-filters" role="presentation">
-            ${filtersHtml}
+    function catalogScreenshotHtml() {
+      const gridSrc = CATALOG_SLIDE_SCREENSHOT_SRC;
+      const gridAlt =
+        "צילום מסך של קטלוג מקטעים וקליפים: רשת כרטיסים, חיפוש, סינון, תגיות וסטטוס סנכרון";
+      const modalSrc = CATALOG_TAG_MODAL_SCREENSHOT_SRC;
+      const modalAlt =
+        "צילום מסך של חלון עריכת מקטעים ותגיות: כרטיסי מקטעים עם תיאור ותגיות, סרגל זמנים ומטא־דאטה";
+      return `<div class="pitch-catalog-visual-stack" dir="rtl">
+      <figure class="pitch-catalog-screenshot">
+        <img src="${escapeHtml(gridSrc)}" alt="${escapeHtml(gridAlt)}" width="1024" height="570" decoding="async" loading="lazy" />
+      </figure>
+      <button type="button" class="pitch-catalog-tag-modal-open">הצג חלון תגיות</button>
+      <dialog class="pitch-catalog-tag-modal" id="catalogTagModal" aria-labelledby="catalogTagModalTitle">
+        <div class="pitch-catalog-tag-modal__panel">
+          <div class="pitch-catalog-tag-modal__head">
+            <h3 id="catalogTagModalTitle" class="pitch-catalog-tag-modal__title">עריכת מקטעים ותגיות</h3>
+            <button type="button" class="pitch-catalog-tag-modal__close" aria-label="סגור">×</button>
           </div>
-          <div class="pitch-catalog-main-stage">
-            <div class="pitch-catalog-workspace">
-            <div class="pitch-catalog-grid">
-              ${cardsHtml}
-            </div>
-            <aside class="pitch-catalog-detail">
-              <div class="pitch-catalog-detail-head">
-                <span class="pitch-detail-eyebrow">בחירה (דמו)</span>
-                <strong class="pitch-detail-title">${escapeHtml(selected.titleHe)}</strong>
-              </div>
-              <section class="pitch-detail-block">
-                <h4 class="pitch-detail-label">סגמנטים באותו קובץ</h4>
-                <div class="pitch-segment-strip" aria-hidden="true">
-                  ${stripHtml}
-                </div>
-                <p class="pitch-detail-desc pitch-detail-desc--tight">${escapeHtml(selected.descriptionHe)}</p>
-              </section>
-              <section class="pitch-detail-block">
-                <h4 class="pitch-detail-label">פוסטר</h4>
-                <div class="pitch-detail-poster" aria-hidden="true">
-                  <img class="pitch-detail-poster-img" src="${escapeHtml(detailPosterSrc)}" alt="" width="320" height="180" decoding="async" loading="lazy" />
-                </div>
-              </section>
-              <section class="pitch-detail-block">
-                <h4 class="pitch-detail-label">תגיות</h4>
-                <div class="pitch-tag-row">
-                  ${tagsHtml}
-                </div>
-              </section>
-              <p class="pitch-catalog-bridge">מהקטלוג שלכם נבחרים רקעים מתאימים לכל סצנה — לא קבצים ברירת מחדל אקראיים.</p>
-            </aside>
+          <div class="pitch-catalog-tag-modal__body">
+            <img src="${escapeHtml(modalSrc)}" alt="${escapeHtml(modalAlt)}" width="1024" height="835" decoding="async" loading="lazy" />
           </div>
-          <aside class="pitch-catalog-iphone-rail" aria-hidden="true">
-            <div class="pitch-device" lang="en" dir="ltr">
-              <div class="pitch-device-screen pitch-device-screen--preview">
-                <video class="pitch-device-video" poster="${escapeHtml(iphonePosterSrc)}" width="180" height="320" muted playsinline loop autoplay preload="metadata" aria-hidden="true">
-                  <source src="download-page/assets/mock-video-example.mp4" type="video/mp4" />
-                </video>
-                <span class="pitch-device-play" aria-hidden="true">▶</span>
-              </div>
-            </div>
-            <span class="pitch-catalog-iphone-label">תצוגה אנכית · סגמנט נבחר</span>
-          </aside>
-          </div>
-        </div>`;
+        </div>
+      </dialog>
+    </div>`;
     }
 
     function localFirstPitchHtml() {
-      const pillar = (ico, title, body) => `<article class="pitch-local-first-pillar">
-        <span class="pitch-local-first-pillar__ico" aria-hidden="true">${ico}</span>
-        <div class="pitch-local-first-pillar__title">${title}</div>
-        <p class="pitch-local-first-pillar__body">${body}</p>
-      </article>`;
-      return `<div class="pitch-local-first-visual" dir="rtl" aria-hidden="true">
+      const r1 =
+        "הרינדור מתבצע על המחשב שבו האפליקציה מותקנת";
+      const r2 =
+        "אם רוצים לעבוד מהטלפון או מרחוק, צריך פתרון ענן שבו הרינדור מתבצע מרחוק";
+      const c1 = "כרגע הקטלוג נמצא בענן פרטי לצורך פיתוח ובדיקות";
+      const c2 = "להמשך צריך לבחור: שמירה מקומית אצלכם או אחסון בענן שלכם";
+      return `<div class="pitch-local-first-visual pitch-local-first-visual--table" dir="rtl" aria-hidden="true">
       <div class="pitch-local-first-visual__bg" aria-hidden="true"></div>
-      <div class="pitch-local-first-grid">
-        ${pillar("💻", "מקומית על המחשב", "העבודה עם קבצי מדיה והרינדור מתבצעים על המחשב שבו האפליקציה מותקנת — לכן בשלב הזה מתקינים אפליקציה, לא רק דפדפן.")}
-        ${pillar("☁️", "הקטלוג — החלטה בהמשך", "כיום הקטלוג בענן פרטי לפיתוח ובדיקות. לשימוש קבוע: שמירה מקומית בסביבת העבודה שלכם או אחסון בענן שלכם.")}
-        ${pillar("📱", "טלפון ומרחוק · עתיד", "אם בעתיד תרצו מהטלפון או ממכשיר מרחוק — נדרש ענן עם קטלוג ורינדור זמינים מרחוק.")}
+      <div class="pitch-local-first-compare-wrap">
+        <table class="pitch-local-first-compare" role="table" aria-label="כרגע מול אפשרות להמשך">
+          <thead>
+            <tr>
+              <th scope="col">נושא</th>
+              <th scope="col">כרגע</th>
+              <th scope="col">אפשרות להמשך</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">רינדור</th>
+              <td>${escapeHtml(r1)}</td>
+              <td>${escapeHtml(r2)}</td>
+            </tr>
+            <tr>
+              <th scope="row">אחסון הקטלוג</th>
+              <td>${escapeHtml(c1)}</td>
+              <td>${escapeHtml(c2)}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>`;
     }
@@ -4625,8 +4674,8 @@
       if (type === "localFirstPitch") {
         return localFirstPitchHtml();
       }
-      if (type === "catalogBrowser") {
-        return catalogBrowserHtml();
+      if (type === "catalogScreenshot") {
+        return catalogScreenshotHtml();
       }
       if (type === "analyticsSimple") {
         return `<div class="pricing-board visual-board" dir="rtl">
@@ -4790,20 +4839,6 @@
         return `<ul class="bullets bullets--studio-wizard">${wizardItems}</ul>`;
       }
 
-      if (section.id === "catalog" && section.bullets.length > 0) {
-        const phases = ["grid", "search", "detail", "preview"];
-        const catalogLi = (item, i) => {
-          const ph = phases[i] || "grid";
-          return `<li role="button" tabindex="0" class="pitch-catalog-phase-pick" data-catalog-phase-bullet="${ph}">${escapeHtml(item)}</li>`;
-        };
-        const wizardItems = section.bullets.map(catalogLi).join("");
-        if (hasMobileBullets) {
-          const mob = mobileList.map(catalogLi).join("");
-          return `<ul class="bullets bullets--catalog-wizard bullets-desktop-only">${wizardItems}</ul><ul class="bullets bullets--catalog-wizard panel-mobile-bullets">${mob}</ul>`;
-        }
-        return `<ul class="bullets bullets--catalog-wizard">${wizardItems}</ul>`;
-      }
-
       if (section.bullets.length === 0) return "";
 
       const desktopItems = section.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join("");
@@ -4816,7 +4851,10 @@
 
     function singlePanelSectionHtml(section, globalIdx, rollIdx) {
       const heroDownloads = section.id === "intro" ? heroDownloadsBlock() : "";
-      const visualAria = section.visual === "excalidrawDemo" ? "" : " aria-hidden=\"true\"";
+      const visualAria =
+        section.visual === "excalidrawDemo" || section.visual === "catalogScreenshot"
+          ? ""
+          : " aria-hidden=\"true\"";
       const copyClass = section.id === "intro" ? "panel-copy panel-copy--intro" : "panel-copy";
       const heading =
         section.id === "intro"
@@ -4838,12 +4876,6 @@
         section.id === "studio"
           ? `<div class="pitch-studio-wiz-controls-wrap" role="note" aria-labelledby="pitch-studio-wiz-legend">
             <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ — ללא הפעלה אוטומטית. בשלב הרביעי: אמולטור אייפון משמאל, לידו תמלול ותוכנית סצנות.</p>
-          </div>`
-          : "";
-      const catalogWizardToolbar =
-        section.id === "catalog"
-          ? `<div class="pitch-catalog-wiz-controls-wrap" role="note" aria-labelledby="pitch-catalog-wiz-legend">
-            <p id="pitch-catalog-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לקבל הדגשה במוקאפ; בשלב הרביעי מופיעה תצוגה אנכית לצד הקטלוג.</p>
           </div>`
           : "";
       const pitchLayoutAttr = pitchProductLayout ? ` data-pitch-layout="product-app"` : "";
@@ -4868,7 +4900,6 @@
             ${bulletsBlock}
             ${pricingPullquoteBlock}
             ${studioWizardToolbar}
-            ${catalogWizardToolbar}
             ${heroDownloads}
           </div>
           ${visualBlock}
@@ -4882,7 +4913,10 @@
       const first = grouped[0].section;
       const slides = grouped
         .map(({ section: sec, globalIdx }) => {
-          const visualAria = sec.visual === "excalidrawDemo" ? "" : " aria-hidden=\"true\"";
+          const visualAria =
+            sec.visual === "excalidrawDemo" || sec.visual === "catalogScreenshot"
+              ? ""
+              : " aria-hidden=\"true\"";
           const bulletsBlock = bulletsMarkup(sec);
           const visualBlock =
             sec.id === "v1-next"
@@ -4942,6 +4976,38 @@
     }
 
     trackRoll.innerHTML = buildStoryRollHtml(storySections);
+
+    (function initCatalogTagModal() {
+      const catalogPanel = document.getElementById("catalog");
+      const dlg = document.getElementById("catalogTagModal");
+      if (!catalogPanel || !dlg || typeof dlg.showModal !== "function") return;
+
+      const onDocClick = event => {
+        const btn = event.target && event.target.closest && event.target.closest(".pitch-catalog-tag-modal-open");
+        if (!btn || !catalogPanel.contains(btn)) return;
+        event.preventDefault();
+        try {
+          dlg.showModal();
+        } catch (_) {
+          /* ignore */
+        }
+      };
+
+      const onDialogClick = event => {
+        if (event.target === dlg) dlg.close();
+      };
+
+      const onCloseClick = event => {
+        const closeBtn = event.target.closest && event.target.closest(".pitch-catalog-tag-modal__close");
+        if (!closeBtn || !dlg.contains(closeBtn)) return;
+        event.preventDefault();
+        dlg.close();
+      };
+
+      document.addEventListener("click", onDocClick);
+      dlg.addEventListener("click", onDialogClick);
+      dlg.addEventListener("click", onCloseClick);
+    })();
 
     (function initMobileDesktopCta() {
       const btn = document.getElementById("pitch-copy-page-url");
@@ -5299,7 +5365,7 @@
 
     /** Panel reveal: studio steps are copy-column `.pitch-studio-phase-pick` items. */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-studio-phase-pick, .pitch-catalog-card, .pitch-catalog-detail, .hero-downloads, .panel-visual > *";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-studio-phase-pick, .pitch-catalog-screenshot, .pitch-catalog-tag-modal-open, .hero-downloads, .panel-visual > *";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
