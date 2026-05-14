@@ -1,0 +1,8 @@
+Pitch mock posters are stored in-repo for static GitHub Pages hosting.
+
+- IB001-s0.jpg, IB002-s0.jpg, IB003-s0.jpg: Unsplash (https://unsplash.com/license).
+  Reference IDs: photo-1469474968028, photo-1527482797697, photo-1507525428034.
+
+- IB-w01-catalog.jpg, IB-n14-catalog.jpg, IB-r08-catalog.jpg, IB-c02-catalog.jpg:
+  Pexels (https://www.pexels.com/license/).
+  Reference photo IDs: 531756, 1257890, 1529360, 917494.
