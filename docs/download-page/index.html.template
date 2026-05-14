@@ -644,47 +644,47 @@
       font-size: 0.9rem;
     }
 
-    /* Intro: bullets + hero download card + phone preview fits one viewport */
+    /* Intro: copy + hero downloads + phone; wide column for text, flexible preview. */
     #intro.story-panel {
-      padding-block: calc(var(--nav-height) + 14px) 24px;
-      padding-inline: clamp(14px, 3.8vw, 52px);
+      padding-block: calc(var(--nav-height) + 18px) clamp(24px, 4vh, 40px);
+      padding-inline: clamp(16px, 3.8vw, 56px);
     }
 
     #intro .panel-inner {
-      align-items: stretch;
-      gap: clamp(10px, 2.5vw, 32px);
-      grid-template-columns: minmax(0, 1.08fr) minmax(min(160px, 18vw), 0.38fr);
+      align-items: center;
+      gap: clamp(16px, 3vw, 40px);
+      grid-template-columns: minmax(0, 1fr) minmax(220px, min(34vw, 300px));
       box-sizing: border-box;
-      max-height: calc(100svh - var(--nav-height) - 40px);
     }
 
     #intro .panel-copy {
-      gap: clamp(8px, 1.5vw, 14px);
+      gap: clamp(10px, 1.8vw, 16px);
       min-height: 0;
       align-self: center;
     }
 
     #intro h1 {
-      font-size: clamp(1.7rem, 4.8vw, 4rem);
-      max-width: 12ch;
+      font-size: clamp(1.85rem, 4.2vw, 3.85rem);
+      max-width: none;
       line-height: 0.98;
+      text-wrap: balance;
     }
 
     #intro .lead {
-      font-size: clamp(0.88rem, 1.25vw, 1.22rem);
-      max-width: 28rem;
-      line-height: 1.28;
+      font-size: clamp(0.92rem, 1.35vw, 1.22rem);
+      max-width: 36rem;
+      line-height: 1.35;
       display: -webkit-box;
-      -webkit-line-clamp: 4;
-      line-clamp: 4;
+      -webkit-line-clamp: 6;
+      line-clamp: 6;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
     #intro .bullets {
       margin-top: 0;
-      gap: 5px;
-      font-size: clamp(0.8rem, 1.05vw, 0.98rem);
+      gap: 6px;
+      font-size: clamp(0.82rem, 1.1vw, 0.98rem);
     }
 
     #intro .bullets li::before {
@@ -692,66 +692,79 @@
     }
 
     #intro .hero-downloads {
-      margin-top: 2px;
+      margin-top: 4px;
       max-width: none;
       width: 100%;
     }
 
     #intro .hero-downloads-title {
-      margin: 0 0 5px;
-      font-size: clamp(0.78rem, 1vw, 0.94rem);
+      margin: 0 0 8px;
+      font-size: clamp(0.8rem, 1.05vw, 0.96rem);
     }
 
     #intro .download-links--hero {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 5px;
+      gap: 8px;
     }
 
     #intro .download-links--hero a {
-      min-height: 34px;
-      padding: 0 8px 0 10px;
-      font-size: 0.72rem;
+      min-height: 38px;
+      padding: 0 10px 0 12px;
+      font-size: clamp(0.68rem, 0.95vw, 0.8rem);
       border-radius: 10px;
       box-shadow: 2px 2px 0 var(--v1-ink);
       gap: 8px;
     }
 
     #intro .panel-visual {
-      min-height: 0;
-      max-height: min(46svh, 320px);
+      min-height: min(240px, 38svh);
+      max-height: min(58svh, 420px);
       align-self: center;
+      width: 100%;
     }
 
     #intro .phone-frame {
-      width: min(118px, 18vw);
-      max-height: min(42svh, 300px);
-      padding: 10px;
+      width: min(100%, clamp(168px, 22vw, 260px));
+      max-height: min(52svh, 420px);
+      margin-inline: auto;
+      padding: clamp(12px, 1.6vw, 16px);
     }
 
     #intro .phone-screen {
-      font-size: clamp(0.78rem, 1.2vw, 1rem);
+      font-size: clamp(0.78rem, 1.15vw, 1rem);
     }
 
     @media (max-height: 720px) {
       #intro .panel-inner {
-        max-height: calc(100svh - var(--nav-height) - 28px);
+        gap: clamp(12px, 2vh, 20px);
       }
 
       #intro h1 {
-        font-size: clamp(1.45rem, 4.2vh, 2.75rem);
+        font-size: clamp(1.5rem, 4.2vh, 3rem);
       }
 
       #intro .lead {
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
       }
 
       #intro .panel-visual {
-        max-height: min(38svh, 260px);
+        max-height: min(44svh, 300px);
       }
 
       #intro .phone-frame {
-        max-height: min(36svh, 240px);
+        max-height: min(40svh, 280px);
+      }
+    }
+
+    @media (min-width: 861px) and (max-width: 1100px) {
+      #intro .panel-inner {
+        grid-template-columns: minmax(0, 1fr) minmax(200px, min(38vw, 260px));
+      }
+
+      #intro .download-links--hero {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -1248,13 +1261,23 @@
 
       #intro .panel-inner {
         max-height: none;
+        gap: clamp(14px, 4.5vw, 22px);
+        align-content: start;
       }
 
       /* Hero: preview first on small screens — faster "what is it?" recognition. */
       #intro .panel-visual {
         order: -1;
-        max-height: none;
+        max-height: min(50svh, 340px);
+        min-height: 0;
+        width: 100%;
         justify-items: center;
+      }
+
+      #intro .panel-copy {
+        width: 100%;
+        max-width: 36rem;
+        margin-inline: auto;
       }
 
       #intro .lead {
@@ -1265,17 +1288,26 @@
       }
 
       #intro .download-links--hero {
+        grid-template-columns: 1fr;
         gap: 10px;
+        width: 100%;
       }
 
       #intro .download-links--hero a {
         min-height: 48px;
         font-size: 0.84rem;
+        justify-content: center;
+        text-align: center;
+        padding-inline: 14px;
       }
 
       #intro .phone-frame {
-        width: min(260px, 78vw);
+        width: min(240px, 74vw);
+        max-width: 100%;
         max-height: none;
+        margin-inline: auto;
+        padding: 14px;
+        aspect-ratio: 9 / 16;
       }
 
       .panel-copy {
@@ -1298,7 +1330,7 @@
 
       #intro h1 {
         font-size: clamp(1.55rem, 7.2vw, 2.65rem);
-        max-width: 22ch;
+        max-width: none;
       }
 
       .lead {
@@ -1366,6 +1398,18 @@
       }
     }
 
+    /* Phablet: room for a 2×2 download grid; narrow phones stay one column. */
+    @media (max-width: 860px) and (min-width: 560px) {
+      #intro .download-links--hero {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      #intro .download-links--hero a {
+        font-size: 0.8rem;
+        min-height: 46px;
+      }
+    }
+
     /* Ultra-narrow: hide subtitle under logo to keep one-line nav density. */
     @media (max-width: 360px) {
       .brand-copy span {
@@ -1391,8 +1435,13 @@
         font-size: clamp(1.45rem, 5.2vh, 2.4rem);
       }
 
+      #intro .panel-visual {
+        max-height: min(38svh, 260px);
+      }
+
       #intro .phone-frame {
         width: min(200px, 52vw);
+        padding: 12px;
       }
     }
 
