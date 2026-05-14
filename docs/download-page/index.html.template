@@ -559,6 +559,8 @@
       border-color: rgb(0 0 0 / 0.12);
     }
 
+    #local-first .panel-visual,
+    #render .panel-visual,
     #thinking .panel-visual,
     #studio .panel-visual,
     #catalog .panel-visual {
@@ -572,12 +574,16 @@
         align-items: start;
       }
 
+      #local-first .panel-inner,
+      #render .panel-inner,
       #thinking .panel-inner,
       #studio .panel-inner,
       #catalog .panel-inner {
         grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
       }
 
+      #local-first .panel-visual,
+      #render .panel-visual,
       #thinking .panel-visual,
       #studio .panel-visual,
       #catalog .panel-visual {
@@ -591,6 +597,177 @@
 
     #thinking .pitch-lead-well {
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(232 248 244 / 0.78));
+    }
+
+    #render .pitch-lead-well {
+      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(253 240 232 / 0.82));
+    }
+
+    #local-first .pitch-lead-well {
+      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(238 242 249 / 0.85));
+    }
+
+    /* —— Pitch: local-first pillars (`#local-first`) —— */
+    .pitch-local-first-visual {
+      position: relative;
+      isolation: isolate;
+      width: min(100%, 640px);
+      margin-inline: auto;
+      border-radius: 22px;
+      border: 1px solid rgb(0 0 0 / 0.09);
+      overflow: hidden;
+      direction: rtl;
+      unicode-bidi: isolate;
+      padding: 18px 14px 20px;
+      background: rgb(255 255 255 / 0.55);
+      box-shadow:
+        0 22px 44px rgb(15 23 42 / 0.06),
+        0 0 0 1px rgb(255 255 255 / 0.55) inset;
+    }
+
+    .pitch-local-first-visual__bg {
+      position: absolute;
+      inset: -12%;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 78% 50% at 18% 20%, color-mix(in srgb, var(--panel-accent, #475569) 18%, transparent), transparent 58%),
+        radial-gradient(ellipse 72% 48% at 88% 88%, color-mix(in srgb, var(--panel-accent, #475569) 12%, transparent), transparent 55%),
+        linear-gradient(168deg, rgb(255 255 255 / 0.96), rgb(242 245 250 / 0.82));
+    }
+
+    .pitch-local-first-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 520px) {
+      .pitch-local-first-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .pitch-local-first-pillar {
+      padding: 12px 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgb(0 0 0 / 0.08);
+      background: linear-gradient(165deg, rgb(255 255 255 / 0.96), rgb(248 250 253 / 0.92));
+      box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 100%;
+    }
+
+    .pitch-local-first-pillar__ico {
+      font-size: 1.15rem;
+      line-height: 1;
+      filter: grayscale(0.15);
+    }
+
+    .pitch-local-first-pillar__title {
+      margin: 0;
+      font-size: 0.74rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: rgb(38 42 48 / 1);
+      line-height: 1.25;
+    }
+
+    .pitch-local-first-pillar__body {
+      margin: 0;
+      font-size: 0.62rem;
+      font-weight: 780;
+      line-height: 1.48;
+      color: rgb(72 78 90 / 1);
+    }
+
+    /* —— Pitch: final video output (`#render`) —— */
+    .pitch-final-output {
+      width: min(100%, 440px);
+      margin-inline: auto;
+      border-radius: 22px;
+      border: 1px solid rgb(0 0 0 / 0.09);
+      background: linear-gradient(
+        168deg,
+        rgb(255 255 255 / 0.97),
+        color-mix(in srgb, var(--panel-accent, #c2410c) 6%, rgb(255 252 249))
+      );
+      box-shadow:
+        0 22px 44px rgb(15 23 42 / 0.06),
+        0 0 0 1px rgb(255 255 255 / 0.55) inset;
+      padding: 18px 16px 20px;
+      direction: rtl;
+      unicode-bidi: isolate;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pitch-final-output__head {
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pitch-final-output__title {
+      font-size: 0.95rem;
+      font-weight: 920;
+      letter-spacing: -0.02em;
+      color: rgb(38 42 48 / 1);
+    }
+
+    .pitch-final-output__badge {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.58rem;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+      background: color-mix(in srgb, var(--panel-accent, #c2410c) 11%, rgb(255 255 255));
+      border: 1px solid rgb(0 0 0 / 0.07);
+      color: rgb(55 60 68 / 1);
+    }
+
+    .pitch-final-output .pitch-device {
+      margin-inline: auto;
+    }
+
+    .pitch-final-output__actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .pitch-final-output__btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 20px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 880;
+      border: 1px solid rgb(0 0 0 / 0.1);
+    }
+
+    .pitch-final-output__btn--primary {
+      background: color-mix(in srgb, var(--panel-accent, #c2410c) 88%, rgb(40 40 40));
+      color: #fff;
+      border-color: rgb(0 0 0 / 0.14);
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--panel-accent, #c2410c) 22%, transparent);
+    }
+
+    .pitch-final-output__btn--ghost {
+      background: rgb(255 255 255 / 0.92);
+      color: rgb(42 48 56 / 1);
     }
 
     /* —— Pitch: cognition-flow diagram (`#thinking`) —— */
@@ -830,6 +1007,72 @@
     .pitch-wiz-step.is-active .pitch-wiz-step-num {
       opacity: 1;
       color: var(--panel-accent, var(--v1-coral));
+    }
+
+    [data-pitch-layout="product-app"] .pitch-studio-wiz-controls-wrap {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgb(0 0 0 / 0.08);
+      background: rgb(255 255 255 / 0.82);
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+      display: grid;
+      gap: 8px;
+      max-width: 100%;
+    }
+
+    .pitch-studio-wiz-legend {
+      font-size: 0.58rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgb(115 118 132 / 1);
+    }
+
+    .pitch-studio-wiz-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pitch-wiz-ctrl {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1px solid rgb(0 0 0 / 0.12);
+      font-size: 0.72rem;
+      font-weight: 880;
+      cursor: pointer;
+      background: rgb(255 255 255 / 0.95);
+      color: var(--v1-ink);
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+      transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        opacity 0.15s ease;
+    }
+
+    .pitch-wiz-ctrl:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 45%, rgb(0 0 0 / 0.12));
+      background: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 6%, rgb(255 255 255 / 1));
+    }
+
+    .pitch-wiz-ctrl:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .pitch-wiz-ctrl--play {
+      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 35%, rgb(0 0 0 / 0.1));
+      color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 70%, rgb(38 40 48));
+    }
+
+    .pitch-wiz-ctrl--reset {
+      margin-inline-start: auto;
     }
 
     .pitch-app-head {
@@ -3136,23 +3379,35 @@
         theme: { paper: "#eef8f6", accent: "#0f766e" }
       },
       {
-        id: "workflow",
-        kicker: "איך זה מרגיש",
-        title: "ארבעה צעדים פשוטים",
-        lead: "{{כאן נחליף לתיאור מדויק של זרימת העבודה שתציג ללקוחות}}",
-        bullets: ["מעלים קריינות ומתכננים את הסיפור", "בוחרים או מייצרים סצנות", "מרנדרים ובודקים", "מייצאים MP4 והולכים לפרסם"],
-        visual: "timeline",
-        theme: { paper: "#f4f3ef", accent: "#c8202b" }
+        id: "render",
+        kicker: "אחרי הרינדור",
+        title: "מה יוצא אחרי הרינדור",
+        lead:
+          "בסיום הרינדור נוצר קובץ וידאו שמרכיב את הקריינות, רקע וידאו מהקטלוג שחובר וחותך לפי התכנון, ומוזיקת רקע כשיש חומר מתאים — ואם אין, הפלט יוצא בלי מוזיקה. זה בסיס מקצועי לתחזית: לא חבילת מיתוג גרפית מלאה של V1 בפלט (לוגואים, כפולים ומסכי מותג מלאים עשויים להידרש עריכה חיצונית).",
+        bullets: [
+          "בממשק מוצג שלב «וידאו סופי» עם צפייה והורדה — כמו באפליקציה",
+          "הרינדור רץ על המחשב שבו האפליקציה מותקנת (בשלב הנוכחי)",
+          "פורמט מוצג לדוגמה: MP4 אנכי (9:16) — עקבי עם שאר המצגת",
+          "כאן התוצר הוא קובץ וידאו מוכן לבדיקה והפצה, לא שלב התכנון או ציר החשיבה"
+        ],
+        visual: "finalVideoOutput",
+        transition: "ttb",
+        theme: { paper: "#fdf7f3", accent: "#c2410c" }
       },
       {
-        id: "sketch",
-        kicker: "סיפור בעיפרון",
-        title: "מקריינות לסרטון אנכי",
-        lead: "דוגמה חזותית בסגנון Excalidraw — אפשר להחליף בקבצים שיצא מכלי ההנפשה.",
-        bullets: ["שומעים תסריט", "מתמקדים בסצנה", "יוצאים עם וידאו מוכן"],
-        visual: "excalidrawDemo",
+        id: "local-first",
+        kicker: "מוצר מקומי",
+        title: "מקומית היום — מה נשקל למחר",
+        lead:
+          "הרינדור והעבודה הכבדה עם קבצי המדיה מתבצעים על המחשב המקומי — ולכן בשלב הזה נדרשת התקנה של אפליקציה, לא רק שירות דפדפן פשוט. בהגדרת המוצר במסמכי הפרויקט: נולד כאפליקציה שיושבת אצל המשתמש קודם כל.",
+        bullets: [
+          "ביצועים ויציבות: קבצי וידאו ואודיו גדולים נשארים בסביבה מקומית חזקה — זה מה שמניע את דרישת ההתקנה בשלב הנוכחי",
+          "קטלוג: היום הוא משמש גם בהקשר של ענן פרטי לפיתוח ובדיקות; לשימוש קבוע אצלכם תידרש החלטה — שמירה מקומית אצל הארגון או בענן שבבעלותכם, בלי להיכנס לפרטי ספקים",
+          "להמשך (כעקרון בלבד, בלי תרשים): עבודה מהטלפון או מרחוק בלי מחשב מתקין תדרוש בעתיד פתרון ענן מתקדם יותר — קטלוג ויכולת רינדור מרחוק"
+        ],
+        visual: "localFirstPitch",
         transition: "ttb",
-        theme: { paper: "#fffdf9", accent: "#ff0000" }
+        theme: { paper: "#f4f6fa", accent: "#475569" }
       },
       {
         id: "screens",
@@ -3162,16 +3417,6 @@
         bullets: ["מסך סטודיו", "תכנון סצנות", "תור רינדור", "פלט סופי"],
         visual: "screens",
         theme: { paper: "#ffffff", accent: "#f9543e" }
-      },
-      {
-        id: "desktop",
-        kicker: "למה דסקטופ",
-        title: "אמין, מקומי ונוח",
-        lead: "{{כאן נסביר בשפה עסקית למה אפליקציית דסקטופ מתאימה יותר לעבודה עם מדיה}}",
-        bullets: ["הקבצים נשארים בשליטה", "עבודה יציבה עם וידאו", "מתאים לתהליך הפקה יומי"],
-        visual: "desktop",
-        transition: "ttb",
-        theme: { paper: "#fce9e4", accent: "#ff0000" }
       },
       {
         id: "value",
@@ -3286,9 +3531,14 @@
     let verticalPanelRevealAnims = [];
     /** Trapped wheel on merged vertical stacks; cleaned before killing horizontal tween. */
     let verticalClusterWheelCleanups = [];
-    /** Studio slide: scroll-synced wizard highlight on `.pitch-app-shell` + bullets. */
-    let studioWizardScrollTrigger = null;
-    let studioWizardPassiveCleanup = null;
+    /** Studio slide: play/pause/reset drives wizard highlight (see #pitch-studio-wiz-* buttons). */
+    let studioWizardTween = null;
+    let studioWizardRafId = 0;
+    let studioWizardStepTimer = null;
+    let studioWizardAnimProgress = 0;
+    let studioWizardDelegated = false;
+    const STUDIO_WIZARD_STEP_COUNT = 7;
+    const STUDIO_WIZARD_TWEEN_SEC = 11;
     /** Thinking slide: scrub sync on cognition-flow diagram (same lifecycle as studio wizard). */
     let thinkingFlowScrollTrigger = null;
     let thinkingFlowPassiveCleanup = null;
@@ -3770,6 +4020,45 @@
     </div>`;
     }
 
+    function finalVideoOutputHtml() {
+      const { plan } = PITCH_STUDIO_DEMO;
+      const timelineRows = plan.timeline.slice().sort((a, b) => a.audio_start - b.audio_start);
+      const firstSeg = timelineRows[0]?.segment_id ?? "IB001-s0";
+      const firstPosterSrc = studioPosterSrc(firstSeg);
+      return `<div class="pitch-final-output" dir="rtl" aria-hidden="true">
+      <div class="pitch-final-output__head">
+        <div class="pitch-final-output__title">וידאו סופי</div>
+        <span class="pitch-final-output__badge mixed-ltr" lang="en" dir="ltr">MP4 · 9:16</span>
+      </div>
+      <div class="pitch-device">
+        <div class="pitch-device-screen pitch-device-screen--preview">
+          <img class="pitch-device-poster" src="${escapeHtml(firstPosterSrc)}" alt="" width="180" height="320" decoding="async" loading="lazy" />
+          <span class="pitch-device-play" aria-hidden="true">▶</span>
+        </div>
+      </div>
+      <div class="pitch-final-output__actions" role="presentation">
+        <span class="pitch-final-output__btn pitch-final-output__btn--primary">צפייה</span>
+        <span class="pitch-final-output__btn pitch-final-output__btn--ghost">הורדה</span>
+      </div>
+    </div>`;
+    }
+
+    function localFirstPitchHtml() {
+      const pillar = (ico, title, body) => `<article class="pitch-local-first-pillar">
+        <span class="pitch-local-first-pillar__ico" aria-hidden="true">${ico}</span>
+        <div class="pitch-local-first-pillar__title">${title}</div>
+        <p class="pitch-local-first-pillar__body">${body}</p>
+      </article>`;
+      return `<div class="pitch-local-first-visual" dir="rtl" aria-hidden="true">
+      <div class="pitch-local-first-visual__bg" aria-hidden="true"></div>
+      <div class="pitch-local-first-grid">
+        ${pillar("💻", "מקומי · התקנה", "רינדור ועבודה כבדה עם קבצי מדיה — על המחשב שלכם. בשלב הזה נדרשת אפליקציה מותקנת, לא רק דפדפן.")}
+        ${pillar("☁️", "קטלוג · החלטה בהמשך", "ממשיכים גם בהקשר של ענן פרטי לפיתוח ובדיקות. לשימוש קבוע תיבחרו שמירה מקומית אצל הארגון או בענן שלכם — בלי פירוט ספקים.")}
+        ${pillar("📱", "מובייל · מרחוק · עתיד", "כיוון אפשרי בעתיד: טלפון ומרחק בלי מחשב מתקין ידרשו פתרון ענן חזק יותר — קטלוג ורינדור מרחוק. כאן רק העקרון, בלי תרשים.")}
+      </div>
+    </div>`;
+    }
+
     function downloadLinksMarkup(links) {
       const primary = links.filter(link => !link.secondary);
       const secondary = links.filter(link => link.secondary);
@@ -3820,6 +4109,12 @@
       }
       if (type === "cognitionFlow") {
         return cognitionFlowHtml();
+      }
+      if (type === "finalVideoOutput") {
+        return finalVideoOutputHtml();
+      }
+      if (type === "localFirstPitch") {
+        return localFirstPitchHtml();
       }
       if (type === "catalogBrowser") {
         return catalogBrowserHtml();
@@ -3992,7 +4287,23 @@
         section.id === "intro" && section.visual === "introPipeline"
           ? ""
           : `<ul class="bullets">${bullets}</ul>`;
-      const pitchProductLayout = section.id === "studio" || section.id === "catalog" || section.id === "thinking";
+      const pitchProductLayout =
+        section.id === "studio" ||
+        section.id === "catalog" ||
+        section.id === "thinking" ||
+        section.id === "render" ||
+        section.id === "local-first";
+      const studioWizardToolbar =
+        section.id === "studio"
+          ? `<div class="pitch-studio-wiz-controls-wrap" role="group" aria-labelledby="pitch-studio-wiz-legend">
+            <span id="pitch-studio-wiz-legend" class="pitch-studio-wiz-legend">הדגמת שלבים במוקאפ</span>
+            <div class="pitch-studio-wiz-controls">
+              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--play" id="pitch-studio-wiz-play">נגן</button>
+              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--pause" id="pitch-studio-wiz-pause" disabled>השהה</button>
+              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--reset" id="pitch-studio-wiz-reset">איפוס</button>
+            </div>
+          </div>`
+          : "";
       const pitchLayoutAttr = pitchProductLayout ? ` data-pitch-layout="product-app"` : "";
       const leadBlock = pitchProductLayout
         ? `<div class="pitch-lead-well"><p class="lead">${escapeHtml(section.lead)}</p></div>`
@@ -4012,6 +4323,7 @@
             ${leadBlock}
             ${introPipelineBlock}
             ${bulletsBlock}
+            ${studioWizardToolbar}
             ${heroDownloads}
           </div>
           ${visualBlock}
@@ -4251,20 +4563,137 @@
       refreshPitchStepNavUi();
     }
 
+    function killStudioWizardMotion() {
+      if (studioWizardTween) {
+        studioWizardTween.kill();
+        studioWizardTween = null;
+      }
+      if (studioWizardRafId) {
+        cancelAnimationFrame(studioWizardRafId);
+        studioWizardRafId = 0;
+      }
+      if (studioWizardStepTimer) {
+        clearInterval(studioWizardStepTimer);
+        studioWizardStepTimer = null;
+      }
+    }
+
+    function updateStudioWizardToolbarPlaying(isPlaying) {
+      const play = document.querySelector("#pitch-studio-wiz-play");
+      const pause = document.querySelector("#pitch-studio-wiz-pause");
+      if (play) play.disabled = isPlaying;
+      if (pause) pause.disabled = !isPlaying;
+    }
+
+    function studioWizardEnsureDelegation() {
+      if (studioWizardDelegated) return;
+      studioWizardDelegated = true;
+      document.addEventListener("click", ev => {
+        const btn = ev.target.closest("button");
+        if (!btn) return;
+        const id = btn.id;
+        if (
+          id !== "pitch-studio-wiz-play" &&
+          id !== "pitch-studio-wiz-pause" &&
+          id !== "pitch-studio-wiz-reset"
+        )
+          return;
+        ev.preventDefault();
+        if (id === "pitch-studio-wiz-play") studioWizardPlayClick();
+        else if (id === "pitch-studio-wiz-pause") studioWizardPauseClick();
+        else studioWizardResetClick();
+      });
+    }
+
+    function studioWizardPlayClick() {
+      if (studioWizardTween && studioWizardTween.paused()) {
+        studioWizardTween.resume();
+        updateStudioWizardToolbarPlaying(true);
+        return;
+      }
+      killStudioWizardMotion();
+      let start = studioWizardAnimProgress;
+      if (start >= 0.998) start = 0;
+      const obj = { p: start };
+      const dur = Math.max(0.35, STUDIO_WIZARD_TWEEN_SEC * (1 - start));
+
+      if (window.gsap && !reduceMotion) {
+        studioWizardTween = window.gsap.to(obj, {
+          p: 1,
+          duration: dur,
+          ease: "none",
+          onUpdate: () => updateStudioWizardUi(obj.p),
+          onComplete: () => {
+            studioWizardTween = null;
+            updateStudioWizardToolbarPlaying(false);
+          },
+        });
+        updateStudioWizardToolbarPlaying(true);
+        return;
+      }
+
+      if (reduceMotion) {
+        const step = () => {
+          const next = Math.min(1, studioWizardAnimProgress + 1 / STUDIO_WIZARD_STEP_COUNT);
+          updateStudioWizardUi(next);
+          if (next >= 1) {
+            if (studioWizardStepTimer) {
+              clearInterval(studioWizardStepTimer);
+              studioWizardStepTimer = null;
+            }
+            updateStudioWizardToolbarPlaying(false);
+          }
+        };
+        step();
+        studioWizardStepTimer = setInterval(step, 550);
+        updateStudioWizardToolbarPlaying(true);
+        return;
+      }
+
+      const t0 = performance.now();
+      const from = start >= 0.998 ? 0 : start;
+      const totalMs = STUDIO_WIZARD_TWEEN_SEC * 1000 * (1 - from);
+      function frame(t) {
+        const u = Math.min(1, (t - t0) / totalMs);
+        updateStudioWizardUi(from + (1 - from) * u);
+        if (u < 1) studioWizardRafId = requestAnimationFrame(frame);
+        else {
+          studioWizardRafId = 0;
+          updateStudioWizardToolbarPlaying(false);
+        }
+      }
+      studioWizardRafId = requestAnimationFrame(frame);
+      updateStudioWizardToolbarPlaying(true);
+    }
+
+    function studioWizardPauseClick() {
+      if (studioWizardTween) studioWizardTween.pause();
+      if (studioWizardRafId) {
+        cancelAnimationFrame(studioWizardRafId);
+        studioWizardRafId = 0;
+      }
+      if (studioWizardStepTimer) {
+        clearInterval(studioWizardStepTimer);
+        studioWizardStepTimer = null;
+      }
+      updateStudioWizardToolbarPlaying(false);
+    }
+
+    function studioWizardResetClick() {
+      killStudioWizardMotion();
+      studioWizardAnimProgress = 0;
+      updateStudioWizardUi(0);
+      updateStudioWizardToolbarPlaying(false);
+    }
+
     function setProgress(value) {
       const clamped = Math.max(0, Math.min(1, value));
       progressFill.style.transform = `scaleX(${clamped})`;
     }
 
     function teardownStudioWizardHighlight() {
-      if (studioWizardScrollTrigger) {
-        studioWizardScrollTrigger.kill();
-        studioWizardScrollTrigger = null;
-      }
-      if (typeof studioWizardPassiveCleanup === "function") {
-        studioWizardPassiveCleanup();
-        studioWizardPassiveCleanup = null;
-      }
+      killStudioWizardMotion();
+      studioWizardAnimProgress = 0;
       const shell = document.querySelector("#studio .pitch-app-shell");
       if (shell) shell.dataset.highlight = "upload";
       document.querySelectorAll("#studio .bullets li.is-wizard-active").forEach(li => li.classList.remove("is-wizard-active"));
@@ -4283,17 +4712,19 @@
     }
 
     function updateStudioWizardUi(progress) {
+      const p = Math.max(0, Math.min(1, progress));
+      studioWizardAnimProgress = p;
       const panel = document.getElementById("studio");
       const shell = panel?.querySelector(".pitch-app-shell");
       if (!panel || !shell) return;
       const zones = ["upload", "transcript", "timeline", "render", "output", "masthead", "tabs"];
-      const zi = Math.min(zones.length - 1, Math.max(0, Math.floor(progress * zones.length)));
+      const zi = Math.min(zones.length - 1, Math.max(0, Math.floor(p * zones.length)));
       shell.dataset.highlight = zones[zi];
 
       const bullets = panel.querySelectorAll(".bullets li");
       const nb = bullets.length;
       if (nb > 0) {
-        const bi = Math.min(nb - 1, Math.max(0, Math.floor(progress * nb)));
+        const bi = Math.min(nb - 1, Math.max(0, Math.floor(p * nb)));
         bullets.forEach((li, i) => li.classList.toggle("is-wizard-active", i === bi));
       }
 
@@ -4307,37 +4738,12 @@
 
     function initStudioWizardHighlight() {
       teardownStudioWizardHighlight();
+      studioWizardEnsureDelegation();
       const panel = document.getElementById("studio");
       const shell = panel?.querySelector(".pitch-app-shell");
       if (!panel || !shell) return;
-
-      const passiveTick = () => updateStudioWizardUi(studioWizardProgressFromPanel(panel));
-
-      const verticalLike =
-        document.body.classList.contains("pitch-vertical") || window.matchMedia("(max-width: 860px)").matches;
-
-      if (verticalLike && window.ScrollTrigger && window.gsap) {
-        window.gsap.registerPlugin(window.ScrollTrigger);
-        studioWizardScrollTrigger = ScrollTrigger.create({
-          trigger: panel,
-          start: "top 88%",
-          end: "bottom 14%",
-          scrub: 0.35,
-          onUpdate(self) {
-            updateStudioWizardUi(self.progress);
-          },
-        });
-        updateStudioWizardUi(studioWizardProgressFromPanel(panel));
-        return;
-      }
-
-      studioWizardPassiveCleanup = () => {
-        window.removeEventListener("scroll", passiveTick);
-        window.removeEventListener("resize", passiveTick);
-      };
-      window.addEventListener("scroll", passiveTick, { passive: true });
-      window.addEventListener("resize", passiveTick, { passive: true });
-      passiveTick();
+      updateStudioWizardUi(0);
+      updateStudioWizardToolbarPlaying(false);
     }
 
     function teardownThinkingFlowMotion() {
