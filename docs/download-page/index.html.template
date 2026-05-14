@@ -194,52 +194,104 @@
 
     .pitch-step-nav {
       position: fixed;
-      inset-block-end: max(1rem, env(safe-area-inset-bottom, 0px), 8px);
-      inset-inline-end: max(12px, env(safe-area-inset-inline-end, 0px));
+      right: max(14px, env(safe-area-inset-right, 0px));
+      left: auto;
+      bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px), 8px) + 3.25rem);
       z-index: 48;
       display: flex;
       flex-direction: column;
-      gap: 8px;
       align-items: stretch;
+      gap: 7px;
+      padding: 9px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 16px;
+      background: rgb(255 255 255 / 0.94);
+      box-shadow: 4px 4px 0 var(--v1-ink);
+      backdrop-filter: blur(14px) saturate(1.15);
+      -webkit-backdrop-filter: blur(14px) saturate(1.15);
     }
 
     .pitch-step-nav button {
       display: grid;
       place-items: center;
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       margin: 0;
       padding: 0;
-      border: 1.5px solid var(--v1-ink);
-      border-radius: 12px;
-      background: rgb(255 255 255 / .84);
+      border: 2px solid var(--v1-ink);
+      border-radius: 11px;
+      background: linear-gradient(165deg, rgb(255 255 255 / 1) 0%, rgb(252 252 252 / 1) 55%, rgb(248 248 249 / 1) 100%);
       color: var(--v1-ink);
-      box-shadow: 2px 2px 0 var(--v1-ink);
-      font-size: 1.1rem;
-      font-weight: 900;
-      line-height: 1;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.14);
       cursor: pointer;
-      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+      transition:
+        transform 160ms ease,
+        background 160ms ease,
+        box-shadow 160ms ease,
+        border-color 160ms ease;
+    }
+
+    .pitch-step-nav button .pitch-step-icon {
+      display: block;
+      flex-shrink: 0;
+    }
+
+    #pitch-step-down {
+      background: linear-gradient(
+        165deg,
+        rgb(255 255 255 / 1) 0%,
+        rgb(255 247 243 / 1) 48%,
+        rgb(252 233 228 / 0.92) 100%
+      );
     }
 
     .pitch-step-nav button:hover,
     .pitch-step-nav button:focus-visible {
       background: var(--v1-yellow);
+      border-color: var(--v1-ink);
       box-shadow: 3px 3px 0 var(--v1-ink);
-      outline: 3px solid var(--v1-paper);
-      outline-offset: 2px;
+      outline: none;
       transform: translateY(-2px);
     }
 
-    .pitch-step-nav button:disabled {
-      opacity: 0.38;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: 2px 2px 0 var(--v1-ink);
+    #pitch-step-down:hover,
+    #pitch-step-down:focus-visible {
+      background: linear-gradient(165deg, var(--v1-yellow), rgb(250 210 75 / 1));
     }
 
-    .pitch-step-nav button:disabled:hover {
-      background: rgb(255 255 255 / .84);
+    .pitch-step-nav button:focus-visible {
+      outline: 3px solid var(--v1-paper);
+      outline-offset: 3px;
+    }
+
+    .pitch-step-nav button:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 1px 1px 0 var(--v1-ink);
+    }
+
+    .pitch-step-nav button:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+    }
+
+    .pitch-step-nav button:disabled:hover,
+    .pitch-step-nav button:disabled:focus-visible {
+      background: linear-gradient(165deg, rgb(255 255 255 / 1) 0%, rgb(252 252 252 / 1) 100%);
+      transform: none;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+      outline: none;
+    }
+
+    #pitch-step-down:disabled:hover,
+    #pitch-step-down:disabled:focus-visible {
+      background: linear-gradient(
+        165deg,
+        rgb(255 255 255 / 1) 0%,
+        rgb(255 247 243 / 1) 48%,
+        rgb(252 233 228 / 0.92) 100%
+      );
     }
 
     .story-shell {
@@ -1404,6 +1456,10 @@
       .pitch-step-nav button:focus-visible {
         transform: none;
       }
+
+      .pitch-step-nav button:active:not(:disabled) {
+        transform: none;
+      }
     }
   </style>
 </head>
@@ -1439,8 +1495,16 @@
   </main>
 
   <div class="pitch-step-nav" role="group" aria-label="ניווט בין שקופיות">
-    <button type="button" id="pitch-step-up" aria-label="שקופית קודמת">↑</button>
-    <button type="button" id="pitch-step-down" aria-label="שקופית הבאה">↓</button>
+    <button type="button" id="pitch-step-up" aria-label="שקופית קודמת">
+      <svg class="pitch-step-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M17 15.5 12 9.25 7 15.5"/>
+      </svg>
+    </button>
+    <button type="button" id="pitch-step-down" aria-label="שקופית הבאה">
+      <svg class="pitch-step-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M7 8.5 12 14.75 17 8.5"/>
+      </svg>
+    </button>
   </div>
 
   <a class="builder-credit" href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
