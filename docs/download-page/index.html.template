@@ -1501,13 +1501,12 @@
 
     const PANEL_REVEAL_SEL = ".kicker, h1, h2, .lead, .bullets li, .hero-downloads, .panel-visual > *";
 
-    /** verticalStack: full-page stack vs horizontal strip */
+    /** verticalStack: full-page stack vs horizontal strip. No autoAlpha — avoids blank panels if a ScrollTrigger misses. */
     function panelRevealTweenVars(panel, verticalStack) {
       const rtl = panel.dataset.transition === "rtl";
       if (rtl) {
         return {
-          autoAlpha: 0,
-          x: 36,
+          x: 40,
           y: 0,
           duration: verticalStack ? .55 : .56,
           stagger: .05,
@@ -1515,7 +1514,6 @@
         };
       }
       return {
-        autoAlpha: 0,
         x: 0,
         y: verticalStack ? 36 : 28,
         duration: verticalStack ? .55 : .6,
@@ -1529,11 +1527,12 @@
       gsap.utils.toArray(".story-panel").forEach(panel => {
         gsap.from(panel.querySelectorAll(PANEL_REVEAL_SEL), {
           ...panelRevealTweenVars(panel, true),
+          immediateRender: false,
           scrollTrigger: {
             trigger: panel,
             start: "top 86%",
-            once: true
-          }
+            once: true,
+          },
         });
       });
     }
@@ -1617,10 +1616,15 @@
           panels.forEach(panel => {
             gsap.from(panel.querySelectorAll(PANEL_REVEAL_SEL), {
               ...panelRevealTweenVars(panel, false),
+              immediateRender: false,
               scrollTrigger: {
                 trigger: panel,
                 containerAnimation: horizontalTween,
-                start: cfg.rtlFlow ? "right 28%" : "left 72%",
+                /*
+                  One start for LTR + mirrored RTL: axis-specific left/right probes
+                  mis-fire with scaleX on .story-mirror, leaving autoAlpha stuck (blank story).
+                */
+                start: "left 78%",
                 once: true,
               },
             });
