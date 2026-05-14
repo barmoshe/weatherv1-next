@@ -457,6 +457,220 @@
       user-select: none;
     }
 
+    /* Pitch slide — Studio tab mock */
+    #studio .panel-visual {
+      min-height: min(62svh, 560px);
+      align-items: stretch;
+    }
+
+    .pitch-studio-mock {
+      width: min(100%, 560px);
+      margin-inline: auto;
+      padding: 14px 16px 16px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 20px;
+      background: rgb(255 255 255 / 0.88);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+      direction: rtl;
+      unicode-bidi: isolate;
+    }
+
+    .pitch-studio-jobstrip {
+      font-size: 0.72rem;
+      font-weight: 900;
+      color: var(--v1-muted);
+      letter-spacing: 0.02em;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1.5px solid rgb(0 0 0 / 0.12);
+      background: rgb(244 243 239 / 0.95);
+    }
+
+    .pitch-studio-tabnav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-start;
+    }
+
+    .pitch-studio-tab {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1.5px solid rgb(0 0 0 / 0.14);
+      font-size: 0.68rem;
+      font-weight: 900;
+      color: var(--v1-muted);
+      background: rgb(255 255 255 / 0.65);
+      white-space: nowrap;
+    }
+
+    .pitch-studio-tab--active {
+      border-color: var(--v1-ink);
+      background: var(--v1-coral);
+      color: #fff;
+      box-shadow: 2px 2px 0 var(--v1-ink);
+    }
+
+    .pitch-studio-board {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .pitch-studio-card {
+      padding: 12px 12px 14px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 14px;
+      background: var(--v1-paper);
+      box-shadow: 3px 3px 0 rgb(0 0 0 / 0.12);
+      display: grid;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .pitch-studio-card-label {
+      font-size: 0.76rem;
+      font-weight: 950;
+      color: var(--v1-ink);
+      letter-spacing: 0.02em;
+    }
+
+    .pitch-studio-upload {
+      grid-column: 1 / -1;
+      min-height: 72px;
+      border-style: dashed;
+      border-width: 2px;
+      place-content: center;
+      text-align: center;
+      font-weight: 850;
+      font-size: 0.82rem;
+      color: var(--v1-muted);
+    }
+
+    .pitch-studio-dropcue {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: rgb(0 0 0 / 0.55);
+    }
+
+    .pitch-studio-trans-body {
+      min-height: 56px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1.5px solid rgb(0 0 0 / 0.12);
+      background: rgb(248 248 249 / 1);
+      font-size: 0.68rem;
+      font-weight: 750;
+      color: var(--v1-muted);
+      line-height: 1.35;
+      text-align: right;
+    }
+
+    .pitch-studio-scenes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pitch-studio-scene {
+      padding: 5px 8px;
+      border-radius: 10px;
+      border: 1.5px solid var(--v1-ink);
+      font-size: 0.62rem;
+      font-weight: 900;
+      background: rgb(252 233 228 / 0.55);
+    }
+
+    .pitch-studio-picks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .pitch-studio-pick {
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgb(0 0 0 / 0.18);
+      font-size: 0.58rem;
+      font-weight: 850;
+      background: rgb(255 255 255 / 0.95);
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+
+    .pitch-studio-render-bar {
+      height: 8px;
+      border-radius: 999px;
+      border: 1.5px solid var(--v1-ink);
+      background: rgb(0 0 0 / 0.06);
+      overflow: hidden;
+    }
+
+    .pitch-studio-render-fill {
+      height: 100%;
+      width: 62%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--v1-yellow), var(--panel-accent, var(--v1-coral)));
+    }
+
+    .pitch-studio-phonecell {
+      display: grid;
+      place-items: center;
+      gap: 8px;
+      padding-block: 6px;
+    }
+
+    .pitch-studio-phonecell .phone-frame {
+      width: min(58vw, 200px);
+      margin: 0 auto;
+    }
+
+    .pitch-studio-card--hot {
+      border-color: var(--panel-accent, var(--v1-coral));
+      box-shadow:
+        0 0 0 2px rgb(249 84 62 / 0.28),
+        5px 5px 0 var(--v1-ink);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .pitch-studio-card--hot {
+        animation: pitch-studio-softpulse 3.2s ease-in-out infinite;
+      }
+
+      @keyframes pitch-studio-softpulse {
+        0%,
+        100% {
+          box-shadow:
+            0 0 0 2px rgb(249 84 62 / 0.22),
+            5px 5px 0 var(--v1-ink);
+        }
+
+        50% {
+          box-shadow:
+            0 0 0 5px rgb(249 84 62 / 0.14),
+            6px 6px 0 var(--v1-ink);
+        }
+      }
+    }
+
+    @media (max-width: 860px) {
+      .pitch-studio-board {
+        grid-template-columns: 1fr;
+      }
+
+      .pitch-studio-upload {
+        grid-column: 1;
+      }
+
+      .pitch-studio-phonecell .phone-frame {
+        width: min(72vw, 220px);
+      }
+    }
+
     .visual-board,
     .phone-frame,
     .screen-frame,
@@ -1702,13 +1916,20 @@
         theme: { paper: "#ffffff", accent: "#f9543e" }
       },
       {
-        id: "problem",
-        kicker: "הבעיה",
-        title: "תחזית וידאו לוקחת יותר מדי זמן",
-        lead: "{{כאן נכתוב את הכאב המרכזי של הלקוח: עריכה, חיפוש חומרים, יצוא וחוסר עקביות}}",
-        bullets: ["הרבה שלבים ידניים", "קשה לשחזר פורמט קבוע", "כל שינוי קטן פותח עוד סבב עבודה"],
-        visual: "mess",
-        theme: { paper: "#fce9e4", accent: "#ff0000" }
+        id: "studio",
+        kicker: "סטודיו",
+        title: "הסטודיו · איך נראית עבודה על תחזית אחת",
+        lead:
+          "בטאב «סטודיו» עובדים על תחזית אחת בכל פעם: מעלים קריינות, רואים תמלול, בונים את הסיפור בציר הזמן עם התאמות מהקטלוג, מרנדרים ובודקים, ומגיעים לווידאו הסופי בפריים אנכי — בלי לצלול לעומק טכני.",
+        bullets: [
+          "העלאת קריינות · תמלול · ציר זמן (סצנות והתאמות מהקטלוג)",
+          "רינדור ואז «וידאו סופי» עם נגן כמו באפליקציה",
+          "בפס העליון: מזהה עבודה קצר וסטטוס (ממתין / מעבד / הושלם)",
+          "טאבים נוספים למעקב: פעילים · היסטוריה · קטלוג · אנליטיקה"
+        ],
+        visual: "studioDashboard",
+        transition: "ttb",
+        theme: { paper: "#f4f3ef", accent: "#c8202b" }
       },
       {
         id: "promise",
@@ -1944,6 +2165,50 @@
       }
       if (type === "phone") {
         return `<div class="phone-frame"><div class="phone-screen"><span class="mixed-ltr" lang="en" dir="ltr">MP4<br>9:16</span><br><small>תחזית מוכנה</small></div></div>`;
+      }
+      if (type === "studioDashboard") {
+        return `<div class="pitch-studio-mock">
+          <div class="pitch-studio-jobstrip mixed-ltr" lang="en" dir="ltr">fixture_demo · מעבד</div>
+          <div class="pitch-studio-tabnav">
+            <span class="pitch-studio-tab pitch-studio-tab--active">סטודיו</span>
+            <span class="pitch-studio-tab">פעילים</span>
+            <span class="pitch-studio-tab">היסטוריה</span>
+            <span class="pitch-studio-tab">קטלוג</span>
+            <span class="pitch-studio-tab">אנליטיקה</span>
+          </div>
+          <div class="pitch-studio-board">
+            <section class="pitch-studio-card pitch-studio-upload">
+              <span class="pitch-studio-card-label">העלאת קריינות</span>
+              <span class="pitch-studio-dropcue">גרירה או בחירת קובץ אודיו</span>
+            </section>
+            <section class="pitch-studio-card">
+              <span class="pitch-studio-card-label">תמלול</span>
+              <div class="pitch-studio-trans-body">טקסט רץ מהקובץ יוצג כאן אחרי התמלול…</div>
+            </section>
+            <section class="pitch-studio-card pitch-studio-card--hot">
+              <span class="pitch-studio-card-label">ציר זמן</span>
+              <div class="pitch-studio-scenes">
+                <span class="pitch-studio-scene">סצנה 1</span>
+                <span class="pitch-studio-scene">סצנה 2</span>
+                <span class="pitch-studio-scene">סצנה 3</span>
+              </div>
+              <div class="pitch-studio-picks">
+                <span class="pitch-studio-pick">IB001-s0</span>
+                <span class="pitch-studio-pick">IB002-s0</span>
+                <span class="pitch-studio-pick">IB003-s0</span>
+              </div>
+            </section>
+            <section class="pitch-studio-card">
+              <span class="pitch-studio-card-label">רינדור</span>
+              <div class="pitch-studio-render-bar" aria-hidden="true"><div class="pitch-studio-render-fill"></div></div>
+              <span class="pitch-studio-dropcue">בניית הווידאו באורך הקריינות</span>
+            </section>
+            <section class="pitch-studio-card pitch-studio-phonecell">
+              <span class="pitch-studio-card-label">וידאו סופי</span>
+              <div class="phone-frame"><div class="phone-screen"><small>נגן אנכי</small><br><span class="mixed-ltr" lang="en" dir="ltr">9:16</span></div></div>
+            </section>
+          </div>
+        </div>`;
       }
       if (type === "mess") {
         return `<div class="visual-board">

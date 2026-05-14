@@ -1,0 +1,93 @@
+{
+  "job_id": "fixture_demo_complete",
+  "created_at": "2026-05-14T14:00:00.000Z",
+  "updated_at": "2026-05-14T14:02:00.000Z",
+  "audio_filename": "fixture-demo.wav",
+  "duration_sec": 16,
+  "transcript": "בוקר נעים באזור המרכז עם עליות קלות בטמפרטורה. בצפון יעד כוח ברוחות. במישור החוף תישאר התמתקות עדינה עד הערב.",
+  "transcript_segments": [
+    { "idx": 0, "start": 0, "end": 6, "text": "בוקר נעים באזור המרכז עם עליות קלות בטמפרטורה." },
+    { "idx": 1, "start": 6, "end": 11, "text": "בצפון יעד כוח ברוחות." },
+    { "idx": 2, "start": 11, "end": 16, "text": "במישור החוף תישאר התמתקות עדינה עד הערב." }
+  ],
+  "scenes": [
+    {
+      "idx": 0,
+      "start_sec": 0,
+      "end_sec": 6,
+      "title_he": "מוקד חום במרכז",
+      "narration": "בוקר נעים באזור המרכז עם עליות קלות בטמפרטורה.",
+      "keywords": ["מרכז", "חום"],
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [0]
+    },
+    {
+      "idx": 1,
+      "start_sec": 6,
+      "end_sec": 11,
+      "title_he": "המשך בצפון",
+      "narration": "בצפון יעד כוח ברוחות.",
+      "keywords": ["צפון", "רוח"],
+      "kind": "transition",
+      "heterogeneous": false,
+      "whisper_beat_indices": [1]
+    },
+    {
+      "idx": 2,
+      "start_sec": 11,
+      "end_sec": 16,
+      "title_he": "חוף רגוע",
+      "narration": "במישור החוף תישאר התמתקות עדינה עד הערב.",
+      "keywords": ["חוף", "ערב"],
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [2]
+    }
+  ],
+  "timeline": [
+    {
+      "scene_idx": 0,
+      "segment_id": "IB001-s0",
+      "audio_start": 0,
+      "audio_end": 6,
+      "video_id": "IB001",
+      "video_start": 0,
+      "video_end": 6,
+      "reason": "fixture"
+    },
+    {
+      "scene_idx": 1,
+      "segment_id": "IB002-s0",
+      "audio_start": 6,
+      "audio_end": 11,
+      "video_id": "IB002",
+      "video_start": 0,
+      "video_end": 5,
+      "reason": "fixture"
+    },
+    {
+      "scene_idx": 2,
+      "segment_id": "IB003-s0",
+      "audio_start": 11,
+      "audio_end": 16,
+      "video_id": "IB003",
+      "video_start": 0,
+      "video_end": 5,
+      "reason": "fixture"
+    }
+  ],
+  "validator": {
+    "score": 100,
+    "hard_violations_fixed": [],
+    "hard_violations_kept": [],
+    "warnings": [],
+    "gap_filled": [],
+    "catalog_health": {
+      "loaded_clips": 212,
+      "loaded_segments": 408,
+      "tagged_segments": 408,
+      "untagged_picks": 0
+    }
+  }
+}

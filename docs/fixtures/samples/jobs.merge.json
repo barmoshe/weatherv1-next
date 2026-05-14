@@ -1,0 +1,14 @@
+{
+  "fixture_demo_complete": {
+    "job_id": "fixture_demo_complete",
+    "status": "completed",
+    "created_at": "2026-05-14T14:00:00.000Z",
+    "audio_filename": "fixture-demo.wav"
+  },
+  "fixture_demo_processing": {
+    "job_id": "fixture_demo_processing",
+    "status": "processing",
+    "created_at": "2026-05-14T14:05:00.000Z",
+    "audio_filename": "fixture-live.wav"
+  }
+}
