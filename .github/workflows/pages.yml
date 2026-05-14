@@ -27,9 +27,12 @@ jobs:
       - name: Render download page
         run: |
           set -euo pipefail
-          mkdir -p _site/public
+          mkdir -p _site/public _site/download-page/assets
           sed "s|__REPO__|${{ github.repository }}|g" docs/download-page/index.html.template > _site/index.html
           cp public/weather-v1-icon-512.png _site/public/weather-v1-icon-512.png
+          if compgen -G "docs/download-page/assets/*" > /dev/null; then
+            cp -R docs/download-page/assets/. _site/download-page/assets/
+          fi
           touch _site/.nojekyll
 
       - uses: actions/upload-pages-artifact@v4

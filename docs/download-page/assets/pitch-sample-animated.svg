@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Placeholder animated sketch for WeatherV1 pitch.
+  Replace anytime with an SVG exported from https://github.com/dai-shi/excalidraw-animate
+  (https://dai-shi.github.io/excalidraw-animate) via File ? Export SVG in Animate mode.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 390" width="520" height="390" role="img" aria-labelledby="title desc">
+  <title id="title">????? ??????  WeatherV1</title>
+  <desc id="desc">????? ????? ??????? ??? ????: ???????, ????, ????? ????</desc>
+  <defs>
+    <filter id="jit" x="-4%" y="-4%" width="108%" height="108%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+  <rect width="520" height="390" fill="#fff8f4" />
+  <style>
+    .ink { fill: none; stroke: #111; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; filter: url(#jit); }
+    .soft { fill: #f9543e22; stroke: #111; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .accent { fill: #f9543e; }
+    .lbl { font: 700 15px Heebo, system-ui, sans-serif; fill: #111; direction: rtl; }
+    .dash { stroke-dasharray: 920; stroke-dashoffset: 920; animation: dash 7.5s cubic-bezier(.35, 0, .2, 1) forwards; }
+    @keyframes dash { to { stroke-dashoffset: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .dash { animation: none; stroke-dashoffset: 0; }
+    }
+  </style>
+  <!-- rough mic -->
+  <ellipse class="soft dash" cx="110" cy="150" rx="34" ry="48" />
+  <path class="ink dash" style="animation-delay: .2s;" d="M86 198 C 86 226, 134 226, 134 198" />
+  <rect class="ink dash" style="animation-delay: .35s;" x="94" y="210" width="32" height="10" rx="3" />
+  <!-- arrow 1 -->
+  <path class="ink dash" style="animation-delay: .5s;" d="M160 160 C 200 150, 218 150, 246 160" />
+  <polygon class="accent" points="258,160 246,153 246,167" />
+  <!-- scene -->
+  <rect class="soft dash" style="animation-delay: .8s;" x="260" y="88" width="120" height="150" rx="12" />
+  <path class="ink dash" style="animation-delay: 1s;" d="M274 180 L 366 180 M 291 130 L 348 130 M 302 210 Q 320 190 338 210" />
+  <!-- arrow 2 -->
+  <path class="ink dash" style="animation-delay: 1.35s;" d="M388 160 H 442" />
+  <polygon class="accent" points="448,160 434,152 434,168" />
+  <!-- phone outline -->
+  <rect class="soft dash" style="animation-delay: 1.65s;" x="350" y="90" width="120" height="200" rx="16" />
+  <rect class="ink dash" style="animation-delay: 1.85s;" x="364" y="110" width="92" height="150" rx="8" />
+  <text class="lbl" x="410" y="200" text-anchor="middle">MP4</text>
+  <text class="lbl" x="410" y="222" text-anchor="middle" opacity=".75" font-size="13px">9:16</text>
+  <!-- labels -->
+  <text class="lbl" x="110" y="72" text-anchor="middle">???????</text>
+  <text class="lbl" x="320" y="72" text-anchor="middle">?????</text>
+  <text class="lbl" x="410" y="72" text-anchor="middle">??????</text>
+</svg>
