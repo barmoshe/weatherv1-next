@@ -644,47 +644,48 @@
       font-size: 0.9rem;
     }
 
-    /* Intro: copy + hero downloads + phone; wide column for text, flexible preview. */
+    /* Intro hero: reading column + device preview; stacks below ~1024px */
     #intro.story-panel {
-      padding-block: calc(var(--nav-height) + 18px) clamp(24px, 4vh, 40px);
-      padding-inline: clamp(16px, 3.8vw, 56px);
+      padding-block: calc(var(--nav-height) + 22px) clamp(28px, 5vh, 52px);
+      padding-inline: clamp(18px, 4vw, 64px);
     }
 
     #intro .panel-inner {
+      width: min(1220px, 100%);
       align-items: center;
-      gap: clamp(16px, 3vw, 40px);
-      grid-template-columns: minmax(0, 1fr) minmax(220px, min(34vw, 300px));
+      gap: clamp(24px, 4.5vw, 64px);
+      grid-template-columns: minmax(260px, 1.22fr) minmax(236px, min(34vw, 360px));
       box-sizing: border-box;
     }
 
     #intro .panel-copy {
-      gap: clamp(10px, 1.8vw, 16px);
+      gap: clamp(12px, 1.8vw, 20px);
       min-height: 0;
       align-self: center;
+      width: 100%;
+      max-width: min(40rem, 100%);
     }
 
     #intro h1 {
-      font-size: clamp(1.85rem, 4.2vw, 3.85rem);
-      max-width: none;
-      line-height: 0.98;
+      font-size: clamp(2rem, 0.35rem + 3.5vw, 4.1rem);
+      max-width: min(100%, 19rem);
+      line-height: 1.03;
       text-wrap: balance;
     }
 
     #intro .lead {
-      font-size: clamp(0.92rem, 1.35vw, 1.22rem);
-      max-width: 36rem;
-      line-height: 1.35;
-      display: -webkit-box;
-      -webkit-line-clamp: 6;
-      line-clamp: 6;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      font-size: clamp(0.98rem, 0.35vw + 0.9rem, 1.32rem);
+      max-width: 38rem;
+      line-height: 1.45;
+      display: block;
+      margin: 0;
+      overflow: visible;
     }
 
     #intro .bullets {
-      margin-top: 0;
-      gap: 6px;
-      font-size: clamp(0.82rem, 1.1vw, 0.98rem);
+      margin-top: 2px;
+      gap: 8px;
+      font-size: clamp(0.84rem, 0.9vw, 1.02rem);
     }
 
     #intro .bullets li::before {
@@ -692,79 +693,109 @@
     }
 
     #intro .hero-downloads {
-      margin-top: 4px;
+      margin-top: 12px;
       max-width: none;
       width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 16px;
+      background: rgb(255 255 255 / 0.62);
+      box-shadow: 4px 4px 0 rgb(0 0 0 / 0.07);
     }
 
     #intro .hero-downloads-title {
-      margin: 0 0 8px;
-      font-size: clamp(0.8rem, 1.05vw, 0.96rem);
+      margin: 0 0 10px;
+      font-size: clamp(0.82rem, 1vw, 1rem);
     }
 
     #intro .download-links--hero {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
     }
 
     #intro .download-links--hero a {
-      min-height: 38px;
-      padding: 0 10px 0 12px;
-      font-size: clamp(0.68rem, 0.95vw, 0.8rem);
-      border-radius: 10px;
+      min-height: 42px;
+      padding: 0 12px;
+      font-size: clamp(0.72rem, 0.55vw + 0.65rem, 0.88rem);
+      border-radius: 12px;
       box-shadow: 2px 2px 0 var(--v1-ink);
       gap: 8px;
+      justify-content: center;
+      text-align: center;
     }
 
     #intro .panel-visual {
-      min-height: min(240px, 38svh);
-      max-height: min(58svh, 420px);
+      min-height: min(280px, 44svh);
+      max-height: min(62svh, 540px);
       align-self: center;
       width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #intro .phone-frame {
-      width: min(100%, clamp(168px, 22vw, 260px));
-      max-height: min(52svh, 420px);
+      width: min(100%, clamp(196px, 26vw, 300px));
       margin-inline: auto;
-      padding: clamp(12px, 1.6vw, 16px);
+      padding: clamp(14px, 1.8vw, 20px);
+      box-shadow: var(--shadow);
     }
 
     #intro .phone-screen {
-      font-size: clamp(0.78rem, 1.15vw, 1rem);
+      font-size: clamp(0.82rem, 1vw + 0.65rem, 1.08rem);
     }
 
     @media (max-height: 720px) {
       #intro .panel-inner {
-        gap: clamp(12px, 2vh, 20px);
+        gap: clamp(14px, 2.5vh, 24px);
       }
 
       #intro h1 {
-        font-size: clamp(1.5rem, 4.2vh, 3rem);
-      }
-
-      #intro .lead {
-        -webkit-line-clamp: 4;
-        line-clamp: 4;
+        font-size: clamp(1.55rem, 3.5vh, 2.9rem);
+        max-width: min(100%, 18rem);
       }
 
       #intro .panel-visual {
-        max-height: min(44svh, 300px);
+        max-height: min(46svh, 340px);
       }
 
       #intro .phone-frame {
-        max-height: min(40svh, 280px);
+        width: min(100%, clamp(170px, 22vw, 240px));
       }
     }
 
-    @media (min-width: 861px) and (max-width: 1100px) {
+    @media (min-width: 861px) and (max-width: 1024px) {
       #intro .panel-inner {
-        grid-template-columns: minmax(0, 1fr) minmax(200px, min(38vw, 260px));
+        grid-template-columns: 1fr;
+        gap: clamp(22px, 4vh, 36px);
+        max-width: 36.5rem;
+        margin-inline: auto;
+      }
+
+      #intro .panel-visual {
+        order: -1;
+        max-height: min(50svh, 400px);
+        min-height: min(220px, 36svh);
+      }
+
+      #intro .phone-frame {
+        width: min(260px, 48vw);
+      }
+
+      #intro .panel-copy {
+        max-width: none;
       }
 
       #intro .download-links--hero {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1025px) and (max-width: 1180px) {
+      #intro .panel-inner {
+        grid-template-columns: minmax(240px, 1.12fr) minmax(220px, min(36vw, 300px));
+        gap: clamp(20px, 3.5vw, 44px);
       }
     }
 
@@ -1259,24 +1290,31 @@
         width: 100%;
       }
 
+      #intro.story-panel {
+        padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 18px)
+          max(6.75rem, calc(env(safe-area-inset-bottom, 0px) + 6rem));
+        padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
+      }
+
       #intro .panel-inner {
         max-height: none;
-        gap: clamp(14px, 4.5vw, 22px);
+        gap: clamp(20px, 5.5vw, 30px);
         align-content: start;
       }
 
-      /* Hero: preview first on small screens — faster "what is it?" recognition. */
+      /* Hero: device preview first — compact band so copy + CTAs get space */
       #intro .panel-visual {
         order: -1;
-        max-height: min(50svh, 340px);
+        max-height: min(42svh, 300px);
         min-height: 0;
         width: 100%;
         justify-items: center;
+        padding-block: 2px 6px;
       }
 
       #intro .panel-copy {
         width: 100%;
-        max-width: 36rem;
+        max-width: 26.5rem;
         margin-inline: auto;
       }
 
@@ -1285,6 +1323,12 @@
         -webkit-line-clamp: unset;
         line-clamp: unset;
         overflow: visible;
+      }
+
+      #intro .hero-downloads {
+        padding: 12px 14px;
+        margin-top: 4px;
+        border-radius: 14px;
       }
 
       #intro .download-links--hero {
@@ -1302,11 +1346,11 @@
       }
 
       #intro .phone-frame {
-        width: min(240px, 74vw);
+        width: min(216px, 70vw);
         max-width: 100%;
-        max-height: none;
+        max-height: 100%;
         margin-inline: auto;
-        padding: 14px;
+        padding: 13px;
         aspect-ratio: 9 / 16;
       }
 
@@ -1329,7 +1373,8 @@
       }
 
       #intro h1 {
-        font-size: clamp(1.55rem, 7.2vw, 2.65rem);
+        font-size: clamp(1.58rem, 5.8vw + 0.65rem, 2.72rem);
+        line-height: 1.06;
         max-width: none;
       }
 
@@ -1458,6 +1503,58 @@
     @media (max-width: 860px) and (orientation: landscape) {
       html {
         scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + 10px);
+      }
+
+      #intro .panel-inner {
+        display: grid;
+        grid-template-columns: minmax(120px, 32vw) minmax(0, 1fr);
+        gap: clamp(14px, 3vw, 22px);
+        align-items: start;
+        direction: ltr;
+      }
+
+      #intro .panel-visual {
+        grid-column: 1;
+        grid-row: 1 / -1;
+        order: 0;
+        max-height: min(85vh, 440px);
+        align-self: center;
+        padding-block: 0;
+      }
+
+      #intro .panel-copy {
+        grid-column: 2;
+        grid-row: 1;
+        direction: rtl;
+        margin-inline: 0;
+        max-width: none;
+      }
+
+      #intro .phone-frame {
+        width: min(128px, 28vw);
+        padding: 10px;
+      }
+
+      #intro h1 {
+        font-size: clamp(1.32rem, 3.6vw, 1.95rem);
+      }
+
+      #intro .lead {
+        font-size: clamp(0.9rem, 2.4vw, 1.06rem);
+      }
+
+      #intro .hero-downloads {
+        padding: 10px 12px;
+      }
+
+      #intro .download-links--hero {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      #intro .download-links--hero a {
+        min-height: 42px;
+        font-size: 0.74rem;
       }
     }
 
