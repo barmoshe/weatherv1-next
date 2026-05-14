@@ -682,6 +682,32 @@
       border-color: rgb(0 0 0 / 0.1);
     }
 
+    #catalog .bullets--catalog-wizard li[data-catalog-phase-bullet] {
+      cursor: pointer;
+    }
+
+    #catalog .bullets--catalog-wizard li[data-catalog-phase-bullet]:focus-visible {
+      outline: 2px solid var(--panel-accent, #3d55b8);
+      outline-offset: 3px;
+    }
+
+    [data-pitch-layout="product-app"] .bullets--catalog-wizard li.is-wizard-active::before {
+      background: var(--panel-accent, #3d55b8);
+      color: #fff;
+      border-color: rgb(0 0 0 / 0.12);
+    }
+
+    [data-pitch-layout="product-app"] .bullets--catalog-wizard li.is-catalog-phase-complete {
+      border-color: color-mix(in srgb, rgb(22 163 91 / 1) 32%, rgb(0 0 0 / 0.1));
+      background: color-mix(in srgb, rgb(22 163 91 / 1) 6%, rgb(255 255 255 / 0.94));
+    }
+
+    [data-pitch-layout="product-app"] .bullets--catalog-wizard li.is-catalog-phase-complete::before {
+      background: color-mix(in srgb, rgb(22 163 91 / 1) 88%, rgb(255 255 255 / 0.12));
+      color: #fff;
+      border-color: rgb(0 0 0 / 0.1);
+    }
+
     [data-pitch-layout="product-app"] .panel-visual {
       place-items: stretch;
       justify-items: stretch;
@@ -939,7 +965,8 @@
       unicode-bidi: isolate;
     }
 
-    [data-pitch-layout="product-app"] .pitch-studio-wiz-controls-wrap {
+    [data-pitch-layout="product-app"] .pitch-studio-wiz-controls-wrap,
+    [data-pitch-layout="product-app"] .pitch-catalog-wiz-controls-wrap {
       margin-top: 10px;
       padding: 10px 12px;
       border-radius: 12px;
@@ -1596,6 +1623,14 @@
       display: block;
     }
 
+    .pitch-device-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      vertical-align: middle;
+    }
+
     .pitch-device-play {
       position: absolute;
       inset: 0;
@@ -1841,6 +1876,78 @@
       align-self: stretch;
       min-height: 0;
       overflow: auto;
+    }
+
+    .pitch-catalog-main-stage {
+      display: block;
+      min-height: 0;
+      grid-row: 4;
+      grid-column: 1;
+    }
+
+    .pitch-catalog-iphone-rail {
+      display: none;
+      box-sizing: border-box;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 4px 0 2px;
+      flex-shrink: 0;
+    }
+
+    .pitch-catalog-iphone-label {
+      font-size: 0.52rem;
+      font-weight: 820;
+      color: rgb(90 94 108 / 1);
+      text-align: center;
+      line-height: 1.3;
+      max-width: 7.5rem;
+    }
+
+    .pitch-catalog-iphone-rail .pitch-device {
+      width: min(124px, 17vw);
+      padding: 10px;
+    }
+
+    /* שלב 4: פריסה שונה — קטלוג משמאל (מסך), אמולטור אייפון מימין */
+    .pitch-app-shell--catalog[data-catalog-phase="preview"] {
+      width: min(100%, 912px);
+      height: auto;
+      min-height: 340px;
+      max-height: min(428px, 56svh);
+      grid-template-rows: auto auto auto minmax(200px, 1fr);
+    }
+
+    .pitch-app-shell--catalog[data-catalog-phase="preview"] .pitch-catalog-main-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: stretch;
+      min-height: 0;
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+
+    .pitch-app-shell--catalog[data-catalog-phase="preview"] .pitch-catalog-workspace {
+      direction: rtl;
+      min-width: 0;
+    }
+
+    .pitch-app-shell--catalog[data-catalog-phase="preview"] .pitch-catalog-iphone-rail {
+      display: flex;
+    }
+
+    .pitch-app-shell--catalog[data-catalog-phase="search"] .pitch-catalog-toolbar {
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--panel-accent, #3d55b8) 32%, transparent),
+        0 1px 0 rgb(255 255 255 / 0.65) inset;
+    }
+
+    .pitch-app-shell--catalog[data-catalog-phase="detail"] .pitch-catalog-detail {
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--panel-accent, #3d55b8) 28%, transparent),
+        0 4px 14px rgb(15 23 42 / 0.06);
     }
 
     .pitch-catalog-toolbar {
@@ -2451,14 +2558,14 @@
       margin-top: 4px;
     }
 
-    /* Intro: four-phase flowboard (RTL), SVG arcs, interactive tabs + readout */
+    /* Intro: four-phase sketch flow (Excalidraw/Mermaid-style), interactive tabs + readout */
     .intro-pipeline-wrap {
       margin: 0;
       width: 100%;
       max-width: min(100%, 44rem);
     }
 
-    .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow {
+    .intro-pipeline-diagram.intro-sketch-board.intro-phase-flow {
       position: relative;
       isolation: isolate;
       margin: 0;
@@ -2486,22 +2593,19 @@
       overflow: clip;
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      grid-template-rows:
-        clamp(40px, 6.5vw, 52px)
-        auto
-        auto;
+      grid-template-rows: auto auto auto;
       column-gap: clamp(10px, 2vw, 16px);
       row-gap: clamp(14px, 2.2vw, 20px);
       align-items: start;
       direction: rtl;
     }
 
-    .intro-phase-flow .intro-pipeline-edge-layer {
+    .intro-phase-flow .intro-sketch-flow-svg {
       grid-column: 1 / -1;
       grid-row: 1;
       width: 100%;
-      height: 100%;
-      min-height: clamp(40px, 6.5vw, 52px);
+      height: auto;
+      min-height: clamp(52px, 10vw, 72px);
       display: block;
       overflow: visible;
       pointer-events: none;
@@ -2521,49 +2625,73 @@
       padding: 0;
     }
 
-    .intro-phase-flow.intro-pipeline-diagram.intro-pipeline-excal:not(.intro-pipeline-diagram--inview) .intro-flow-segment {
-      opacity: 0.78;
-      transition: opacity 0.45s ease;
-    }
-
-    .intro-phase-flow.intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-flow-segment {
-      opacity: 1;
-    }
-
-    .intro-flow-segment {
+    .intro-flow-segment,
+    .intro-sketch-node {
       transition:
-        opacity 0.42s ease,
-        filter 0.42s ease;
+        opacity 0.35s ease,
+        filter 0.35s ease;
     }
 
-    .intro-flow-arrow-moving path {
-      filter: drop-shadow(0 0 2px rgb(249 84 62 / 0.65));
+    .intro-sketch-flow-svg .intro-sketch-link {
+      stroke: #1f1f1f;
+      stroke-width: 2.1;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.88;
+    }
+
+    .intro-sketch-flow-svg .intro-sketch-node-shape {
+      fill: rgb(255 255 255 / 0.97);
+      stroke: #121212;
+      stroke-width: 2.15;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .intro-sketch-flow-svg .intro-sketch-node-num {
+      font-family: ui-rounded, "Segoe UI", system-ui, sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      fill: var(--v1-coral);
+      stroke: none;
+      text-anchor: middle;
+      dominant-baseline: central;
     }
 
     /* Dim segments ahead of current phase (progressive emphasis) */
     .intro-phase-flow[data-intro-phase="0"] .intro-flow-segment--2,
-    .intro-phase-flow[data-intro-phase="0"] .intro-flow-segment--3 {
+    .intro-phase-flow[data-intro-phase="0"] .intro-flow-segment--3,
+    .intro-phase-flow[data-intro-phase="0"] .intro-sketch-node--2,
+    .intro-phase-flow[data-intro-phase="0"] .intro-sketch-node--3 {
       opacity: 0.34;
     }
 
-    .intro-phase-flow[data-intro-phase="1"] .intro-flow-segment--3 {
+    .intro-phase-flow[data-intro-phase="1"] .intro-flow-segment--3,
+    .intro-phase-flow[data-intro-phase="1"] .intro-sketch-node--3 {
       opacity: 0.38;
     }
 
-    .intro-phase-flow[data-intro-phase="1"] .intro-flow-segment--1 {
+    .intro-phase-flow[data-intro-phase="1"] .intro-flow-segment--1,
+    .intro-phase-flow[data-intro-phase="1"] .intro-sketch-node--0,
+    .intro-phase-flow[data-intro-phase="1"] .intro-sketch-node--1 {
       opacity: 1;
-      filter: drop-shadow(0 0 5px rgb(249 84 62 / 0.42));
+      filter: drop-shadow(0 0 4px rgb(249 84 62 / 0.35));
     }
 
     .intro-phase-flow[data-intro-phase="2"] .intro-flow-segment--1,
-    .intro-phase-flow[data-intro-phase="2"] .intro-flow-segment--2 {
+    .intro-phase-flow[data-intro-phase="2"] .intro-flow-segment--2,
+    .intro-phase-flow[data-intro-phase="2"] .intro-sketch-node--0,
+    .intro-phase-flow[data-intro-phase="2"] .intro-sketch-node--1,
+    .intro-phase-flow[data-intro-phase="2"] .intro-sketch-node--2 {
       opacity: 1;
-      filter: drop-shadow(0 0 4px rgb(249 84 62 / 0.38));
+      filter: drop-shadow(0 0 3px rgb(249 84 62 / 0.32));
     }
 
-    .intro-phase-flow[data-intro-phase="3"] .intro-flow-segment {
+    .intro-phase-flow[data-intro-phase="3"] .intro-flow-segment,
+    .intro-phase-flow[data-intro-phase="3"] .intro-sketch-node {
       opacity: 1;
-      filter: drop-shadow(0 0 4px rgb(249 84 62 / 0.34));
+      filter: drop-shadow(0 0 3px rgb(249 84 62 / 0.28));
     }
     button.intro-phase-step {
       appearance: none;
@@ -2734,18 +2862,11 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow .intro-pipeline-track {
-        stroke-opacity: 0.55 !important;
+      .intro-pipeline-diagram.intro-sketch-board .intro-flow-segment,
+      .intro-pipeline-diagram.intro-sketch-board .intro-sketch-node {
         filter: none !important;
       }
 
-      .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow .intro-flow-arrow-moving path {
-        filter: none !important;
-      }
-
-      .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow .intro-flow-segment {
-        filter: none !important;
-      }
       button.intro-phase-step,
       button.intro-phase-step .intro-phase-step__ring {
         transition-duration: 0.01ms !important;
@@ -2761,12 +2882,13 @@
     }
 
     @media (max-width: 930px) {
-      .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow {
+      .intro-pipeline-diagram.intro-sketch-board.intro-phase-flow {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows:
-          clamp(38px, 9vw, 48px)
-          auto
-          auto;
+        grid-template-rows: auto auto auto;
+      }
+
+      .intro-phase-flow .intro-sketch-flow-svg {
+        min-height: clamp(48px, 14vw, 64px);
       }
 
       .intro-phase-steps {
@@ -3572,7 +3694,8 @@
          Exception: #studio keeps mock + hint so phase picks stay meaningful. */
       .story-panel:not(#studio) .panel-visual,
       .intro-pipeline-wrap,
-      .story-panel:not(#studio) .pitch-studio-wiz-controls-wrap,
+      .story-panel:not(#studio):not(#catalog) .pitch-studio-wiz-controls-wrap,
+      .story-panel:not(#catalog) .pitch-catalog-wiz-controls-wrap,
       .pitch-pricing-quote {
         display: none !important;
       }
@@ -4070,12 +4193,20 @@
         kicker: "קטלוג",
         title: "טאב הקטלוג — הבסיס החומרים שלכם",
         lead:
-          "הקטלוג שלכם מרכז וידאו ותמונות במקום אחד — עם חיפוש, סינון וצפייה בקטעים. לכל פריט יכולים להיות פוסטר לכל סגמנט, תיאור קצר ותגיות, ואפשר להוסיף חומרים חדשים דרך האפליקציה. מהקטלוג המערכת בוחרת רקע מתאים לכל סצנה.",
+          "הקטלוג שלכם מרכז וידאו ותמונות במקום אחד — עם חיפוש, סינון וצפייה בקטעים. לכל פריט יכולים להיות פוסטר לכל סגמנט, תיאור קצר ותגיות, ואפשר להוסיף חומרים חדשים דרך האפליקציה. מהקטלוג המערכת בוחרת רקע מתאים לכל סצנה. בשלב האחרון רואים איך אותו קטע נראה בתצוגה אנכית לצד רשת הקטלוג.",
         mobileSummary:
-          "חומרי רקע מסודרים: סגמנטים, פוסטרים ותגיות — ומהם נבחר רקע לכל סצנה.",
+          "חומרי רקע מסודרים: סגמנטים, פוסטרים ותגיות — ומהם נבחר רקע לכל סצנה. גללו לשלב 4 לתצוגת אנכית (דמו).",
         bullets: [
-          "סרטונים ותמונות · חלוקה לסגמנטים · פוסטר לכל סגמנט · תיאור קצר · תגיות · העלאה מהאפליקציה",
-          "מסר מרכזי: הקטלוג הוא שכבת החומרים שממנה נגזרות ההתאמות לווידאו בכל סצנה — לא תיקייה אקראית"
+          "רשת הקטעים — כל הקליפים והחיתוכים במבט אחד.",
+          "חיפוש וסינון — מציאת חומר לפי מזהה, תגיות ומילות מפתח.",
+          "פרטי קטע — סגמנטים, פוסטר ותיאור לפני שמשייכים לסצנה.",
+          "תצוגה אנכית — אמולטור אייפון לצד הקטלוג: איך אותו קטע נראה ב־9:16."
+        ],
+        mobileBullets: [
+          "רשת הקטעים במבט אחד.",
+          "חיפוש וסינון.",
+          "פרטי סגמנט ופוסטר.",
+          "תצוגה אנכית ליד הקטלוג."
         ],
         visual: "catalogBrowser",
         transition: "ttb",
@@ -4468,7 +4599,9 @@
                     <span class="pitch-output-placeholder-txt">כאן תופיע תצוגה אנכית אחרי הרינדור</span>
                   </div>
                   <div class="pitch-device-screen pitch-device-screen--preview pitch-output-ready">
-                    <img class="pitch-device-poster" src="${escapeHtml(firstPosterSrc)}" alt="" width="180" height="320" decoding="async" loading="lazy" />
+                    <video class="pitch-device-video" poster="${escapeHtml(firstPosterSrc)}" width="180" height="320" muted playsinline loop autoplay preload="metadata" aria-hidden="true">
+                      <source src="download-page/assets/mock-video-example.mp4" type="video/mp4" />
+                    </video>
                     <span class="pitch-device-play" aria-hidden="true">▶</span>
                   </div>
                 </div>
@@ -4635,7 +4768,11 @@
         )
       ].join("");
       const detailPosterSrc = pitchPosterRelPath(selected.posterFile);
-      return `<div class="pitch-app-shell pitch-app-shell--catalog" aria-hidden="true">
+      const iphonePosterSeg = segmentRows[0];
+      const iphonePosterSrc = iphonePosterSeg
+        ? segmentThumbUrl(iphonePosterSeg.id, selected.posterFile)
+        : detailPosterSrc;
+      return `<div class="pitch-app-shell pitch-app-shell--catalog" data-catalog-phase="grid" aria-hidden="true">
           <header class="pitch-catalog-toolbar">
             <div class="pitch-catalog-toolbar-title">קטלוג קליפים</div>
             <div class="pitch-catalog-toolbar-row">
@@ -4654,7 +4791,8 @@
           <div class="pitch-catalog-filters" role="presentation">
             ${filtersHtml}
           </div>
-          <div class="pitch-catalog-workspace">
+          <div class="pitch-catalog-main-stage">
+            <div class="pitch-catalog-workspace">
             <div class="pitch-catalog-grid">
               ${cardsHtml}
             </div>
@@ -4684,6 +4822,18 @@
               </section>
               <p class="pitch-catalog-bridge">מהקטלוג שלכם נבחרים רקעים מתאימים לכל סצנה — לא קבצים ברירת מחדל אקראיים.</p>
             </aside>
+          </div>
+          <aside class="pitch-catalog-iphone-rail" aria-hidden="true">
+            <div class="pitch-device" lang="en" dir="ltr">
+              <div class="pitch-device-screen pitch-device-screen--preview">
+                <video class="pitch-device-video" poster="${escapeHtml(iphonePosterSrc)}" width="180" height="320" muted playsinline loop autoplay preload="metadata" aria-hidden="true">
+                  <source src="download-page/assets/mock-video-example.mp4" type="video/mp4" />
+                </video>
+                <span class="pitch-device-play" aria-hidden="true">▶</span>
+              </div>
+            </div>
+            <span class="pitch-catalog-iphone-label">תצוגה אנכית · סגמנט נבחר</span>
+          </aside>
           </div>
         </div>`;
     }
@@ -4847,40 +4997,41 @@
         </div>`;
       }
       if (type === "introPipeline") {
-        const d1 = "M 87.5 12 C 81.5 17.5 69 17.5 62.5 12";
-        const d2 = "M 62.5 12 C 56.75 17.5 44.25 17.5 37.5 12";
-        const d3 = "M 37.5 12 C 31.75 17.25 19.25 17.25 12.5 12";
-        const arrowDur = "2.65s";
-        const arrowShape =
-          '<path vector-effect="non-scaling-stroke" d="M -5,-4.5 L 9,0 L -5,4.5 Z" fill="#f9543e" stroke="#951c16" stroke-width="0.6" stroke-linejoin="round"/>';
-        const arrowAlongGeo = (geoId, beginAttr = "") =>
-          `<g class="intro-flow-arrow-moving">${arrowShape}<animateMotion dur="${arrowDur}" repeatCount="indefinite" rotate="auto" calcMode="linear"${beginAttr}><mpath xlink:href="#${geoId}" href="#${geoId}"/></animateMotion></g>`;
-        return `<div class="intro-pipeline-diagram intro-pipeline-excal intro-phase-flow" data-intro-phase="0" dir="rtl">
-          <svg class="intro-pipeline-edge-layer intro-pipeline-edge-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true">
+        return `<div class="intro-pipeline-diagram intro-sketch-board intro-phase-flow" data-intro-phase="0" dir="rtl">
+          <svg class="intro-sketch-flow-svg" viewBox="0 0 400 58" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <defs>
-              <linearGradient id="introPipelineFlowStroke" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="0" y2="0">
-                <stop offset="0%" stop-color="#ff8f7a"/>
-                <stop offset="45%" stop-color="#f9543e"/>
-                <stop offset="100%" stop-color="#b91c1c"/>
-              </linearGradient>
-              <path id="introFlowGeo1" fill="none" d="${d1}"/>
-              <path id="introFlowGeo2" fill="none" d="${d2}"/>
-              <path id="introFlowGeo3" fill="none" d="${d3}"/>
+              <marker id="introSketchArrow" markerWidth="7.5" markerHeight="7.5" refX="6.2" refY="3.75" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M0,0 L6.5,3.75 L0,7.5 z" fill="#181818"/>
+              </marker>
             </defs>
-            <g class="intro-flow-segment intro-flow-segment--1">
-              <path class="intro-pipeline-track" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2" stroke-opacity="0.33" stroke-linecap="round" d="${d1}"/>
-              ${arrowAlongGeo("introFlowGeo1")}
-              ${arrowAlongGeo("introFlowGeo1", ' begin="-1.325s"')}
+            <g class="intro-sketch-connectors" fill="none" stroke="#1f1f1f" stroke-linecap="round" stroke-linejoin="round">
+              <g class="intro-flow-segment intro-flow-segment--1">
+                <path class="intro-sketch-link" stroke-width="2.15" marker-end="url(#introSketchArrow)" d="M 318,28 C 304,42 297,42 289,28"/>
+              </g>
+              <g class="intro-flow-segment intro-flow-segment--2">
+                <path class="intro-sketch-link" stroke-width="2.2" marker-end="url(#introSketchArrow)" d="M 214,31 C 200,46 187,43 173,31"/>
+              </g>
+              <g class="intro-flow-segment intro-flow-segment--3">
+                <path class="intro-sketch-link" stroke-width="2.1" marker-end="url(#introSketchArrow)" d="M 120,29 C 108,43 103,43 93,29"/>
+              </g>
             </g>
-            <g class="intro-flow-segment intro-flow-segment--2">
-              <path class="intro-pipeline-track" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2" stroke-opacity="0.33" stroke-linecap="round" d="${d2}"/>
-              ${arrowAlongGeo("introFlowGeo2")}
-              ${arrowAlongGeo("introFlowGeo2", ' begin="-1.325s"')}
-            </g>
-            <g class="intro-flow-segment intro-flow-segment--3">
-              <path class="intro-pipeline-track" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2" stroke-opacity="0.33" stroke-linecap="round" d="${d3}"/>
-              ${arrowAlongGeo("introFlowGeo3")}
-              ${arrowAlongGeo("introFlowGeo3", ' begin="-1.325s"')}
+            <g class="intro-sketch-nodes-group">
+              <g class="intro-sketch-node intro-sketch-node--0">
+                <path class="intro-sketch-node-shape" d="M 317,13 C 315,17 314,21 317,29 L 319,45 C 322,50 331,53 342,52 L 365,49 C 375,46 379,41 379,31 L 378,19 C 376,12 369,10 356,11 L 330,11 C 324,11 319,11 317,13 Z"/>
+                <text class="intro-sketch-node-num" x="348" y="31">1</text>
+              </g>
+              <g class="intro-sketch-node intro-sketch-node--1">
+                <path class="intro-sketch-node-shape" d="M 222,13 C 218,17 217,21 219,29 L 223,43 C 226,48 237,52 257,51 L 276,48 C 287,43 289,39 289,31 L 288,20 C 286,12 279,11 267,11 L 241,11 C 229,11 224,11 222,13 Z"/>
+                <text class="intro-sketch-node-num" x="252" y="31">2</text>
+              </g>
+              <g class="intro-sketch-node intro-sketch-node--2">
+                <path class="intro-sketch-node-shape" d="M 128,12 C 123,17 121,21 124,31 L 127,43 C 130,49 146,53 157,52 L 175,49 C 186,43 187,39 187,31 L 186,20 C 184,13 173,11 162,11 L 146,11 C 136,11 129,11 128,12 Z"/>
+                <text class="intro-sketch-node-num" x="156" y="31">3</text>
+              </g>
+              <g class="intro-sketch-node intro-sketch-node--3">
+                <path class="intro-sketch-node-shape" d="M 36,13 C 32,17 31,21 34,31 L 37,45 C 41,52 53,53 71,52 L 84,48 C 93,42 93,39 93,31 L 93,21 C 90,13 82,11 67,11 L 53,11 C 43,11 38,11 36,13 Z"/>
+                <text class="intro-sketch-node-num" x="61" y="31">4</text>
+              </g>
             </g>
           </svg>
           <div class="intro-phase-steps" role="tablist" aria-label="שלבי העבודה במערכת">
@@ -4998,6 +5149,20 @@
         return `<ul class="bullets bullets--studio-wizard">${wizardItems}</ul>`;
       }
 
+      if (section.id === "catalog" && section.bullets.length > 0) {
+        const phases = ["grid", "search", "detail", "preview"];
+        const catalogLi = (item, i) => {
+          const ph = phases[i] || "grid";
+          return `<li role="button" tabindex="0" class="pitch-catalog-phase-pick" data-catalog-phase-bullet="${ph}">${escapeHtml(item)}</li>`;
+        };
+        const wizardItems = section.bullets.map(catalogLi).join("");
+        if (hasMobileBullets) {
+          const mob = mobileList.map(catalogLi).join("");
+          return `<ul class="bullets bullets--catalog-wizard bullets-desktop-only">${wizardItems}</ul><ul class="bullets bullets--catalog-wizard panel-mobile-bullets">${mob}</ul>`;
+        }
+        return `<ul class="bullets bullets--catalog-wizard">${wizardItems}</ul>`;
+      }
+
       if (section.bullets.length === 0) return "";
 
       const desktopItems = section.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join("");
@@ -5038,6 +5203,12 @@
             <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ — ללא הפעלה אוטומטית.</p>
           </div>`
           : "";
+      const catalogWizardToolbar =
+        section.id === "catalog"
+          ? `<div class="pitch-catalog-wiz-controls-wrap" role="note" aria-labelledby="pitch-catalog-wiz-legend">
+            <p id="pitch-catalog-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לקבל הדגשה במוקאפ; בשלב הרביעי מופיעה תצוגה אנכית לצד הקטלוג.</p>
+          </div>`
+          : "";
       const pitchLayoutAttr = pitchProductLayout ? ` data-pitch-layout="product-app"` : "";
       const panelLayoutAttr =
         section.id === "intro" || section.id === "v1-next"
@@ -5061,6 +5232,7 @@
             ${bulletsBlock}
             ${pricingPullquoteBlock}
             ${studioWizardToolbar}
+            ${catalogWizardToolbar}
             ${heroDownloads}
           </div>
           ${visualBlock}
@@ -5190,81 +5362,6 @@
         else if (e.key === "Home") move(-cur);
         else if (e.key === "End") move(tabs.length - 1 - cur);
       });
-    })();
-
-    (function initIntroPipelineDiagramInview() {
-      let observer = null;
-      const teardown = () => {
-        if (observer) {
-          observer.disconnect();
-          observer = null;
-        }
-      };
-
-      const sync = () => {
-        teardown();
-        const intro = document.getElementById("intro");
-        const diagram = intro?.querySelector(".intro-pipeline-diagram.intro-pipeline-excal");
-        if (!intro || !diagram) return;
-
-        diagram.classList.remove("intro-pipeline-diagram--inview");
-
-        const syncIntroFlowSvgMotion = () => {
-          const svgEl = diagram.querySelector("svg.intro-pipeline-edge-svg");
-          if (!svgEl || typeof svgEl.pauseAnimations !== "function" || typeof svgEl.unpauseAnimations !== "function") return;
-          svgEl.pauseAnimations();
-          if (diagram.classList.contains("intro-pipeline-diagram--inview")) svgEl.unpauseAnimations();
-        };
-
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          diagram.classList.add("intro-pipeline-diagram--inview");
-          diagram.querySelectorAll(".intro-flow-arrow-moving").forEach(el => el.remove());
-          syncIntroFlowSvgMotion();
-          return;
-        }
-
-        const markIntroIfIntersectingViewport = () => {
-          const r = intro.getBoundingClientRect();
-          const vh = window.innerHeight || document.documentElement.clientHeight || 1;
-          if (r.bottom > 10 && r.top < vh - 10) diagram.classList.add("intro-pipeline-diagram--inview");
-        };
-
-        markIntroIfIntersectingViewport();
-        syncIntroFlowSvgMotion();
-
-        observer = new IntersectionObserver(
-          ents => {
-            for (let i = 0; i < ents.length; i++) {
-              if (ents[i].isIntersecting) diagram.classList.add("intro-pipeline-diagram--inview");
-            }
-            syncIntroFlowSvgMotion();
-          },
-          { root: null, rootMargin: "-4% 0px -52% 0px", threshold: [0.04, 0.12] }
-        );
-        observer.observe(intro);
-      };
-
-      sync();
-      const mqReduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-      if (typeof mqReduce.addEventListener === "function") mqReduce.addEventListener("change", sync);
-      else if (typeof mqReduce.addListener === "function") mqReduce.addListener(sync);
-
-      window.addEventListener(
-        "hashchange",
-        () => {
-          const intro = document.getElementById("intro");
-          const diagram = intro?.querySelector(".intro-pipeline-diagram.intro-pipeline-excal");
-          if (!intro || !diagram || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-          const r = intro.getBoundingClientRect();
-          const vh = window.innerHeight || document.documentElement.clientHeight || 1;
-          if (r.bottom > 10 && r.top < vh - 10) {
-            diagram.classList.add("intro-pipeline-diagram--inview");
-            const svgEl = diagram.querySelector("svg.intro-pipeline-edge-svg");
-            if (svgEl && typeof svgEl.unpauseAnimations === "function") svgEl.unpauseAnimations();
-          }
-        },
-        { passive: true }
-      );
     })();
 
     (function initMobileDesktopCta() {
