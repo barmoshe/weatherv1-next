@@ -29,6 +29,10 @@
       font-family: Heebo, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
+    .pitch-mobile-desktop-cta {
+      display: none;
+    }
+
     * { box-sizing: border-box; }
     html {
       min-height: 100%;
@@ -410,6 +414,11 @@
       .story-subslide[data-panel-layout^="split-"] .panel-inner {
         grid-template-rows: minmax(0, 1fr);
       }
+
+      .panel-mobile-summary,
+      .panel-mobile-bullets {
+        display: none !important;
+      }
     }
 
     .story-panel[data-panel-layout="stack-visual-top"] .panel-inner,
@@ -690,35 +699,7 @@
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(237 235 252 / 0.78));
     }
 
-    #thinking .pitch-lead-well {
-      margin-block-end: 0;
-      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(239 242 252 / 0.82));
-    }
-
-    #thinking h2 {
-      margin-block-end: clamp(10px, 1.4vw, 16px);
-    }
-
-    #thinking .bullets {
-      margin-block-start: 4px;
-      width: 100%;
-    }
-
-    #thinking .bullets li {
-      width: 100%;
-      min-width: 0;
-      justify-self: stretch;
-    }
-
-    #thinking[data-panel-layout="stack-visual-top"] .pitch-thinking-visual {
-      width: min(100%, min(760px, 92vw));
-    }
-
-    #render .pitch-lead-well {
-      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(253 240 232 / 0.82));
-    }
-
-    #local-first .pitch-lead-well {
+    #analytics .pitch-lead-well {
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(238 242 249 / 0.85));
     }
 
@@ -911,307 +892,6 @@
       color: rgb(72 78 90 / 1);
     }
 
-    /* —— Pitch: final video output (`#render`) —— */
-    .pitch-final-output {
-      width: min(100%, 440px);
-      margin-inline: auto;
-      border-radius: 22px;
-      border: 1px solid rgb(0 0 0 / 0.09);
-      background: linear-gradient(
-        168deg,
-        rgb(255 255 255 / 0.97),
-        color-mix(in srgb, var(--panel-accent, #c2410c) 6%, rgb(255 252 249))
-      );
-      box-shadow:
-        0 22px 44px rgb(15 23 42 / 0.06),
-        0 0 0 1px rgb(255 255 255 / 0.55) inset;
-      padding: 18px 16px 20px;
-      direction: rtl;
-      unicode-bidi: isolate;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .pitch-final-output__head {
-      align-self: stretch;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .pitch-final-output__title {
-      font-size: 0.95rem;
-      font-weight: 920;
-      letter-spacing: -0.02em;
-      color: rgb(38 42 48 / 1);
-    }
-
-    .pitch-final-output__badge {
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 0.58rem;
-      font-weight: 850;
-      font-variant-numeric: tabular-nums;
-      background: color-mix(in srgb, var(--panel-accent, #c2410c) 11%, rgb(255 255 255));
-      border: 1px solid rgb(0 0 0 / 0.07);
-      color: rgb(55 60 68 / 1);
-    }
-
-    .pitch-final-output .pitch-device {
-      margin-inline: auto;
-    }
-
-    .pitch-final-output__actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .pitch-final-output__btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 40px;
-      padding: 0 20px;
-      border-radius: 12px;
-      font-size: 0.72rem;
-      font-weight: 880;
-      border: 1px solid rgb(0 0 0 / 0.1);
-    }
-
-    .pitch-final-output__btn--primary {
-      background: color-mix(in srgb, var(--panel-accent, #c2410c) 88%, rgb(40 40 40));
-      color: #fff;
-      border-color: rgb(0 0 0 / 0.14);
-      box-shadow: 0 6px 16px color-mix(in srgb, var(--panel-accent, #c2410c) 22%, transparent);
-    }
-
-    .pitch-final-output__btn--ghost {
-      background: rgb(255 255 255 / 0.92);
-      color: rgb(42 48 56 / 1);
-    }
-
-    /* Render slide — wide inner, larger phone, calmer bullet rows (grid: stack-visual-top via data-panel-layout) */
-    #render .panel-inner {
-      width: min(1260px, 96vw);
-      gap: clamp(22px, 3.5vw, 56px);
-    }
-
-    #render .pitch-final-output {
-      width: min(100%, min(520px, 92vw));
-      padding: 20px 18px 22px;
-      gap: clamp(14px, 2vw, 18px);
-    }
-
-    #render .pitch-final-output .pitch-device {
-      width: min(82vw, 268px);
-      padding: 12px;
-    }
-
-    #render .bullets li {
-      align-items: center;
-      min-height: 3rem;
-      padding-block: 11px;
-    }
-
-    @media (min-width: 861px) {
-      #render .panel-visual {
-        align-self: stretch;
-      }
-
-      #render .panel-copy {
-        align-self: stretch;
-      }
-
-      #render .pitch-final-output .pitch-device {
-        width: min(32vw, 300px);
-      }
-    }
-
-    @media (min-width: 1200px) {
-      #render .pitch-final-output .pitch-device {
-        width: min(28vw, 320px);
-      }
-    }
-
-    /* —— Pitch: cognition-flow diagram (`#thinking`) —— */
-    .pitch-thinking-visual {
-      position: relative;
-      isolation: isolate;
-      width: min(100%, 640px);
-      margin-inline: auto;
-      border-radius: 22px;
-      border: 1px solid rgb(0 0 0 / 0.09);
-      background: rgb(255 255 255 / 0.52);
-      box-shadow:
-        0 22px 44px rgb(15 23 42 / 0.06),
-        0 0 0 1px rgb(255 255 255 / 0.55) inset;
-      overflow: hidden;
-      direction: rtl;
-      unicode-bidi: isolate;
-    }
-
-    .pitch-thinking-visual__bg {
-      position: absolute;
-      inset: -14%;
-      pointer-events: none;
-      background:
-        radial-gradient(ellipse 88% 58% at 78% 14%, color-mix(in srgb, var(--panel-accent, #4338ca) 22%, transparent), transparent 62%),
-        radial-gradient(ellipse 72% 52% at 10% 82%, color-mix(in srgb, var(--panel-accent, #4338ca) 14%, transparent), transparent 58%),
-        linear-gradient(168deg, rgb(255 255 255 / 0.96), rgb(241 242 252 / 0.8));
-    }
-
-    .pitch-thinking-visual__noise {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.042;
-      mix-blend-mode: multiply;
-      background-image: repeating-linear-gradient(
-        -17deg,
-        transparent,
-        transparent 2px,
-        rgb(0 0 0 / 0.05) 2px,
-        rgb(0 0 0 / 0.05) 3px
-      );
-    }
-
-    .pitch-thinking-flow {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 2px;
-      padding: 18px 16px 16px;
-    }
-
-    .pitch-flow-step {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
-      gap: 11px;
-      padding: 11px 13px;
-      border-radius: 14px;
-      border: 1px solid rgb(0 0 0 / 0.08);
-      background: linear-gradient(165deg, rgb(255 255 255 / 0.97), rgb(246 246 252 / 0.9));
-      box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
-      font-weight: 820;
-      font-size: 0.74rem;
-      line-height: 1.35;
-      color: rgb(48 52 58 / 1);
-    }
-
-    .pitch-flow-step-num {
-      display: grid;
-      place-items: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      font-size: 0.62rem;
-      font-weight: 950;
-      font-variant-numeric: tabular-nums;
-      color: #fff;
-      background: color-mix(in srgb, var(--panel-accent, #4338ca) 88%, rgb(15 23 42));
-      border: 1px solid rgb(0 0 0 / 0.08);
-      flex-shrink: 0;
-    }
-
-    .pitch-flow-step-label {
-      display: block;
-      text-wrap: balance;
-    }
-
-    .pitch-flow-step-break {
-      display: block;
-    }
-
-    .pitch-flow-step--hot {
-      border-color: color-mix(in srgb, var(--panel-accent, #4338ca) 38%, rgb(0 0 0 / 0.12));
-      box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--panel-accent, #4338ca) 22%, transparent),
-        0 10px 28px color-mix(in srgb, var(--panel-accent, #4338ca) 18%, transparent);
-    }
-
-    .pitch-flow-connector {
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-      height: 26px;
-      color: color-mix(in srgb, var(--panel-accent, #4338ca) 72%, rgb(100 116 139));
-    }
-
-    .pitch-flow-connector-svg {
-      width: 40px;
-      height: 100%;
-      overflow: visible;
-    }
-
-    .pitch-flow-path {
-      stroke: currentColor;
-      fill: none;
-    }
-
-    .pitch-thinking-callout {
-      margin-top: 12px;
-      padding: 12px 13px 13px;
-      border-radius: 15px;
-      border: 1px solid color-mix(in srgb, var(--panel-accent, #4338ca) 28%, rgb(0 0 0 / 0.1));
-      background: linear-gradient(155deg, rgb(255 255 255 / 0.94), color-mix(in srgb, var(--panel-accent, #4338ca) 7%, rgb(255 255 255)));
-      box-shadow:
-        0 12px 28px color-mix(in srgb, var(--panel-accent, #4338ca) 12%, rgb(15 23 42 / 0.04)),
-        0 0 0 1px rgb(255 255 255 / 0.55) inset;
-    }
-
-    .pitch-thinking-callout__title {
-      font-size: 0.68rem;
-      font-weight: 920;
-      letter-spacing: -0.02em;
-      color: rgb(30 36 42 / 1);
-      margin-bottom: 6px;
-    }
-
-    .pitch-thinking-callout__body {
-      margin: 0;
-      font-size: 0.62rem;
-      font-weight: 760;
-      line-height: 1.5;
-      color: rgb(72 78 88 / 1);
-    }
-
-    .pitch-scene-hint-chips {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 7px;
-      margin-top: 11px;
-    }
-
-    .pitch-scene-chip {
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 0.58rem;
-      font-weight: 820;
-      background: rgb(255 255 255 / 0.94);
-      border: 1px solid color-mix(in srgb, var(--panel-accent, #4338ca) 22%, rgb(0 0 0 / 0.08));
-      box-shadow:
-        0 1px 2px rgb(0 0 0 / 0.05),
-        0 0 0 1px rgb(255 255 255 / 0.65) inset;
-      color: rgb(52 58 68 / 1);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .pitch-flow-path {
-        stroke-dashoffset: 0 !important;
-      }
-    }
-
     /* —— Shared app chrome (catalog can reuse .pitch-app-shell + toolbar/tabs) —— */
     .pitch-app-shell {
       --pitch-app-r: 20px;
@@ -1235,6 +915,8 @@
     }
 
     .pitch-wizard-track {
+      list-style: none;
+      margin: 0;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -1243,6 +925,23 @@
       padding: 9px 10px 8px;
       background: linear-gradient(180deg, rgb(255 255 255 / 0.72), rgb(248 246 243 / 0.35));
       border-bottom: 1px solid rgb(0 0 0 / 0.06);
+    }
+
+    .pitch-wizard-track__item {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    #studio button.pitch-wiz-step {
+      font: inherit;
+      font-size: 0.61rem;
+      font-weight: 820;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     .pitch-wiz-step {
@@ -1261,7 +960,8 @@
         color 0.2s ease,
         border-color 0.2s ease,
         box-shadow 0.2s ease,
-        transform 0.2s ease;
+        transform 0.2s ease,
+        background 0.2s ease;
     }
 
     .pitch-wiz-step-num {
@@ -1282,6 +982,23 @@
       color: var(--panel-accent, var(--v1-coral));
     }
 
+    .pitch-wiz-step.is-complete {
+      color: rgb(21 92 58 / 1);
+      border-color: color-mix(in srgb, rgb(22 163 91 / 1) 32%, rgb(0 0 0 / 0.1));
+      background: color-mix(in srgb, rgb(22 163 91 / 1) 9%, rgb(255 255 255 / 0.94));
+      transform: none;
+    }
+
+    .pitch-wiz-step.is-complete .pitch-wiz-step-num {
+      opacity: 0.92;
+      color: rgb(21 118 74 / 1);
+    }
+
+    #studio .pitch-wiz-step:focus-visible {
+      outline: 2px solid var(--panel-accent, var(--v1-coral));
+      outline-offset: 3px;
+    }
+
     [data-pitch-layout="product-app"] .pitch-studio-wiz-controls-wrap {
       margin-top: 10px;
       padding: 10px 12px;
@@ -1290,62 +1007,262 @@
       background: rgb(255 255 255 / 0.82);
       box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
       display: grid;
-      gap: 8px;
+      gap: 6px;
       max-width: 100%;
     }
 
-    .pitch-studio-wiz-legend {
-      font-size: 0.58rem;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgb(115 118 132 / 1);
+    .pitch-studio-wiz-hint {
+      margin: 0;
+      font-size: 0.68rem;
+      font-weight: 760;
+      line-height: 1.48;
+      color: rgb(68 72 84 / 1);
     }
 
-    .pitch-studio-wiz-controls {
+    /* —— Studio wizard: phased disclosure (#studio mock) —— */
+    #studio .pitch-job-chip-withid {
+      display: none;
+    }
+
+    #studio .pitch-app-shell:not([data-studio-phase="upload"]) .pitch-job-chip-noid {
+      display: none;
+    }
+
+    #studio .pitch-app-shell:not([data-studio-phase="upload"]) .pitch-job-chip-withid {
+      display: inline;
+    }
+
+    #studio .pitch-job-state-txt {
+      display: none;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="upload"] .pitch-job-state--upload,
+    #studio .pitch-app-shell[data-studio-phase="transcript"] .pitch-job-state--transcript,
+    #studio .pitch-app-shell[data-studio-phase="planning"] .pitch-job-state--planning,
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-job-state--render {
+      display: inline;
+    }
+
+    #studio .pitch-drop-empty-note {
+      margin: 6px 0 0;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: rgb(118 118 132 / 1);
+    }
+
+    #studio .pitch-app-shell:not([data-studio-phase="upload"]) .pitch-drop-empty-note {
+      display: none;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="upload"] .pitch-drop-file-slot {
+      display: none;
+    }
+
+    #studio .pitch-cell-badge-trans-wait,
+    #studio .pitch-cell-badge-trans-done,
+    #studio .pitch-cell-badge-render-wait,
+    #studio .pitch-cell-badge-render-done,
+    #studio .pitch-cell-badge-timeline-wait,
+    #studio .pitch-cell-badge-timeline-done,
+    #studio .pitch-cell-badge-output-wait,
+    #studio .pitch-cell-badge-output-done {
+      box-sizing: border-box;
+    }
+
+    #studio .pitch-app-shell:not([data-studio-phase="upload"]) .pitch-cell-badge-trans-wait {
+      display: none;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="upload"] .pitch-cell-badge-trans-done {
+      display: none;
+    }
+
+    #studio .pitch-app-shell:not([data-studio-phase="render"]) .pitch-cell-badge-render-done {
+      display: none;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-cell-badge-render-wait {
+      display: none;
+    }
+
+    #studio .pitch-app-shell:is([data-studio-phase="planning"], [data-studio-phase="render"]) .pitch-cell-badge-timeline-wait {
+      display: none;
+    }
+
+    #studio .pitch-app-shell:is([data-studio-phase="upload"], [data-studio-phase="transcript"]) .pitch-cell-badge-timeline-done {
+      display: none;
+    }
+
+    #studio .pitch-app-shell:not([data-studio-phase="render"]) .pitch-cell-badge-output-done {
+      display: none;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-cell-badge-output-wait {
+      display: none;
+    }
+
+    #studio .pitch-app-shell:not([data-studio-phase="upload"]) .pitch-transcript-skel {
+      display: none !important;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="upload"] .pitch-transcript-filled {
+      display: none !important;
+    }
+
+    #studio .pitch-app-shell:is([data-studio-phase="planning"], [data-studio-phase="render"]) .pitch-timeline-skel {
+      display: none !important;
+    }
+
+    #studio .pitch-app-shell:is([data-studio-phase="upload"], [data-studio-phase="transcript"]) .pitch-timeline-filled {
+      display: none !important;
+    }
+
+    #studio .pitch-app-shell:is([data-studio-phase="upload"], [data-studio-phase="transcript"]) .pitch-planning-callouts {
+      display: none !important;
+    }
+
+    #studio .pitch-planning-callouts {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgb(0 0 0 / 0.09);
+      display: grid;
+      gap: 7px;
+    }
+
+    #studio .pitch-planning-callout-p {
+      margin: 0;
+      font-size: 0.59rem;
+      font-weight: 760;
+      line-height: 1.45;
+      color: rgb(62 66 76 / 1);
+    }
+
+    #studio .pitch-planning-callout-p--tags {
+      padding: 7px 9px;
+      border-radius: 10px;
+      border: 1px solid rgb(0 0 0 / 0.07);
+      background: rgb(255 255 255 / 0.85);
+    }
+
+    #studio .pitch-app-shell:not([data-studio-phase="render"]) .pitch-render-done {
+      display: none !important;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-render-pending {
+      display: none !important;
+    }
+
+    #studio .pitch-device-screen--preview {
+      position: relative;
+      min-height: 140px;
+    }
+
+    #studio .pitch-output-placeholder {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 12px 10px;
+      width: 100%;
+      height: 100%;
+      min-height: 120px;
+      box-sizing: border-box;
+    }
+
+    #studio .pitch-output-placeholder-txt {
+      font-size: 0.62rem;
+      font-weight: 780;
+      line-height: 1.35;
+      color: rgb(255 255 255 / 0.42);
+      max-width: 18ch;
+    }
+
+    #studio .pitch-output-ready {
+      display: none;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-output-placeholder {
+      display: none !important;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-output-ready {
+      display: block;
+    }
+
+    #studio .pitch-output-footnote {
+      font-size: 0.53rem;
+      font-weight: 760;
+      line-height: 1.42;
+      color: rgb(96 98 108 / 1);
+      max-width: 42ch;
+      text-align: center;
+    }
+
+    #studio .pitch-output-actions {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: center;
       gap: 8px;
     }
 
-    .pitch-wiz-ctrl {
+    #studio .pitch-output-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 36px;
+      min-height: 34px;
       padding: 0 14px;
       border-radius: 10px;
-      border: 1px solid rgb(0 0 0 / 0.12);
-      font-size: 0.72rem;
+      font-size: 0.62rem;
       font-weight: 880;
-      cursor: pointer;
-      background: rgb(255 255 255 / 0.95);
-      color: var(--v1-ink);
-      box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
-      transition:
-        background 0.15s ease,
-        border-color 0.15s ease,
-        opacity 0.15s ease;
+      border: 1px solid rgb(0 0 0 / 0.1);
+      cursor: default;
     }
 
-    .pitch-wiz-ctrl:hover:not(:disabled) {
-      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 45%, rgb(0 0 0 / 0.12));
-      background: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 6%, rgb(255 255 255 / 1));
+    #studio .pitch-output-btn--primary {
+      background: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 88%, rgb(40 40 40));
+      color: #fff;
+      border-color: rgb(0 0 0 / 0.14);
     }
 
-    .pitch-wiz-ctrl:disabled {
-      opacity: 0.48;
-      cursor: not-allowed;
+    #studio .pitch-output-btn--ghost {
+      background: rgb(255 255 255 / 0.92);
+      color: rgb(42 48 56 / 1);
     }
 
-    .pitch-wiz-ctrl--play {
-      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 35%, rgb(0 0 0 / 0.1));
-      color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 70%, rgb(38 40 48));
+    #studio .pitch-app-shell:not([data-studio-phase="render"]) .pitch-when-render {
+      display: none !important;
     }
 
-    .pitch-wiz-ctrl--reset {
-      margin-inline-start: auto;
+    #studio .pitch-timeline-thumb-skel {
+      width: 100%;
+      height: 100%;
+      min-height: 48px;
+      border-radius: 6px;
+      background: rgb(0 0 0 / 0.07);
+      border: 1px solid rgb(0 0 0 / 0.06);
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="upload"] .pitch-bento {
+      opacity: 0.38;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    #studio .pitch-app-shell:is([data-studio-phase="transcript"], [data-studio-phase="planning"], [data-studio-phase="render"]) .pitch-bento {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #studio .pitch-wiz-step,
+      #studio .pitch-bento,
+      #studio .studio-phase-panel {
+        transition: none !important;
+      }
     }
 
     .pitch-app-head {
@@ -3161,11 +3078,16 @@
         /* Single-row nav: frees vertical space vs old stacked bar (~140px+). */
         --nav-height: 58px;
         --story-slide-h: min(100dvh, 100svh);
+        /* Reserve space below fixed nav for “full deck on desktop” strip */
+        --pitch-mobile-desktop-cta-h: 3.35rem;
       }
 
       html {
         scroll-snap-type: none;
-        scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 14px);
+        scroll-padding-top: calc(
+          env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) +
+            var(--pitch-mobile-desktop-cta-h) + 10px
+        );
         scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
       }
 
@@ -3225,6 +3147,96 @@
 
       .nav-actions::-webkit-scrollbar {
         display: none;
+      }
+
+      /* Slim referral strip — same URL, best viewed on large screen */
+      .pitch-mobile-desktop-cta {
+        box-sizing: border-box;
+        position: fixed;
+        z-index: 51;
+        inset-inline: max(10px, env(safe-area-inset-inline-start, 0px)) max(10px, env(safe-area-inset-inline-end, 0px));
+        top: calc(max(8px, env(safe-area-inset-top, 0px)) + var(--nav-height) + 6px);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 14px;
+        border: 2px solid var(--v1-ink);
+        background: rgb(255 255 255 / 0.94);
+        box-shadow: 0 10px 28px rgb(15 23 42 / 0.08), 3px 3px 0 rgb(0 0 0 / 0.08);
+        direction: rtl;
+        unicode-bidi: isolate;
+      }
+
+      .pitch-mobile-desktop-cta__text {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.35;
+        color: var(--v1-ink);
+        text-wrap: balance;
+      }
+
+      .pitch-mobile-desktop-cta__row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pitch-mobile-desktop-cta__btn {
+        flex: 1 1 auto;
+        min-height: 40px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        border: 2px solid var(--v1-ink);
+        font-size: 0.74rem;
+        font-weight: 900;
+        text-decoration: none;
+        cursor: pointer;
+        background: rgb(255 255 255 / 0.96);
+        color: var(--v1-ink);
+        box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+      }
+
+      .pitch-mobile-desktop-cta__btn--primary {
+        background: var(--v1-coral, #f9543e);
+        color: #fff;
+        border-color: rgb(0 0 0 / 0.12);
+      }
+
+      .pitch-mobile-desktop-cta__btn--ghost {
+        flex: 0 1 auto;
+        min-width: min(100%, 8.5rem);
+      }
+
+      .pitch-mobile-desktop-cta__status {
+        margin: 0;
+        min-height: 1.1em;
+        font-size: 0.68rem;
+        font-weight: 750;
+        color: color-mix(in srgb, var(--v1-ink) 72%, var(--v1-coral, #f9543e));
+      }
+
+      .lead-desktop-only {
+        display: none !important;
+      }
+
+      .bullets-desktop-only {
+        display: none !important;
+      }
+
+      .panel-mobile-summary {
+        display: block;
+        font-size: clamp(0.98rem, 3.4vw, 1.18rem);
+        line-height: 1.38;
+      }
+
+      .pitch-lead-well .panel-mobile-summary {
+        margin: 0;
       }
 
       .nav-link,
@@ -3304,9 +3316,15 @@
         height: var(--story-slide-h);
         max-height: var(--story-slide-h);
         min-height: var(--story-slide-h);
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         scroll-snap-align: none;
-        padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 22px) max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 76px), 88px);
+        padding-block: calc(
+            env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) +
+              var(--pitch-mobile-desktop-cta-h) + 10px
+          )
+          max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 76px), 88px);
         padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
         display: grid;
         align-items: stretch;
@@ -3324,9 +3342,20 @@
       }
 
       #intro.story-panel {
-        padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 18px)
+        padding-block: calc(
+            env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) +
+              var(--pitch-mobile-desktop-cta-h) + 8px
+          )
           max(6.75rem, calc(env(safe-area-inset-bottom, 0px) + 6rem));
         padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
+      }
+
+      /* Text-first mobile pitch: hide decorative mockups (desktop keeps full layout). */
+      .panel-visual,
+      .intro-pipeline-wrap,
+      .pitch-studio-wiz-controls-wrap,
+      .pitch-pricing-quote {
+        display: none !important;
       }
 
       #intro .panel-inner {
@@ -3528,11 +3557,17 @@
     /* Short viewports: avoid comically large display type + extra air. */
     @media (max-width: 860px) and (max-height: 560px) {
       .story-panel {
-        padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + 14px) 18px;
+        padding-block: calc(
+            env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-desktop-cta-h) + 8px
+          )
+          18px;
       }
 
       .story-panel.story-panel--vcluster .story-subslide {
-        padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + 14px) 18px;
+        padding-block: calc(
+            env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-desktop-cta-h) + 8px
+          )
+          18px;
       }
 
       h1, h2 {
@@ -3542,7 +3577,9 @@
 
     @media (max-width: 860px) and (orientation: landscape) {
       html {
-        scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + 10px);
+        scroll-padding-top: calc(
+          env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-desktop-cta-h) + 8px
+        );
       }
 
       #intro .panel-inner {
@@ -3612,7 +3649,9 @@
         height: var(--story-slide-h);
         max-height: var(--story-slide-h);
         min-height: var(--story-slide-h);
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         scroll-snap-align: none;
       }
 
@@ -3667,6 +3706,33 @@
     </div>
   </nav>
 
+  <aside
+    class="pitch-mobile-desktop-cta"
+    aria-label="צפייה במצגת המלאה במחשב"
+  >
+    <p class="pitch-mobile-desktop-cta__text">
+      המצגת המלאה עם המוקאפים והאנימציות נוחה יותר במסך רחב. אפשר להעתיק את הקישור ולפתוח אותו מהמחשב.
+    </p>
+    <div class="pitch-mobile-desktop-cta__row">
+      <button
+        type="button"
+        class="pitch-mobile-desktop-cta__btn pitch-mobile-desktop-cta__btn--primary"
+        id="pitch-copy-page-url"
+      >
+        העתקת קישור
+      </button>
+      <a
+        class="pitch-mobile-desktop-cta__btn pitch-mobile-desktop-cta__btn--ghost"
+        id="pitch-open-email-link"
+        href="#"
+        rel="nofollow"
+      >
+        שליחה באימייל
+      </a>
+    </div>
+    <p class="pitch-mobile-desktop-cta__status" id="pitch-desktop-cta-status" aria-live="polite"></p>
+  </aside>
+
   <div class="scroll-progress" aria-hidden="true"><span id="progressFill"></span></div>
   <div class="scroll-hint" aria-hidden="true">גללו להמשך</div>
 
@@ -3720,7 +3786,9 @@
         title: "מה זה בקצרה",
         lead:
           "Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת את התוכן לסצנות, ומתאימה לכל סצנה קטעי וידאו רקע מתוך הקטלוג שלכם. בסוף נוצר בסיס לסרטון תחזית אנכי — קריינות, וידאו רקע ערוך ומוזיקת רקע.",
-        bullets: ["קריינות → תמלול → תוכנית סצנות → התאמת סגמנטים → רינדור → צפייה בתוצאה"],
+        mobileSummary:
+          "קריינות → תמלול → סצנות → התאמת קטעים מהקטלוג → בסיס לסרטון אנכי (עם הורדה).",
+        bullets: ["קריינות → תמלול → תכנון סצנות והתאמת קטלוג → רינדור והורדה"],
         visual: "introPipeline",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
@@ -3728,12 +3796,22 @@
       {
         id: "studio",
         kicker: "סטודיו",
-        title: "טאב הסטודיו — איפה יוצרים את התחזית",
+        title: "טאב הסטודיו — איפה נבנית התחזית",
         lead:
-          "בסטודיו עובדים על תחזית אחת בכל פעם: העלאת קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים מהקטלוג, רינדור ואז צפייה בתוצאה — הכל באותה סביבת עבודה, בלי להיכנס לעומק טכני.",
+          "בסטודיו מתקדמים שלב־אחר־שלב: העלאת קריינות, תמלול לטקסט, תכנון סצנות והחלטות על קטעים מהקטלוג, ואז רינדור לקובץ וידאו בסיס אנכי. בחרו בשורת השלבים במוקאפ כדי לראות איך המסך מתמלא — בלי הפעלה אוטומטית.",
+        mobileSummary:
+          "מסלול אחד ברור: קריינות, תמלול, סצנות והתאמות מהקטלוג, ורינדור לווידאו אנכי.",
         bullets: [
-          "מוקאפ חי שמרגיש כמו האפליקציה עצמה — לא צילום מסך שטוח",
-          "שכבת אשף מדגישה לפי סדר: העלאת קריינות · תמלול · תוכנית סצנות · התאמת סגמנטים · רינדור · צפייה בתוצאה"
+          "העלאה — מתחילים מקובץ קריינות אחד.",
+          "תמלול — הקריינות הופכת לטקסט שאפשר לעבוד איתו.",
+          "תכנון והחלטות — המערכת מחלקת לסצנות ומתאימה קטעים מהקטלוג לפי ההקשר.",
+          "רינדור והורדה — מתקבל בסיס לסרטון תחזית אנכי (קריינות, רקע ערוך, מוזיקה), לפני מיתוג גרפי מלא."
+        ],
+        mobileBullets: [
+          "העלאת קריינות.",
+          "תמלול לטקסט.",
+          "תכנון סצנות והתאמות מהקטלוג.",
+          "רינדור והורדת בסיס אנכי."
         ],
         visual: "studioDashboard",
         transition: "ttb",
@@ -3746,6 +3824,8 @@
         title: "טאב הקטלוג — הבסיס החומרים שלכם",
         lead:
           "הקטלוג שלכם מרכז וידאו ותמונות במקום אחד — עם חיפוש, סינון וצפייה בקטעים. לכל פריט יכולים להיות פוסטר לכל סגמנט, תיאור קצר ותגיות, ואפשר להוסיף חומרים חדשים דרך האפליקציה. מהקטלוג המערכת בוחרת רקע מתאים לכל סצנה.",
+        mobileSummary:
+          "חומרי רקע מסודרים: סגמנטים, פוסטרים ותגיות — ומהם נבחר רקע לכל סצנה.",
         bullets: [
           "סרטונים ותמונות · חלוקה לסגמנטים · פוסטר לכל סגמנט · תיאור קצר · תגיות · העלאה מהאפליקציה",
           "מסר מרכזי: הקטלוג הוא שכבת החומרים שממנה נגזרות ההתאמות לווידאו בכל סצנה — לא תיקייה אקראית"
@@ -3756,42 +3836,13 @@
         theme: { paper: "#f4f6fb", accent: "#3d55b8" }
       },
       {
-        id: "thinking",
-        kicker: "מהלך חשיבה",
-        title: "איך המערכת חושבת — בלי ז׳רגון",
-        lead:
-          "אחרי שהקריינות הופכת לטקסט, המערכת מנסה להבין את התחזית: מה נאמר בכל חלק, איפה המעברים, ואיזה סוג רקע מתאים. מתוך זה נבנית תוכנית סצנות, ואז נבחרים סגמנטים מהקטלוג שלכם שמתאימים לכל רגע.",
-        bullets: [
-          "הרצף: קריינות → תמלול → הבנת משמעות → חלוקה לסצנות → התאמת סגמנטים מהקטלוג",
-          "הקטלוג הוא שכבת ידע — לא רק קבצים: מה יש בכל סגמנט, מה האווירה, ולמה הוא מתאים לסצנה מסוימת בתחזית",
-          "בקוד ובממשק: איך סצנות, סגמנטים ותגיות מיוצגים — להשלמה מהריפו כשמשווים למציאות"
-        ],
-        visual: "cognitionFlow",
-        transition: "ttb",
-        panelLayout: "stack-visual-top",
-        theme: { paper: "#f4f4fb", accent: "#4338ca" }
-      },
-      {
-        id: "render",
-        kicker: "רינדור",
-        title: "רינדור הסרטון — מה נכנס לפלט",
-        lead:
-          "בשלב הרינדור האפליקציה מרכיבה בסיס לסרטון מקריינות, מקטעי וידאו רקע שנבחרו מהקטלוג שלכם וממוזיקת רקע כשמתאים. הפלט הנוכחי הוא בסיס טוב לעריכה נוספת — עדיין בלי חבילה גרפית מלאה (לוגואים, כותרות, שכבות גרפיות או מסכי מותג מלאים). איך נראה תהליך הרינדור בפועל בממשק — להשלמה מהריפו.",
-        bullets: [
-          "בממשק: צפייה · הורדה · דוגמת פורמט אנכי",
-          "להשלמה מהריפו: צעדי הרינדור והחיוויים במסך"
-        ],
-        visual: "finalVideoOutput",
-        transition: "ttb",
-        panelLayout: "stack-visual-top",
-        theme: { paper: "#fdf7f3", accent: "#c2410c" }
-      },
-      {
         id: "local-first",
         kicker: "מקומית",
         title: "למה מקומית עכשיו, ומה אפשר בהמשך",
         lead:
           "כרגע Weather V1 מיועדת להתקנה על מחשב אצלכם — זה הנתיב הפשוט לעבודה עם קבצי מדיה ועם רינדור.",
+        mobileSummary:
+          "התקנה על המחשב שלכם. קטלוג היום לפיתוח בענן פרטי; לשימוש קבוע — מקומי או הענן שלכם. רינדור מקומי.",
         bullets: [
           "הקטלוג: כיום בענן פרטי לפיתוח ובדיקות · לשימוש קבוע תבחרו אם לשמור אותו מקומית בסביבת העבודה שלכם או באחסון בענן שלכם",
           "הרינדור רץ על המחשב שבו האפליקציה מותקנת",
@@ -3809,6 +3860,7 @@
         title: "אנליטיקות ועלויות — עדיין בפיתוח ובטא",
         lead:
           "בטאב האנליטיקות רואים תמונת מצב על כל עבודה או סרטון — בערך כמה טוקנים נוצלו ומה נראית העלות הכספית המשוערת. האזור עדיין בטא; הנתונים להערכה בלבד.",
+        mobileSummary: "בטא: טוקנים ועלות משוערת לעבודה — מספרים להמחשה בלבד.",
         bullets: [
           "לכל עבודה / סרטון: טוקנים משוערים ועלות משוערת — למצגת",
           "להשלמה מהריפו: אילו שדות ומדדים מוצגים בפועל בממשק"
@@ -3824,12 +3876,19 @@
         title: "עלות והמשך עבודה",
         lead:
           "מחיר ראשוני ושקוף, עם מקום לעדכון אם ההיקף משתנה.",
+        mobileSummary:
+          "הצעה ראשונית שקופה: 4,000 ₪ לפני מע״ם לפי הצורך — עד להתקנה ראשונית אצלכם.",
         bullets: [
           "הצעת מחיר ראשונית: 4,000 ₪ לפני מע״מ / אם צריך — ניסוח סופי מול רואה חשבון כשנדרש",
           "המחיר כולל את מה שכבר נעשה ואת המשך העבודה עד להתקנה ראשונית אצלכם במחשבי העבודה הרלוונטיים",
           "לא רק שעות פיתוח — גם שימוש בכלי AI ובטוקנים תוך כדי העבודה",
           "אם בהמשך העבודה תצמח מעבר למוסכמות — נדבר ונעדכן מחיר בהתאם",
           "מה נבנה בפועל (לפי הריפו והקומיטים האחרונים): אפליקציית דסקטופ עם סטודיו, קטלוג, תכנון סצנות ותמלול מקריינות, רינדור בסיסי לאנכי, הגדרות וסנכרון לענן — ודף ההורדות הזה במצגת."
+        ],
+        mobileBullets: [
+          "4,000 ₪ לפני מע״ם (ניסוח סופי מול רו״ח כשנדרש).",
+          "כולל המשך עבודה עד להתקנה אצלכם + שימוש ב־AI וטוקנים בפיתוח.",
+          "היקף שגדל מעבר למוסכמות — עדכון מחיר בהסכמה."
         ],
         visual: "pricingHero",
         transition: "ttb",
@@ -3842,6 +3901,7 @@
         title: "מה צריך כדי להתקדם להתקנה ראשונית",
         lead:
           "כמה החלטות פשוטות וחיבורים בסיסיים — ואפשר להתחיל לעבוד באמת על תחזיות.",
+        mobileSummary: "החלטות קצרות וחיבורים בסיסיים — ומתחילים להריץ תחזיות באופן מעשי.",
         bullets: [],
         visual: "none",
         transition: "ttb",
@@ -3891,17 +3951,8 @@
     let verticalPanelRevealAnims = [];
     /** Trapped wheel on merged vertical stacks; cleaned before killing horizontal tween. */
     let verticalClusterWheelCleanups = [];
-    /** Studio slide: play/pause/reset drives wizard highlight (see #pitch-studio-wiz-* buttons). */
-    let studioWizardTween = null;
-    let studioWizardRafId = 0;
-    let studioWizardStepTimer = null;
-    let studioWizardAnimProgress = 0;
-    let studioWizardDelegated = false;
-    const STUDIO_WIZARD_STEP_COUNT = 6;
-    const STUDIO_WIZARD_TWEEN_SEC = 13;
-    /** Thinking slide: scrub sync on cognition-flow diagram (same lifecycle as studio wizard). */
-    let thinkingFlowScrollTrigger = null;
-    let thinkingFlowPassiveCleanup = null;
+    /** Studio slide: click-to-advance phase wizard (`#studio .pitch-wiz-step`), no autoplay. */
+    let studioWizardCleanup = null;
 
     function teardownPassiveProgress() {
       if (typeof passiveProgressCleanup === "function") {
@@ -4073,20 +4124,44 @@
             </div>`;
         })
         .join("");
+      const timelineSkelHtml = [1, 2, 3]
+        .map(
+          () => `<div class="pitch-timeline-scene pitch-timeline-scene--skel" aria-hidden="true">
+              <div class="pitch-timeline-scene-thumb pitch-timeline-thumb-skel"></div>
+              <div class="pitch-timeline-scene-meta">
+                <div class="pitch-skel-line" style="width: 72%"></div>
+                <div class="pitch-skel-line" style="width: 48%; margin-top: 7px"></div>
+              </div>
+            </div>`
+        )
+        .join("");
       const jobChip = `${job.job_id} · עבודה נוכחית`;
-      const jobState = studioJobStatusHe(job.status);
       const fileLine = audioName
         ? `<div class="pitch-drop-file mixed-ltr" lang="en" dir="ltr">${escapeHtml(audioName)}</div>`
         : "";
-      return `<div class="pitch-app-shell" data-highlight="upload">
-          <div class="pitch-wizard-track" aria-hidden="true">
-            <span class="pitch-wiz-step is-active" data-wiz="upload"><span class="pitch-wiz-step-num">1</span> העלאת קריינות</span>
-            <span class="pitch-wiz-step" data-wiz="transcript"><span class="pitch-wiz-step-num">2</span> תמלול</span>
-            <span class="pitch-wiz-step" data-wiz="timeline"><span class="pitch-wiz-step-num">3</span> תוכנית סצנות</span>
-            <span class="pitch-wiz-step" data-wiz="segments"><span class="pitch-wiz-step-num">4</span> התאמת סגמנטים</span>
-            <span class="pitch-wiz-step" data-wiz="render"><span class="pitch-wiz-step-num">5</span> רינדור</span>
-            <span class="pitch-wiz-step" data-wiz="output"><span class="pitch-wiz-step-num">6</span> צפייה בתוצאה</span>
-          </div>
+      return `<div class="pitch-app-shell" data-studio-phase="upload" data-highlight="upload">
+          <ul class="pitch-wizard-track" role="list" aria-label="שלבי יצירת תחזית">
+            <li class="pitch-wizard-track__item" role="listitem">
+              <button type="button" class="pitch-wiz-step is-active" data-studio-phase-button="upload" aria-current="step">
+                <span class="pitch-wiz-step-num" aria-hidden="true">1</span> העלאה
+              </button>
+            </li>
+            <li class="pitch-wizard-track__item" role="listitem">
+              <button type="button" class="pitch-wiz-step" data-studio-phase-button="transcript">
+                <span class="pitch-wiz-step-num" aria-hidden="true">2</span> תמלול
+              </button>
+            </li>
+            <li class="pitch-wizard-track__item" role="listitem">
+              <button type="button" class="pitch-wiz-step" data-studio-phase-button="planning">
+                <span class="pitch-wiz-step-num" aria-hidden="true">3</span> תכנון והחלטות
+              </button>
+            </li>
+            <li class="pitch-wizard-track__item" role="listitem">
+              <button type="button" class="pitch-wiz-step" data-studio-phase-button="render">
+                <span class="pitch-wiz-step-num" aria-hidden="true">4</span> רינדור והורדה
+              </button>
+            </li>
+          </ul>
           <header class="pitch-app-head" aria-hidden="true">
             <div class="pitch-app-head-brand">
               <span class="pitch-app-btn pitch-app-btn--dark" role="presentation">תחזית חדשה</span>
@@ -4104,48 +4179,79 @@
               <span class="pitch-app-tab">אנליטיקה</span>
             </nav>
             <div class="pitch-job-row" aria-hidden="true">
-              <span class="pitch-job-chip mixed-ltr" lang="en" dir="ltr">${escapeHtml(jobChip)}</span>
-              <span class="pitch-job-state">${escapeHtml(jobState)}</span>
+              <span class="pitch-job-chip mixed-ltr" lang="en" dir="ltr">
+                <span class="pitch-job-chip-txt pitch-job-chip-noid">טרם נטענה עבודה</span>
+                <span class="pitch-job-chip-txt pitch-job-chip-withid">${escapeHtml(jobChip)}</span>
+              </span>
+              <span class="pitch-job-state">
+                <span class="pitch-job-state-txt pitch-job-state--upload">ממתין להעלאה</span>
+                <span class="pitch-job-state-txt pitch-job-state--transcript">מעבד תמלול…</span>
+                <span class="pitch-job-state-txt pitch-job-state--planning">מתכנן סצנות והתאמות מהקטלוג…</span>
+                <span class="pitch-job-state-txt pitch-job-state--render">הרינדור הושלם</span>
+              </span>
             </div>
-            <section class="pitch-drop-card" aria-hidden="true">
+            <section class="pitch-drop-card studio-phase-panel" aria-hidden="true">
               <div class="pitch-drop-inner">
                 <div class="pitch-drop-icon" aria-hidden="true">🎙️</div>
                 <div>
                   <div class="pitch-drop-title">העלאת קריינות</div>
                   <div class="pitch-drop-hint">גרירה לכאן או בחירת קובץ אודיו לפתיחת התמלול והתכנון</div>
-                  ${fileLine}
+                  <p class="pitch-drop-empty-note">עדיין ללא קובץ · שלב הדגמה</p>
+                  <div class="pitch-drop-file-slot">${fileLine}</div>
                 </div>
               </div>
               <span class="pitch-drop-cta" role="presentation">בחר קובץ</span>
             </section>
             <div class="pitch-bento" aria-hidden="true">
               <div class="pitch-bento__rail">
-                <section class="pitch-mini-card pitch-mini-card--transcript">
-                  <span class="pitch-cell-badge pitch-cell-badge--done">הושלם</span>
+                <section class="pitch-mini-card pitch-mini-card--transcript studio-phase-panel">
+                  <span class="pitch-cell-badge pitch-cell-badge-trans-wait">ממתין</span>
+                  <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-trans-done">תמלול מוכן</span>
                   <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📝</span> תמלול</div>
-                  <div class="pitch-transcript-lines">${transcriptHtml}</div>
+                  <div class="pitch-transcript-skel pitch-skel-lines" aria-hidden="true">
+                    <div class="pitch-skel-line"></div>
+                    <div class="pitch-skel-line"></div>
+                    <div class="pitch-skel-line"></div>
+                    <div class="pitch-skel-line"></div>
+                  </div>
+                  <div class="pitch-transcript-lines pitch-transcript-filled">${transcriptHtml}</div>
                 </section>
-                <section class="pitch-mini-card pitch-mini-card--render">
-                  <span class="pitch-cell-badge pitch-cell-badge--done">הושלם</span>
+                <section class="pitch-mini-card pitch-mini-card--render studio-phase-panel">
+                  <span class="pitch-cell-badge pitch-cell-badge-render-wait">ממתין</span>
+                  <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-render-done">הושלם</span>
                   <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">⚙️</span> רינדור</div>
-                  <div class="pitch-render-zone pitch-render-zone--done"><span class="pitch-render-done-label mixed-ltr" lang="en" dir="ltr">MP4 · 9:16</span></div>
+                  <div class="pitch-render-zone pitch-render-pending" aria-hidden="true"></div>
+                  <div class="pitch-render-zone pitch-render-zone--done pitch-render-done"><span class="pitch-render-done-label mixed-ltr" lang="en" dir="ltr">MP4 · 9:16</span></div>
                 </section>
               </div>
-              <section class="pitch-bento__cell--timeline">
-                <span class="pitch-cell-badge pitch-cell-badge--done">הושלם</span>
+              <section class="pitch-bento__cell--timeline studio-phase-panel">
+                <span class="pitch-cell-badge pitch-cell-badge-timeline-wait">ממתין</span>
+                <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-timeline-done">הושלם</span>
                 <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">🎚️</span> תוכנית סצנות</div>
-                <div class="pitch-timeline-lanes">
-                  ${timelineHtml}
+                <div class="pitch-timeline-lanes pitch-timeline-skel">${timelineSkelHtml}</div>
+                <div class="pitch-timeline-lanes pitch-timeline-filled">${timelineHtml}</div>
+                <div class="pitch-planning-callouts" aria-hidden="true">
+                  <p class="pitch-planning-callout-p">המערכת לא רק מתמללת — היא מנסה להבין את מבנה התחזית, לזהות מעברים ונושאים, ולחבר לכל סצנה קטע מתאים מהקטלוג.</p>
+                  <p class="pitch-planning-callout-p pitch-planning-callout-p--tags">התיוגים הופכים את הקטלוג לשכבת ידע: מה מופיע בכל קטע, איזו אווירה יש בו, ולאיזה סוג סצנה הוא יכול להתאים.</p>
                 </div>
               </section>
-              <section class="pitch-bento__cell--output">
-                <span class="pitch-cell-badge pitch-cell-badge--done">הושלם</span>
+              <section class="pitch-bento__cell--output studio-phase-panel">
+                <span class="pitch-cell-badge pitch-cell-badge-output-wait">ממתין</span>
+                <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-output-done">הושלם</span>
                 <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📱</span> צפייה בתוצאה</div>
                 <div class="pitch-device">
-                  <div class="pitch-device-screen pitch-device-screen--preview">
+                  <div class="pitch-device-screen pitch-device-screen--preview pitch-output-placeholder">
+                    <span class="pitch-output-placeholder-txt">כאן תופיע תצוגה אנכית אחרי הרינדור</span>
+                  </div>
+                  <div class="pitch-device-screen pitch-device-screen--preview pitch-output-ready">
                     <img class="pitch-device-poster" src="${escapeHtml(firstPosterSrc)}" alt="" width="180" height="320" decoding="async" loading="lazy" />
                     <span class="pitch-device-play" aria-hidden="true">▶</span>
                   </div>
+                </div>
+                <div class="pitch-output-footnote pitch-when-render" aria-hidden="true">בשלב הזה זה בסיס לסרטון תחזית — לא חבילה גרפית מלאה (לוגואים, כותרות ושכבות מיתוג מלאות).</div>
+                <div class="pitch-output-actions pitch-when-render" role="presentation">
+                  <span class="pitch-output-btn pitch-output-btn--primary">צפייה</span>
+                  <span class="pitch-output-btn pitch-output-btn--ghost mixed-ltr" lang="en" dir="ltr">הורדה</span>
                 </div>
               </section>
             </div>
@@ -4358,74 +4464,6 @@
         </div>`;
     }
 
-    function cognitionFlowHtml() {
-      const steps = [
-        "קריינות",
-        "תמלול",
-        "הבנת משמעות",
-        "חלוקה לסצנות",
-        "התאמת סגמנטים מהקטלוג"
-      ];
-      const parts = [];
-      steps.forEach((labelInner, i) => {
-        parts.push(`<div class="pitch-flow-step pitch-flow-step--${i + 1}" data-step="${i + 1}">
-        <span class="pitch-flow-step-num" aria-hidden="true">${i + 1}</span>
-        <span class="pitch-flow-step-label">${labelInner}</span>
-      </div>`);
-        if (i < steps.length - 1) {
-          parts.push(`<div class="pitch-flow-connector" aria-hidden="true">
-        <svg class="pitch-flow-connector-svg" viewBox="0 0 40 56" preserveAspectRatio="none">
-          <defs>
-            <marker id="pitch-flow-amk-${i}" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-              <path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor"></path>
-            </marker>
-          </defs>
-          <path class="pitch-flow-path" d="M20 5 L20 48" fill="none" stroke-width="2.75" stroke-linecap="round" vector-effect="non-scaling-stroke" marker-end="url(#pitch-flow-amk-${i})"></path>
-        </svg>
-      </div>`);
-        }
-      });
-      return `<div class="pitch-thinking-visual" dir="rtl">
-      <div class="pitch-thinking-visual__bg" aria-hidden="true"></div>
-      <div class="pitch-thinking-visual__noise" aria-hidden="true"></div>
-      <div class="pitch-thinking-flow">
-        ${parts.join("")}
-        <aside class="pitch-thinking-callout" aria-hidden="true">
-          <div class="pitch-thinking-callout__title">קטלוג כשכבת ידע</div>
-          <p class="pitch-thinking-callout__body">התיוג בקטלוג לא רק מציין איפה הקובץ — אלא מה יש בכל סגמנט, איזו אווירה יש בו ולמה הוא מתאים לסצנה מסוימת בתחזית. ככל שהקטלוג שלכם מתויג טוב יותר, ההתאמות בתוכן התחזית מדויקות יותר.</p>
-        </aside>
-        <div class="pitch-scene-hint-chips" aria-hidden="true">
-          <span class="pitch-scene-chip">תיאור</span>
-          <span class="pitch-scene-chip">רשימה</span>
-          <span class="pitch-scene-chip">מעבר</span>
-        </div>
-      </div>
-    </div>`;
-    }
-
-    function finalVideoOutputHtml() {
-      const { plan } = PITCH_STUDIO_DEMO;
-      const timelineRows = plan.timeline.slice().sort((a, b) => a.audio_start - b.audio_start);
-      const firstSeg = timelineRows[0]?.segment_id ?? "IB001-s0";
-      const firstPosterSrc = studioPosterSrc(firstSeg);
-      return `<div class="pitch-final-output" dir="rtl" aria-hidden="true">
-      <div class="pitch-final-output__head">
-        <div class="pitch-final-output__title">וידאו לבדיקה</div>
-        <span class="pitch-final-output__badge mixed-ltr" lang="en" dir="ltr">MP4 · 9:16</span>
-      </div>
-      <div class="pitch-device">
-        <div class="pitch-device-screen pitch-device-screen--preview">
-          <img class="pitch-device-poster" src="${escapeHtml(firstPosterSrc)}" alt="" width="270" height="480" decoding="async" loading="lazy" />
-          <span class="pitch-device-play" aria-hidden="true">▶</span>
-        </div>
-      </div>
-      <div class="pitch-final-output__actions" role="presentation">
-        <span class="pitch-final-output__btn pitch-final-output__btn--primary">צפייה</span>
-        <span class="pitch-final-output__btn pitch-final-output__btn--ghost">הורדה</span>
-      </div>
-    </div>`;
-    }
-
     function localFirstPitchHtml() {
       const pillar = (ico, title, body) => `<article class="pitch-local-first-pillar">
         <span class="pitch-local-first-pillar__ico" aria-hidden="true">${ico}</span>
@@ -4504,12 +4542,6 @@
       }
       if (type === "studioDashboard") {
         return studioDashboardHtml();
-      }
-      if (type === "cognitionFlow") {
-        return cognitionFlowHtml();
-      }
-      if (type === "finalVideoOutput") {
-        return finalVideoOutputHtml();
       }
       if (type === "localFirstPitch") {
         return localFirstPitchHtml();
@@ -4645,8 +4677,68 @@
       return out;
     }
 
+    function hasMobileSummary(section) {
+      const s = section.mobileSummary;
+      return typeof s === "string" && s.trim() !== "";
+    }
+
+    function leadBlocksHtml(section, pitchProductLayout) {
+      const ms = hasMobileSummary(section) ? escapeHtml(section.mobileSummary.trim()) : "";
+      const leadEsc = escapeHtml(section.lead);
+      if (pitchProductLayout) {
+        if (ms) {
+          return `<div class="pitch-lead-well"><p class="lead lead-desktop-only">${leadEsc}</p><p class="lead panel-mobile-summary">${ms}</p></div>`;
+        }
+        return `<div class="pitch-lead-well"><p class="lead">${leadEsc}</p></div>`;
+      }
+      if (ms) {
+        return `<p class="lead lead-desktop-only">${leadEsc}</p><p class="lead panel-mobile-summary">${ms}</p>`;
+      }
+      return `<p class="lead">${leadEsc}</p>`;
+    }
+
+    function isPitchProductSection(section) {
+      return (
+        section.id === "studio" ||
+        section.id === "catalog" ||
+        section.id === "local-first" ||
+        section.id === "analytics" ||
+        section.id === "pricing" ||
+        section.id === "v1-next"
+      );
+    }
+
+    function bulletsMarkup(section) {
+      if (section.id === "intro" && section.visual === "introPipeline") return "";
+
+      const mobileList = Array.isArray(section.mobileBullets) ? section.mobileBullets : null;
+      const hasMobileBullets = mobileList && mobileList.length > 0;
+
+      if (section.id === "studio" && section.bullets.length > 0) {
+        const wizardItems = section.bullets
+          .map(
+            (item, i) =>
+              `<li data-studio-phase-bullet="${["upload", "transcript", "planning", "render"][i] || "upload"}">${escapeHtml(item)}</li>`
+          )
+          .join("");
+        if (hasMobileBullets) {
+          const mob = mobileList.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+          return `<ul class="bullets bullets--studio-wizard bullets-desktop-only">${wizardItems}</ul><ul class="bullets panel-mobile-bullets">${mob}</ul>`;
+        }
+        return `<ul class="bullets bullets--studio-wizard">${wizardItems}</ul>`;
+      }
+
+      if (section.bullets.length === 0) return "";
+
+      const desktopItems = section.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+      if (hasMobileBullets) {
+        const mob = mobileList.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+        return `<ul class="bullets bullets-desktop-only">${desktopItems}</ul><ul class="bullets panel-mobile-bullets">${mob}</ul>`;
+      }
+      return `<ul class="bullets">${desktopItems}</ul>`;
+    }
+
     function singlePanelSectionHtml(section, globalIdx, rollIdx) {
-      const bullets = section.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join("");
       const heroDownloads = section.id === "intro" ? heroDownloadsBlock() : "";
       const visualAria = section.visual === "excalidrawDemo" ? "" : " aria-hidden=\"true\"";
       const copyClass = section.id === "intro" ? "panel-copy panel-copy--intro" : "panel-copy";
@@ -4660,23 +4752,10 @@
           : `<div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>`;
       const introPipelineBlock =
         section.id === "intro" && section.visual === "introPipeline"
-          ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ייצור: קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים, רינדור, צפייה בתוצאה">${visualMarkup("introPipeline", section)}</figure>`
+          ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ייצור: קריינות, תמלול, תכנון והתאמה מהקטלוג, רינדור והורדה">${visualMarkup("introPipeline", section)}</figure>`
           : "";
-      const bulletsBlock =
-        section.id === "intro" && section.visual === "introPipeline"
-          ? ""
-          : section.bullets.length === 0
-            ? ""
-            : `<ul class="bullets">${bullets}</ul>`;
-      const pitchProductLayout =
-        section.id === "studio" ||
-        section.id === "catalog" ||
-        section.id === "thinking" ||
-        section.id === "render" ||
-        section.id === "local-first" ||
-        section.id === "analytics" ||
-        section.id === "pricing" ||
-        section.id === "v1-next";
+      const bulletsBlock = bulletsMarkup(section);
+      const pitchProductLayout = isPitchProductSection(section);
       const pricingPullquoteBlock =
         section.id === "pricing"
           ? `<blockquote class="pitch-pricing-quote"><p>${escapeHtml(
@@ -4685,13 +4764,8 @@
           : "";
       const studioWizardToolbar =
         section.id === "studio"
-          ? `<div class="pitch-studio-wiz-controls-wrap" role="group" aria-labelledby="pitch-studio-wiz-legend">
-            <span id="pitch-studio-wiz-legend" class="pitch-studio-wiz-legend">הדגמת שלבים במוקאפ</span>
-            <div class="pitch-studio-wiz-controls">
-              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--play" id="pitch-studio-wiz-play">נגן</button>
-              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--pause" id="pitch-studio-wiz-pause" disabled>השהה</button>
-              <button type="button" class="pitch-wiz-ctrl pitch-wiz-ctrl--reset" id="pitch-studio-wiz-reset">איפוס</button>
-            </div>
+          ? `<div class="pitch-studio-wiz-controls-wrap" role="note" aria-labelledby="pitch-studio-wiz-legend">
+            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב בשורת ההתקדמות במוקאפ כדי לראות איך התחזית נבנית — ללא הפעלה אוטומטית.</p>
           </div>`
           : "";
       const pitchLayoutAttr = pitchProductLayout ? ` data-pitch-layout="product-app"` : "";
@@ -4699,9 +4773,7 @@
         section.id === "intro" || section.id === "v1-next"
           ? ""
           : ` data-panel-layout="${escapeHtml(section.panelLayout || "split-balanced")}"`;
-      const leadBlock = pitchProductLayout
-        ? `<div class="pitch-lead-well"><p class="lead">${escapeHtml(section.lead)}</p></div>`
-        : `<p class="lead">${escapeHtml(section.lead)}</p>`;
+      const leadBlock = leadBlocksHtml(section, pitchProductLayout);
       return `<section
         class="story-panel"
         id="${escapeHtml(section.id)}"
@@ -4732,10 +4804,8 @@
       const first = grouped[0].section;
       const slides = grouped
         .map(({ section: sec, globalIdx }) => {
-          const bullets = sec.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join("");
           const visualAria = sec.visual === "excalidrawDemo" ? "" : " aria-hidden=\"true\"";
-          const bulletsBlock =
-            sec.bullets.length === 0 ? "" : `<ul class="bullets">${bullets}</ul>`;
+          const bulletsBlock = bulletsMarkup(sec);
           const visualBlock =
             sec.id === "v1-next"
               ? ""
@@ -4744,6 +4814,8 @@
             sec.id === "v1-next"
               ? ""
               : ` data-panel-layout="${escapeHtml(sec.panelLayout || "split-balanced")}"`;
+          const pitchProductLayout = isPitchProductSection(sec);
+          const leadBlock = leadBlocksHtml(sec, pitchProductLayout);
           return `
       <article
         class="story-subslide"
@@ -4757,7 +4829,7 @@
           <div class="panel-copy">
             <div class="kicker">${escapeHtml(sec.kicker)}</div>
             <h2>${escapeHtml(sec.title)}</h2>
-            <p class="lead">${escapeHtml(sec.lead)}</p>
+            ${leadBlock}
             ${bulletsBlock}
           </div>
           ${visualBlock}
@@ -4792,6 +4864,45 @@
     }
 
     trackRoll.innerHTML = buildStoryRollHtml(storySections);
+
+    (function initMobileDesktopCta() {
+      const btn = document.getElementById("pitch-copy-page-url");
+      const status = document.getElementById("pitch-desktop-cta-status");
+      const mailEl = document.getElementById("pitch-open-email-link");
+      if (!btn || !status) return;
+
+      const pageUrl = () =>
+        `${location.origin}${location.pathname}${location.search || ""}${location.hash || ""}`;
+
+      const setMailtoHref = () => {
+        if (!mailEl) return;
+        const subj = encodeURIComponent("Weather V1 — מצגת");
+        const body = encodeURIComponent(`קישור למצגת המלאה במחשב:\n\n${pageUrl()}\n`);
+        mailEl.setAttribute("href", `mailto:?subject=${subj}&body=${body}`);
+      };
+      setMailtoHref();
+      window.addEventListener("hashchange", setMailtoHref, { passive: true });
+
+      let clearStatusT = 0;
+      btn.addEventListener("click", () => {
+        const url = pageUrl();
+        const ok = text => {
+          status.textContent = text;
+          window.clearTimeout(clearStatusT);
+          clearStatusT = window.setTimeout(() => {
+            status.textContent = "";
+          }, 3800);
+        };
+
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+          navigator.clipboard.writeText(url).then(() => ok("הקישור הועתק — פתחו במחשב")).catch(() =>
+            ok("העתקה נכשלה — נסו «שליחה באימייל»")
+          );
+          return;
+        }
+        ok("העתקה זמינה רק בדפדפן מעודכן — נסו «שליחה באימייל»");
+      });
+    })();
 
     const pitchStepUp = document.getElementById("pitch-step-up");
     const pitchStepDown = document.getElementById("pitch-step-down");
@@ -4969,127 +5080,121 @@
       refreshPitchStepNavUi();
     }
 
-    function killStudioWizardMotion() {
-      if (studioWizardTween) {
-        studioWizardTween.kill();
-        studioWizardTween = null;
+    /** Studio wizard: four explicit phases, click + keyboard; no GSAP/RAF tour. */
+    const STUDIO_PHASES = ["upload", "transcript", "planning", "render"];
+    const STUDIO_HIGHLIGHT_FOR_PHASE = {
+      upload: "upload",
+      transcript: "transcript",
+      planning: "segments",
+      render: "output",
+    };
+
+    let studioWizardPhase = "upload";
+
+    function setStudioPhase(phase) {
+      if (!STUDIO_PHASES.includes(phase)) return;
+      studioWizardPhase = phase;
+      const shell = document.querySelector("#studio .pitch-app-shell");
+      if (shell) {
+        shell.dataset.studioPhase = phase;
+        shell.dataset.highlight = STUDIO_HIGHLIGHT_FOR_PHASE[phase] || phase;
       }
-      if (studioWizardRafId) {
-        cancelAnimationFrame(studioWizardRafId);
-        studioWizardRafId = 0;
-      }
-      if (studioWizardStepTimer) {
-        clearInterval(studioWizardStepTimer);
-        studioWizardStepTimer = null;
-      }
+      updateStudioWizardSteps(phase);
+      updateStudioStoryBullets(phase);
     }
 
-    function updateStudioWizardToolbarPlaying(isPlaying) {
-      const play = document.querySelector("#pitch-studio-wiz-play");
-      const pause = document.querySelector("#pitch-studio-wiz-pause");
-      if (play) play.disabled = isPlaying;
-      if (pause) pause.disabled = !isPlaying;
-    }
+    function updateStudioWizardSteps(activePhase) {
+      const activeIndex = STUDIO_PHASES.indexOf(activePhase);
 
-    function studioWizardEnsureDelegation() {
-      if (studioWizardDelegated) return;
-      studioWizardDelegated = true;
-      document.addEventListener("click", ev => {
-        const btn = ev.target.closest("button");
-        if (!btn) return;
-        const id = btn.id;
-        if (
-          id !== "pitch-studio-wiz-play" &&
-          id !== "pitch-studio-wiz-pause" &&
-          id !== "pitch-studio-wiz-reset"
-        )
-          return;
-        ev.preventDefault();
-        if (id === "pitch-studio-wiz-play") studioWizardPlayClick();
-        else if (id === "pitch-studio-wiz-pause") studioWizardPauseClick();
-        else studioWizardResetClick();
+      document.querySelectorAll("#studio .pitch-wiz-step").forEach(button => {
+        const raw = button.getAttribute("data-studio-phase-button") || "";
+        const index = STUDIO_PHASES.indexOf(raw);
+
+        const isActive = raw === activePhase;
+        const isComplete = index >= 0 && index < activeIndex;
+
+        button.classList.toggle("is-active", isActive);
+        button.classList.toggle("is-complete", isComplete);
+
+        if (isActive) button.setAttribute("aria-current", "step");
+        else button.removeAttribute("aria-current");
       });
     }
 
-    function studioWizardPlayClick() {
-      if (studioWizardTween && studioWizardTween.paused()) {
-        studioWizardTween.resume();
-        updateStudioWizardToolbarPlaying(true);
-        return;
-      }
-      killStudioWizardMotion();
-      let start = studioWizardAnimProgress;
-      if (start >= 0.998) start = 0;
-      const obj = { p: start };
-      const dur = Math.max(0.35, STUDIO_WIZARD_TWEEN_SEC * (1 - start));
+    function updateStudioStoryBullets(activePhase) {
+      const panel = document.getElementById("studio");
+      if (!panel) return;
 
-      if (window.gsap && !reduceMotion) {
-        studioWizardTween = window.gsap.to(obj, {
-          p: 1,
-          duration: dur,
-          ease: "none",
-          onUpdate: () => updateStudioWizardUi(obj.p),
-          onComplete: () => {
-            studioWizardTween = null;
-            updateStudioWizardToolbarPlaying(false);
-          },
-        });
-        updateStudioWizardToolbarPlaying(true);
-        return;
+      panel.querySelectorAll(".bullets--studio-wizard li[data-studio-phase-bullet]").forEach(li => {
+        const b = li.getAttribute("data-studio-phase-bullet") || "";
+        li.classList.toggle("is-wizard-active", b === activePhase);
+      });
+    }
+
+    function teardownStudioWizardHighlight() {
+      if (typeof studioWizardCleanup === "function") {
+        studioWizardCleanup();
+        studioWizardCleanup = null;
       }
 
-      if (reduceMotion) {
-        const step = () => {
-          const next = Math.min(1, studioWizardAnimProgress + 1 / STUDIO_WIZARD_STEP_COUNT);
-          updateStudioWizardUi(next);
-          if (next >= 1) {
-            if (studioWizardStepTimer) {
-              clearInterval(studioWizardStepTimer);
-              studioWizardStepTimer = null;
-            }
-            updateStudioWizardToolbarPlaying(false);
-          }
-        };
-        step();
-        studioWizardStepTimer = setInterval(step, 550);
-        updateStudioWizardToolbarPlaying(true);
-        return;
+      studioWizardPhase = "upload";
+
+      const shell = document.querySelector("#studio .pitch-app-shell");
+      if (shell) {
+        shell.dataset.studioPhase = "upload";
+        shell.dataset.highlight = "upload";
       }
 
-      const t0 = performance.now();
-      const from = start >= 0.998 ? 0 : start;
-      const totalMs = STUDIO_WIZARD_TWEEN_SEC * 1000 * (1 - from);
-      function frame(t) {
-        const u = Math.min(1, (t - t0) / totalMs);
-        updateStudioWizardUi(from + (1 - from) * u);
-        if (u < 1) studioWizardRafId = requestAnimationFrame(frame);
-        else {
-          studioWizardRafId = 0;
-          updateStudioWizardToolbarPlaying(false);
+      updateStudioWizardSteps("upload");
+      updateStudioStoryBullets("upload");
+    }
+
+    function initStudioWizardHighlight() {
+      teardownStudioWizardHighlight();
+      const root = document.getElementById("studio");
+      if (!root) return;
+
+      const onClick = event => {
+        const button = event.target.closest("[data-studio-phase-button]");
+        if (!button || !root.contains(button)) return;
+        const phase = button.getAttribute("data-studio-phase-button");
+        if (!phase || !STUDIO_PHASES.includes(phase)) return;
+        setStudioPhase(phase);
+      };
+
+      const onKeydown = event => {
+        const activeElement = document.activeElement;
+        if (
+          !activeElement ||
+          !activeElement.matches("[data-studio-phase-button]") ||
+          !root.contains(activeElement)
+        ) {
+          return;
         }
-      }
-      studioWizardRafId = requestAnimationFrame(frame);
-      updateStudioWizardToolbarPlaying(true);
-    }
 
-    function studioWizardPauseClick() {
-      if (studioWizardTween) studioWizardTween.pause();
-      if (studioWizardRafId) {
-        cancelAnimationFrame(studioWizardRafId);
-        studioWizardRafId = 0;
-      }
-      if (studioWizardStepTimer) {
-        clearInterval(studioWizardStepTimer);
-        studioWizardStepTimer = null;
-      }
-      updateStudioWizardToolbarPlaying(false);
-    }
+        const currentIndex = STUDIO_PHASES.indexOf(studioWizardPhase);
+        if (currentIndex < 0) return;
 
-    function studioWizardResetClick() {
-      killStudioWizardMotion();
-      studioWizardAnimProgress = 0;
-      updateStudioWizardUi(0);
-      updateStudioWizardToolbarPlaying(false);
+        if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+
+        event.preventDefault();
+
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        const nextIndex = Math.max(0, Math.min(STUDIO_PHASES.length - 1, currentIndex + direction));
+        const nextPhase = STUDIO_PHASES[nextIndex];
+        setStudioPhase(nextPhase);
+
+        root.querySelector(`[data-studio-phase-button="${nextPhase}"]`)?.focus();
+      };
+
+      root.addEventListener("click", onClick);
+      root.addEventListener("keydown", onKeydown);
+      studioWizardCleanup = () => {
+        root.removeEventListener("click", onClick);
+        root.removeEventListener("keydown", onKeydown);
+      };
+
+      setStudioPhase("upload");
     }
 
     function setProgress(value) {
@@ -5097,177 +5202,7 @@
       progressFill.style.transform = `scaleX(${clamped})`;
     }
 
-    function teardownStudioWizardHighlight() {
-      killStudioWizardMotion();
-      studioWizardAnimProgress = 0;
-      const shell = document.querySelector("#studio .pitch-app-shell");
-      if (shell) shell.dataset.highlight = "upload";
-      document.querySelectorAll("#studio .bullets li.is-wizard-active").forEach(li => li.classList.remove("is-wizard-active"));
-      document.querySelectorAll("#studio .pitch-wiz-step.is-active").forEach(el => el.classList.remove("is-active"));
-      const firstStep = document.querySelector('#studio .pitch-wiz-step[data-wiz="upload"]');
-      if (firstStep) firstStep.classList.add("is-active");
-    }
-
-    function studioWizardProgressFromPanel(panel) {
-      const vh = window.innerHeight || 1;
-      const r = panel.getBoundingClientRect();
-      const start = vh * 0.88;
-      const end = vh * 0.14;
-      const span = Math.max(1, start - end);
-      return Math.min(1, Math.max(0, (start - r.top) / span));
-    }
-
-    function updateStudioWizardUi(progress) {
-      const p = Math.max(0, Math.min(1, progress));
-      studioWizardAnimProgress = p;
-      const panel = document.getElementById("studio");
-      const shell = panel?.querySelector(".pitch-app-shell");
-      if (!panel || !shell) return;
-      const zones = ["upload", "transcript", "timeline", "segments", "render", "output"];
-      const zi = Math.min(zones.length - 1, Math.max(0, Math.floor(p * zones.length)));
-      shell.dataset.highlight = zones[zi];
-
-      const bullets = panel.querySelectorAll(".bullets li");
-      const nb = bullets.length;
-      if (nb > 0) {
-        const bi = Math.min(nb - 1, Math.max(0, Math.floor(p * nb)));
-        bullets.forEach((li, i) => li.classList.toggle("is-wizard-active", i === bi));
-      }
-
-      const active = zones[zi];
-      const railIds = new Set(["upload", "transcript", "timeline", "segments", "render", "output"]);
-      shell.querySelectorAll(".pitch-wiz-step").forEach(el => {
-        const w = el.getAttribute("data-wiz");
-        el.classList.toggle("is-active", railIds.has(active) && w === active);
-      });
-    }
-
-    function initStudioWizardHighlight() {
-      teardownStudioWizardHighlight();
-      studioWizardEnsureDelegation();
-      const panel = document.getElementById("studio");
-      const shell = panel?.querySelector(".pitch-app-shell");
-      if (!panel || !shell) return;
-      updateStudioWizardUi(0);
-      updateStudioWizardToolbarPlaying(false);
-    }
-
-    function teardownThinkingFlowMotion() {
-      if (thinkingFlowScrollTrigger) {
-        thinkingFlowScrollTrigger.kill();
-        thinkingFlowScrollTrigger = null;
-      }
-      if (typeof thinkingFlowPassiveCleanup === "function") {
-        thinkingFlowPassiveCleanup();
-        thinkingFlowPassiveCleanup = null;
-      }
-      const panel = document.getElementById("thinking");
-      if (!panel) return;
-      panel.querySelectorAll(".pitch-flow-step").forEach(el => {
-        el.style.opacity = "";
-        el.style.transform = "";
-        el.classList.remove("pitch-flow-step--hot");
-      });
-      panel.querySelectorAll(".pitch-flow-path").forEach(p => {
-        p.style.strokeDasharray = "";
-        p.style.strokeDashoffset = "";
-        delete p.dataset.len;
-      });
-    }
-
-    /** GSAP scrub on `#thinking` mirrors studio wizard when vertical-like; passive scroll otherwise. Panel reveal animates `.panel-visual > *` only — steps stay under this scrub (no double entrance). */
-    function updateThinkingFlowUi(progress) {
-      const panel = document.getElementById("thinking");
-      if (!panel) return;
-      const steps = panel.querySelectorAll(".pitch-flow-step");
-      const paths = panel.querySelectorAll(".pitch-flow-path");
-      const n = steps.length;
-      if (!n) return;
-
-      steps.forEach((el, i) => {
-        const start = i / (n + 0.35);
-        const width = 0.26;
-        const t = Math.min(1, Math.max(0, (progress - start) / width));
-        el.style.opacity = "1";
-        el.style.transform = `translateY(${(1 - t) * 10}px) scale(${0.985 + 0.015 * t})`;
-        el.classList.toggle("pitch-flow-step--hot", t > 0.68 && t < 1);
-      });
-
-      paths.forEach((path, i) => {
-        let len = Number(path.dataset.len || 0);
-        if (!len && typeof path.getTotalLength === "function") {
-          try {
-            len = path.getTotalLength();
-          } catch (_) {
-            len = 0;
-          }
-          if (len > 0) {
-            path.dataset.len = String(len);
-            path.style.strokeDasharray = String(len);
-          }
-        }
-        if (!len) return;
-        const start = (i + 0.4) / (n + 0.25);
-        const width = 0.24;
-        const t = Math.min(1, Math.max(0, (progress - start) / width));
-        path.style.strokeDashoffset = String(len * (1 - t));
-      });
-    }
-
-    function initThinkingFlowMotion() {
-      teardownThinkingFlowMotion();
-      const panel = document.getElementById("thinking");
-      if (!panel) return;
-
-      if (reduceMotion) {
-        panel.querySelectorAll(".pitch-flow-path").forEach(p => {
-          if (typeof p.getTotalLength !== "function") return;
-          try {
-            const len = p.getTotalLength();
-            if (len > 0) {
-              p.style.strokeDasharray = String(len);
-              p.style.strokeDashoffset = "0";
-            }
-          } catch (_) {}
-        });
-        panel.querySelectorAll(".pitch-flow-step").forEach(el => {
-          el.style.opacity = "1";
-          el.style.transform = "none";
-        });
-        return;
-      }
-
-      const passiveTick = () => updateThinkingFlowUi(studioWizardProgressFromPanel(panel));
-
-      const verticalLike =
-        document.body.classList.contains("pitch-vertical") || window.matchMedia("(max-width: 860px)").matches;
-
-      if (verticalLike && window.ScrollTrigger && window.gsap) {
-        window.gsap.registerPlugin(window.ScrollTrigger);
-        thinkingFlowScrollTrigger = ScrollTrigger.create({
-          trigger: panel,
-          start: "top 88%",
-          end: "bottom 14%",
-          scrub: 0.48,
-          onUpdate(self) {
-            updateThinkingFlowUi(self.progress);
-          },
-        });
-        updateThinkingFlowUi(studioWizardProgressFromPanel(panel));
-        return;
-      }
-
-      thinkingFlowPassiveCleanup = () => {
-        window.removeEventListener("scroll", passiveTick);
-        window.removeEventListener("resize", passiveTick);
-      };
-      window.addEventListener("scroll", passiveTick, { passive: true });
-      window.addEventListener("resize", passiveTick, { passive: true });
-      passiveTick();
-    }
-
     function teardownHorizontalStory() {
-      teardownThinkingFlowMotion();
       teardownStudioWizardHighlight();
       teardownVerticalClusterWheelCaptures();
       teardownHorizontalPanelReveals();
@@ -5279,9 +5214,9 @@
       mainScrollTrigger = null;
     }
 
-    /** `#thinking`: `.pitch-flow-step` omitted on purpose — step motion is `initThinkingFlowMotion` (scrub/passive); reveal tween hits `.panel-visual > *` only (outer `.pitch-thinking-visual`). */
+    /** Panel reveal tweens targets in this selector; Studio wizard `.pitch-wiz-step` is included alongside `.panel-visual > *`. */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
@@ -5510,7 +5445,6 @@
       if (!hasGsap || reduceMotion) {
         addPassiveProgress();
         initStudioWizardHighlight();
-        initThinkingFlowMotion();
         refreshPitchStepNavUi();
         return;
       }
@@ -5521,7 +5455,6 @@
         addPassiveProgress();
         initVerticalPanelReveals();
         initStudioWizardHighlight();
-        initThinkingFlowMotion();
         refreshPitchStepNavUi();
         return;
       }
@@ -5529,7 +5462,6 @@
       if (!isDesktop) {
         addPassiveProgress();
         initStudioWizardHighlight();
-        initThinkingFlowMotion();
         refreshPitchStepNavUi();
         return;
       }
@@ -5618,7 +5550,6 @@
               attachHorizontalVerticalClusters();
               refreshPitchStepNavUi();
               initStudioWizardHighlight();
-              initThinkingFlowMotion();
             });
           } catch (err) {
             console.warn("[scrollstory]", err);
