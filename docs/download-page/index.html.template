@@ -948,6 +948,7 @@
 
       body.is-scrollstory:not(.pitch-vertical) .story-roll {
         display: flex;
+        flex-wrap: nowrap;
         width: max-content;
         height: 100svh;
         direction: ltr;
@@ -1623,27 +1624,41 @@
           const maxSpan = Math.max(1, panels.length - 1);
           const getMaxScroll = () => Math.max(trackRoll.scrollWidth - window.innerWidth, 1);
 
-          horizontalTween = gsap.to(trackRoll, {
-            x: () => -getMaxScroll(),
-            ease: "none",
-            invalidateOnRefresh: true,
-            scrollTrigger: {
-              trigger: "#story",
-              pin: true,
-              scrub: 1,
-              snap:
-                panels.length > 1
-                  ? {
-                      snapTo: 1 / maxSpan,
-                      duration: { min: .12, max: .38 },
-                      ease: "power1.inOut",
-                      delay: .02,
-                    }
-                  : false,
-              end: () => "+=" + getMaxScroll(),
-              onUpdate: self => setProgress(self.progress),
+          /*
+            scroll-rtlflow uses scaleX(-1) on .story-mirror so strip direction matches RTL reading.
+            With translateX unchanged, viewport at progress 0 would show the *mirrored geometry's*
+            physical left (= last DOM panel). Swap tween bounds when rtlFlow so progress 0 = intro.
+          */
+          const rtlFlip = prefs.rtlFlow;
+
+          horizontalTween = gsap.fromTo(
+            trackRoll,
+            {
+              x: () => (rtlFlip ? -getMaxScroll() : 0),
+              ease: "none",
             },
-          });
+            {
+              x: () => (rtlFlip ? 0 : -getMaxScroll()),
+              ease: "none",
+              invalidateOnRefresh: true,
+              scrollTrigger: {
+                trigger: "#story",
+                pin: true,
+                scrub: 1,
+                snap:
+                  panels.length > 1
+                    ? {
+                        snapTo: 1 / maxSpan,
+                        duration: { min: .12, max: .38 },
+                        ease: "power1.inOut",
+                        delay: .02,
+                      }
+                    : false,
+                end: () => "+=" + getMaxScroll(),
+                onUpdate: self => setProgress(self.progress),
+              },
+            }
+          );
 
           mainScrollTrigger = horizontalTween.scrollTrigger;
 
