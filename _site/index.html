@@ -745,11 +745,19 @@
       width: min(1180px, 100%);
       max-width: min(56rem, 100%);
       margin-inline: auto;
+      /* No .panel-visual on this slide — default two-column grid leaves a dead column in RTL. */
+      grid-template-columns: 1fr;
+    }
+
+    #v1-next .panel-copy {
+      justify-items: stretch;
+      width: 100%;
     }
 
     #v1-next .bullets {
       grid-template-columns: 1fr;
       align-content: start;
+      gap: 11px;
     }
 
     @media (min-width: 640px) {
