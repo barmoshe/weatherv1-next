@@ -1390,11 +1390,21 @@
       }
 
       .builder-credit {
-        position: static;
-        display: flex;
-        margin: 0 max(16px, env(safe-area-inset-inline-start, 0px)) max(1.5rem, env(safe-area-inset-bottom, 0px));
-        width: fit-content;
-        max-width: calc(100% - 32px);
+        position: fixed;
+        left: max(12px, env(safe-area-inset-left, 0px));
+        right: auto;
+        /* Same band as .pitch-step-nav so both float controls share a baseline. */
+        bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px), 8px) + 3.25rem);
+        z-index: 47;
+        margin: 0;
+        max-width: min(16.5rem, calc(100vw - 100px));
+        padding: 0.32rem 0.65rem;
+        font-size: 0.64rem;
+        box-shadow: 2px 2px 0 var(--v1-ink);
+      }
+
+      .builder-credit span:first-child {
+        font-size: 0.54rem;
       }
     }
 
