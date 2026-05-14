@@ -1224,6 +1224,52 @@
       pointer-events: auto;
     }
 
+    /*
+     * שלב 4 (רינדור): פריסה אופקית — ריל תמלול + תוכנית סצנות משמאל (מסך),
+     * עמודת אמולטור אייפון מימין (פיזית). `direction: ltr` קובע ימין=מסוף השורה.
+     */
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento {
+      direction: ltr;
+      unicode-bidi: isolate;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(120px, 152px);
+      min-height: 218px;
+      align-items: stretch;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__rail {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--timeline {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--output {
+      grid-column: 3;
+      grid-row: 1;
+      align-self: stretch;
+      justify-items: center;
+      padding: 16px 8px 10px;
+      background: linear-gradient(200deg, rgb(252 250 247 / 1), rgb(255 255 255 / 1));
+      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 22%, rgb(0 0 0 / 0.1));
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--output .pitch-cell-label {
+      text-align: center;
+      justify-content: center;
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-device {
+      width: min(136px, 24vw);
+    }
+
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-output-footnote {
+      max-width: 10.5rem;
+      font-size: 0.5rem;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       #studio .pitch-bento,
       #studio .studio-phase-panel {
@@ -1835,6 +1881,28 @@
 
       .pitch-device {
         width: min(58vw, 188px);
+      }
+
+      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento {
+        direction: ltr;
+        grid-template-columns: 1fr;
+        min-height: 0;
+      }
+
+      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__rail,
+      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--timeline,
+      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--output {
+        grid-column: 1;
+        grid-row: auto;
+      }
+
+      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--output {
+        order: -1;
+        padding: 12px 10px;
+      }
+
+      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-device {
+        width: min(58vw, 168px);
       }
 
       .pitch-catalog-workspace {
@@ -5200,7 +5268,7 @@
       const studioWizardToolbar =
         section.id === "studio"
           ? `<div class="pitch-studio-wiz-controls-wrap" role="note" aria-labelledby="pitch-studio-wiz-legend">
-            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ — ללא הפעלה אוטומטית.</p>
+            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ — ללא הפעלה אוטומטית. בשלב הרביעי: פריסה עם אמולטור אייפון בצד ימין.</p>
           </div>`
           : "";
       const catalogWizardToolbar =
