@@ -174,6 +174,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [saving, setSaving] = useState(false);
   const [syncingR2, setSyncingR2] = useState(false);
   const [exportR2JobsLoading, setExportR2JobsLoading] = useState(false);
+  const [clearCacheBusy, setClearCacheBusy] = useState(false);
   const [uninstallBusy, setUninstallBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -347,6 +348,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [loadDesktopStatus, loadHealth]);
 
+  const clearDerivedCache = useCallback(async () => {
+    if (
+      !window.confirm(
+        "למחוק מהדיסק את הפוסטרים, התצוגות המקדימות, תמונות המקטעים וקבצי הרינדור הזמניים?\nהקטלוג וקבצי הווידאו המלאים לא יימחקו.",
+      )
+    ) {
+      return;
+    }
+    setClearCacheBusy(true);
+    setDesktopError(null);
+    try {
+      const r = await fetch("/api/runtime/clear-derived-cache", { method: "POST" });
+      const data = (await r.json()) as { success: boolean; error?: string };
+      if (!r.ok || !data.success) throw new Error(data.error ?? `HTTP ${r.status}`);
+      await loadDesktopStatus();
+      await loadHealth();
+      setSaved(true);
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setClearCacheBusy(false);
+    }
+  }, [loadDesktopStatus, loadHealth]);
+
   const pullCatalogFromR2 = useCallback(async () => {
     setSyncingR2(true);
     setDesktopError(null);
@@ -478,7 +503,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <div className="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby="settings-description">
       <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal-dialog modal-dialog--settings" aria-busy={saving || desktopLoading || exportR2JobsLoading}>
+      <div className="modal-dialog modal-dialog--settings" aria-busy={saving || desktopLoading || exportR2JobsLoading || clearCacheBusy}>
         {saving && (
           <div className="settings-reloading" role="status">
             שומר ומרענן את השרת המקומי…
@@ -809,6 +834,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <span>FFprobe</span>
                   <input value={ffprobePath} onChange={(e) => { setFfprobePath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
                 </label>
+              </div>
+              <p className="settings-hint">
+                ניקוי מטמון מוחק מהדיסק פוסטרים, תצוגות מקדימות, תמונות מקטעים וקבצי רינדור זמניים. הקטלוג וקבצי הווידאו המלאים לא נמחקים.
+                הדפדפן עשוי להמשיך להציג תמונות ישנות עד רענון מלא (עד כשעה).
+              </p>
+              <div className="settings-actions-row">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => void clearDerivedCache()}
+                  disabled={saving || desktopLoading || clearCacheBusy}
+                >
+                  {clearCacheBusy ? "מנקה…" : "נקה מטמון"}
+                </button>
               </div>
               {desktopStatus && desktopStatus.workspace.missing.length > 0 && (
                 <p className="settings-hint">

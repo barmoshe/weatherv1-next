@@ -2,7 +2,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { NextRequest } from "next/server";
+import { POST as clearDerivedCachePost } from "@/app/api/runtime/clear-derived-cache/route";
 import { DESKTOP_AUTH_HEADER, assertDesktopAuth } from "@/server/runtime/auth";
+import { clearDerivedRuntimeCaches } from "@/server/runtime/clear-derived-cache";
 import { getRuntimeConfig, resetRuntimeConfigForTests } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { getAssetSource, resetAssetSourceForTests } from "@/server/assets/source";
@@ -167,6 +170,72 @@ describe("desktop auth", () => {
       headers: new Headers({ [DESKTOP_AUTH_HEADER]: "secret" }),
     });
     expect(allowed).toBeNull();
+  });
+});
+
+describe("clearDerivedRuntimeCaches", () => {
+  it("clears posters, previews, segment posters, render tmp, and tagging; preserves uploads", async () => {
+    const workspace = makeTempDir("clear-cache-workspace");
+    const runtime = makeTempDir("clear-cache-runtime");
+    process.env.WEATHER_WORKSPACE_DIR = workspace;
+    process.env.WEATHER_RUNTIME_DIR = runtime;
+    resetRuntimeState();
+
+    const paths = getRuntimePaths();
+    fs.mkdirSync(paths.postersDir, { recursive: true });
+    fs.writeFileSync(path.join(paths.postersDir, "x.jpg"), "x");
+    fs.mkdirSync(paths.previewsDir, { recursive: true });
+    fs.writeFileSync(path.join(paths.previewsDir, "p.mp4"), "p");
+    fs.mkdirSync(paths.segmentPostersDir, { recursive: true });
+    fs.writeFileSync(path.join(paths.segmentPostersDir, "s.jpg"), "s");
+    fs.mkdirSync(paths.renderTmpDir, { recursive: true });
+    fs.writeFileSync(path.join(paths.renderTmpDir, "tmp.bin"), "t");
+    const taggingDir = path.join(paths.cacheDir, "tagging");
+    fs.mkdirSync(taggingDir, { recursive: true });
+    fs.writeFileSync(path.join(taggingDir, "q.json"), "{}");
+
+    fs.mkdirSync(paths.uploadsDir, { recursive: true });
+    fs.writeFileSync(path.join(paths.uploadsDir, "keep.bin"), "k");
+
+    await clearDerivedRuntimeCaches();
+
+    expect(fs.readdirSync(paths.postersDir)).toEqual([]);
+    expect(fs.readdirSync(paths.previewsDir)).toEqual([]);
+    expect(fs.readdirSync(paths.segmentPostersDir)).toEqual([]);
+    expect(fs.readdirSync(paths.renderTmpDir)).toEqual([]);
+    expect(fs.readdirSync(taggingDir)).toEqual([]);
+    expect(fs.readFileSync(path.join(paths.uploadsDir, "keep.bin"), "utf8")).toBe("k");
+  });
+
+  it("POST /api/runtime/clear-derived-cache requires desktop auth when desktop mode is on", async () => {
+    const workspace = makeTempDir("clear-cache-api-workspace");
+    const runtime = makeTempDir("clear-cache-api-runtime");
+    process.env.DESKTOP_MODE = "1";
+    process.env.DESKTOP_SESSION_TOKEN = "secret";
+    process.env.WEATHER_WORKSPACE_DIR = workspace;
+    process.env.WEATHER_RUNTIME_DIR = runtime;
+    resetRuntimeState();
+
+    const paths = getRuntimePaths();
+    fs.mkdirSync(paths.postersDir, { recursive: true });
+    fs.writeFileSync(path.join(paths.postersDir, "a.jpg"), "a");
+
+    const denied = await clearDerivedCachePost(
+      new NextRequest("http://localhost/api/runtime/clear-derived-cache", { method: "POST" }),
+    );
+    expect(denied.status).toBe(401);
+
+    const ok = await clearDerivedCachePost(
+      new NextRequest("http://localhost/api/runtime/clear-derived-cache", {
+        method: "POST",
+        headers: new Headers({ [DESKTOP_AUTH_HEADER]: "secret" }),
+      }),
+    );
+    expect(ok.status).toBe(200);
+    const body = (await ok.json()) as { success: boolean; cleared_paths?: string[] };
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.cleared_paths)).toBe(true);
+    expect(fs.readdirSync(paths.postersDir)).toEqual([]);
   });
 });
 
