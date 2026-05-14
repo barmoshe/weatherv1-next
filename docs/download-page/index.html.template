@@ -587,7 +587,7 @@
       font-size: 0.9rem;
     }
 
-    /* First slide: hero + bullets + downloads + preview fits one viewport */
+    /* Intro: bullets + hero download card + phone preview fits one viewport */
     #intro.story-panel {
       padding-block: calc(var(--nav-height) + 14px) 24px;
       padding-inline: clamp(14px, 3.8vw, 52px);
@@ -1331,8 +1331,8 @@
         id: "pitch-test-07",
         kicker: "דוגמת מעבר · 07",
         title: "שקופית בדיקה 07",
-        lead: "לפני הורדה — ודאו שאתם מזהים 07 ואחריו 08 בלי דילוג פרק קדימה/אחורה.",
-        bullets: ["קרוב ליעד ההורדה", "מתאים לבדוק anchor מ־#/pitch-test-01 עד הסוף"],
+        lead: "מהדקים את סדר 07 ואחריו 08 בלי דילוג פרק — אחרי הסדרה ההורדה רק בשקופית הפתיחה.",
+        bullets: ["לקישורי הורדה חזרו ל־#download-hero", "מתאים לבדוק anchor מ־#/pitch-test-01 עד 08"],
         visual: "numberedSample",
         sampleNumber: 7,
         theme: { paper: "#f7ffee", accent: "#3d7f1e" }
@@ -1341,20 +1341,11 @@
         id: "pitch-test-08",
         kicker: "דוגמת מעבר · 08",
         title: "שקופית בדיקה 08",
-        lead: "הפרק האחרון בשורת הבדיקה — מה שאחריו צריך להיות ההורדה בלי התנגשות ב־snap.",
-        bullets: ["08 ואז הורדה", "מחקו את פרקי pitch-test כשמתחיל פרודקשן"],
+        lead: "הפרק האחרון בשורת הדוגמה — אחריו אין שקופית הורדה נפרפת; ההורדות רק בשקופית הפתיחה.",
+        bullets: ["לקישורים חזרו ל־#intro או #download-hero", "מחקו את פרקי pitch-test כשמתחיל פרודקשן"],
         visual: "numberedSample",
         sampleNumber: 8,
         theme: { paper: "#fff0ee", accent: "#d9432b" }
-      },
-      {
-        id: "download",
-        kicker: "הורדה",
-        title: "להתחיל עם WeatherV1",
-        lead: "הורידו את גרסת הדסקטופ האחרונה. אם הקישור לא זמין, בדקו שיש Release עם קבצי ההתקנה המצורפים.",
-        bullets: ["הורדות ל-macOS ול-Windows מהעמוד הזה", "כל ההפצות מסודרות ב-Releases", "עדכונים מתפרסמים מהמאגר"],
-        visual: "download",
-        theme: { paper: "#f2c231", accent: "#ff0000" }
       }
     ];
 
@@ -1520,7 +1511,7 @@
             </li>
             <li class="tutorial-item">
               <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">2</span>
-              <div class="tutorial-body"><strong>דילוג פרקים</strong><span>לחצו על “הורדה” בשורת הניווט ושימו לב איך הזזת המסך מתיישבת על אותה שקופית.</span></div>
+              <div class="tutorial-body"><strong>דילוג פרקים</strong><span>לחצו על “הורדה” בשורת הניווט — הקפיצה חוזרת לעמודת ההורדה בשקופית הפתיחה (#download-hero).</span></div>
             </li>
             <li class="tutorial-item">
               <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">3</span>
@@ -1534,13 +1525,6 @@
         const raw = Number(section.sampleNumber);
         const n = Number.isFinite(raw) ? String(Math.trunc(raw)) : "?";
         return `<div class="numbered-sample-visual"><span class="numbered-sample-num mixed-ltr" lang="en" dir="ltr">${escapeHtml(n)}</span></div>`;
-      }
-      if (type === "download") {
-        return `<div class="download-card">
-          <h3><span class="mixed-ltr" lang="en" dir="ltr">WeatherV1 Desktop</span></h3>
-          <p>קישורי הורדה לגרסה האחרונה</p>
-          <div class="download-links">${downloadLinksMarkup(downloadLinks)}</div>
-        </div>`;
       }
       return `<div class="visual-board"><div class="mini-card"><span>${escapeHtml(section.title)}</span><small>Placeholder</small></div></div>`;
     }
