@@ -656,7 +656,7 @@
       box-shadow: 0 2px 10px rgb(200 32 43 / 0.08);
     }
 
-    [data-pitch-layout="product-app"] .bullets li.is-wizard-active::before {
+    [data-pitch-layout="product-app"] .bullets--studio-wizard li.is-wizard-active::before {
       background: var(--panel-accent, var(--v1-coral));
       color: #fff;
       border-color: rgb(0 0 0 / 0.12);
@@ -688,19 +688,6 @@
       align-content: stretch;
     }
 
-    /* v1-next: single copy column (no visual mock) */
-    #v1-next .panel-inner {
-      grid-template-columns: 1fr;
-      width: min(1180px, 100%);
-      max-width: min(48rem, 100%);
-      margin-inline: auto;
-      justify-items: stretch;
-    }
-
-    #v1-next .panel-copy {
-      max-width: 100%;
-    }
-
     @media (min-width: 861px) {
       .story-panel[data-pitch-layout="product-app"] .panel-inner {
         align-items: stretch;
@@ -727,9 +714,27 @@
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(247 243 236 / 0.88));
     }
 
-    @media (min-width: 861px) {
-      #v1-next .panel-inner {
-        grid-template-columns: 1fr;
+    /* סיכום והמשך — רשימה אחת ככרטיסי־גריד עם מספור כמו בשאר המצגת */
+    #v1-next .panel-inner {
+      width: min(1180px, 100%);
+      max-width: min(56rem, 100%);
+      margin-inline: auto;
+    }
+
+    #v1-next .bullets {
+      grid-template-columns: 1fr;
+      align-content: start;
+    }
+
+    @media (min-width: 640px) {
+      #v1-next .bullets {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1040px) {
+      #v1-next .bullets {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
 
@@ -2446,311 +2451,348 @@
       margin-top: 4px;
     }
 
-    /* Intro flow diagram: dotted board, wired SVG arcs, phased node pulses (RTL logical grid columns) */
+    /* Intro: four-phase flowboard (RTL), SVG arcs, interactive tabs + readout */
     .intro-pipeline-wrap {
       margin: 0;
       width: 100%;
       max-width: min(100%, 44rem);
     }
 
-    .intro-pipeline-diagram.intro-pipeline-excal {
+    .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow {
       position: relative;
+      isolation: isolate;
       margin: 0;
-      padding: clamp(14px, 2.2vw, 22px) clamp(12px, 2.4vw, 20px) clamp(12px, 2vw, 18px);
+      padding: clamp(16px, 2.4vw, 24px);
       border: 2px solid var(--v1-ink);
-      border-radius: 22px;
-      background-color: rgb(255 255 255 / 0.96);
+      border-radius: clamp(22px, 4vw, 28px);
+      background-color: rgb(255 255 255 / 0.97);
       background-image:
-        radial-gradient(rgb(249 84 62 / 0.07) 1px, transparent 1px),
-        linear-gradient(135deg, rgb(255 255 255 / 0.94), rgb(252 233 228 / 0.55));
+        radial-gradient(rgb(249 84 62 / 0.055) 1px, transparent 1px),
+        linear-gradient(
+          160deg,
+          rgb(255 255 255 / 0.99) 0%,
+          rgb(255 246 243 / 0.88) 38%,
+          rgb(252 228 223 / 0.55) 100%
+        ),
+        radial-gradient(120% 80% at 15% -10%, rgb(249 84 62 / 0.12), transparent 55%);
       background-size:
-        20px 20px,
+        22px 22px,
+        auto,
         auto;
       box-shadow:
-        0 14px 34px rgb(15 23 42 / 0.07),
-        4px 4px 0 rgb(0 0 0 / 0.1);
+        0 18px 40px rgb(15 23 42 / 0.08),
+        0 0 0 1px rgb(255 255 255 / 0.85) inset,
+        5px 5px 0 rgb(0 0 0 / 0.1);
       overflow: clip;
       display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       grid-template-rows:
-        clamp(34px, 5.5vw, 44px)
+        clamp(40px, 6.5vw, 52px)
+        auto
         auto;
-      column-gap: clamp(6px, 1.25vw, 12px);
-      row-gap: 10px;
-      align-items: center;
+      column-gap: clamp(10px, 2vw, 16px);
+      row-gap: clamp(14px, 2.2vw, 20px);
+      align-items: start;
       direction: rtl;
     }
 
-    .intro-pipeline-edge-layer {
+    .intro-phase-flow .intro-pipeline-edge-layer {
       grid-column: 1 / -1;
       grid-row: 1;
       width: 100%;
       height: 100%;
-      min-height: clamp(34px, 5.5vw, 44px);
+      min-height: clamp(40px, 6.5vw, 52px);
       display: block;
       overflow: visible;
       pointer-events: none;
       z-index: 0;
     }
 
-    .intro-pipeline-diagram.intro-pipeline-excal:not(.intro-pipeline-diagram--inview) .intro-pipeline-edge {
-      opacity: 0.75;
-      animation-play-state: paused;
-      stroke-dashoffset: 0.35;
-    }
-
-    .intro-pipeline-edge {
-      stroke-dasharray: 0.2 0.8;
-      animation: introPipelineDash 3.2s linear infinite;
-      opacity: 0.96;
-      will-change: stroke-dashoffset;
-    }
-
-    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-edge {
-      animation-play-state: running;
-    }
-
-    .intro-pipeline-edge--1 {
-      animation-delay: -0s;
-    }
-
-    .intro-pipeline-edge--2 {
-      animation-delay: -0.58s;
-    }
-
-    .intro-pipeline-edge--3 {
-      animation-delay: -1.17s;
-    }
-
-    .intro-pipeline-edge--4 {
-      animation-delay: -1.74s;
-    }
-
-    .intro-pipeline-edge--5 {
-      animation-delay: -2.32s;
-    }
-
-    @keyframes introPipelineDash {
-      to {
-        stroke-dashoffset: -1;
-      }
-    }
-
-    @keyframes introPipelineNodePulse {
-      0%,
-      58% {
-        opacity: 0.8;
-      }
-
-      8% {
-        opacity: 1;
-      }
-
-      12% {
-        opacity: 0.88;
-      }
-    }
-
-    .intro-pipeline-node-slot.intro-pipeline-node {
+    .intro-phase-steps {
+      grid-column: 1 / -1;
       grid-row: 2;
-      justify-self: center;
-      align-self: start;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(8px, 1.8vw, 14px);
+      align-items: start;
       position: relative;
       z-index: 1;
-      max-width: 100%;
+      margin: 0;
+      padding: 0;
     }
 
-    .intro-pipeline-node-slot--1 {
-      grid-column: 1;
+    .intro-phase-flow.intro-pipeline-diagram.intro-pipeline-excal:not(.intro-pipeline-diagram--inview) .intro-flow-segment {
+      opacity: 0.78;
+      transition: opacity 0.45s ease;
     }
 
-    .intro-pipeline-node-slot--2 {
-      grid-column: 2;
+    .intro-phase-flow.intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-flow-segment {
+      opacity: 1;
     }
 
-    .intro-pipeline-node-slot--3 {
-      grid-column: 3;
-    }
-
-    .intro-pipeline-node-slot--4 {
-      grid-column: 4;
-    }
-
-    .intro-pipeline-node-slot--5 {
-      grid-column: 5;
-    }
-
-    .intro-pipeline-node-slot--6 {
-      grid-column: 6;
-    }
-
-    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--a {
-      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
-      animation-delay: 0s;
-    }
-
-    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--b {
-      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
-      animation-delay: -1.6s;
-    }
-
-    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--c {
-      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
-      animation-delay: -3.2s;
-    }
-
-    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--d {
-      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
-      animation-delay: -4.8s;
-    }
-
-    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--e {
-      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
-      animation-delay: -6.4s;
-    }
-
-    .intro-pipeline-diagram.intro-pipeline-excal.intro-pipeline-diagram--inview .intro-pipeline-node.intro-pipeline-node--f {
-      animation: introPipelineNodePulse 9.6s ease-in-out infinite;
-      animation-delay: -8s;
-    }
-
-    .intro-pipeline-flow {
-      display: none;
-    }
-
-    .intro-pipeline-arrow {
-      display: none;
-    }
-
-    .intro-pipeline-node {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 10px 12px;
-      border: 2px solid var(--v1-ink);
-      border-radius: 16px 20px 14px 18px;
-      background: rgb(255 255 255 / 0.95);
-      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.12);
-      font-weight: 950;
-      font-size: clamp(0.68rem, 0.22vw + 0.62rem, 0.92rem);
-      line-height: 1.22;
-      color: var(--v1-ink);
-      hyphens: auto;
-      box-sizing: border-box;
-      transform-origin: center;
+    .intro-flow-segment {
       transition:
-        opacity 0.35s ease,
-        box-shadow 0.35s ease;
+        opacity 0.42s ease,
+        filter 0.42s ease;
     }
 
-    .intro-pipeline-node--a {
-      transform: rotate(-0.65deg);
+    .intro-flow-arrow-moving path {
+      filter: drop-shadow(0 0 2px rgb(249 84 62 / 0.65));
     }
 
-    .intro-pipeline-node--b {
-      transform: rotate(0.55deg);
+    /* Dim segments ahead of current phase (progressive emphasis) */
+    .intro-phase-flow[data-intro-phase="0"] .intro-flow-segment--2,
+    .intro-phase-flow[data-intro-phase="0"] .intro-flow-segment--3 {
+      opacity: 0.34;
     }
 
-    .intro-pipeline-node--c {
-      transform: rotate(-0.45deg);
+    .intro-phase-flow[data-intro-phase="1"] .intro-flow-segment--3 {
+      opacity: 0.38;
     }
 
-    .intro-pipeline-node--d {
-      transform: rotate(0.5deg);
+    .intro-phase-flow[data-intro-phase="1"] .intro-flow-segment--1 {
+      opacity: 1;
+      filter: drop-shadow(0 0 5px rgb(249 84 62 / 0.42));
     }
 
-    .intro-pipeline-node--e {
-      transform: rotate(-0.4deg);
+    .intro-phase-flow[data-intro-phase="2"] .intro-flow-segment--1,
+    .intro-phase-flow[data-intro-phase="2"] .intro-flow-segment--2 {
+      opacity: 1;
+      filter: drop-shadow(0 0 4px rgb(249 84 62 / 0.38));
     }
 
-    .intro-pipeline-node--f {
-      transform: rotate(0.42deg);
+    .intro-phase-flow[data-intro-phase="3"] .intro-flow-segment {
+      opacity: 1;
+      filter: drop-shadow(0 0 4px rgb(249 84 62 / 0.34));
+    }
+    button.intro-phase-step {
+      appearance: none;
+      font: inherit;
+      margin: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      padding: 10px 6px 12px;
+      border: none;
+      border-radius: clamp(14px, 2.4vw, 20px);
+      background: rgb(255 255 255 / 0.45);
+      color: var(--v1-ink);
+      box-shadow: 0 0 0 1.5px rgb(15 23 42 / 0.07) inset;
+      outline: none;
+      transition:
+        background 0.3s ease,
+        box-shadow 0.32s ease,
+        transform 0.32s ease;
+    }
+
+    .intro-phase-step__ring {
+      display: grid;
+      place-items: center;
+      width: clamp(42px, 7vw, 52px);
+      height: clamp(42px, 7vw, 52px);
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.95), rgb(252 232 226 / 0.75));
+      box-shadow:
+        0 0 0 2px rgb(15 23 42 / 0.92),
+        3px 3px 0 rgb(15 23 42 / 0.12),
+        inset 0 3px 8px rgb(249 84 62 / 0.08);
+      transition: transform 0.32s ease;
+    }
+
+    .intro-phase-step__num {
+      font-variant-numeric: tabular-nums;
+      font-weight: 950;
+      font-size: clamp(1rem, 0.4vw + 0.92rem, 1.28rem);
+      line-height: 1;
+      color: var(--v1-coral);
+      letter-spacing: -0.02em;
+    }
+
+    .intro-phase-step__label {
+      font-weight: 850;
+      font-size: clamp(0.72rem, 0.35vw + 0.62rem, 0.94rem);
+      line-height: 1.35;
+      max-width: 11em;
+      hyphens: auto;
+      color: rgb(28 31 43 / 0.92);
+    }
+
+    button.intro-phase-step:hover {
+      background: rgb(255 255 255 / 0.85);
+      box-shadow:
+        0 0 0 2px rgb(249 84 62 / 0.25) inset,
+        4px 4px 0 rgb(249 84 62 / 0.12);
+    }
+
+    button.intro-phase-step:focus-visible {
+      box-shadow:
+        0 0 0 3px rgb(249 84 62 / 0.45),
+        0 0 0 7px rgb(255 255 255 / 0.95),
+        0 0 0 1.5px var(--v1-ink) inset;
+      z-index: 2;
+      position: relative;
+    }
+
+    .intro-phase-step.is-complete .intro-phase-step__ring {
+      background: linear-gradient(155deg, rgb(255 253 246), rgb(220 246 229 / 0.92));
+      box-shadow:
+        0 0 0 2px rgb(52 146 106 / 0.55),
+        3px 3px 0 rgb(52 146 106 / 0.15),
+        inset 0 1px 0 rgb(255 255 255 / 0.8);
+    }
+
+    .intro-phase-step.is-complete .intro-phase-step__num {
+      color: rgb(28 126 94);
+    }
+
+    .intro-phase-step.is-active .intro-phase-step__ring {
+      background:
+        radial-gradient(circle at 30% 20%, rgb(255 246 237), rgb(251 216 207 / 0.85)),
+        conic-gradient(
+          from 220deg,
+          rgb(249 84 62 / 0.25),
+          transparent 52%,
+          rgb(249 84 62 / 0.2)
+        );
+      box-shadow:
+        0 0 0 2.5px var(--v1-coral),
+        5px 5px 0 rgb(249 84 62 / 0.22),
+        inset 0 2px 10px rgb(255 255 255 / 0.75);
+      transform: scale(1.04);
+    }
+
+    .intro-phase-step.is-active .intro-phase-step__label {
+      color: var(--v1-ink);
+      font-weight: 950;
+    }
+
+    .intro-phase-readout {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      margin: 0;
+      padding: clamp(14px, 2.5vw, 18px) clamp(16px, 2.4vw, 22px);
+      border-radius: clamp(14px, 2.8vw, 20px);
+      background: rgb(255 253 251 / 0.82);
+      box-shadow:
+        0 0 0 1.5px rgb(15 23 42 / 0.08),
+        inset 0 12px 32px rgb(249 84 62 / 0.04);
+      border: 1px solid rgb(249 84 62 / 0.16);
+      min-height: 3.75em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .intro-phase-readout::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 18px;
+      top: -6px;
+      width: clamp(72px, 18%, 120px);
+      height: 3px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--v1-coral), rgb(249 84 62 / 0));
+      opacity: 0.9;
+      pointer-events: none;
+      transition:
+        inset-inline-start 0.42s cubic-bezier(0.22, 0.92, 0.25, 1),
+        opacity 0.38s ease;
+    }
+
+    .intro-phase-flow[data-intro-phase="0"] .intro-phase-readout::before {
+      inset-inline-start: 8%;
+    }
+
+    .intro-phase-flow[data-intro-phase="1"] .intro-phase-readout::before {
+      inset-inline-start: 34%;
+    }
+
+    .intro-phase-flow[data-intro-phase="2"] .intro-phase-readout::before {
+      inset-inline-start: 56%;
+    }
+
+    .intro-phase-flow[data-intro-phase="3"] .intro-phase-readout::before {
+      inset-inline-start: 78%;
+    }
+
+    .intro-phase-detail {
+      margin: 0;
+      font-weight: 700;
+      font-size: clamp(0.94rem, 0.45vw + 0.76rem, 1.06rem);
+      line-height: 1.62;
+      color: rgb(25 31 43 / 0.92);
+      display: none;
+    }
+
+    .intro-phase-flow[data-intro-phase="0"] .intro-phase-detail--0,
+    .intro-phase-flow[data-intro-phase="1"] .intro-phase-detail--1,
+    .intro-phase-flow[data-intro-phase="2"] .intro-phase-detail--2,
+    .intro-phase-flow[data-intro-phase="3"] .intro-phase-detail--3 {
+      display: block;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .intro-pipeline-diagram.intro-pipeline-excal:not(.intro-pipeline-diagram--inview) .intro-pipeline-edge {
-        opacity: 1;
+      .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow .intro-pipeline-track {
+        stroke-opacity: 0.55 !important;
+        filter: none !important;
       }
 
-      .intro-pipeline-edge {
-        animation: none !important;
-        opacity: 1 !important;
-        stroke-dashoffset: 0 !important;
-        stroke-dasharray: none !important;
+      .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow .intro-flow-arrow-moving path {
+        filter: none !important;
       }
 
-      .intro-pipeline-node {
-        animation: none !important;
+      .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow .intro-flow-segment {
+        filter: none !important;
+      }
+      button.intro-phase-step,
+      button.intro-phase-step .intro-phase-step__ring {
+        transition-duration: 0.01ms !important;
       }
 
-      .intro-pipeline-diagram.intro-pipeline-excal .intro-pipeline-node {
-        opacity: 1;
+      button.intro-phase-step.is-active .intro-phase-step__ring {
+        transform: none;
+      }
+
+      .intro-phase-readout::before {
+        transition: none;
       }
     }
 
-    @media (max-width: 1110px) {
-      .intro-pipeline-diagram.intro-pipeline-excal .intro-pipeline-node {
-        font-size: clamp(0.62rem, 0.08vw + 0.54rem, 0.74rem);
-        padding: 8px 6px;
+    @media (max-width: 930px) {
+      .intro-pipeline-diagram.intro-pipeline-excal.intro-phase-flow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows:
+          clamp(38px, 9vw, 48px)
+          auto
+          auto;
       }
 
-      .intro-pipeline-diagram.intro-pipeline-excal {
-        column-gap: 4px;
+      .intro-phase-steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .intro-phase-flow[data-intro-phase="0"] .intro-phase-readout::before {
+        inset-inline-start: 22%;
+      }
+
+      .intro-phase-flow[data-intro-phase="1"] .intro-phase-readout::before {
+        inset-inline-start: 74%;
+      }
+
+      .intro-phase-flow[data-intro-phase="2"] .intro-phase-readout::before {
+        inset-inline-start: 26%;
+      }
+
+      .intro-phase-flow[data-intro-phase="3"] .intro-phase-readout::before {
+        inset-inline-start: 72%;
       }
     }
 
-    @media (max-width: 960px) {
-      .intro-pipeline-diagram.intro-pipeline-excal {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        grid-template-rows: clamp(34px, 6vw, 42px) auto auto;
-      }
-
-      .intro-pipeline-edge-layer {
-        grid-row: 1;
-      }
-
-      .intro-pipeline-node-slot--1,
-      .intro-pipeline-node-slot--2,
-      .intro-pipeline-node-slot--3 {
-        grid-row: 2;
-      }
-
-      .intro-pipeline-node-slot--4,
-      .intro-pipeline-node-slot--5,
-      .intro-pipeline-node-slot--6 {
-        grid-row: 3;
-      }
-
-      /* RTL: cols 3,2,1 then 6,5,4 for two-row reading */
-      .intro-pipeline-node-slot--1 {
-        grid-column: 1;
-      }
-
-      .intro-pipeline-node-slot--2 {
-        grid-column: 2;
-      }
-
-      .intro-pipeline-node-slot--3 {
-        grid-column: 3;
-      }
-
-      .intro-pipeline-node-slot--4 {
-        grid-column: 1;
-      }
-
-      .intro-pipeline-node-slot--5 {
-        grid-column: 2;
-      }
-
-      .intro-pipeline-node-slot--6 {
-        grid-column: 3;
-      }
-
-      .intro-pipeline-edge-layer .intro-pipeline-edge {
-        opacity: 0.35;
-        animation-duration: 4.25s;
-      }
+    .intro-pipeline-flow,
+    .intro-pipeline-arrow {
+      display: none;
     }
 
     #intro .hero-downloads {
@@ -3231,6 +3273,8 @@
         --story-slide-h: min(100dvh, 100svh);
         /* Reserve space below fixed nav for “full deck on desktop” strip */
         --pitch-mobile-desktop-cta-h: 3.35rem;
+        /* Floating step dock (prev/next) — used for panel padding + builder chip offset */
+        --pitch-mobile-step-dock: 58px;
       }
 
       html {
@@ -3239,12 +3283,15 @@
           env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) +
             var(--pitch-mobile-desktop-cta-h) + 10px
         );
-        scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
+        scroll-padding-bottom: calc(
+          env(safe-area-inset-bottom, 0px) + var(--pitch-mobile-step-dock) + 36px
+        );
+        touch-action: manipulation;
       }
 
       body {
         overflow-x: hidden;
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--pitch-mobile-step-dock) + 40px);
         /* Avoid iOS 100vh jump when the chrome shows/hides; keeps pitch cards feeling stable. */
         min-height: 100svh;
         min-height: 100dvh;
@@ -3337,8 +3384,8 @@
 
       .pitch-mobile-desktop-cta__btn {
         flex: 1 1 auto;
-        min-height: 40px;
-        padding: 0 12px;
+        min-height: 44px;
+        padding: 0 14px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -3351,6 +3398,7 @@
         background: rgb(255 255 255 / 0.96);
         color: var(--v1-ink);
         box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+        -webkit-tap-highlight-color: rgb(249 84 62 / 0.18);
       }
 
       .pitch-mobile-desktop-cta__btn--primary {
@@ -3383,7 +3431,12 @@
       .panel-mobile-summary {
         display: block;
         font-size: clamp(0.98rem, 3.4vw, 1.18rem);
-        line-height: 1.38;
+        line-height: 1.42;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgb(0 0 0 / 0.07);
+        background: rgb(255 255 255 / 0.72);
+        box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
       }
 
       .pitch-lead-well .panel-mobile-summary {
@@ -3393,8 +3446,9 @@
       .nav-link,
       .cta {
         flex: 0 0 auto;
-        min-height: 40px;
+        min-height: 44px;
         padding: 0 14px;
+        -webkit-tap-highlight-color: rgb(249 84 62 / 0.18);
       }
 
       .scroll-progress,
@@ -3409,18 +3463,22 @@
         left: 50%;
         right: auto;
         transform: translateX(-50%);
-        bottom: max(10px, env(safe-area-inset-bottom, 0px), 8px);
+        bottom: max(12px, env(safe-area-inset-bottom, 0px) + 4px, 10px);
         flex-direction: row;
         align-items: center;
-        gap: 8px;
-        padding: 8px 10px;
+        gap: 10px;
+        padding: 10px 12px;
         border-radius: 999px;
         z-index: 52;
+        box-shadow:
+          0 10px 36px rgb(15 23 42 / 0.14),
+          0 1px 0 rgb(255 255 255 / 0.65) inset;
       }
 
       .pitch-step-nav button {
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
+        -webkit-tap-highlight-color: rgb(249 84 62 / 0.22);
       }
 
       .story-shell {
@@ -3447,8 +3505,17 @@
         min-height: var(--story-slide-h);
         overflow: hidden;
         scroll-snap-align: none;
-        padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 22px) max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 76px), 88px);
-        padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
+        padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 22px)
+          max(1.85rem, calc(env(safe-area-inset-bottom, 0px) + var(--pitch-mobile-step-dock) + 32px), 96px);
+        padding-inline: max(18px, env(safe-area-inset-inline-start, 8px)) max(18px, env(safe-area-inset-inline-end, 8px));
+      }
+
+      /* Studio: taller content + live mock — allow in-slide scroll instead of clipping */
+      #studio.story-panel {
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
       }
 
       .story-panel.story-panel--vcluster {
@@ -3475,8 +3542,8 @@
             env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) +
               var(--pitch-mobile-desktop-cta-h) + 10px
           )
-          max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 76px), 88px);
-        padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
+          max(1.85rem, calc(env(safe-area-inset-bottom, 0px) + var(--pitch-mobile-step-dock) + 32px), 96px);
+        padding-inline: max(18px, env(safe-area-inset-inline-start, 8px)) max(18px, env(safe-area-inset-inline-end, 8px));
         display: grid;
         align-items: stretch;
         justify-items: center;
@@ -3497,16 +3564,39 @@
             env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) +
               var(--pitch-mobile-desktop-cta-h) + 8px
           )
-          max(6.75rem, calc(env(safe-area-inset-bottom, 0px) + 6rem));
-        padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
+          max(6.75rem, calc(env(safe-area-inset-bottom, 0px) + var(--pitch-mobile-step-dock) + 52px));
+        padding-inline: max(18px, env(safe-area-inset-inline-start, 8px)) max(18px, env(safe-area-inset-inline-end, 8px));
       }
 
-      /* Text-first mobile pitch: hide decorative mockups (desktop keeps full layout). */
-      .panel-visual,
+      /* Text-first mobile pitch: hide decorative mockups (desktop keeps full layout).
+         Exception: #studio keeps mock + hint so phase picks stay meaningful. */
+      .story-panel:not(#studio) .panel-visual,
       .intro-pipeline-wrap,
-      .pitch-studio-wiz-controls-wrap,
+      .story-panel:not(#studio) .pitch-studio-wiz-controls-wrap,
       .pitch-pricing-quote {
         display: none !important;
+      }
+
+      #studio .panel-visual {
+        display: grid !important;
+        width: 100%;
+        max-height: min(48vh, 420px);
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 18px;
+        outline: 1px solid rgb(0 0 0 / 0.08);
+        background: rgb(248 247 244 / 0.65);
+        margin-top: 4px;
+        touch-action: pan-y;
+      }
+
+      #studio .pitch-app-shell {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      #studio .panel-inner {
+        align-content: start;
       }
 
       #intro .panel-inner {
@@ -3586,7 +3676,8 @@
       h1, h2 {
         max-width: none;
         font-size: clamp(1.75rem, 7.8vw, 3.35rem);
-        line-height: 0.94;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
         text-wrap: balance;
       }
 
@@ -3606,6 +3697,12 @@
       .bullets {
         font-size: clamp(0.92rem, 3.5vw, 1.08rem);
         gap: 12px;
+      }
+
+      [data-pitch-layout="product-app"] .bullets--studio-wizard li[data-studio-phase-bullet] {
+        min-height: 48px;
+        align-items: center;
+        padding-block: 12px;
       }
 
       .panel-visual {
@@ -3659,13 +3756,14 @@
         inset-inline-end: auto;
         left: auto;
         right: auto;
-        bottom: max(12px, env(safe-area-inset-bottom, 0px), 8px);
+        bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + var(--pitch-mobile-step-dock) + 8px);
         z-index: 51;
         margin: 0;
         max-width: min(16.5rem, calc(100vw - 120px));
-        padding: 0.32rem 0.65rem;
+        padding: 0.35rem 0.7rem;
         font-size: 0.64rem;
         box-shadow: 2px 2px 0 var(--v1-ink);
+        -webkit-tap-highlight-color: rgb(249 84 62 / 0.15);
       }
 
       .builder-credit span:first-child {
@@ -3920,12 +4018,12 @@
     const downloadLinks = [
       {
         label: "התקנה ל־Windows",
-        href: "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-Setup.exe",
+        href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-Setup.exe",
         primary: true
       },
       {
         label: "התקנה ל־Mac",
-        href: "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-macOS.zip",
+        href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-macOS.zip",
         primary: true
       }
     ];
@@ -3935,11 +4033,9 @@
         id: "intro",
         kicker: "Weather V1",
         title: "מה זה בקצרה",
-        lead:
-          "Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת את התוכן לסצנות, ומתאימה לכל סצנה קטעי וידאו רקע מתוך הקטלוג שלכם. בסוף נוצר בסיס לסרטון תחזית אנכי — קריינות, וידאו רקע ערוך ומוזיקת רקע.",
-        mobileSummary:
-          "קריינות → תמלול → סצנות → התאמת קטעים מהקטלוג → בסיס לסרטון אנכי (עם הורדה).",
-        bullets: ["קריינות → תמלול → תכנון סצנות והתאמת קטלוג → רינדור והורדה"],
+        lead: "מסלול אחד, ארבעה שלבים — בחרו שלב כדי לראות את הפירוט.",
+        mobileSummary: "העלאה → תמלול → תכנון והחלטות → רינדור והורדה.",
+        bullets: ["העלאה → תמלול → תכנון והחלטות → רינדור והורדה"],
         visual: "introPipeline",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
@@ -3951,7 +4047,7 @@
         lead:
           "בסטודיו מתקדמים שלב־אחר־שלב: העלאת קריינות, תמלול לטקסט, תכנון סצנות והחלטות על קטעים מהקטלוג, ואז רינדור לקובץ וידאו בסיס אנכי. בחרו בשורת השלבים במוקאפ כדי לראות איך המסך מתמלא — בלי הפעלה אוטומטית.",
         mobileSummary:
-          "מסלול אחד ברור: קריינות, תמלול, סצנות והתאמות מהקטלוג, ורינדור לווידאו אנכי.",
+          "מסלול אחד: קריינות, תמלול, סצנות והתאמות מהקטלוג, ורינדור. גללו למוקאפ ובחרו שלב מהרשימה.",
         bullets: [
           "העלאה — מתחילים מקובץ קריינות אחד.",
           "תמלול — הקריינות הופכת לטקסט שאפשר לעבוד איתו.",
@@ -4053,7 +4149,14 @@
         lead:
           "כמה החלטות פשוטות וחיבורים בסיסיים — ואפשר להתחיל לעבוד באמת על תחזיות.",
         mobileSummary: "החלטות קצרות וחיבורים בסיסיים — ומתחילים להריץ תחזיות באופן מעשי.",
-        bullets: [],
+        bullets: [
+          "אישור כיוון העבודה",
+          "החלטה לגבי אחסון הקטלוג — מקומי או בענן שלכם",
+          "התקנה ראשונית במחשבי העבודה הרלוונטיים",
+          "חיבור OpenAI API key לתמלול ולפי הצורך גם לתכנון",
+          "חיבור Claude API key רק אם בוחרים להשתמש ב־Claude לתכנון הסצנות",
+          "סבב התאמות לפי פידבק אחרי שימוש אמיתי"
+        ],
         visual: "none",
         transition: "ttb",
         theme: { paper: "#faf8f5", accent: "#78716c" }
@@ -4744,27 +4847,66 @@
         </div>`;
       }
       if (type === "introPipeline") {
-        return `<div class="intro-pipeline-diagram intro-pipeline-excal" dir="rtl">
-          <svg class="intro-pipeline-edge-layer intro-pipeline-edge-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true">
+        const d1 = "M 87.5 12 C 81.5 17.5 69 17.5 62.5 12";
+        const d2 = "M 62.5 12 C 56.75 17.5 44.25 17.5 37.5 12";
+        const d3 = "M 37.5 12 C 31.75 17.25 19.25 17.25 12.5 12";
+        const arrowDur = "2.65s";
+        const arrowShape =
+          '<path vector-effect="non-scaling-stroke" d="M -5,-4.5 L 9,0 L -5,4.5 Z" fill="#f9543e" stroke="#951c16" stroke-width="0.6" stroke-linejoin="round"/>';
+        const arrowAlongGeo = (geoId, beginAttr = "") =>
+          `<g class="intro-flow-arrow-moving">${arrowShape}<animateMotion dur="${arrowDur}" repeatCount="indefinite" rotate="auto" calcMode="linear"${beginAttr}><mpath xlink:href="#${geoId}" href="#${geoId}"/></animateMotion></g>`;
+        return `<div class="intro-pipeline-diagram intro-pipeline-excal intro-phase-flow" data-intro-phase="0" dir="rtl">
+          <svg class="intro-pipeline-edge-layer intro-pipeline-edge-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true">
             <defs>
               <linearGradient id="introPipelineFlowStroke" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="0" y2="0">
-                <stop offset="0%" stop-color="#f9543e"/>
-                <stop offset="55%" stop-color="#e84232"/>
-                <stop offset="100%" stop-color="#c8202b"/>
+                <stop offset="0%" stop-color="#ff8f7a"/>
+                <stop offset="45%" stop-color="#f9543e"/>
+                <stop offset="100%" stop-color="#b91c1c"/>
               </linearGradient>
+              <path id="introFlowGeo1" fill="none" d="${d1}"/>
+              <path id="introFlowGeo2" fill="none" d="${d2}"/>
+              <path id="introFlowGeo3" fill="none" d="${d3}"/>
             </defs>
-            <path class="intro-pipeline-edge intro-pipeline-edge--1" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 91.667 11 C 88.25 14.75 79.42 14.83 75 11"/>
-            <path class="intro-pipeline-edge intro-pipeline-edge--2" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 75 11 C 71.08 14.92 62.92 14.92 58.333 11"/>
-            <path class="intro-pipeline-edge intro-pipeline-edge--3" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 58.333 11 C 54.42 14.92 46.58 14.92 41.667 11"/>
-            <path class="intro-pipeline-edge intro-pipeline-edge--4" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 41.667 11 C 37.75 14.92 29.92 14.92 25 11"/>
-            <path class="intro-pipeline-edge intro-pipeline-edge--5" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 25 11 C 21.08 14.92 12.92 14.92 8.333 11"/>
+            <g class="intro-flow-segment intro-flow-segment--1">
+              <path class="intro-pipeline-track" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2" stroke-opacity="0.33" stroke-linecap="round" d="${d1}"/>
+              ${arrowAlongGeo("introFlowGeo1")}
+              ${arrowAlongGeo("introFlowGeo1", ' begin="-1.325s"')}
+            </g>
+            <g class="intro-flow-segment intro-flow-segment--2">
+              <path class="intro-pipeline-track" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2" stroke-opacity="0.33" stroke-linecap="round" d="${d2}"/>
+              ${arrowAlongGeo("introFlowGeo2")}
+              ${arrowAlongGeo("introFlowGeo2", ' begin="-1.325s"')}
+            </g>
+            <g class="intro-flow-segment intro-flow-segment--3">
+              <path class="intro-pipeline-track" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2" stroke-opacity="0.33" stroke-linecap="round" d="${d3}"/>
+              ${arrowAlongGeo("introFlowGeo3")}
+              ${arrowAlongGeo("introFlowGeo3", ' begin="-1.325s"')}
+            </g>
           </svg>
-          <span class="intro-pipeline-node intro-pipeline-node--a intro-pipeline-node-slot intro-pipeline-node-slot--1">קריינות</span>
-          <span class="intro-pipeline-node intro-pipeline-node--b intro-pipeline-node-slot intro-pipeline-node-slot--2">תמלול</span>
-          <span class="intro-pipeline-node intro-pipeline-node--c intro-pipeline-node-slot intro-pipeline-node-slot--3">תוכנית סצנות</span>
-          <span class="intro-pipeline-node intro-pipeline-node--d intro-pipeline-node-slot intro-pipeline-node-slot--4">התאמת סגמנטים</span>
-          <span class="intro-pipeline-node intro-pipeline-node--e intro-pipeline-node-slot intro-pipeline-node-slot--5">רינדור</span>
-          <span class="intro-pipeline-node intro-pipeline-node--f intro-pipeline-node-slot intro-pipeline-node-slot--6">צפייה בתוצאה</span>
+          <div class="intro-phase-steps" role="tablist" aria-label="שלבי העבודה במערכת">
+            <button type="button" role="tab" id="intro-step-0" class="intro-phase-step is-active" data-intro-step="0" aria-selected="true" aria-controls="intro-readout-panel" tabindex="0">
+              <span class="intro-phase-step__ring"><span class="intro-phase-step__num">1</span></span>
+              <span class="intro-phase-step__label">העלאה</span>
+            </button>
+            <button type="button" role="tab" id="intro-step-1" class="intro-phase-step" data-intro-step="1" aria-selected="false" aria-controls="intro-readout-panel" tabindex="-1">
+              <span class="intro-phase-step__ring"><span class="intro-phase-step__num">2</span></span>
+              <span class="intro-phase-step__label">תמלול</span>
+            </button>
+            <button type="button" role="tab" id="intro-step-2" class="intro-phase-step" data-intro-step="2" aria-selected="false" aria-controls="intro-readout-panel" tabindex="-1">
+              <span class="intro-phase-step__ring"><span class="intro-phase-step__num">3</span></span>
+              <span class="intro-phase-step__label">תכנון והחלטות</span>
+            </button>
+            <button type="button" role="tab" id="intro-step-3" class="intro-phase-step" data-intro-step="3" aria-selected="false" aria-controls="intro-readout-panel" tabindex="-1">
+              <span class="intro-phase-step__ring"><span class="intro-phase-step__num">4</span></span>
+              <span class="intro-phase-step__label">רינדור והורדה</span>
+            </button>
+          </div>
+          <div class="intro-phase-readout" id="intro-readout-panel" role="tabpanel" aria-labelledby="intro-step-0">
+            <p class="intro-phase-detail intro-phase-detail--0" aria-hidden="false">מתחילים מקובץ קריינות התחזית.</p>
+            <p class="intro-phase-detail intro-phase-detail--1" aria-hidden="true">הקריינות הופכת לטקסט לעבודה.</p>
+            <p class="intro-phase-detail intro-phase-detail--2" aria-hidden="true">חלוקה לסצנות והתאמה לקטלוג.</p>
+            <p class="intro-phase-detail intro-phase-detail--3" aria-hidden="true">בסוף מתקבל וידאו אנכי מוכן.</p>
+          </div>
         </div>`;
       }
       return `<div class="visual-board"><div class="mini-card"><span>${escapeHtml(section.title)}</span><small>Placeholder</small></div></div>`;
@@ -4880,7 +5022,7 @@
           : `<div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>`;
       const introPipelineBlock =
         section.id === "intro" && section.visual === "introPipeline"
-          ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ייצור: קריינות, תמלול, תכנון והתאמה מהקטלוג, רינדור והורדה">${visualMarkup("introPipeline", section)}</figure>`
+          ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ארבעה שלבים: העלאה, תמלול, תכנון והחלטות, רינדור והורדה">${visualMarkup("introPipeline", section)}</figure>`
           : "";
       const bulletsBlock = bulletsMarkup(section);
       const pitchProductLayout = isPitchProductSection(section);
@@ -4993,6 +5135,63 @@
 
     trackRoll.innerHTML = buildStoryRollHtml(storySections);
 
+    (function wireIntroPhaseFlow() {
+      const root = document.querySelector("#intro .intro-phase-flow");
+      const panel = document.getElementById("intro-readout-panel");
+      if (!root || !panel) return;
+
+      const clampPhase = idx => Math.max(0, Math.min(3, idx));
+
+      const selectPhase = phase => {
+        const n = clampPhase(phase);
+        root.dataset.introPhase = String(n);
+        const tabs = [...root.querySelectorAll("button.intro-phase-step[data-intro-step]")];
+        tabs.forEach((tab, i) => {
+          const selected = i === n;
+          tab.setAttribute("aria-selected", selected ? "true" : "false");
+          tab.tabIndex = selected ? 0 : -1;
+          if (selected) tab.setAttribute("aria-current", "step");
+          else tab.removeAttribute("aria-current");
+          tab.classList.toggle("is-active", selected);
+          tab.classList.toggle("is-complete", i < n);
+        });
+        panel.setAttribute("aria-labelledby", `intro-step-${n}`);
+        root.querySelectorAll(".intro-phase-detail").forEach((el, i) => {
+          el.setAttribute("aria-hidden", i === n ? "false" : "true");
+        });
+      };
+
+      selectPhase(Number.parseInt(root.dataset.introPhase || "0", 10) || 0);
+
+      root.addEventListener("click", e => {
+        const btn = e.target && e.target.closest && e.target.closest("button[data-intro-step]");
+        if (!btn || !root.contains(btn)) return;
+        const idx = Number.parseInt(btn.getAttribute("data-intro-step") || "", 10);
+        if (Number.isNaN(idx)) return;
+        selectPhase(idx);
+        btn.focus();
+      });
+
+      root.addEventListener("keydown", e => {
+        const tabs = [...root.querySelectorAll("button.intro-phase-step[data-intro-step]")];
+        const cur = tabs.indexOf(document.activeElement);
+        if (cur < 0) return;
+
+        const move = delta => {
+          const nextIdx = clampPhase(cur + delta);
+          selectPhase(nextIdx);
+          const t = tabs[nextIdx];
+          if (t) t.focus();
+          e.preventDefault();
+        };
+
+        if (e.key === "ArrowRight") move(1);
+        else if (e.key === "ArrowLeft") move(-1);
+        else if (e.key === "Home") move(-cur);
+        else if (e.key === "End") move(tabs.length - 1 - cur);
+      });
+    })();
+
     (function initIntroPipelineDiagramInview() {
       let observer = null;
       const teardown = () => {
@@ -5010,8 +5209,17 @@
 
         diagram.classList.remove("intro-pipeline-diagram--inview");
 
+        const syncIntroFlowSvgMotion = () => {
+          const svgEl = diagram.querySelector("svg.intro-pipeline-edge-svg");
+          if (!svgEl || typeof svgEl.pauseAnimations !== "function" || typeof svgEl.unpauseAnimations !== "function") return;
+          svgEl.pauseAnimations();
+          if (diagram.classList.contains("intro-pipeline-diagram--inview")) svgEl.unpauseAnimations();
+        };
+
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
           diagram.classList.add("intro-pipeline-diagram--inview");
+          diagram.querySelectorAll(".intro-flow-arrow-moving").forEach(el => el.remove());
+          syncIntroFlowSvgMotion();
           return;
         }
 
@@ -5022,12 +5230,14 @@
         };
 
         markIntroIfIntersectingViewport();
+        syncIntroFlowSvgMotion();
 
         observer = new IntersectionObserver(
           ents => {
             for (let i = 0; i < ents.length; i++) {
               if (ents[i].isIntersecting) diagram.classList.add("intro-pipeline-diagram--inview");
             }
+            syncIntroFlowSvgMotion();
           },
           { root: null, rootMargin: "-4% 0px -52% 0px", threshold: [0.04, 0.12] }
         );
@@ -5047,7 +5257,11 @@
           if (!intro || !diagram || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
           const r = intro.getBoundingClientRect();
           const vh = window.innerHeight || document.documentElement.clientHeight || 1;
-          if (r.bottom > 10 && r.top < vh - 10) diagram.classList.add("intro-pipeline-diagram--inview");
+          if (r.bottom > 10 && r.top < vh - 10) {
+            diagram.classList.add("intro-pipeline-diagram--inview");
+            const svgEl = diagram.querySelector("svg.intro-pipeline-edge-svg");
+            if (svgEl && typeof svgEl.unpauseAnimations === "function") svgEl.unpauseAnimations();
+          }
         },
         { passive: true }
       );
@@ -5409,7 +5623,7 @@
 
     /** Panel reveal: studio steps are copy-column `.pitch-studio-phase-pick` items. */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-studio-phase-pick, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-edge, .hero-downloads, .panel-visual > *";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-studio-phase-pick, .pitch-catalog-card, .pitch-catalog-detail, .intro-phase-step, .intro-phase-detail, .intro-flow-segment, .hero-downloads, .panel-visual > *";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
