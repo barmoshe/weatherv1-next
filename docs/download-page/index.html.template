@@ -199,10 +199,81 @@
       min-height: 100svh;
     }
 
+    .story-mirror {
+      width: 100%;
+      min-height: 100%;
+    }
+
+    .story-roll {
+      display: block;
+      width: 100%;
+      min-height: 100svh;
+    }
+
+    .pitch-motion-opts {
+      position: fixed;
+      inset-inline-end: 14px;
+      inset-block-end: 108px;
+      z-index: 49;
+      max-width: 240px;
+      direction: rtl;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    .pitch-motion-opts summary {
+      cursor: pointer;
+      list-style-position: outside;
+      font-weight: 900;
+      padding: .35rem .55rem .35rem .25rem;
+      border: 1.5px solid var(--v1-ink);
+      border-radius: 10px;
+      background: rgb(255 255 255 / .88);
+      box-shadow: 2px 2px 0 var(--v1-ink);
+    }
+
+    .pitch-motion-inner {
+      margin-top: 8px;
+      padding: 10px 11px;
+      border: 1.5px solid var(--v1-ink);
+      border-radius: 12px;
+      background: rgb(255 255 255 / .94);
+      box-shadow: 2px 2px 0 var(--v1-ink);
+      display: grid;
+      gap: 8px;
+    }
+
+    .pitch-motion-inner label {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-weight: 750;
+    }
+
+    .pitch-motion-note {
+      margin: 0;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--v1-muted);
+    }
+
+    @media (max-width: 860px) {
+      .pitch-motion-flow-group {
+        display: none;
+      }
+    }
+
+    .pitch-motion-inner .motion-label-en {
+      display: block;
+      font-size: .72rem;
+      font-weight: 800;
+      opacity: .82;
+      margin-block-end: .1rem;
+    }
+
     /*
-      Horizontal carousel uses physical LTR flex + GSAP translateX — isolate from html[dir=rtl]
-      so intro→download DOM order matches scroll and Snap/ScrollTrigger "left/right" probes.
-      Panel typography stays rtl via .panel-inner.
+      Horizontal carousel uses physical LTR flex on #storyRoll + GSAP translateX — isolate from html[dir=rtl].
+      Panel typography stays rtl via .panel-inner. Optional body.scroll-rtlflow mirrors the strip (strip + panels).
     */
 
     .story-panel {
@@ -305,6 +376,28 @@
       min-height: min(58svh, 520px);
       display: grid;
       place-items: center;
+    }
+
+    .numbered-sample-visual {
+      width: min(100%, 520px);
+      min-height: min(52svh, 420px);
+      border: 3px solid var(--v1-ink);
+      border-radius: 24px;
+      background: rgb(255 255 255 / .78);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .numbered-sample-num {
+      font-size: clamp(4rem, 22vmin, 9.5rem);
+      font-weight: 950;
+      line-height: 1;
+      color: var(--panel-accent, var(--v1-coral));
+      letter-spacing: -0.06em;
+      font-variant-numeric: tabular-nums;
+      user-select: none;
     }
 
     .visual-board,
@@ -815,8 +908,45 @@
       opacity: .72;
     }
 
+    @media (min-width: 861px) {
+      html.pitch-vertical-desktop {
+        scroll-snap-type: y proximity;
+      }
+
+      body.pitch-vertical .scroll-hint {
+        display: none;
+      }
+
+      body.pitch-vertical .story-shell {
+        overflow: visible;
+        min-height: 0;
+      }
+
+      body.pitch-vertical .story-track {
+        overflow: visible;
+        height: auto;
+        min-height: 0;
+      }
+
+      body.pitch-vertical .story-roll {
+        display: block;
+        width: 100%;
+        min-height: 0;
+      }
+
+      body.pitch-vertical .story-panel {
+        scroll-snap-align: start;
+      }
+    }
+
     @media (min-width: 861px) and (prefers-reduced-motion: no-preference) {
-      body.is-scrollstory .story-track {
+      body.is-scrollstory:not(.pitch-vertical) .story-track {
+        overflow: hidden;
+        width: 100%;
+        height: 100svh;
+      }
+
+      body.is-scrollstory:not(.pitch-vertical) .story-roll {
         display: flex;
         width: max-content;
         height: 100svh;
@@ -826,6 +956,17 @@
 
       body.is-scrollstory .story-panel {
         width: 100vw;
+        flex-shrink: 0;
+      }
+
+      body.scroll-rtlflow.is-scrollstory:not(.pitch-vertical) .story-mirror {
+        transform: scaleX(-1);
+        transform-origin: 50% 50%;
+      }
+
+      body.scroll-rtlflow.is-scrollstory:not(.pitch-vertical) .story-panel {
+        transform: scaleX(-1);
+        transform-origin: 50% 50%;
       }
     }
 
@@ -856,6 +997,12 @@
         width: 100%;
         min-height: 0;
         display: block;
+      }
+
+      .story-roll {
+        display: block;
+        width: 100%;
+        min-height: 0;
       }
       .story-panel {
         width: 100%;
@@ -933,6 +1080,14 @@
         display: block;
         transform: none !important;
       }
+
+      .story-mirror {
+        transform: none !important;
+      }
+
+      .story-roll {
+        transform: none !important;
+      }
       .story-panel {
         width: 100%;
         min-height: 100svh;
@@ -982,8 +1137,27 @@
   <div class="scroll-progress" aria-hidden="true"><span id="progressFill"></span></div>
   <div class="scroll-hint" aria-hidden="true">גללו להמשך</div>
 
+  <details class="pitch-motion-opts" id="pitchMotionOpts">
+    <summary>מצב גלילה</summary>
+    <div class="pitch-motion-inner" id="pitchMotionUi">
+      <span class="motion-label-en mixed-ltr" lang="en" dir="ltr">Desktop layout</span>
+      <label><input type="radio" name="pitchLayout" value="horizontal"> אופקי (שקופיות)</label>
+      <label><input type="radio" name="pitchLayout" value="vertical"> מלמעלה למטה</label>
+      <div class="pitch-motion-flow-group">
+        <span class="motion-label-en mixed-ltr" lang="en" dir="ltr">Horizontal strip</span>
+        <label><input type="radio" name="pitchFlow" value="rtl"> מתחילה מימין (RTL)</label>
+        <label><input type="radio" name="pitchFlow" value="ltr"> משמאל לימין</label>
+      </div>
+      <p class="pitch-motion-note">ההגדרות נשמרות במכשיר. ברירת‑המחדל רענון אוטומטי אחרי שינוי.</p>
+    </div>
+  </details>
+
   <main class="story-shell" id="story">
-    <div class="story-track" id="storyTrack" aria-label="WeatherV1 pitch story"></div>
+    <div class="story-track" id="storyTrack" aria-label="WeatherV1 pitch story">
+      <div class="story-mirror" id="storyMirror">
+        <div id="storyRoll" class="story-roll"></div>
+      </div>
+    </div>
   </main>
 
   <a class="builder-credit" href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
@@ -1094,6 +1268,86 @@
         theme: { paper: "#f2fff7", accent: "#169a62" }
       },
       {
+        id: "pitch-test-01",
+        kicker: "דוגמת מעבר · 01",
+        title: "שקופית בדיקה 01",
+        lead: "כרטיס עם מספר גדול — קל לאמת סדר פרקים בגלילה אופקית או מאלף למטה.",
+        bullets: ["מפריד בין פרקים בלי משחקי עיצוב", "אפשר למחוק את בלוק pitch-test אחרי QA"],
+        visual: "numberedSample",
+        sampleNumber: 1,
+        theme: { paper: "#f0f4ff", accent: "#3940ad" }
+      },
+      {
+        id: "pitch-test-02",
+        kicker: "דוגמת מעבר · 02",
+        title: "שקופית בדיקה 02",
+        lead: "המשיכו לגלול — מה שאתם רואים כאן אמור לעקוב בסדר הנכון בסרגל וב־snap.",
+        bullets: ["02 → 03 → 04", "ב־RTL הכיוון הוויזואלי תלוי בהגדרת מצב הגלילה"],
+        visual: "numberedSample",
+        sampleNumber: 2,
+        theme: { paper: "#fff4f8", accent: "#c7155a" }
+      },
+      {
+        id: "pitch-test-03",
+        kicker: "דוגמת מעבר · 03",
+        title: "שקופית בדיקה 03",
+        lead: "שלושה פרקים נוספים אחרים מסוג זה מאפשרים לגבש תחושת מעבר ארוכה יותר.",
+        bullets: ["בדיקת scrub איטית", "בדיקת קפיצות כפתור הניווט (הורדה וכו׳)"],
+        visual: "numberedSample",
+        sampleNumber: 3,
+        theme: { paper: "#f2fffc", accent: "#0f8f7f" }
+      },
+      {
+        id: "pitch-test-04",
+        kicker: "דוגמת מעבר · 04",
+        title: "שקופית בדיקה 04",
+        lead: "אם פרק לא מופיע, המספר הזה מסמן שהבעיה היא במדידת רוחב / pin ולא בהנפשת התוכן.",
+        bullets: ["מספר בסגנון LTR בתוך לוח RTL", "הקפידו שהמראה מתאימה בהעדפת reduced-motion"],
+        visual: "numberedSample",
+        sampleNumber: 4,
+        theme: { paper: "#fff9e9", accent: "#b57700" }
+      },
+      {
+        id: "pitch-test-05",
+        kicker: "דוגמת מעבר · 05",
+        title: "שקופית בדיקה 05",
+        lead: "אמצע סדרת הדוגמה — טוב למדידת מתח בין פרקים רחוקים בציר אופקי.",
+        bullets: ["05 מתוך 08 בשורה זו בלבד", "גלילה מהירה + snap שנתפס מתחילת המסך"],
+        visual: "numberedSample",
+        sampleNumber: 5,
+        theme: { paper: "#f4f2ff", accent: "#5c3dbf" }
+      },
+      {
+        id: "pitch-test-06",
+        kicker: "דוגמת מעבר · 06",
+        title: "שקופית בדיקה 06",
+        lead: "המשיכו למטה בסטאק מאלף — אם יש טלטול, הבעיה בהגדרות scroll-snap או ב־viewport.",
+        bullets: ["השוו אנכי מול אופקי במצבי התצוגה", "נסו הרענון אחרי שינוי ההעדפות"],
+        visual: "numberedSample",
+        sampleNumber: 6,
+        theme: { paper: "#eaf7ff", accent: "#1a73b5" }
+      },
+      {
+        id: "pitch-test-07",
+        kicker: "דוגמת מעבר · 07",
+        title: "שקופית בדיקה 07",
+        lead: "לפני הורדה — ודאו שאתם מזהים 07 ואחריו 08 בלי דילוג פרק קדימה/אחורה.",
+        bullets: ["קרוב ליעד ההורדה", "מתאים לבדוק anchor מ־#/pitch-test-01 עד הסוף"],
+        visual: "numberedSample",
+        sampleNumber: 7,
+        theme: { paper: "#f7ffee", accent: "#3d7f1e" }
+      },
+      {
+        id: "pitch-test-08",
+        kicker: "דוגמת מעבר · 08",
+        title: "שקופית בדיקה 08",
+        lead: "הפרק האחרון בשורת הבדיקה — מה שאחריו צריך להיות ההורדה בלי התנגשות ב־snap.",
+        bullets: ["08 ואז הורדה", "מחקו את פרקי pitch-test כשמתחיל פרודקשן"],
+        visual: "numberedSample",
+        sampleNumber: 8,
+        theme: { paper: "#fff0ee", accent: "#d9432b" }
+      },
+      {
         id: "download",
         kicker: "הורדה",
         title: "להתחיל עם WeatherV1",
@@ -1104,10 +1358,58 @@
       }
     ];
 
-    const track = document.getElementById("storyTrack");
+    const STORAGE_LAYOUT = "weatherV1Pitch.layout";
+    const STORAGE_FLOW = "weatherV1Pitch.flow";
+
+    function readMotionPrefs() {
+      try {
+        const layout = localStorage.getItem(STORAGE_LAYOUT) || "horizontal";
+        const flow = localStorage.getItem(STORAGE_FLOW) || "rtl";
+        return {
+          verticalDesktop: layout === "vertical",
+          rtlFlow: flow !== "ltr"
+        };
+      } catch (_) {
+        return { verticalDesktop: false, rtlFlow: true };
+      }
+    }
+
+    function persistMotionPrefs(next) {
+      try {
+        localStorage.setItem(STORAGE_LAYOUT, next.verticalDesktop ? "vertical" : "horizontal");
+        localStorage.setItem(STORAGE_FLOW, next.rtlFlow ? "rtl" : "ltr");
+      } catch (_) {}
+    }
+
+    const trackRoll = document.getElementById("storyRoll");
     const progressFill = document.getElementById("progressFill");
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     let mainScrollTrigger = null;
+    let horizontalTween = null;
+
+    function wireMotionPrefsUi() {
+      const root = document.getElementById("pitchMotionUi");
+      if (!root) return;
+      const p = readMotionPrefs();
+      const layoutRadio = root.querySelector(`input[name="pitchLayout"][value="${p.verticalDesktop ? "vertical" : "horizontal"}"]`);
+      const flowRadio = root.querySelector(`input[name="pitchFlow"][value="${p.rtlFlow ? "rtl" : "ltr"}"]`);
+      if (layoutRadio) layoutRadio.checked = true;
+      if (flowRadio) flowRadio.checked = true;
+      root.addEventListener("change", ev => {
+        const t = ev.target;
+        if (!(t instanceof HTMLInputElement)) return;
+        const cur = readMotionPrefs();
+        if (t.name === "pitchLayout") {
+          persistMotionPrefs({ verticalDesktop: t.value === "vertical", rtlFlow: cur.rtlFlow });
+          location.reload();
+          return;
+        }
+        if (t.name === "pitchFlow") {
+          persistMotionPrefs({ verticalDesktop: cur.verticalDesktop, rtlFlow: t.value === "rtl" });
+          location.reload();
+        }
+      });
+    }
 
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, ch => ({
@@ -1228,6 +1530,11 @@
           <p class="tutorial-tip"><span class="mixed-ltr" lang="en" dir="ltr">prefers-reduced-motion</span>: כבו אנימציה במערכת כדי לראות פריסה סטטית.</p>
         </div>`;
       }
+      if (type === "numberedSample") {
+        const raw = Number(section.sampleNumber);
+        const n = Number.isFinite(raw) ? String(Math.trunc(raw)) : "?";
+        return `<div class="numbered-sample-visual"><span class="numbered-sample-num mixed-ltr" lang="en" dir="ltr">${escapeHtml(n)}</span></div>`;
+      }
       if (type === "download") {
         return `<div class="download-card">
           <h3><span class="mixed-ltr" lang="en" dir="ltr">WeatherV1 Desktop</span></h3>
@@ -1261,51 +1568,118 @@
       </section>`;
     }
 
-    track.innerHTML = storySections.map(sectionMarkup).join("");
+    trackRoll.innerHTML = storySections.map(sectionMarkup).join("");
 
     function setProgress(value) {
       const clamped = Math.max(0, Math.min(1, value));
       progressFill.style.transform = `scaleX(${clamped})`;
     }
 
+    function teardownHorizontalStory() {
+      if (horizontalTween) {
+        horizontalTween.kill();
+        horizontalTween = null;
+      }
+      mainScrollTrigger = null;
+    }
+
+    function initVerticalPanelReveals() {
+      gsap.registerPlugin(ScrollTrigger);
+      gsap.utils.toArray(".story-panel").forEach(panel => {
+        gsap.from(panel.querySelectorAll(".kicker, h1, h2, .lead, .bullets li, .hero-downloads, .panel-visual > *"), {
+          autoAlpha: 0,
+          y: 36,
+          duration: .55,
+          stagger: .05,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: panel,
+            start: "top 86%",
+            once: true
+          }
+        });
+      });
+    }
+
     function initScrollStory() {
+      teardownHorizontalStory();
+      document.body.classList.remove("is-scrollstory", "scroll-rtlflow", "pitch-vertical");
+      document.documentElement.classList.remove("pitch-vertical-desktop");
+
+      const prefs = readMotionPrefs();
       const isDesktop = matchMedia("(min-width: 861px)").matches;
-      if (!isDesktop || reduceMotion || !window.gsap || !window.ScrollTrigger) {
-        document.body.classList.remove("is-scrollstory");
+      const hasGsap = window.gsap && window.ScrollTrigger;
+
+      if (!hasGsap || reduceMotion) {
         addPassiveProgress();
         return;
       }
 
-      document.body.classList.add("is-scrollstory");
-      gsap.registerPlugin(ScrollTrigger);
-      const panels = gsap.utils.toArray(".story-panel");
-      const horizontalTween = gsap.to(track, {
-        x: () => -(track.scrollWidth - innerWidth),
-        ease: "none",
-        scrollTrigger: {
-          trigger: "#story",
-          pin: true,
-          scrub: 1,
-          snap: 1 / (panels.length - 1),
-          end: () => "+=" + (track.scrollWidth - innerWidth),
-          onUpdate: self => setProgress(self.progress)
-        }
-      });
-      mainScrollTrigger = horizontalTween.scrollTrigger;
+      if (prefs.verticalDesktop && isDesktop) {
+        document.body.classList.add("pitch-vertical");
+        document.documentElement.classList.add("pitch-vertical-desktop");
+        addPassiveProgress();
+        initVerticalPanelReveals();
+        return;
+      }
 
-      panels.forEach(panel => {
-        gsap.from(panel.querySelectorAll(".kicker, h1, h2, .lead, .bullets li, .hero-downloads, .panel-visual > *"), {
-          autoAlpha: 0,
-          y: 28,
-          duration: .6,
-          stagger: .05,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: panel,
-            containerAnimation: horizontalTween,
-            start: "left 70%",
-            once: true
-          }
+      if (!isDesktop) {
+        addPassiveProgress();
+        return;
+      }
+
+      gsap.registerPlugin(ScrollTrigger);
+      document.body.classList.add("is-scrollstory");
+      if (prefs.rtlFlow) document.body.classList.add("scroll-rtlflow");
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          void trackRoll.offsetWidth;
+          const panels = gsap.utils.toArray(".story-panel");
+          const maxSpan = Math.max(1, panels.length - 1);
+          const getMaxScroll = () => Math.max(trackRoll.scrollWidth - window.innerWidth, 1);
+
+          horizontalTween = gsap.to(trackRoll, {
+            x: () => -getMaxScroll(),
+            ease: "none",
+            invalidateOnRefresh: true,
+            scrollTrigger: {
+              trigger: "#story",
+              pin: true,
+              scrub: 1,
+              snap:
+                panels.length > 1
+                  ? {
+                      snapTo: 1 / maxSpan,
+                      duration: { min: .12, max: .38 },
+                      ease: "power1.inOut",
+                      delay: .02,
+                    }
+                  : false,
+              end: () => "+=" + getMaxScroll(),
+              onUpdate: self => setProgress(self.progress),
+            },
+          });
+
+          mainScrollTrigger = horizontalTween.scrollTrigger;
+
+          panels.forEach(panel => {
+            gsap.from(panel.querySelectorAll(".kicker, h1, h2, .lead, .bullets li, .hero-downloads, .panel-visual > *"), {
+              autoAlpha: 0,
+              y: 28,
+              duration: .6,
+              stagger: .05,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: panel,
+                containerAnimation: horizontalTween,
+                start: prefs.rtlFlow ? "right 28%" : "left 72%",
+                once: true,
+              },
+            });
+          });
+
+          ScrollTrigger.refresh();
         });
       });
     }
@@ -1328,7 +1702,7 @@
         if (!targetElement) return;
         event.preventDefault();
         const anchorPanel = targetElement.closest(".story-panel");
-        if (mainScrollTrigger && document.body.classList.contains("is-scrollstory") && anchorPanel?.classList.contains("story-panel")) {
+        if (mainScrollTrigger && document.body.classList.contains("is-scrollstory") && !document.body.classList.contains("pitch-vertical") && anchorPanel?.classList.contains("story-panel")) {
           const panelIndex = Number(anchorPanel.dataset.index || 0);
           const progress = panelIndex / Math.max(1, storySections.length - 1);
           const top = mainScrollTrigger.start + (mainScrollTrigger.end - mainScrollTrigger.start) * progress;
@@ -1339,6 +1713,7 @@
       });
     });
 
+    wireMotionPrefsUi();
     initScrollStory();
     addEventListener("resize", () => {
       if (window.ScrollTrigger) ScrollTrigger.refresh();
