@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readPlanBundle } from "@/server/jobs/plan-bundle";
 import { getAllJobs } from "@/server/jobs/store";
+import { pullJobsFromR2 } from "@/server/sync/r2/service";
 
 function transcriptPreview(jobId: string): string | undefined {
   const bundle = readPlanBundle(jobId);
@@ -12,6 +13,10 @@ function transcriptPreview(jobId: string): string | undefined {
 }
 
 export async function GET() {
+  // Hydrate from R2 before reading the store so `/api/jobs` is not sensitive to
+  // request ordering vs `/api/catalog` or `/api/desktop/status` on cold start.
+  await pullJobsFromR2();
+
   const jobs = getAllJobs()
     .map((job) => ({
       job_id: job.job_id,

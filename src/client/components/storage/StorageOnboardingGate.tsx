@@ -88,6 +88,9 @@ export function StorageOnboardingGate() {
       qc.invalidateQueries({ queryKey: ["catalog"] }),
       qc.invalidateQueries({ queryKey: ["r2-sync-status"] }),
     ]);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("weatherv1-refetch-jobs"));
+    }
   }, [refetch, qc]);
 
   const handleSignIn = useCallback(async () => {

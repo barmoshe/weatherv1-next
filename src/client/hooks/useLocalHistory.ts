@@ -93,6 +93,12 @@ export function useLocalHistory() {
     return () => ac.abort();
   }, [syncFromServer]);
 
+  useEffect(() => {
+    const onRefetch = () => void syncFromServer();
+    window.addEventListener("weatherv1-refetch-jobs", onRefetch);
+    return () => window.removeEventListener("weatherv1-refetch-jobs", onRefetch);
+  }, [syncFromServer]);
+
   // Jobs list updates from many places (worker, APIs). Studio only polls `/api/status`
   // for the current transcript job — keep dashboard rows (Active/History tabs) aligned.
   useEffect(() => {
