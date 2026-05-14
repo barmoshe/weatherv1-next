@@ -559,6 +559,8 @@
       border-color: rgb(0 0 0 / 0.12);
     }
 
+    #pricing .panel-visual,
+    #analytics .panel-visual,
     #local-first .panel-visual,
     #render .panel-visual,
     #thinking .panel-visual,
@@ -574,6 +576,8 @@
         align-items: start;
       }
 
+      #pricing .panel-inner,
+      #analytics .panel-inner,
       #local-first .panel-inner,
       #render .panel-inner,
       #thinking .panel-inner,
@@ -582,6 +586,8 @@
         grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
       }
 
+      #pricing .panel-visual,
+      #analytics .panel-visual,
       #local-first .panel-visual,
       #render .panel-visual,
       #thinking .panel-visual,
@@ -596,7 +602,7 @@
     }
 
     #thinking .pitch-lead-well {
-      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(232 248 244 / 0.78));
+      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(239 242 252 / 0.82));
     }
 
     #render .pitch-lead-well {
@@ -605,6 +611,246 @@
 
     #local-first .pitch-lead-well {
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(238 242 249 / 0.85));
+    }
+
+    #analytics .pitch-lead-well {
+      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(237 233 254 / 0.82));
+    }
+
+    #pricing .pitch-lead-well {
+      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(232 249 242 / 0.82));
+    }
+
+    #pricing .pitch-pricing-quote {
+      margin: 12px 0 0;
+      padding: 12px 13px 13px;
+      border-radius: 14px;
+      border: 1px solid rgb(0 0 0 / 0.07);
+      border-inline-start: 4px solid color-mix(in srgb, var(--panel-accent, #0d9488) 55%, rgb(20 60 50));
+      background: linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--panel-accent, #0d9488) 5%, rgb(255 255 255 / 0.97)),
+        rgb(255 255 255 / 0.92)
+      );
+      box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
+    }
+
+    #pricing .pitch-pricing-quote p {
+      margin: 0;
+      font-size: clamp(0.66rem, 1.9vw, 0.74rem);
+      font-weight: 780;
+      line-height: 1.52;
+      color: rgb(42 48 54 / 1);
+    }
+
+    /* —— Pitch: pricing hero (`#pricing`) —— */
+    .pitch-pricing-hero {
+      width: min(100%, 400px);
+      margin-inline: auto;
+      direction: rtl;
+      unicode-bidi: isolate;
+    }
+
+    .pitch-pricing-hero__card {
+      padding: 20px 18px 18px;
+      border-radius: 22px;
+      border: 1px solid rgb(0 0 0 / 0.09);
+      background: linear-gradient(
+        168deg,
+        rgb(255 255 255 / 0.97),
+        color-mix(in srgb, var(--panel-accent, #0d9488) 7%, rgb(248 253 250))
+      );
+      box-shadow:
+        0 22px 44px rgb(15 23 42 / 0.06),
+        0 0 0 1px rgb(255 255 255 / 0.55) inset;
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .pitch-pricing-hero__eyebrow {
+      font-size: 0.58rem;
+      font-weight: 820;
+      letter-spacing: 0.02em;
+      color: rgb(82 88 96 / 1);
+    }
+
+    .pitch-pricing-hero__amount {
+      font-size: clamp(2rem, 6vw, 2.65rem);
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: rgb(28 34 40 / 1);
+    }
+
+    .pitch-pricing-hero__currency {
+      font-size: 0.55em;
+      font-weight: 900;
+      margin-inline-start: 0.12em;
+    }
+
+    .pitch-pricing-hero__vat {
+      font-size: 0.72rem;
+      font-weight: 850;
+      color: rgb(72 78 86 / 1);
+    }
+
+    .pitch-pricing-hero__fineprint {
+      margin: 0;
+      font-size: 0.54rem;
+      font-weight: 780;
+      color: rgb(118 122 132 / 1);
+    }
+
+    .pitch-pricing-hero__chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      padding-top: 4px;
+      width: 100%;
+    }
+
+    .pitch-pricing-hero__chip {
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 0.58rem;
+      font-weight: 820;
+      background: rgb(255 255 255 / 0.9);
+      border: 1px solid rgb(0 0 0 / 0.07);
+      color: rgb(56 62 70 / 1);
+    }
+
+    /* —— Pitch: analytics tab mock (`#analytics`) —— */
+    .pitch-app-shell--analytics {
+      background: linear-gradient(
+        180deg,
+        rgb(255 255 255 / 0.99) 0%,
+        rgb(248 246 255 / 1) 55%,
+        rgb(252 251 255 / 1) 100%
+      );
+    }
+
+    .pitch-analytics-workspace {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pitch-analytics-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pitch-analytics-screen-title {
+      font-size: 0.88rem;
+      font-weight: 920;
+      letter-spacing: -0.02em;
+      color: rgb(38 42 48 / 1);
+    }
+
+    .pitch-analytics-beta {
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.56rem;
+      font-weight: 900;
+      text-transform: lowercase;
+      letter-spacing: 0.04em;
+      background: color-mix(in srgb, var(--panel-accent, #4f46e5) 14%, rgb(255 255 255));
+      border: 1px solid rgb(0 0 0 / 0.08);
+      color: rgb(67 56 202 / 1);
+    }
+
+    .pitch-analytics-cards {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 440px) {
+      .pitch-analytics-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .pitch-analytics-card {
+      padding: 11px 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgb(0 0 0 / 0.08);
+      background: linear-gradient(165deg, rgb(255 255 255 / 0.96), rgb(246 245 255 / 0.88));
+      box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
+      display: grid;
+      gap: 5px;
+    }
+
+    .pitch-analytics-card__label {
+      font-size: 0.61rem;
+      font-weight: 820;
+      color: rgb(82 86 98 / 1);
+      line-height: 1.35;
+    }
+
+    .pitch-analytics-card__value {
+      font-size: 1.05rem;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      color: rgb(30 34 42 / 1);
+    }
+
+    .pitch-analytics-card__hint {
+      font-size: 0.56rem;
+      font-weight: 760;
+      color: rgb(118 122 134 / 1);
+      line-height: 1.4;
+    }
+
+    .pitch-analytics-card__split {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: rgb(52 56 66 / 1);
+    }
+
+    .pitch-analytics-card__sub {
+      font-size: 0.58rem;
+      font-weight: 780;
+      color: rgb(92 96 108 / 1);
+      line-height: 1.35;
+    }
+
+    .pitch-analytics-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      justify-content: flex-start;
+    }
+
+    .pitch-analytics-chip {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.54rem;
+      font-weight: 820;
+      background: rgb(255 255 255 / 0.85);
+      border: 1px solid rgb(0 0 0 / 0.07);
+      color: rgb(72 78 90 / 1);
+    }
+
+    .pitch-analytics-disclaimer {
+      margin: 0;
+      font-size: 0.58rem;
+      font-weight: 820;
+      line-height: 1.45;
+      color: rgb(90 94 108 / 1);
+      padding-top: 10px;
+      border-top: 1px dashed rgb(0 0 0 / 0.1);
     }
 
     /* —— Pitch: local-first pillars (`#local-first`) —— */
@@ -792,9 +1038,9 @@
       inset: -14%;
       pointer-events: none;
       background:
-        radial-gradient(ellipse 88% 58% at 78% 14%, color-mix(in srgb, var(--panel-accent, #0f766e) 26%, transparent), transparent 62%),
-        radial-gradient(ellipse 72% 52% at 10% 82%, color-mix(in srgb, var(--panel-accent, #0f766e) 16%, transparent), transparent 58%),
-        linear-gradient(168deg, rgb(255 255 255 / 0.96), rgb(238 249 246 / 0.74));
+        radial-gradient(ellipse 88% 58% at 78% 14%, color-mix(in srgb, var(--panel-accent, #4338ca) 22%, transparent), transparent 62%),
+        radial-gradient(ellipse 72% 52% at 10% 82%, color-mix(in srgb, var(--panel-accent, #4338ca) 14%, transparent), transparent 58%),
+        linear-gradient(168deg, rgb(255 255 255 / 0.96), rgb(241 242 252 / 0.8));
     }
 
     .pitch-thinking-visual__noise {
@@ -830,7 +1076,7 @@
       padding: 11px 13px;
       border-radius: 14px;
       border: 1px solid rgb(0 0 0 / 0.08);
-      background: linear-gradient(165deg, rgb(255 255 255 / 0.97), rgb(245 252 249 / 0.88));
+      background: linear-gradient(165deg, rgb(255 255 255 / 0.97), rgb(246 246 252 / 0.9));
       box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
       font-weight: 820;
       font-size: 0.74rem;
@@ -848,7 +1094,7 @@
       font-weight: 950;
       font-variant-numeric: tabular-nums;
       color: #fff;
-      background: color-mix(in srgb, var(--panel-accent, #0f766e) 88%, rgb(15 23 42));
+      background: color-mix(in srgb, var(--panel-accent, #4338ca) 88%, rgb(15 23 42));
       border: 1px solid rgb(0 0 0 / 0.08);
       flex-shrink: 0;
     }
@@ -863,10 +1109,10 @@
     }
 
     .pitch-flow-step--hot {
-      border-color: color-mix(in srgb, var(--panel-accent, #0f766e) 38%, rgb(0 0 0 / 0.12));
+      border-color: color-mix(in srgb, var(--panel-accent, #4338ca) 38%, rgb(0 0 0 / 0.12));
       box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--panel-accent, #0f766e) 22%, transparent),
-        0 10px 28px color-mix(in srgb, var(--panel-accent, #0f766e) 18%, transparent);
+        0 0 0 1px color-mix(in srgb, var(--panel-accent, #4338ca) 22%, transparent),
+        0 10px 28px color-mix(in srgb, var(--panel-accent, #4338ca) 18%, transparent);
     }
 
     .pitch-flow-connector {
@@ -874,7 +1120,7 @@
       justify-content: center;
       align-items: stretch;
       height: 26px;
-      color: color-mix(in srgb, var(--panel-accent, #0f766e) 72%, rgb(100 116 139));
+      color: color-mix(in srgb, var(--panel-accent, #4338ca) 72%, rgb(100 116 139));
     }
 
     .pitch-flow-connector-svg {
@@ -892,10 +1138,10 @@
       margin-top: 12px;
       padding: 12px 13px 13px;
       border-radius: 15px;
-      border: 1px solid color-mix(in srgb, var(--panel-accent, #0f766e) 28%, rgb(0 0 0 / 0.1));
-      background: linear-gradient(155deg, rgb(255 255 255 / 0.94), color-mix(in srgb, var(--panel-accent, #0f766e) 7%, rgb(255 255 255)));
+      border: 1px solid color-mix(in srgb, var(--panel-accent, #4338ca) 28%, rgb(0 0 0 / 0.1));
+      background: linear-gradient(155deg, rgb(255 255 255 / 0.94), color-mix(in srgb, var(--panel-accent, #4338ca) 7%, rgb(255 255 255)));
       box-shadow:
-        0 12px 28px color-mix(in srgb, var(--panel-accent, #0f766e) 12%, rgb(15 23 42 / 0.04)),
+        0 12px 28px color-mix(in srgb, var(--panel-accent, #4338ca) 12%, rgb(15 23 42 / 0.04)),
         0 0 0 1px rgb(255 255 255 / 0.55) inset;
     }
 
@@ -928,7 +1174,7 @@
       border-radius: 999px;
       font-size: 0.58rem;
       font-weight: 820;
-      background: color-mix(in srgb, var(--panel-accent, #0f766e) 9%, rgb(248 250 249));
+      background: color-mix(in srgb, var(--panel-accent, #4338ca) 9%, rgb(247 248 252));
       border: 1px solid rgb(0 0 0 / 0.06);
       color: rgb(78 86 94 / 1);
     }
@@ -3376,7 +3622,7 @@
         ],
         visual: "cognitionFlow",
         transition: "ttb",
-        theme: { paper: "#eef8f6", accent: "#0f766e" }
+        theme: { paper: "#f4f4fb", accent: "#4338ca" }
       },
       {
         id: "render",
@@ -3410,22 +3656,36 @@
         theme: { paper: "#f4f6fa", accent: "#475569" }
       },
       {
-        id: "screens",
-        kicker: "מסכים",
-        title: "מקום לצילומי מסך",
-        lead: "{{כאן תוסיף בהמשך צילומי מסך של האפליקציה והסבר קצר לכל מסך}}",
-        bullets: ["מסך סטודיו", "תכנון סצנות", "תור רינדור", "פלט סופי"],
-        visual: "screens",
-        theme: { paper: "#ffffff", accent: "#f9543e" }
+        id: "analytics",
+        kicker: "בטא · תמונה למנהלים",
+        title: "אנליטיקת שימוש",
+        lead:
+          "בטאב האנליטיקה רואים תמונה משוערת על עלות ושימוש בעבודות מההיסטוריה המקומית — כדי לנהל תקציב ולהבין כיוון, לא כדי לקבל דוח מס או חשבונית רשמית. האזור עדיין בפיתוח והנתונים מתעדכנים.",
+        bullets: [
+          "מוצגות עבודות שיש להן נתוני שימוש מהיסטוריה מקומית, עם הערכת עלות כוללת (למשל בדולר)",
+          "פירוק גס בין עלות LLM לבין תמלול, יחד עם טוקני קלט/פלט ושניות אודיו רלוונטיות לחיוב תמלול",
+          "כשיש מספיק נתונים מוצגים גם פילוחים לפי דגם בשימוש ולפי יום — להמחשה בלבד",
+          "ליד הסיכומים מודגש שהנתונים הם הערכות — לא חשבוניות"
+        ],
+        visual: "usageAnalytics",
+        transition: "ttb",
+        theme: { paper: "#f8f7fc", accent: "#4f46e5" }
       },
       {
-        id: "value",
-        kicker: "ערך ללקוח",
-        title: "יותר תוכן, פחות עבודה ידנית",
-        lead: "{{כאן נוסיף את הערך העסקי: מהירות, עקביות, מיתוג, וחיסכון בזמן}}",
-        bullets: ["פורמט קבוע לתחזיות", "פחות תלות בעריכה ידנית", "קל להפיק שוב ושוב"],
-        visual: "value",
-        theme: { paper: "#ffffff", accent: "#1fa871" }
+        id: "pricing",
+        kicker: "הצעת מחיר",
+        title: "עלות והמשך עבודה",
+        lead:
+          "שקיפות קצרה בטון עסקי שקט — מה נכלל בהצעה ומה קורה כשמשנים היקף. הניסוח כאן למצגת; במקרה הצורך תואמים מול רואה חשבון או משפטני לגבי מע״מ וחשבונית.",
+        bullets: [
+          "הצעת מחיר ראשונית: 4,000 ₪ לפני מע״מ",
+          "המחיר כולל את העבודה שבוצעה עד כה ואת ההמשך עד התקנה ראשונה אצל V1 של האפליקציה",
+          "העלות כוללת גם שימוש בכלי AI ובטוקנים במהלך הפיתוח — לא רק שעות",
+          "אם היקף העבודה יגדל מעבר למוסכמות — נעדכן במחיר בשיחה"
+        ],
+        visual: "pricingHero",
+        transition: "ttb",
+        theme: { paper: "#f4fcf8", accent: "#0d9488" }
       },
       {
         id: "llm-sample",
@@ -4059,6 +4319,76 @@
     </div>`;
     }
 
+    function usageAnalyticsHtml() {
+      return `<div class="pitch-app-shell pitch-app-shell--analytics" dir="rtl" aria-hidden="true">
+          <header class="pitch-app-head" aria-hidden="true">
+            <div class="pitch-app-head-brand">
+              <span class="pitch-app-btn pitch-app-btn--dark" role="presentation">תחזית חדשה</span>
+              <span class="pitch-app-pill mixed-ltr" lang="en" dir="ltr">V1</span>
+            </div>
+            <div class="pitch-app-head-title">מחולל תחזית · וידאו אנכי</div>
+            <div class="pitch-app-head-actions"><span class="pitch-app-btn pitch-app-btn--ghost" role="presentation">הגדרות</span></div>
+          </header>
+          <div class="pitch-app-main">
+            <nav class="pitch-app-tabs" aria-hidden="true">
+              <span class="pitch-app-tab">סטודיו</span>
+              <span class="pitch-app-tab">פעילים</span>
+              <span class="pitch-app-tab">היסטוריה</span>
+              <span class="pitch-app-tab">קטלוג</span>
+              <span class="pitch-app-tab is-active">אנליטיקה</span>
+            </nav>
+            <div class="pitch-analytics-workspace">
+              <div class="pitch-analytics-head">
+                <span class="pitch-analytics-screen-title">אנליטיקת שימוש</span>
+                <span class="pitch-analytics-beta mixed-ltr" lang="en" dir="ltr">beta</span>
+              </div>
+              <div class="pitch-analytics-cards">
+                <article class="pitch-analytics-card">
+                  <div class="pitch-analytics-card__label">עבודות עם נתוני שימוש</div>
+                  <div class="pitch-analytics-card__value">12</div>
+                  <div class="pitch-analytics-card__hint">מהיסטוריה מקומית · דמו</div>
+                </article>
+                <article class="pitch-analytics-card">
+                  <div class="pitch-analytics-card__label">הערכת עלות כוללת</div>
+                  <div class="pitch-analytics-card__value mixed-ltr" lang="en" dir="ltr">~$47.20</div>
+                  <div class="pitch-analytics-card__hint">מספרים להמחשה בלבד</div>
+                </article>
+                <article class="pitch-analytics-card">
+                  <div class="pitch-analytics-card__label">פירוק משוער</div>
+                  <div class="pitch-analytics-card__split"><span>LLM</span><span class="mixed-ltr" lang="en" dir="ltr">~$31</span></div>
+                  <div class="pitch-analytics-card__split"><span>תמלול</span><span class="mixed-ltr" lang="en" dir="ltr">~$16</span></div>
+                </article>
+                <article class="pitch-analytics-card">
+                  <div class="pitch-analytics-card__label mixed-ltr" lang="en" dir="ltr">Tokens · אודיו לחיוב</div>
+                  <div class="pitch-analytics-card__sub mixed-ltr" lang="en" dir="ltr">420K in · 160K out</div>
+                  <div class="pitch-analytics-card__sub">842 שניות אודיו לתמחור תמלול (דמו)</div>
+                </article>
+              </div>
+              <div class="pitch-analytics-meta-row mixed-ltr" lang="en" dir="ltr">
+                <span class="pitch-analytics-chip">By model · NovaLite</span>
+                <span class="pitch-analytics-chip">By day · last 7d</span>
+              </div>
+              <p class="pitch-analytics-disclaimer">הנתונים משוערים ומתעדכנים — לא חשבונית ולא דוח מס.</p>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function pricingHeroHtml() {
+      return `<div class="pitch-pricing-hero" dir="rtl" aria-hidden="true">
+      <div class="pitch-pricing-hero__card">
+        <div class="pitch-pricing-hero__eyebrow">הצעה ראשונית · להמחשה במצגת</div>
+        <div class="pitch-pricing-hero__amount">4,000<span class="pitch-pricing-hero__currency">₪</span></div>
+        <div class="pitch-pricing-hero__vat">לפני מע״מ</div>
+        <p class="pitch-pricing-hero__fineprint">דמו מצגת — לא חוזה</p>
+        <div class="pitch-pricing-hero__chips">
+          <span class="pitch-pricing-hero__chip">עד התקנה ראשונה אצל V1</span>
+          <span class="pitch-pricing-hero__chip">כולל AI וטוקנים בפיתוח</span>
+        </div>
+      </div>
+    </div>`;
+    }
+
     function downloadLinksMarkup(links) {
       const primary = links.filter(link => !link.secondary);
       const secondary = links.filter(link => link.secondary);
@@ -4115,6 +4445,12 @@
       }
       if (type === "localFirstPitch") {
         return localFirstPitchHtml();
+      }
+      if (type === "usageAnalytics") {
+        return usageAnalyticsHtml();
+      }
+      if (type === "pricingHero") {
+        return pricingHeroHtml();
       }
       if (type === "catalogBrowser") {
         return catalogBrowserHtml();
@@ -4292,7 +4628,15 @@
         section.id === "catalog" ||
         section.id === "thinking" ||
         section.id === "render" ||
-        section.id === "local-first";
+        section.id === "local-first" ||
+        section.id === "analytics" ||
+        section.id === "pricing";
+      const pricingPullquoteBlock =
+        section.id === "pricing"
+          ? `<blockquote class="pitch-pricing-quote"><p>${escapeHtml(
+              "נבנתה אפליקציית ייצור מקומית שמחברת בין קריינות, תמלול, תכנון סצנות, קטלוג קליפים ורינדור לווידאו אנכי, כולל מעקב עבודות, אנליטיקת שימוש משוערת והגדרות להתחברות לעזרי AI ולסנכרון קטלוג לצורכי פיתוח."
+            )}</p></blockquote>`
+          : "";
       const studioWizardToolbar =
         section.id === "studio"
           ? `<div class="pitch-studio-wiz-controls-wrap" role="group" aria-labelledby="pitch-studio-wiz-legend">
@@ -4323,6 +4667,7 @@
             ${leadBlock}
             ${introPipelineBlock}
             ${bulletsBlock}
+            ${pricingPullquoteBlock}
             ${studioWizardToolbar}
             ${heroDownloads}
           </div>
@@ -4875,7 +5220,7 @@
 
     /** `#thinking`: `.pitch-flow-step` omitted on purpose — step motion is `initThinkingFlowMotion` (scrub/passive); reveal tween hits `.panel-visual > *` only (outer `.pitch-thinking-visual`). */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .bullets li, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
