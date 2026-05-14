@@ -21,15 +21,6 @@
       --shadow: 8px 8px 0 var(--v1-ink);
       --soft-shadow: 0 18px 46px rgb(0 0 0 / .12);
       --nav-height: 76px;
-      --surface-page: oklch(0.985 0.012 95);
-      --surface-elevated: oklch(0.997 0.006 95 / 0.92);
-      --surface-glass: oklch(0.999 0.004 95 / 0.72);
-      --stroke-hairline: oklch(0 0 0 / 0.06);
-      --stroke-soft: oklch(0 0 0 / 0.09);
-      --text-secondary: oklch(0.42 0.02 265);
-      --accent-line-start: #f97862;
-      --accent-line-mid: #ea5744;
-      --accent-line-end: #c73732;
       /* Mobile pitch tier overrides `--nav-height` + exposes rhythm for panels / anchors */
       --pitch-mobile-nav-buffer: 12px;
       --story-vw: 100vw;
@@ -46,7 +37,7 @@
     html {
       min-height: 100%;
       scroll-behavior: smooth;
-      background: var(--surface-page);
+      background: var(--v1-cream);
       overflow-anchor: none;
     }
     body {
@@ -54,11 +45,13 @@
       margin: 0;
       overflow-x: hidden;
       background:
-        radial-gradient(120% 80% at 100% 0%, oklch(0.96 0.04 50 / 0.35), transparent 55%),
-        radial-gradient(90% 70% at 0% 100%, oklch(0.95 0.03 250 / 0.2), transparent 50%),
-        var(--surface-page);
+        linear-gradient(90deg, rgb(0 0 0 / .035) 1px, transparent 1px) 0 0 / 28px 28px,
+        linear-gradient(0deg, rgb(0 0 0 / .03) 1px, transparent 1px) 0 0 / 28px 28px,
+        radial-gradient(circle at 12% 18%, rgb(242 194 49 / .26), transparent 30rem),
+        radial-gradient(circle at 86% 68%, rgb(249 84 62 / .18), transparent 36rem),
+        var(--v1-cream);
       color: var(--v1-ink);
-      font: 16px/1.58 Heebo, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font: 16px/1.55 Heebo, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     a { color: inherit; }
@@ -72,14 +65,12 @@
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 10px 14px;
-      border: 1px solid var(--stroke-soft);
-      border-radius: 999px;
-      background: var(--surface-elevated);
-      box-shadow:
-        0 1px 0 oklch(1 0 0 / 0.55) inset,
-        0 14px 40px oklch(0 0 0 / 0.07);
-      backdrop-filter: blur(16px) saturate(1.2);
+      padding: 8px 10px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 18px;
+      background: rgb(249 84 62 / .96);
+      box-shadow: 5px 5px 0 var(--v1-ink);
+      backdrop-filter: blur(10px);
     }
 
     .brand {
@@ -98,10 +89,10 @@
       display: grid;
       place-items: center;
       overflow: hidden;
-      border: 1px solid var(--stroke-soft);
-      border-radius: 12px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 10px;
       background: var(--v1-paper);
-      box-shadow: 0 2px 8px oklch(0 0 0 / 0.06);
+      box-shadow: 3px 3px 0 var(--v1-ink);
     }
 
     .brand-mark img {
@@ -123,7 +114,7 @@
     }
 
     .brand-copy span {
-      color: var(--text-secondary);
+      color: rgb(0 0 0 / .7);
       font-size: .78rem;
       font-weight: 800;
     }
@@ -143,37 +134,30 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 0 16px;
-      border: 1px solid var(--stroke-soft);
-      border-radius: 999px;
-      background: oklch(0.99 0.004 95 / 0.95);
+      padding: 0 14px;
+      border: 1.5px solid var(--v1-ink);
+      border-radius: 12px;
+      background: rgb(255 255 255 / .78);
       color: var(--v1-ink);
-      box-shadow: 0 2px 6px oklch(0 0 0 / 0.05);
+      box-shadow: 2px 2px 0 var(--v1-ink);
       text-decoration: none;
       font-weight: 900;
       white-space: nowrap;
       cursor: pointer;
-      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
     }
 
     .cta {
-      background: oklch(0.58 0.2 35);
+      background: var(--v1-red);
       color: #fff;
-      border-color: oklch(0.52 0.19 35);
     }
 
     .nav-link:hover,
     .cta:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px oklch(0 0 0 / 0.1);
-      background: oklch(0.94 0.06 95);
+      transform: translateY(-2px);
+      box-shadow: 3px 3px 0 var(--v1-ink);
+      background: var(--v1-yellow);
       color: var(--v1-ink);
-    }
-
-    .cta:hover {
-      background: oklch(0.52 0.2 35);
-      color: #fff;
-      border-color: oklch(0.48 0.2 35);
     }
 
     .scroll-progress {
@@ -2399,82 +2383,53 @@
       font-size: 0.9rem;
     }
 
-    /* Intro hero: editorial column + sidebar rail (pipeline + downloads) */
+    /* Intro hero: copy + hero downloads only (no device mockup) */
     #intro.story-panel {
-      padding-block: calc(var(--nav-height) + 28px) clamp(32px, 6vh, 56px);
+      padding-block: calc(var(--nav-height) + 22px) clamp(28px, 5vh, 52px);
       padding-inline: clamp(18px, 4vw, 64px);
     }
 
     #intro .panel-inner {
-      width: min(1180px, 100%);
+      width: min(1220px, 100%);
       grid-template-columns: 1fr;
       align-items: stretch;
       justify-items: stretch;
       gap: clamp(18px, 3.5vw, 36px);
       box-sizing: border-box;
-      max-width: min(1180px, 94vw);
+      max-width: min(47rem, 92vw);
       margin-inline: auto;
     }
 
     #intro .panel-copy--intro {
-      display: grid;
       gap: clamp(14px, 1.6vw, 22px);
       min-height: 0;
       width: 100%;
       max-width: none;
-      align-items: start;
-    }
-
-    @media (min-width: 960px) {
-      #intro .panel-copy--intro {
-        grid-template-columns: minmax(0, 1fr) minmax(288px, 400px);
-        column-gap: clamp(36px, 5vw, 72px);
-      }
-
-      #intro .panel-copy--intro > .intro-rail {
-        grid-column: 2;
-        grid-row: 1 / -1;
-        align-self: start;
-        position: sticky;
-        top: calc(var(--nav-height) + 16px);
-      }
-    }
-
-    #intro .intro-rail {
-      display: flex;
-      flex-direction: column;
-      gap: clamp(16px, 2.2vw, 22px);
-      width: 100%;
-      min-width: 0;
     }
 
     #intro .panel-copy--intro .kicker {
       text-transform: none;
-      letter-spacing: 0.04em;
-      font-size: clamp(0.78rem, 0.95vw, 0.92rem);
-      font-weight: 850;
-      color: oklch(0.52 0.17 35);
+      letter-spacing: 0.02em;
+      font-size: clamp(0.82rem, 1.05vw, 0.98rem);
+      font-weight: 950;
     }
 
     #intro h1 {
-      font-size: clamp(2.1rem, 0.35rem + 3.8vw, 3.85rem);
-      max-width: min(100%, 22rem);
-      line-height: 1.06;
-      letter-spacing: -0.035em;
+      font-size: clamp(2.35rem, 0.45rem + 4vw, 4.65rem);
+      max-width: min(100%, 26rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
       font-weight: 950;
       text-wrap: balance;
-      color: oklch(0.18 0.02 265);
     }
 
     #intro .lead {
-      font-size: clamp(0.96rem, 0.28vw + 0.88rem, 1.2rem);
-      max-width: min(100%, 38rem);
-      line-height: 1.55;
+      font-size: clamp(0.98rem, 0.35vw + 0.9rem, 1.32rem);
+      max-width: min(100%, 44rem);
+      line-height: 1.45;
       display: block;
       margin: 0;
       overflow: visible;
-      color: var(--text-secondary);
-      font-weight: 650;
     }
 
     #intro .bullets {
@@ -2488,39 +2443,40 @@
     }
 
     #intro .intro-pipeline-wrap {
-      margin: 0;
+      margin-top: 4px;
     }
 
-    /* Intro flow: soft glass board, connector rail, calm pills */
+    /* Intro flow diagram: dotted board, wired SVG arcs, phased node pulses (RTL logical grid columns) */
     .intro-pipeline-wrap {
       margin: 0;
       width: 100%;
       max-width: min(100%, 44rem);
     }
 
-    #intro .intro-pipeline-wrap {
-      max-width: none;
-    }
-
     .intro-pipeline-diagram.intro-pipeline-excal {
       position: relative;
       margin: 0;
-      padding: clamp(16px, 2.4vw, 24px) clamp(10px, 2vw, 16px) clamp(14px, 2vw, 20px);
-      border: 1px solid var(--stroke-hairline);
-      border-radius: 20px;
-      background:
-        linear-gradient(165deg, oklch(0.998 0.005 95 / 0.95), oklch(0.985 0.02 40 / 0.35));
+      padding: clamp(14px, 2.2vw, 22px) clamp(12px, 2.4vw, 20px) clamp(12px, 2vw, 18px);
+      border: 2px solid var(--v1-ink);
+      border-radius: 22px;
+      background-color: rgb(255 255 255 / 0.96);
+      background-image:
+        radial-gradient(rgb(249 84 62 / 0.07) 1px, transparent 1px),
+        linear-gradient(135deg, rgb(255 255 255 / 0.94), rgb(252 233 228 / 0.55));
+      background-size:
+        20px 20px,
+        auto;
       box-shadow:
-        0 1px 0 oklch(1 0 0 / 0.5) inset,
-        0 22px 50px oklch(0 0 0 / 0.06);
+        0 14px 34px rgb(15 23 42 / 0.07),
+        4px 4px 0 rgb(0 0 0 / 0.1);
       overflow: clip;
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       grid-template-rows:
-        clamp(30px, 5vw, 40px)
+        clamp(34px, 5.5vw, 44px)
         auto;
-      column-gap: clamp(5px, 1.1vw, 10px);
-      row-gap: 12px;
+      column-gap: clamp(6px, 1.25vw, 12px);
+      row-gap: 10px;
       align-items: center;
       direction: rtl;
     }
@@ -2530,24 +2486,23 @@
       grid-row: 1;
       width: 100%;
       height: 100%;
-      min-height: clamp(30px, 5vw, 40px);
+      min-height: clamp(34px, 5.5vw, 44px);
       display: block;
       overflow: visible;
       pointer-events: none;
       z-index: 0;
-      opacity: 0.92;
     }
 
     .intro-pipeline-diagram.intro-pipeline-excal:not(.intro-pipeline-diagram--inview) .intro-pipeline-edge {
-      opacity: 0.55;
+      opacity: 0.75;
       animation-play-state: paused;
       stroke-dashoffset: 0.35;
     }
 
     .intro-pipeline-edge {
-      stroke-dasharray: 0.18 0.82;
-      animation: introPipelineDash 3.6s linear infinite;
-      opacity: 0.88;
+      stroke-dasharray: 0.2 0.8;
+      animation: introPipelineDash 3.2s linear infinite;
+      opacity: 0.96;
       will-change: stroke-dashoffset;
     }
 
@@ -2584,7 +2539,7 @@
     @keyframes introPipelineNodePulse {
       0%,
       58% {
-        opacity: 0.86;
+        opacity: 0.8;
       }
 
       8% {
@@ -2592,7 +2547,7 @@
       }
 
       12% {
-        opacity: 0.92;
+        opacity: 0.88;
       }
     }
 
@@ -2672,17 +2627,15 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 9px 11px;
-      border: 1px solid oklch(0 0 0 / 0.05);
-      border-radius: 999px;
-      background: oklch(0.995 0.01 95 / 0.92);
-      box-shadow:
-        0 1px 0 oklch(1 0 0 / 0.55) inset,
-        0 6px 14px oklch(0 0 0 / 0.06);
-      font-weight: 800;
-      font-size: clamp(0.65rem, 0.2vw + 0.58rem, 0.82rem);
-      line-height: 1.2;
-      color: oklch(0.22 0.02 265);
+      padding: 10px 12px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 16px 20px 14px 18px;
+      background: rgb(255 255 255 / 0.95);
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.12);
+      font-weight: 950;
+      font-size: clamp(0.68rem, 0.22vw + 0.62rem, 0.92rem);
+      line-height: 1.22;
+      color: var(--v1-ink);
       hyphens: auto;
       box-sizing: border-box;
       transform-origin: center;
@@ -2691,13 +2644,28 @@
         box-shadow 0.35s ease;
     }
 
-    .intro-pipeline-node--a,
-    .intro-pipeline-node--b,
-    .intro-pipeline-node--c,
-    .intro-pipeline-node--d,
-    .intro-pipeline-node--e,
+    .intro-pipeline-node--a {
+      transform: rotate(-0.65deg);
+    }
+
+    .intro-pipeline-node--b {
+      transform: rotate(0.55deg);
+    }
+
+    .intro-pipeline-node--c {
+      transform: rotate(-0.45deg);
+    }
+
+    .intro-pipeline-node--d {
+      transform: rotate(0.5deg);
+    }
+
+    .intro-pipeline-node--e {
+      transform: rotate(-0.4deg);
+    }
+
     .intro-pipeline-node--f {
-      transform: none;
+      transform: rotate(0.42deg);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2723,19 +2691,19 @@
 
     @media (max-width: 1110px) {
       .intro-pipeline-diagram.intro-pipeline-excal .intro-pipeline-node {
-        font-size: clamp(0.58rem, 0.07vw + 0.5rem, 0.72rem);
-        padding: 7px 6px;
+        font-size: clamp(0.62rem, 0.08vw + 0.54rem, 0.74rem);
+        padding: 8px 6px;
       }
 
       .intro-pipeline-diagram.intro-pipeline-excal {
-        column-gap: 3px;
+        column-gap: 4px;
       }
     }
 
     @media (max-width: 960px) {
       .intro-pipeline-diagram.intro-pipeline-excal {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        grid-template-rows: clamp(30px, 6vw, 38px) auto auto;
+        grid-template-rows: clamp(34px, 6vw, 42px) auto auto;
       }
 
       .intro-pipeline-edge-layer {
@@ -2780,33 +2748,32 @@
       }
 
       .intro-pipeline-edge-layer .intro-pipeline-edge {
-        opacity: 0.32;
-        animation-duration: 4.4s;
+        opacity: 0.35;
+        animation-duration: 4.25s;
       }
     }
 
     #intro .hero-downloads {
-      margin-top: 0;
+      margin-top: 6px;
       max-width: none;
       width: 100%;
-      padding: clamp(18px, 2.8vw, 22px) clamp(18px, 3vw, 24px);
-      border: 1px solid var(--stroke-hairline);
-      border-radius: 20px;
-      background: oklch(0.998 0.006 95 / 0.88);
+      padding: clamp(16px, 2.5vw, 20px) clamp(18px, 2.8vw, 22px);
+      border: 2px solid var(--v1-ink);
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 0.96), rgb(252 236 232 / 0.45));
       box-shadow:
-        0 1px 0 oklch(1 0 0 / 0.55) inset,
-        0 18px 42px oklch(0 0 0 / 0.07);
+        0 14px 34px rgb(15 23 42 / 0.07),
+        4px 4px 0 rgb(0 0 0 / 0.1);
     }
 
     #intro .hero-downloads-title {
-      margin: 0 0 12px;
-      padding-bottom: 0;
-      border-bottom: none;
-      font-size: clamp(0.72rem, 0.85vw, 0.82rem);
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgb(0 0 0 / 0.08);
+      font-size: clamp(0.86rem, 1.05vw, 1.05rem);
+      font-weight: 950;
+      letter-spacing: 0.02em;
     }
 
     #intro .download-links--hero {
@@ -2816,19 +2783,17 @@
     }
 
     #intro .download-links--hero > a {
-      min-height: 46px;
-      padding: 0 14px;
-      font-size: clamp(0.74rem, 0.45vw + 0.64rem, 0.86rem);
-      border-radius: 999px;
-      border: 1px solid oklch(0 0 0 / 0.08);
-      box-shadow: 0 4px 16px oklch(0.55 0.16 35 / 0.2);
+      min-height: 44px;
+      padding: 0 12px;
+      font-size: clamp(0.72rem, 0.55vw + 0.65rem, 0.88rem);
+      border-radius: 12px;
+      box-shadow:
+        0 6px 18px rgb(249 84 62 / 0.22),
+        2px 2px 0 rgb(0 0 0 / 0.12);
       gap: 10px;
       justify-content: center;
       text-align: center;
       flex-direction: row-reverse;
-      background: oklch(0.57 0.19 35);
-      color: #fff;
-      font-weight: 900;
     }
 
     /* External-link glyph reads correctly in RTL (inline-start side of label). */
@@ -2837,14 +2802,15 @@
       flex-shrink: 0;
       direction: ltr;
       unicode-bidi: isolate;
-      opacity: 0.9;
     }
 
     #intro .download-links--hero a.primary {
       min-height: 48px;
-      font-size: clamp(0.78rem, 0.45vw + 0.68rem, 0.9rem);
+      font-size: clamp(0.78rem, 0.5vw + 0.68rem, 0.92rem);
       font-weight: 950;
-      box-shadow: 0 8px 24px oklch(0.55 0.18 35 / 0.28);
+      box-shadow:
+        0 8px 22px rgb(249 84 62 / 0.28),
+        2px 2px 0 rgb(0 0 0 / 0.14);
     }
 
     #intro .download-links--hero > .download-links--hero-extra {
@@ -2852,9 +2818,9 @@
     }
 
     #intro .download-links--hero-extra {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid oklch(0 0 0 / 0.07);
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed rgb(0 0 0 / 0.14);
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
@@ -2863,13 +2829,12 @@
     #intro .download-links--hero-extra a {
       min-height: 40px;
       padding: 0 10px;
-      font-size: clamp(0.66rem, 0.4vw + 0.58rem, 0.78rem);
-      font-weight: 750;
-      border-radius: 999px;
-      box-shadow: 0 2px 8px oklch(0 0 0 / 0.05);
-      background: oklch(0.99 0.006 95);
-      color: oklch(0.28 0.02 265);
-      border: 1px solid var(--stroke-hairline);
+      font-size: clamp(0.68rem, 0.45vw + 0.62rem, 0.82rem);
+      font-weight: 850;
+      border-radius: 11px;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+      background: rgb(255 255 255 / 0.92);
+      color: var(--v1-ink);
       justify-content: center;
       text-align: center;
       flex-direction: row;
@@ -2890,16 +2855,11 @@
         line-height: 1.08;
         letter-spacing: -0.03em;
       }
-
-      #intro .panel-copy--intro > .intro-rail {
-        position: relative;
-        top: auto;
-      }
     }
 
     @media (min-width: 861px) and (max-width: 1024px) {
       #intro .panel-inner {
-        max-width: min(960px, 94vw);
+        max-width: min(47rem, 92vw);
       }
     }
 
@@ -3560,12 +3520,6 @@
         max-width: min(100%, 28rem);
         margin-inline: auto;
         gap: clamp(14px, 4vw, 20px);
-        grid-template-columns: 1fr;
-      }
-
-      #intro .panel-copy--intro > .intro-rail {
-        position: relative;
-        top: auto;
       }
 
       #intro .lead {
@@ -3576,20 +3530,17 @@
       }
 
       #intro .hero-downloads {
-        padding: 16px 18px;
-        margin-top: 0;
+        padding: 14px 16px;
+        margin-top: 6px;
         border-radius: 18px;
       }
 
       #intro .hero-downloads-title {
-        margin: 0 0 10px;
-        padding-bottom: 0;
-        border-bottom: none;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        font-size: 0.72rem;
-        color: var(--text-secondary);
+        margin: 0 0 12px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgb(0 0 0 / 0.08);
+        font-weight: 950;
+        letter-spacing: 0.02em;
       }
 
       #intro .download-links--hero {
@@ -4797,16 +4748,16 @@
           <svg class="intro-pipeline-edge-layer intro-pipeline-edge-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true">
             <defs>
               <linearGradient id="introPipelineFlowStroke" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="0" y2="0">
-                <stop offset="0%" stop-color="#fa8a72"/>
-                <stop offset="50%" stop-color="#e85d48"/>
-                <stop offset="100%" stop-color="#cc4540"/>
+                <stop offset="0%" stop-color="#f9543e"/>
+                <stop offset="55%" stop-color="#e84232"/>
+                <stop offset="100%" stop-color="#c8202b"/>
               </linearGradient>
             </defs>
-            <path class="intro-pipeline-edge intro-pipeline-edge--1" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.35" stroke-linecap="round" d="M 91.667 11 C 88.25 14.75 79.42 14.83 75 11"/>
-            <path class="intro-pipeline-edge intro-pipeline-edge--2" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.35" stroke-linecap="round" d="M 75 11 C 71.08 14.92 62.92 14.92 58.333 11"/>
-            <path class="intro-pipeline-edge intro-pipeline-edge--3" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.35" stroke-linecap="round" d="M 58.333 11 C 54.42 14.92 46.58 14.92 41.667 11"/>
-            <path class="intro-pipeline-edge intro-pipeline-edge--4" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.35" stroke-linecap="round" d="M 41.667 11 C 37.75 14.92 29.92 14.92 25 11"/>
-            <path class="intro-pipeline-edge intro-pipeline-edge--5" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.35" stroke-linecap="round" d="M 25 11 C 21.08 14.92 12.92 14.92 8.333 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--1" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 91.667 11 C 88.25 14.75 79.42 14.83 75 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--2" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 75 11 C 71.08 14.92 62.92 14.92 58.333 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--3" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 58.333 11 C 54.42 14.92 46.58 14.92 41.667 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--4" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 41.667 11 C 37.75 14.92 29.92 14.92 25 11"/>
+            <path class="intro-pipeline-edge intro-pipeline-edge--5" pathLength="1" vector-effect="non-scaling-stroke" fill="none" stroke="url(#introPipelineFlowStroke)" stroke-width="2.75" stroke-linecap="round" d="M 25 11 C 21.08 14.92 12.92 14.92 8.333 11"/>
           </svg>
           <span class="intro-pipeline-node intro-pipeline-node--a intro-pipeline-node-slot intro-pipeline-node-slot--1">קריינות</span>
           <span class="intro-pipeline-node intro-pipeline-node--b intro-pipeline-node-slot intro-pipeline-node-slot--2">תמלול</span>
@@ -4931,10 +4882,6 @@
         section.id === "intro" && section.visual === "introPipeline"
           ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ייצור: קריינות, תמלול, תכנון והתאמה מהקטלוג, רינדור והורדה">${visualMarkup("introPipeline", section)}</figure>`
           : "";
-      const introRailBlock =
-        section.id === "intro" && section.visual === "introPipeline"
-          ? `<aside class="intro-rail" aria-label="זרימת העבודה והורדה">${introPipelineBlock}${heroDownloads}</aside>`
-          : `${introPipelineBlock}${heroDownloads}`;
       const bulletsBlock = bulletsMarkup(section);
       const pitchProductLayout = isPitchProductSection(section);
       const pricingPullquoteBlock =
@@ -4968,10 +4915,11 @@
             <div class="kicker">${escapeHtml(section.kicker)}</div>
             ${heading}
             ${leadBlock}
-            ${introRailBlock}
+            ${introPipelineBlock}
             ${bulletsBlock}
             ${pricingPullquoteBlock}
             ${studioWizardToolbar}
+            ${heroDownloads}
           </div>
           ${visualBlock}
         </div>
