@@ -3578,71 +3578,16 @@
         padding-inline: max(18px, env(safe-area-inset-inline-start, 8px)) max(18px, env(safe-area-inset-inline-end, 8px));
       }
 
-      /* Text-first mobile pitch: hide decorative mockups (desktop keeps full layout).
-         Exception: #studio keeps mock + hint so phase picks stay meaningful.
-         Exception: #catalog keeps a real screenshot beside / under the copy.
-         Exception: #local-first keeps the compare table under the copy. */
-      .story-panel:not(#studio):not(#catalog):not(#local-first) .panel-visual,
-      .story-panel:not(#studio):not(#catalog):not(#local-first) .pitch-studio-wiz-controls-wrap,
-      .story-panel:not(#catalog) .pitch-catalog-wiz-controls-wrap,
-      .pitch-pricing-quote {
+      /* Text-first mobile pitch: hide all mockups (desktop keeps full layout). */
+      .story-panel .panel-visual,
+      .story-subslide .panel-visual {
         display: none !important;
       }
 
-      #studio .panel-visual {
-        display: grid !important;
-        width: 100%;
-        max-height: min(48vh, 420px);
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-        border-radius: 18px;
-        outline: 1px solid rgb(0 0 0 / 0.08);
-        background: rgb(248 247 244 / 0.65);
-        margin-top: 4px;
-        touch-action: pan-y;
-      }
-
-      #catalog .panel-visual {
-        display: grid !important;
-        width: 100%;
-        max-height: min(52vh, 460px);
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-        border-radius: 16px;
-        outline: 1px solid rgb(0 0 0 / 0.08);
-        background: rgb(255 255 255 / 0.55);
-        margin-top: 6px;
-        touch-action: pan-y;
-        place-items: center;
-      }
-
-      #catalog .pitch-catalog-screenshot img {
-        max-height: min(48vh, 400px);
-      }
-
-      #local-first .panel-visual {
-        display: grid !important;
-        width: 100%;
-        max-height: min(46vh, 420px);
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-        border-radius: 16px;
-        outline: 1px solid rgb(0 0 0 / 0.08);
-        background: rgb(255 255 255 / 0.5);
-        margin-top: 6px;
-        touch-action: pan-y;
-        place-items: stretch;
-      }
-
-      #local-first .pitch-local-first-visual {
-        max-height: min(42vh, 380px);
-        overflow: auto;
-        margin-inline: 0;
-      }
-
-      #studio .pitch-app-shell {
-        width: 100%;
-        max-width: 100%;
+      #studio .pitch-studio-wiz-controls-wrap,
+      .story-panel:not(#catalog) .pitch-catalog-wiz-controls-wrap,
+      .pitch-pricing-quote {
+        display: none !important;
       }
 
       #studio .panel-inner {
@@ -4187,6 +4132,12 @@
         lead:
           "כמה החלטות פשוטות וחיבורים בסיסיים — ואפשר להתחיל לעבוד באמת על תחזיות.",
         mobileSummary: "החלטות קצרות וחיבורים בסיסיים — ומתחילים להריץ תחזיות באופן מעשי.",
+        mobileBullets: [
+          "אישור כיוון והתקנה ראשונית במחשבי העבודה.",
+          "אחסון קטלוג — מקומי או בענן שלכם.",
+          "חיבור מפתחות API (OpenAI לתמלול/תכנון; Claude רק אם בוחרים).",
+          "סבב התאמות אחרי שימוש אמיתי."
+        ],
         bullets: [
           "אישור כיוון העבודה",
           "החלטה לגבי אחסון הקטלוג — מקומי או בענן שלכם",
@@ -4811,8 +4762,8 @@
         };
         const wizardItems = section.bullets.map(studioLi).join("");
         if (hasMobileBullets) {
-          const mob = mobileList.map(studioLi).join("");
-          return `<ul class="bullets bullets--studio-wizard bullets-desktop-only">${wizardItems}</ul><ul class="bullets bullets--studio-wizard panel-mobile-bullets">${mob}</ul>`;
+          const mob = mobileList.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+          return `<ul class="bullets bullets--studio-wizard bullets-desktop-only">${wizardItems}</ul><ul class="bullets panel-mobile-bullets">${mob}</ul>`;
         }
         return `<ul class="bullets bullets--studio-wizard">${wizardItems}</ul>`;
       }
