@@ -1635,6 +1635,8 @@
     }
 
     .pitch-device {
+      position: relative;
+      overflow: hidden;
       width: min(48vw, 158px);
       aspect-ratio: 9 / 16;
       padding: 11px;
