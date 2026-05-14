@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="WeatherV1 Next - סטודיו דסקטופ ליצירת סרטוני תחזית אנכיים ללקוחות ולצוותי תוכן.">
-  <title>WeatherV1 Next - Pitch</title>
+  <meta name="description" content="Weather V1 — אפליקציה שמקבלת קריינות תחזית, מתמללת ומתכננת סצנות עם רקע מקטלוג V1, ומייצרת בסיס לווידאו תחזית אנכי.">
+  <title>Weather V1 — מצגת פתיחה</title>
   <style>
     :root {
       color-scheme: light;
@@ -194,8 +194,8 @@
 
     .pitch-step-nav {
       position: fixed;
-      right: max(14px, env(safe-area-inset-right, 0px));
-      left: auto;
+      inset-inline-end: max(14px, env(safe-area-inset-inline-end, 0px));
+      inset-inline-start: auto;
       bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px), 8px) + 3.25rem);
       z-index: 48;
       display: flex;
@@ -668,10 +668,19 @@
       max-width: none;
     }
 
+    #intro .panel-copy--intro .kicker {
+      text-transform: none;
+      letter-spacing: 0.02em;
+      font-size: clamp(0.82rem, 1.05vw, 0.98rem);
+      font-weight: 950;
+    }
+
     #intro h1 {
-      font-size: clamp(2rem, 0.35rem + 3.5vw, 4.1rem);
-      max-width: min(100%, 18.5rem);
-      line-height: 1.03;
+      font-size: clamp(2.35rem, 0.45rem + 4vw, 4.65rem);
+      max-width: min(100%, 26rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      font-weight: 950;
       text-wrap: balance;
     }
 
@@ -720,21 +729,61 @@
       gap: 10px;
     }
 
-    #intro .download-links--hero a {
+    #intro .download-links--hero > a {
       min-height: 44px;
       padding: 0 12px;
       font-size: clamp(0.72rem, 0.55vw + 0.65rem, 0.88rem);
       border-radius: 12px;
       box-shadow: 2px 2px 0 var(--v1-ink);
-      gap: 8px;
+      gap: 10px;
       justify-content: center;
       text-align: center;
+      flex-direction: row-reverse;
+    }
+
+    /* External-link glyph reads correctly in RTL (inline-start side of label). */
+    #intro .download-links--hero > a::after {
+      content: "\2197";
+      flex-shrink: 0;
+      direction: ltr;
+      unicode-bidi: isolate;
     }
 
     #intro .download-links--hero a.primary {
       min-height: 48px;
       font-size: clamp(0.78rem, 0.5vw + 0.68rem, 0.92rem);
       font-weight: 950;
+    }
+
+    #intro .download-links--hero > .download-links--hero-extra {
+      grid-column: 1 / -1;
+    }
+
+    #intro .download-links--hero-extra {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed rgb(0 0 0 / 0.14);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    #intro .download-links--hero-extra a {
+      min-height: 40px;
+      padding: 0 10px;
+      font-size: clamp(0.68rem, 0.45vw + 0.62rem, 0.82rem);
+      font-weight: 850;
+      border-radius: 11px;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+      background: rgb(255 255 255 / 0.92);
+      color: var(--v1-ink);
+      justify-content: center;
+      text-align: center;
+      flex-direction: row;
+    }
+
+    #intro .download-links--hero-extra a::after {
+      display: none;
     }
 
     @media (max-height: 720px) {
@@ -744,7 +793,9 @@
 
       #intro h1 {
         font-size: clamp(1.55rem, 3.5vh, 2.9rem);
-        max-width: min(100%, 17.5rem);
+        max-width: min(100%, 24rem);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
       }
     }
 
@@ -930,7 +981,8 @@
     }
 
     .download-links a::after {
-      content: "\2196";
+      content: "\2197";
+      flex-shrink: 0;
       direction: ltr;
       unicode-bidi: isolate;
     }
@@ -1304,6 +1356,16 @@
         font-size: 0.88rem;
       }
 
+      #intro .download-links--hero-extra {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      #intro .download-links--hero-extra a {
+        min-height: 44px;
+        font-size: 0.78rem;
+      }
+
       .panel-copy {
         justify-items: stretch;
         gap: 14px;
@@ -1324,7 +1386,8 @@
 
       #intro h1 {
         font-size: clamp(1.58rem, 5.8vw + 0.65rem, 2.72rem);
-        line-height: 1.06;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
         max-width: none;
       }
 
@@ -1418,6 +1481,10 @@
         min-height: 50px;
         font-size: 0.84rem;
       }
+
+      #intro .download-links--hero-extra {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     /* Ultra-narrow: hide subtitle under logo to keep one-line nav density. */
@@ -1458,6 +1525,8 @@
 
       #intro h1 {
         font-size: clamp(1.28rem, 3.2vw, 1.88rem);
+        line-height: 1.08;
+        letter-spacing: -0.025em;
       }
 
       #intro .lead {
@@ -1481,6 +1550,16 @@
       #intro .download-links--hero a.primary {
         min-height: 46px;
         font-size: 0.78rem;
+      }
+
+      #intro .download-links--hero-extra {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      #intro .download-links--hero-extra a {
+        min-height: 38px;
+        font-size: 0.7rem;
       }
     }
 
@@ -1544,13 +1623,13 @@
     try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (_) {}
   </script>
   <nav class="site-nav" aria-label="ניווט ראשי">
-    <a class="brand" href="#intro" aria-label="WeatherV1 Next">
+    <a class="brand" href="#intro" aria-label="Weather V1 · מחולל תחזית · וידאו אנכי">
       <span class="brand-mark">
-        <img src="public/weather-v1-icon-512.png" alt="WeatherV1" width="40" height="40" decoding="async">
+        <img src="public/weather-v1-icon-512.png" alt="Weather V1" width="40" height="40" decoding="async">
       </span>
       <span class="brand-copy">
-        <strong>WeatherV1 Next</strong>
-        <span>סטודיו תחזית וידאו</span>
+        <strong>Weather V1</strong>
+        <span>מחולל תחזית · וידאו אנכי</span>
       </span>
     </a>
     <div class="nav-actions">
@@ -1562,7 +1641,7 @@
   <div class="scroll-hint" aria-hidden="true">גללו להמשך</div>
 
   <main class="story-shell" id="story">
-    <div class="story-track" id="storyTrack" aria-label="WeatherV1 pitch story">
+    <div class="story-track" id="storyTrack" aria-label="Weather V1 pitch story">
       <div class="story-mirror" id="storyMirror">
         <div id="storyRoll" class="story-roll"></div>
       </div>
@@ -1592,19 +1671,32 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script>
     const downloadLinks = [
-      { label: "הורדה ל-macOS (.zip)", href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-macOS.zip", primary: true },
-      { label: "הורדה ל-Windows (Setup)", href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-Setup.exe", primary: true },
-      { label: "כל הגרסאות", href: "https://github.com/__REPO__/releases" },
-      { label: "מאגר GitHub", href: "https://github.com/__REPO__" }
+      {
+        label: "התקנה ל־Windows",
+        href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-Setup.exe",
+        primary: true
+      },
+      {
+        label: "התקנה ל־Mac",
+        href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-macOS.zip",
+        primary: true
+      },
+      { label: "כל הגרסאות", href: "https://github.com/__REPO__/releases", secondary: true },
+      { label: "מאגר GitHub", href: "https://github.com/__REPO__", secondary: true }
     ];
 
     const storySections = [
       {
         id: "intro",
-        kicker: "WeatherV1 Next",
-        title: "אפליקציה מוכנה למכירה",
-        lead: "{{כאן נוסיף משפט פתיחה שיסביר ללקוח מה הוא מקבל בלי מילים טכניות}}",
-        bullets: ["יוצרים סרטוני תחזית אנכיים", "מתאים לעמודים, עסקים וצוותי תוכן", "תהליך עבודה ברור וחוזר"],
+        kicker: "Weather V1",
+        title: "מה זה בקצרה",
+        lead:
+          "מעלים קובץ קריינות תחזית — האפליקציה מתמללת אותו (למשל בעזרת Whisper), מפעילה רצף היגיון שמחבר את הטקסט לסצנות, מתאימה קטעי וידאו רקע מתוך קטלוג V1, ובסוף נוצר בסיס לסרטון תחזית בפורמט אנכי.",
+        bullets: [
+          "קריינות → תמלול → סצנות מתוכננות",
+          "רקעים מקטלוג V1 לכל חלק בסיפור",
+          "פלט בסיס לאנכי — מוכן להמשך הפקה"
+        ],
         visual: "none",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
@@ -1809,17 +1901,39 @@
     }
 
     function downloadLinksMarkup(links) {
-      return links.map(link => `
+      const primary = links.filter(link => !link.secondary);
+      const secondary = links.filter(link => link.secondary);
+      const primaryHtml = primary
+        .map(
+          link => `
           <a class="${link.primary ? "primary" : ""}" href="${escapeHtml(link.href)}">
             <span>${escapeHtml(link.label)}</span>
           </a>
-        `).join("");
+        `
+        )
+        .join("");
+      const secondaryHtml =
+        secondary.length === 0
+          ? ""
+          : `
+          <div class="download-links download-links--hero-extra" aria-label="קישורים נוספים">
+            ${secondary
+              .map(
+                link => `
+          <a href="${escapeHtml(link.href)}">
+            <span>${escapeHtml(link.label)}</span>
+          </a>
+        `
+              )
+              .join("")}
+          </div>`;
+      return `${primaryHtml}${secondaryHtml}`;
     }
 
     function heroDownloadsBlock() {
       return `
           <div class="hero-downloads" id="download-hero" aria-labelledby="hero-download-heading">
-            <p class="hero-downloads-title" id="hero-download-heading">הורדה</p>
+            <p class="hero-downloads-title" id="hero-download-heading">התקנה</p>
             <div class="download-links download-links--hero">${downloadLinksMarkup(downloadLinks)}</div>
           </div>`;
     }

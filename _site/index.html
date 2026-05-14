@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="WeatherV1 Next - סטודיו דסקטופ ליצירת סרטוני תחזית אנכיים ללקוחות ולצוותי תוכן.">
-  <title>WeatherV1 Next - Pitch</title>
+  <meta name="description" content="Weather V1 — אפליקציה שמקבלת קריינות תחזית, מתמללת ומתכננת סצנות עם רקע מקטלוג V1, ומייצרת בסיס לווידאו תחזית אנכי.">
+  <title>Weather V1 — מצגת פתיחה</title>
   <style>
     :root {
       color-scheme: light;
@@ -194,52 +194,104 @@
 
     .pitch-step-nav {
       position: fixed;
-      inset-block-end: max(1rem, env(safe-area-inset-bottom, 0px), 8px);
-      inset-inline-end: max(12px, env(safe-area-inset-inline-end, 0px));
+      right: max(14px, env(safe-area-inset-right, 0px));
+      left: auto;
+      bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px), 8px) + 3.25rem);
       z-index: 48;
       display: flex;
       flex-direction: column;
-      gap: 8px;
       align-items: stretch;
+      gap: 7px;
+      padding: 9px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 16px;
+      background: rgb(255 255 255 / 0.94);
+      box-shadow: 4px 4px 0 var(--v1-ink);
+      backdrop-filter: blur(14px) saturate(1.15);
+      -webkit-backdrop-filter: blur(14px) saturate(1.15);
     }
 
     .pitch-step-nav button {
       display: grid;
       place-items: center;
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       margin: 0;
       padding: 0;
-      border: 1.5px solid var(--v1-ink);
-      border-radius: 12px;
-      background: rgb(255 255 255 / .84);
+      border: 2px solid var(--v1-ink);
+      border-radius: 11px;
+      background: linear-gradient(165deg, rgb(255 255 255 / 1) 0%, rgb(252 252 252 / 1) 55%, rgb(248 248 249 / 1) 100%);
       color: var(--v1-ink);
-      box-shadow: 2px 2px 0 var(--v1-ink);
-      font-size: 1.1rem;
-      font-weight: 900;
-      line-height: 1;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.14);
       cursor: pointer;
-      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+      transition:
+        transform 160ms ease,
+        background 160ms ease,
+        box-shadow 160ms ease,
+        border-color 160ms ease;
+    }
+
+    .pitch-step-nav button .pitch-step-icon {
+      display: block;
+      flex-shrink: 0;
+    }
+
+    #pitch-step-down {
+      background: linear-gradient(
+        165deg,
+        rgb(255 255 255 / 1) 0%,
+        rgb(255 247 243 / 1) 48%,
+        rgb(252 233 228 / 0.92) 100%
+      );
     }
 
     .pitch-step-nav button:hover,
     .pitch-step-nav button:focus-visible {
       background: var(--v1-yellow);
+      border-color: var(--v1-ink);
       box-shadow: 3px 3px 0 var(--v1-ink);
-      outline: 3px solid var(--v1-paper);
-      outline-offset: 2px;
+      outline: none;
       transform: translateY(-2px);
     }
 
-    .pitch-step-nav button:disabled {
-      opacity: 0.38;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: 2px 2px 0 var(--v1-ink);
+    #pitch-step-down:hover,
+    #pitch-step-down:focus-visible {
+      background: linear-gradient(165deg, var(--v1-yellow), rgb(250 210 75 / 1));
     }
 
-    .pitch-step-nav button:disabled:hover {
-      background: rgb(255 255 255 / .84);
+    .pitch-step-nav button:focus-visible {
+      outline: 3px solid var(--v1-paper);
+      outline-offset: 3px;
+    }
+
+    .pitch-step-nav button:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 1px 1px 0 var(--v1-ink);
+    }
+
+    .pitch-step-nav button:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+    }
+
+    .pitch-step-nav button:disabled:hover,
+    .pitch-step-nav button:disabled:focus-visible {
+      background: linear-gradient(165deg, rgb(255 255 255 / 1) 0%, rgb(252 252 252 / 1) 100%);
+      transform: none;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+      outline: none;
+    }
+
+    #pitch-step-down:disabled:hover,
+    #pitch-step-down:disabled:focus-visible {
+      background: linear-gradient(
+        165deg,
+        rgb(255 255 255 / 1) 0%,
+        rgb(255 247 243 / 1) 48%,
+        rgb(252 233 228 / 0.92) 100%
+      );
     }
 
     .story-shell {
@@ -592,47 +644,50 @@
       font-size: 0.9rem;
     }
 
-    /* Intro: bullets + hero download card + phone preview fits one viewport */
+    /* Intro hero: copy + hero downloads only (no device mockup) */
     #intro.story-panel {
-      padding-block: calc(var(--nav-height) + 14px) 24px;
-      padding-inline: clamp(14px, 3.8vw, 52px);
+      padding-block: calc(var(--nav-height) + 22px) clamp(28px, 5vh, 52px);
+      padding-inline: clamp(18px, 4vw, 64px);
     }
 
     #intro .panel-inner {
-      align-items: stretch;
-      gap: clamp(10px, 2.5vw, 32px);
-      grid-template-columns: minmax(0, 1.08fr) minmax(min(160px, 18vw), 0.38fr);
+      width: min(1220px, 100%);
+      grid-template-columns: 1fr;
+      align-items: start;
+      justify-items: stretch;
+      gap: clamp(18px, 3.5vw, 36px);
       box-sizing: border-box;
-      max-height: calc(100svh - var(--nav-height) - 40px);
+      max-width: min(47rem, 92vw);
+      margin-inline: auto;
     }
 
-    #intro .panel-copy {
-      gap: clamp(8px, 1.5vw, 14px);
+    #intro .panel-copy--intro {
+      gap: clamp(14px, 1.6vw, 22px);
       min-height: 0;
-      align-self: center;
+      width: 100%;
+      max-width: none;
     }
 
     #intro h1 {
-      font-size: clamp(1.7rem, 4.8vw, 4rem);
-      max-width: 12ch;
-      line-height: 0.98;
+      font-size: clamp(2rem, 0.35rem + 3.5vw, 4.1rem);
+      max-width: min(100%, 18.5rem);
+      line-height: 1.03;
+      text-wrap: balance;
     }
 
     #intro .lead {
-      font-size: clamp(0.88rem, 1.25vw, 1.22rem);
-      max-width: 28rem;
-      line-height: 1.28;
-      display: -webkit-box;
-      -webkit-line-clamp: 4;
-      line-clamp: 4;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      font-size: clamp(0.98rem, 0.35vw + 0.9rem, 1.32rem);
+      max-width: min(100%, 44rem);
+      line-height: 1.45;
+      display: block;
+      margin: 0;
+      overflow: visible;
     }
 
     #intro .bullets {
-      margin-top: 0;
-      gap: 5px;
-      font-size: clamp(0.8rem, 1.05vw, 0.98rem);
+      margin-top: 4px;
+      gap: 10px;
+      font-size: clamp(0.84rem, 0.9vw, 1.02rem);
     }
 
     #intro .bullets li::before {
@@ -640,66 +695,92 @@
     }
 
     #intro .hero-downloads {
-      margin-top: 2px;
+      margin-top: 6px;
       max-width: none;
       width: 100%;
+      padding: 16px 18px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 16px;
+      background: rgb(255 255 255 / 0.68);
+      box-shadow: 4px 4px 0 rgb(0 0 0 / 0.07);
     }
 
     #intro .hero-downloads-title {
-      margin: 0 0 5px;
-      font-size: clamp(0.78rem, 1vw, 0.94rem);
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgb(0 0 0 / 0.08);
+      font-size: clamp(0.86rem, 1.05vw, 1.05rem);
+      font-weight: 950;
+      letter-spacing: 0.02em;
     }
 
     #intro .download-links--hero {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
     }
 
     #intro .download-links--hero a {
-      min-height: 34px;
-      padding: 0 8px 0 10px;
-      font-size: 0.72rem;
-      border-radius: 10px;
+      min-height: 44px;
+      padding: 0 12px;
+      font-size: clamp(0.72rem, 0.55vw + 0.65rem, 0.88rem);
+      border-radius: 12px;
       box-shadow: 2px 2px 0 var(--v1-ink);
+      gap: 8px;
+      justify-content: center;
+      text-align: center;
+    }
+
+    #intro .download-links--hero a.primary {
+      min-height: 48px;
+      font-size: clamp(0.78rem, 0.5vw + 0.68rem, 0.92rem);
+      font-weight: 950;
+    }
+
+    #intro .download-links--hero > .download-links--hero-extra {
+      grid-column: 1 / -1;
+    }
+
+    #intro .download-links--hero-extra {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed rgb(0 0 0 / 0.14);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
     }
 
-    #intro .panel-visual {
-      min-height: 0;
-      max-height: min(46svh, 320px);
-      align-self: center;
+    #intro .download-links--hero-extra a {
+      min-height: 40px;
+      padding: 0 10px;
+      font-size: clamp(0.68rem, 0.45vw + 0.62rem, 0.82rem);
+      font-weight: 850;
+      border-radius: 11px;
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+      background: rgb(255 255 255 / 0.92);
+      color: var(--v1-ink);
+      justify-content: center;
+      text-align: center;
     }
 
-    #intro .phone-frame {
-      width: min(118px, 18vw);
-      max-height: min(42svh, 300px);
-      padding: 10px;
-    }
-
-    #intro .phone-screen {
-      font-size: clamp(0.78rem, 1.2vw, 1rem);
+    #intro .download-links--hero-extra a::after {
+      display: none;
     }
 
     @media (max-height: 720px) {
       #intro .panel-inner {
-        max-height: calc(100svh - var(--nav-height) - 28px);
+        gap: clamp(14px, 2.5vh, 24px);
       }
 
       #intro h1 {
-        font-size: clamp(1.45rem, 4.2vh, 2.75rem);
+        font-size: clamp(1.55rem, 3.5vh, 2.9rem);
+        max-width: min(100%, 17.5rem);
       }
+    }
 
-      #intro .lead {
-        -webkit-line-clamp: 3;
-      }
-
-      #intro .panel-visual {
-        max-height: min(38svh, 260px);
-      }
-
-      #intro .phone-frame {
-        max-height: min(36svh, 240px);
+    @media (min-width: 861px) and (max-width: 1024px) {
+      #intro .panel-inner {
+        max-width: min(47rem, 92vw);
       }
     }
 
@@ -1194,15 +1275,23 @@
         width: 100%;
       }
 
-      #intro .panel-inner {
-        max-height: none;
+      #intro.story-panel {
+        padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 18px)
+          max(6.75rem, calc(env(safe-area-inset-bottom, 0px) + 6rem));
+        padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
       }
 
-      /* Hero: preview first on small screens — faster "what is it?" recognition. */
-      #intro .panel-visual {
-        order: -1;
+      #intro .panel-inner {
         max-height: none;
-        justify-items: center;
+        gap: clamp(18px, 5vw, 28px);
+        align-content: start;
+      }
+
+      #intro .panel-copy--intro {
+        width: 100%;
+        max-width: min(100%, 28rem);
+        margin-inline: auto;
+        gap: clamp(14px, 4vw, 20px);
       }
 
       #intro .lead {
@@ -1212,18 +1301,47 @@
         overflow: visible;
       }
 
+      #intro .hero-downloads {
+        padding: 14px 16px;
+        margin-top: 6px;
+        border-radius: 14px;
+      }
+
+      #intro .hero-downloads-title {
+        margin: 0 0 12px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgb(0 0 0 / 0.08);
+        font-weight: 950;
+        letter-spacing: 0.02em;
+      }
+
       #intro .download-links--hero {
+        grid-template-columns: 1fr;
         gap: 10px;
+        width: 100%;
       }
 
       #intro .download-links--hero a {
         min-height: 48px;
         font-size: 0.84rem;
+        justify-content: center;
+        text-align: center;
+        padding-inline: 14px;
       }
 
-      #intro .phone-frame {
-        width: min(260px, 78vw);
-        max-height: none;
+      #intro .download-links--hero a.primary {
+        min-height: 52px;
+        font-size: 0.88rem;
+      }
+
+      #intro .download-links--hero-extra {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      #intro .download-links--hero-extra a {
+        min-height: 44px;
+        font-size: 0.78rem;
       }
 
       .panel-copy {
@@ -1245,8 +1363,9 @@
       }
 
       #intro h1 {
-        font-size: clamp(1.55rem, 7.2vw, 2.65rem);
-        max-width: 22ch;
+        font-size: clamp(1.58rem, 5.8vw + 0.65rem, 2.72rem);
+        line-height: 1.06;
+        max-width: none;
       }
 
       .lead {
@@ -1306,11 +1425,42 @@
       }
 
       .builder-credit {
-        position: static;
-        display: flex;
-        margin: 0 max(16px, env(safe-area-inset-inline-start, 0px)) max(1.5rem, env(safe-area-inset-bottom, 0px));
-        width: fit-content;
-        max-width: calc(100% - 32px);
+        position: fixed;
+        left: max(12px, env(safe-area-inset-left, 0px));
+        right: auto;
+        /* Same band as .pitch-step-nav so both float controls share a baseline. */
+        bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px), 8px) + 3.25rem);
+        z-index: 47;
+        margin: 0;
+        max-width: min(16.5rem, calc(100vw - 100px));
+        padding: 0.32rem 0.65rem;
+        font-size: 0.64rem;
+        box-shadow: 2px 2px 0 var(--v1-ink);
+      }
+
+      .builder-credit span:first-child {
+        font-size: 0.54rem;
+      }
+    }
+
+    /* Phablet: room for a 2×2 download grid; narrow phones stay one column. */
+    @media (max-width: 860px) and (min-width: 560px) {
+      #intro .download-links--hero {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      #intro .download-links--hero a {
+        font-size: 0.8rem;
+        min-height: 46px;
+      }
+
+      #intro .download-links--hero a.primary {
+        min-height: 50px;
+        font-size: 0.84rem;
+      }
+
+      #intro .download-links--hero-extra {
+        grid-template-columns: 1fr 1fr;
       }
     }
 
@@ -1338,15 +1488,53 @@
       h1, h2 {
         font-size: clamp(1.45rem, 5.2vh, 2.4rem);
       }
-
-      #intro .phone-frame {
-        width: min(200px, 52vw);
-      }
     }
 
     @media (max-width: 860px) and (orientation: landscape) {
       html {
         scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + 10px);
+      }
+
+      #intro .panel-inner {
+        max-width: min(42rem, 94vw);
+        margin-inline: auto;
+      }
+
+      #intro h1 {
+        font-size: clamp(1.28rem, 3.2vw, 1.88rem);
+      }
+
+      #intro .lead {
+        font-size: clamp(0.88rem, 2.2vw, 1.05rem);
+      }
+
+      #intro .hero-downloads {
+        padding: 10px 12px;
+      }
+
+      #intro .download-links--hero {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      #intro .download-links--hero a {
+        min-height: 42px;
+        font-size: 0.74rem;
+      }
+
+      #intro .download-links--hero a.primary {
+        min-height: 46px;
+        font-size: 0.78rem;
+      }
+
+      #intro .download-links--hero-extra {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      #intro .download-links--hero-extra a {
+        min-height: 38px;
+        font-size: 0.7rem;
       }
     }
 
@@ -1384,13 +1572,6 @@
         overflow: visible;
       }
 
-      #intro .panel-visual {
-        max-height: none;
-      }
-
-      #intro .phone-frame {
-        max-height: none;
-      }
       .scroll-progress {
         display: none;
       }
@@ -1404,6 +1585,10 @@
       .pitch-step-nav button:focus-visible {
         transform: none;
       }
+
+      .pitch-step-nav button:active:not(:disabled) {
+        transform: none;
+      }
     }
   </style>
 </head>
@@ -1413,13 +1598,13 @@
     try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (_) {}
   </script>
   <nav class="site-nav" aria-label="ניווט ראשי">
-    <a class="brand" href="#intro" aria-label="WeatherV1 Next">
+    <a class="brand" href="#intro" aria-label="Weather V1 — מחולל תחזית · וידאו אנכי">
       <span class="brand-mark">
-        <img src="public/weather-v1-icon-512.png" alt="WeatherV1" width="40" height="40" decoding="async">
+        <img src="public/weather-v1-icon-512.png" alt="Weather V1" width="40" height="40" decoding="async">
       </span>
       <span class="brand-copy">
-        <strong>WeatherV1 Next</strong>
-        <span>סטודיו תחזית וידאו</span>
+        <strong>Weather V1</strong>
+        <span>מחולל תחזית · וידאו אנכי</span>
       </span>
     </a>
     <div class="nav-actions">
@@ -1431,7 +1616,7 @@
   <div class="scroll-hint" aria-hidden="true">גללו להמשך</div>
 
   <main class="story-shell" id="story">
-    <div class="story-track" id="storyTrack" aria-label="WeatherV1 pitch story">
+    <div class="story-track" id="storyTrack" aria-label="Weather V1 pitch story">
       <div class="story-mirror" id="storyMirror">
         <div id="storyRoll" class="story-roll"></div>
       </div>
@@ -1439,8 +1624,16 @@
   </main>
 
   <div class="pitch-step-nav" role="group" aria-label="ניווט בין שקופיות">
-    <button type="button" id="pitch-step-up" aria-label="שקופית קודמת">↑</button>
-    <button type="button" id="pitch-step-down" aria-label="שקופית הבאה">↓</button>
+    <button type="button" id="pitch-step-up" aria-label="שקופית קודמת">
+      <svg class="pitch-step-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M17 15.5 12 9.25 7 15.5"/>
+      </svg>
+    </button>
+    <button type="button" id="pitch-step-down" aria-label="שקופית הבאה">
+      <svg class="pitch-step-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M7 8.5 12 14.75 17 8.5"/>
+      </svg>
+    </button>
   </div>
 
   <a class="builder-credit" href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
@@ -1453,20 +1646,33 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script>
     const downloadLinks = [
-      { label: "הורדה ל-macOS (.zip)", href: "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-macOS.zip", primary: true },
-      { label: "הורדה ל-Windows (Setup)", href: "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-Setup.exe", primary: true },
-      { label: "כל הגרסאות", href: "https://github.com/barmoshe/weatherv1-next/releases" },
-      { label: "מאגר GitHub", href: "https://github.com/barmoshe/weatherv1-next" }
+      {
+        label: "התקנה ל־Windows",
+        href: "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-Setup.exe",
+        primary: true
+      },
+      {
+        label: "התקנה ל־Mac",
+        href: "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-macOS.zip",
+        primary: true
+      },
+      { label: "כל הגרסאות", href: "https://github.com/barmoshe/weatherv1-next/releases", secondary: true },
+      { label: "מאגר GitHub", href: "https://github.com/barmoshe/weatherv1-next", secondary: true }
     ];
 
     const storySections = [
       {
         id: "intro",
-        kicker: "WeatherV1 Next",
-        title: "אפליקציה מוכנה למכירה",
-        lead: "{{כאן נוסיף משפט פתיחה שיסביר ללקוח מה הוא מקבל בלי מילים טכניות}}",
-        bullets: ["יוצרים סרטוני תחזית אנכיים", "מתאים לעמודים, עסקים וצוותי תוכן", "תהליך עבודה ברור וחוזר"],
-        visual: "phone",
+        kicker: "Weather V1",
+        title: "Weather V1 — מה זה בקצרה",
+        lead:
+          "מעלים קובץ קריינות תחזית — האפליקציה מתמללת אותו (למשל בעזרת Whisper), מפעילה רצף היגיון שמחבר את הטקסט לסצנות, מתאימה קטעי וידאו רקע מתוך קטלוג V1, ובסוף נוצר בסיס לסרטון תחזית בפורמט אנכי.",
+        bullets: [
+          "קריינות → תמלול → סצנות מתוכננות",
+          "רקעים מקטלוג V1 לכל חלק בסיפור",
+          "פלט בסיס לאנכי — מוכן להמשך הפקה"
+        ],
+        visual: "none",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
       },
@@ -1670,22 +1876,47 @@
     }
 
     function downloadLinksMarkup(links) {
-      return links.map(link => `
+      const primary = links.filter(link => !link.secondary);
+      const secondary = links.filter(link => link.secondary);
+      const primaryHtml = primary
+        .map(
+          link => `
           <a class="${link.primary ? "primary" : ""}" href="${escapeHtml(link.href)}">
             <span>${escapeHtml(link.label)}</span>
           </a>
-        `).join("");
+        `
+        )
+        .join("");
+      const secondaryHtml =
+        secondary.length === 0
+          ? ""
+          : `
+          <div class="download-links download-links--hero-extra" aria-label="קישורים נוספים">
+            ${secondary
+              .map(
+                link => `
+          <a href="${escapeHtml(link.href)}">
+            <span>${escapeHtml(link.label)}</span>
+          </a>
+        `
+              )
+              .join("")}
+          </div>`;
+      return `${primaryHtml}${secondaryHtml}`;
     }
 
     function heroDownloadsBlock() {
       return `
           <div class="hero-downloads" id="download-hero" aria-labelledby="hero-download-heading">
-            <p class="hero-downloads-title" id="hero-download-heading">הורדה</p>
+            <p class="hero-downloads-title" id="hero-download-heading">התקנה</p>
             <div class="download-links download-links--hero">${downloadLinksMarkup(downloadLinks)}</div>
           </div>`;
     }
 
     function visualMarkup(type, section) {
+      if (type === "none" || type == null) {
+        return "";
+      }
       if (type === "phone") {
         return `<div class="phone-frame"><div class="phone-screen"><span class="mixed-ltr" lang="en" dir="ltr">MP4<br>9:16</span><br><small>תחזית מוכנה</small></div></div>`;
       }
@@ -1825,10 +2056,15 @@
       const bullets = section.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join("");
       const heroDownloads = section.id === "intro" ? heroDownloadsBlock() : "";
       const visualAria = section.visual === "excalidrawDemo" ? "" : " aria-hidden=\"true\"";
+      const copyClass = section.id === "intro" ? "panel-copy panel-copy--intro" : "panel-copy";
       const heading =
         section.id === "intro"
           ? `<h1>${escapeHtml(section.title)}</h1>`
           : `<h2>${escapeHtml(section.title)}</h2>`;
+      const visualBlock =
+        section.id === "intro"
+          ? ""
+          : `<div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>`;
       return `<section
         class="story-panel"
         id="${escapeHtml(section.id)}"
@@ -1838,14 +2074,14 @@
         data-transition="${escapeHtml(panelTransition(section))}"
       >
         <div class="panel-inner">
-          <div class="panel-copy">
+          <div class="${copyClass}">
             <div class="kicker">${escapeHtml(section.kicker)}</div>
             ${heading}
             <p class="lead">${escapeHtml(section.lead)}</p>
             <ul class="bullets">${bullets}</ul>
             ${heroDownloads}
           </div>
-          <div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>
+          ${visualBlock}
         </div>
       </section>`;
     }
