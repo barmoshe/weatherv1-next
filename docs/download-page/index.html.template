@@ -176,14 +176,16 @@
 
     .scroll-hint {
       position: fixed;
-      inset-inline-end: 18px;
-      inset-block-end: 30px;
+      inset-inline-start: 18px;
+      inset-inline-end: auto;
+      inset-block-end: 78px;
       z-index: 46;
       transform: translateY(-100%);
       color: var(--v1-muted);
       font-size: .78rem;
       font-weight: 900;
       pointer-events: none;
+      white-space: nowrap;
     }
 
     .story-shell {
@@ -309,7 +311,8 @@
     .phone-frame,
     .screen-frame,
     .card-stack,
-    .download-card {
+    .download-card,
+    .tutorial-panel {
       width: min(100%, 520px);
       border: 2px solid var(--v1-ink);
       border-radius: 22px;
@@ -323,6 +326,11 @@
       display: grid;
       gap: 18px;
       align-content: center;
+    }
+
+    .pricing-board.visual-board {
+      min-height: unset;
+      padding: 0;
     }
 
     .mini-card {
@@ -636,6 +644,120 @@
       font-weight: 850;
       text-decoration: underline;
       text-underline-offset: 2px;
+    }
+
+    .pricing-board {
+      padding: 0;
+      min-height: 0;
+      gap: 0;
+      overflow: hidden;
+      align-content: start;
+    }
+
+    .pricing-head,
+    .pricing-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--v1-ink);
+      font-weight: 850;
+    }
+
+    .pricing-head {
+      background: rgb(226 232 255 / .85);
+      font-weight: 950;
+      font-size: 0.9rem;
+    }
+
+    .pricing-row small {
+      color: var(--v1-muted);
+      font-weight: 800;
+    }
+
+    .token-chip {
+      margin: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 2px dashed var(--v1-ink);
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 0.88rem;
+    }
+
+    .tutorial-panel {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 22px;
+      background: rgb(255 255 255 / .9);
+      box-shadow: var(--shadow);
+    }
+
+    .tutorial-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .tutorial-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 14px;
+      background: var(--v1-cream);
+      box-shadow: 3px 3px 0 var(--v1-ink);
+    }
+
+    .tutorial-num {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--panel-accent, var(--v1-success));
+      color: #fff;
+      font-weight: 950;
+      font-size: 0.95rem;
+    }
+
+    .tutorial-body {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .tutorial-body strong {
+      font-size: 1rem;
+    }
+
+    .tutorial-body span {
+      color: var(--v1-muted);
+      font-weight: 750;
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .tutorial-tip {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1.5px solid var(--v1-ink);
+      background: rgb(255 255 255 / .75);
+      font-size: 0.82rem;
+      font-weight: 750;
+      color: var(--v1-muted);
+      line-height: 1.4;
     }
 
     .download-links a {
@@ -954,6 +1076,24 @@
         theme: { paper: "#ffffff", accent: "#1fa871" }
       },
       {
+        id: "llm-sample",
+        kicker: "דוגמת מעבר",
+        title: "טוקנים ומחירון מודלים",
+        lead: "שקופית לדוגמה לבדיקת מעברים בין פרקים. המספרים להמחשה בלבד — החליפו למקור הפיננסי הרשמי שלכם.",
+        bullets: ["חישוב לפי קלט+פלט בטוקנים", "השוו מודלים לפני בחירה", "שריינו אלרט כשמתקרבים לתקרה"],
+        visual: "llmPricing",
+        theme: { paper: "#eef1ff", accent: "#4f52c8" }
+      },
+      {
+        id: "tutorial-sample",
+        kicker: "דוגמת מעבר",
+        title: "מדריך קצר",
+        lead: "שלבים פשוטים כדי להרגיש את אנימציית הגלילה והזזת השקופיות בגרסת שולחן העבודה.",
+        bullets: ["גללו לאט ובמכוון למדוד scrub", "במובייל הפרקים נערמים אנכית", "אפשר למחוק את שקופיות הדוגמה אחרי הבדיקה"],
+        visual: "tutorialDemo",
+        theme: { paper: "#f2fff7", accent: "#169a62" }
+      },
+      {
         id: "download",
         kicker: "הורדה",
         title: "להתחיל עם WeatherV1",
@@ -1058,6 +1198,34 @@
             <object class="excal-embed" type="image/svg+xml" data="${escapeHtml(src)}" title="דוגמת שרטוט מהיר ללקוח" aria-label="דוגמת שרטוט מהיר ללקוח"></object>
           </div>
           <p class="excal-caption">ניתן להחליף ב־SVG שייצא מהכלי הציבורי <a href="https://dai-shi.github.io/excalidraw-animate" target="_blank" rel="noreferrer">excalidraw-animate</a> (<a href="https://github.com/dai-shi/excalidraw-animate" target="_blank" rel="noreferrer">מקור</a>).</p>
+        </div>`;
+      }
+      if (type === "llmPricing") {
+        return `<div class="pricing-board visual-board">
+          <div class="pricing-head"><span>מודל</span><span class="mixed-ltr" lang="en" dir="ltr">$/1M טוקנים</span></div>
+          <div class="pricing-row"><span class="mixed-ltr" lang="en" dir="ltr">NovaLite · מהיר</span><small class="mixed-ltr">$2.50 in / $5 out</small></div>
+          <div class="pricing-row"><span class="mixed-ltr" lang="en" dir="ltr">NovaPro · איכות</span><small class="mixed-ltr">$12 in / $24 out</small></div>
+          <div class="pricing-row"><span>ממוצע שימוש בשבוע (דמו)</span><small class="mixed-ltr">~420K in · 160K out</small></div>
+          <div class="token-chip"><span>ארנק פרויקט</span><span class="mixed-ltr" lang="en" dir="ltr">-18% מתקרה</span></div>
+        </div>`;
+      }
+      if (type === "tutorialDemo") {
+        return `<div class="tutorial-panel">
+          <ul class="tutorial-list">
+            <li class="tutorial-item">
+              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">1</span>
+              <div class="tutorial-body"><strong>התחזית הראשונה</strong><span>גללו מטה בצעד רגוע וראו מתי מתחילה ריצת ההזזה האופקית.</span></div>
+            </li>
+            <li class="tutorial-item">
+              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">2</span>
+              <div class="tutorial-body"><strong>דילוג פרקים</strong><span>לחצו על “הורדה” בשורת הניווט ושימו לב איך הזזת המסך מתיישבת על אותה שקופית.</span></div>
+            </li>
+            <li class="tutorial-item">
+              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">3</span>
+              <div class="tutorial-body"><strong>נסו הפוך</strong><span>גללו למעלה שוב ובדקו ש־snap מחזיר אתכם בצורה ברורה בין פרקים.</span></div>
+            </li>
+          </ul>
+          <p class="tutorial-tip"><span class="mixed-ltr" lang="en" dir="ltr">prefers-reduced-motion</span>: כבו אנימציה במערכת כדי לראות פריסה סטטית.</p>
         </div>`;
       }
       if (type === "download") {
