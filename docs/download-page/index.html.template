@@ -164,9 +164,14 @@
 
     .scroll-progress span {
       display: block;
-      width: 0%;
+      position: absolute;
+      inset: 0;
+      width: auto;
       height: 100%;
+      transform: scaleX(0);
+      transform-origin: inline-start;
       background: linear-gradient(90deg, var(--v1-yellow), var(--v1-red));
+      will-change: transform;
     }
 
     .scroll-hint {
@@ -192,6 +197,12 @@
       min-height: 100svh;
     }
 
+    /*
+      Horizontal carousel uses physical LTR flex + GSAP translateX — isolate from html[dir=rtl]
+      so intro→download DOM order matches scroll and Snap/ScrollTrigger "left/right" probes.
+      Panel typography stays rtl via .panel-inner.
+    */
+
     .story-panel {
       width: 100%;
       min-height: 100svh;
@@ -210,6 +221,8 @@
       grid-template-columns: minmax(0, .9fr) minmax(320px, 1.1fr);
       gap: clamp(24px, 5vw, 78px);
       align-items: center;
+      direction: rtl;
+      unicode-bidi: isolate;
     }
 
     .panel-copy {
@@ -220,22 +233,15 @@
     }
 
     .kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
+      display: inline-block;
+      max-width: 100%;
+      border-inline-start: 4px solid currentColor;
+      padding-inline-start: 12px;
       color: var(--panel-accent, var(--v1-coral));
       font-size: clamp(.78rem, 1.2vw, .95rem);
       font-weight: 950;
       letter-spacing: .04em;
       text-transform: uppercase;
-    }
-
-    .kicker::before {
-      content: "";
-      width: 28px;
-      height: 4px;
-      border-radius: 999px;
-      background: currentColor;
     }
 
     h1, h2 {
@@ -245,6 +251,7 @@
       font-size: clamp(3rem, 7vw, 7.4rem);
       line-height: .9;
       letter-spacing: 0;
+      text-align: start;
     }
 
     .lead {
@@ -267,20 +274,28 @@
     }
 
     .bullets li {
-      display: flex;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: 10px 1fr;
       gap: 10px;
+      align-items: start;
     }
 
     .bullets li::before {
       content: "";
-      flex: 0 0 auto;
       width: 10px;
       height: 10px;
       margin-top: .52em;
+      margin-inline: auto;
       border-radius: 999px;
       background: var(--panel-accent, var(--v1-coral));
       box-shadow: 0 0 0 5px rgb(249 84 62 / .14);
+    }
+
+    /* English / Latin snippets inside rtl panels */
+
+    .mixed-ltr {
+      direction: ltr;
+      unicode-bidi: isolate;
     }
 
     .panel-visual {
@@ -417,6 +432,7 @@
       background: var(--panel-accent, var(--v1-coral));
       color: #fff;
       direction: ltr;
+      unicode-bidi: isolate;
     }
 
     .download-card {
@@ -430,7 +446,13 @@
       margin: 0 0 4px;
       font-size: clamp(1.8rem, 3vw, 2.8rem);
       line-height: 1;
+      text-align: start;
     }
+
+    .download-card .mixed-ltr {
+      display: inline-block;
+    }
+
 
     .download-card p {
       margin: 0 0 8px;
@@ -486,6 +508,8 @@
       background: rgb(255 255 255 / .88);
       box-shadow: var(--shadow);
       overflow: hidden;
+      direction: ltr;
+      unicode-bidi: isolate;
     }
 
     .excal-caption {
@@ -524,7 +548,7 @@
     }
 
     .download-links a::after {
-      content: "↗";
+      content: "\2196";
       direction: ltr;
       unicode-bidi: isolate;
     }
@@ -563,6 +587,8 @@
         display: flex;
         width: max-content;
         height: 100svh;
+        direction: ltr;
+        unicode-bidi: isolate;
       }
 
       body.is-scrollstory .story-panel {
@@ -807,7 +833,7 @@
 
     function visualMarkup(type, section) {
       if (type === "phone") {
-        return `<div class="phone-frame"><div class="phone-screen">MP4<br>9:16<br><small>תחזית מוכנה</small></div></div>`;
+        return `<div class="phone-frame"><div class="phone-screen"><span class="mixed-ltr" lang="en" dir="ltr">MP4<br>9:16</span><br><small>תחזית מוכנה</small></div></div>`;
       }
       if (type === "mess") {
         return `<div class="visual-board">
@@ -835,7 +861,7 @@
       }
       if (type === "screens") {
         return `<div class="screen-frame">
-          <div class="screen-top"><span>V1</span><span>תחזית חדשה</span></div>
+          <div class="screen-top"><span class="mixed-ltr" lang="en" dir="ltr">V1</span><span>תחזית חדשה</span></div>
           <div class="screen-grid">
             <div class="screen-tile">צילום מסך 1</div>
             <div class="screen-tile">צילום מסך 2</div>
@@ -846,7 +872,7 @@
       }
       if (type === "desktop") {
         return `<div class="screen-frame">
-          <div class="screen-top"><span>WeatherV1 Desktop</span><span>יציב</span></div>
+          <div class="screen-top"><span class="mixed-ltr" lang="en" dir="ltr">WeatherV1 Desktop</span><span>יציב</span></div>
           <div class="visual-board" style="box-shadow:none;border:0;width:100%;min-height:260px;padding:0">
             <div class="mini-card"><span>קבצים מקומיים</span><small>שליטה</small></div>
             <div class="mini-card"><span>עבודת וידאו</span><small>אמינות</small></div>
@@ -864,7 +890,7 @@
       if (type === "excalidrawDemo") {
         const src = "download-page/assets/pitch-sample-animated.svg";
         return `<div class="excal-embed-wrap">
-          <div class="excal-drawbox">
+          <div class="excal-drawbox" lang="en" dir="ltr">
             <object class="excal-embed" type="image/svg+xml" data="${escapeHtml(src)}" title="דוגמת שרטוט מהיר ללקוח" aria-label="דוגמת שרטוט מהיר ללקוח"></object>
           </div>
           <p class="excal-caption">ניתן להחליף ב־SVG שייצא מהכלי הציבורי <a href="https://dai-shi.github.io/excalidraw-animate" target="_blank" rel="noreferrer">excalidraw-animate</a> (<a href="https://github.com/dai-shi/excalidraw-animate" target="_blank" rel="noreferrer">מקור</a>).</p>
@@ -872,7 +898,7 @@
       }
       if (type === "download") {
         return `<div class="download-card">
-          <h3>WeatherV1 Desktop</h3>
+          <h3><span class="mixed-ltr" lang="en" dir="ltr">WeatherV1 Desktop</span></h3>
           <p>קישורי הורדה לגרסה האחרונה</p>
           <div class="download-links">${downloadLinksMarkup(downloadLinks)}</div>
         </div>`;
@@ -906,7 +932,8 @@
     track.innerHTML = storySections.map(sectionMarkup).join("");
 
     function setProgress(value) {
-      progressFill.style.width = `${Math.max(0, Math.min(1, value)) * 100}%`;
+      const clamped = Math.max(0, Math.min(1, value));
+      progressFill.style.transform = `scaleX(${clamped})`;
     }
 
     function initScrollStory() {
