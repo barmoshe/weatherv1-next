@@ -17,7 +17,7 @@ import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildVideoMap } from "@/server/catalog/parser";
 import type { ResolvedPick } from "@/shared/types";
 import { getRuntimePaths } from "@/server/runtime/paths";
-import { uploadRuntimeFile } from "@/server/sync/r2/service";
+import { hydrateVoiceoverFromR2 } from "@/server/sync/r2/hydrate-voiceover";
 import { prepareRenderMedia } from "./render-media";
 import { sortTimelineForRender } from "@/server/pipeline/validator";
 
@@ -54,10 +54,12 @@ async function drain(): Promise<void> {
 async function runJob(jobId: string, audioFilename: string): Promise<void> {
   const { uploadsDir, outputsDir } = getRuntimePaths();
   updateJob(jobId, { status: "processing" });
-  const audioPath = path.join(uploadsDir, audioFilename);
+  const audioPath = path.join(uploadsDir, path.basename(audioFilename));
   const outputPath = path.join(outputsDir, `forecast_${jobId}.mp4`);
 
   try {
+    await hydrateVoiceoverFromR2(jobId, audioFilename, audioPath);
+
     // Re-read plan bundle to get the finalized timeline
     const { readPlanBundle } = await import("./plan-bundle");
     const bundle = readPlanBundle(jobId);
@@ -88,9 +90,6 @@ async function runJob(jobId: string, audioFilename: string): Promise<void> {
         output_url: path.basename(outputPath),
       });
       updatePlanBundle(jobId, { output_url: path.basename(outputPath) });
-      void uploadRuntimeFile(`outputs/${jobId}/forecast.mp4`, outputPath).catch((e) => {
-        console.warn(`[worker] R2 output upload failed for ${jobId}:`, e);
-      });
     } else {
       updateJob(jobId, { status: "failed", error: "Renderer returned failure" });
     }

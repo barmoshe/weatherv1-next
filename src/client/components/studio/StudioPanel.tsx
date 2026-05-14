@@ -92,9 +92,18 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
         if (cancelled) return;
         if (!planRes.ok) {
           if (planRes.status === 404) {
-            onJobStatusChange?.(restoreJobId, "lost");
             setPhase("failed");
-            setError(`Job ${restoreJobId.slice(0, 8)} not found`);
+            let detail = `Job ${restoreJobId.slice(0, 8)} not found`;
+            try {
+              const body = (await planRes.json()) as { error?: string };
+              if (body.error === "Plan not found") {
+                detail =
+                  `Plan bundle missing for job ${restoreJobId.slice(0, 8)} — metadata synced but plan file was never uploaded to R2. From the Mac that still has outputs/, run scripts/backfill-r2-plan-bundles.ts (or touch/save the job once after updating).`;
+              }
+            } catch {
+              /* ignore malformed JSON */
+            }
+            setError(detail);
             return;
           }
           setError(`Could not restore job ${restoreJobId.slice(0, 8)}`);

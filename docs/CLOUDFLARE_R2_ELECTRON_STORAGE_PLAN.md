@@ -6,9 +6,10 @@ WeatherV1 is an Electron standalone Next.js app. The app should keep rendering a
 
 - `catalog/catalog.json`
 - source videos
-- voiceovers
-- rendered outputs
+- voiceovers (input audio per job; lazy-hydrated into `runtime/uploads` before render when missing locally)
 - posters/previews if useful
+
+**Rendered forecast MP4** (`runtime/outputs/forecast_<jobId>.mp4`) is **device-local only** — it is not uploaded to R2 and not hydrated from R2. Each machine renders its own file.
 
 This is **not** a plan to deploy the app to a specific cloud VM vendor, Vercel, or any hosted server. The app remains local-first.
 
@@ -48,10 +49,13 @@ weatherv1-media/
         │   ├── vid_001_example.mp4
         │   └── ...
         ├── voiceovers/
-        │   ├── <job-id>.mp3
-        │   └── ...
-        ├── outputs/
-        │   ├── forecast_<job-id>.mp4
+        │   └── <job-id>/
+        │       └── <audio-basename>.mp3   # same stem as runtime/uploads (UUID + ext)
+        ├── jobs/
+        │   ├── jobs.json
+        │   └── <job-id>/
+        │       └── plan.json
+        ├── outputs/                        # legacy: older builds uploaded forecast MP4 here; new builds do not
         │   └── ...
         └── posters/
             ├── vid_001.jpg
@@ -81,6 +85,78 @@ runtime/
 R2 is the remote sync/source-of-truth layer, but ffmpeg should work from local files.
 
 Do not make ffmpeg depend on remote URLs in v1. Download/cache source media locally first.
+
+---
+
+## Runtime persistence and authority layers
+
+Use one mental stack so multi-device behavior stays predictable:
+
+```mermaid
+flowchart TB
+  subgraph cloud [R2_tenant_prefix]
+    catM[catalog.json]
+    vidM[video_blobs]
+    jobsM[jobs.json]
+    plansM[job_plan.json]
+    voM[voiceovers_per_job]
+  end
+  subgraph serverLocal [Server_disk_and_runtime]
+    catL[catalog_local_copy]
+    jobsL[jobs_local_copy]
+    plansL[plan_json_local]
+    up[uploads_voiceover_cache]
+    out[outputs_forecast_mp4_device_local]
+    r2st[r2_sync_state_machine_local]
+  end
+  subgraph process [Node_process]
+    mem[Jobs_Map_from_disk]
+  end
+  subgraph ui [Renderer]
+    ls[localStorage_history_overlay]
+  end
+  catM <--> catL
+  jobsM <--> jobsL
+  plansM <--> plansL
+  voM --> up
+  jobsL --> mem
+  ls -.->|merge_with_GET_api_jobs| mem
+```
+
+| Layer | Artifact | Authority when R2 enabled | Notes |
+| --- | --- | --- | --- |
+| Cloud | `catalog/catalog.json` | **R2** after sync; local is cache | ETag conflict flow exists (`pushCatalogToR2`). |
+| Cloud | `jobs/jobs.json` | **R2** for shared registry | Mirror is fire-and-forget `putR2Text`; multi-writer races possible — see Future hardening below. |
+| Cloud | `jobs/<id>/plan.json` | **R2** once mirrored | Hydrate on `GET /api/plan/[jobId]`. |
+| Cloud | Voiceover blob | **R2**; local upload is cache | Immutable per job id + filename. Lazy hydrate before render when local missing/empty. |
+| Cloud | Source videos | **R2** keys in catalog | Materialize to workspace via sync. |
+| Local only | `forecast_<job>.mp4` | **This device** | Never cloud per product decision. |
+| Local only | `r2-sync-state.json` | **This device** | Etags, conflicts, upload progress — not shared. |
+| Process | Jobs `Map` | **Disk `jobs.json`** after load | Invalidate via `resetJobsStore` after R2 hydrate. |
+| Browser | `weatherv1.history` | **Derived** | Merged with server list in `useLocalHistory`; server wins on conflicts for shared ids. |
+
+**Cross-device `completed` semantics:** Treat `JobRecord.status` and `output_url` as **global narrative state** (“this job finished somewhere”), not “this Mac has the MP4.” `GET /api/outputs/[filename]` may return **404** until this device renders; the UI should explain and offer re-render.
+
+### JSON on R2 — practices
+
+Apply to catalog, `jobs.json`, and plan JSON blobs:
+
+- **Whole-object semantics:** read → merge in app → PUT full body.
+- **Optimistic concurrency:** for hot mutable JSON, prefer GET + ETag → PUT `If-Match`; on failure, re-read or surface conflict to the user (catalog tracks remote etag in `r2-sync-state`; `jobs.json` mirror does not yet).
+- **Validate before PUT:** schema parse (e.g. Zod) so corrupt JSON never replaces cloud.
+- **Headers:** `Content-Type: application/json; charset=utf-8` and `Cache-Control: no-cache` for authoritative documents (`putR2Text`).
+- **Atomic local writes:** temp file + rename before trusting disk (`jobs.json`, catalog) so crashes do not leave torn JSON.
+- **Change detection:** prefer server **ETag** or canonical stringify; avoid relying on arbitrary `JSON.stringify` key order.
+- **Metadata:** prefer structured fields **inside JSON** over `x-amz-meta-*` for non-ASCII or rich data.
+- **Size:** keep single JSON objects bounded; shard history if `jobs.json` grows without bound long-term.
+
+### Ops: legacy `outputs/` objects in R2
+
+Older builds uploaded `tenants/<tenant>/outputs/<jobId>/forecast.mp4`. New code **does not** write these keys. For cost and clarity, use a [bucket lifecycle rule](https://developers.cloudflare.com/r2/buckets/bucket-lifecycle/) or a one-off delete for `**/outputs/**` under tenant prefixes after rollout.
+
+### Future hardening: `jobs.json` concurrency
+
+Optional: GET + ETag for `jobs/jobs.json` and PUT with `If-Match`, plus conflict UX if two machines mutate the catalog of jobs concurrently (similar to catalog pattern).
 
 ---
 
@@ -145,8 +221,10 @@ Use this when the app needs to upload/download many files:
 ```txt
 videos/*
 voiceovers/*
-outputs/*
 catalog/catalog.json
+jobs/jobs.json
+jobs/*/plan.json
+# outputs/* may still exist for legacy tenants; new builds do not write forecast MP4 to R2
 ```
 
 Pros:
@@ -170,7 +248,7 @@ Use this when the app needs exactly one operation:
 ```txt
 PUT one voiceover
 GET one video
-PUT one rendered output
+# optional legacy: PUT rendered output (not used by current app — renders stay local)
 DELETE one object
 ```
 
@@ -197,8 +275,8 @@ Use temporary credentials for the sync engine. Keep presigned URLs as a later fa
 | --- | --- | --- | --- |
 | Catalog JSON | edited locally | synced to `catalog/catalog.json` | private |
 | Source videos | cached locally for ffmpeg | stored in `videos/` | private |
-| Voiceovers | stored in `runtime/uploads` | stored in `voiceovers/` | private |
-| Rendered outputs | stored in `runtime/outputs` | stored in `outputs/` | private by default, shareable later |
+| Voiceovers | stored in `runtime/uploads` (cache) | stored under `voiceovers/<job-id>/` | private |
+| Rendered forecast MP4 | stored in `runtime/outputs` only | **not** mirrored to R2 | device-local |
 | Posters/previews | stored in cache | optional `posters/` | can be public later |
 
 ---
@@ -226,7 +304,7 @@ Before pushing local catalog to R2:
 
 Avoid silent last-write-wins for catalog edits.
 
-For videos/voiceovers/outputs, use immutable filenames and avoid overwrites.
+For videos and voiceovers, use immutable filenames and avoid overwrites. Forecast MP4 outputs stay local only and are not part of R2 sync.
 
 ---
 
@@ -246,9 +324,9 @@ or short TTL:
 Cache-Control: max-age=30
 ```
 
-### Videos / voiceovers / outputs
+### Videos / voiceovers
 
-Use immutable object keys where possible.
+Use immutable object keys where possible. Forecast render outputs are not stored in R2.
 
 ```txt
 Cache-Control: public, max-age=31536000, immutable
@@ -319,7 +397,7 @@ Responsibilities:
 - upload missing videos
 - download missing videos
 - upload voiceovers after transcription
-- upload rendered outputs after render
+- lazy-hydrate voiceovers from R2 before render when the local file is missing
 - report progress to UI
 
 ---
@@ -363,20 +441,15 @@ src/app/api/transcribe/route.ts
 
 ### Render output
 
-Current worker renders to local `runtime/outputs/forecast_<jobId>.mp4`.
+Current worker renders to local `runtime/outputs/forecast_<jobId>.mp4`. That file **stays on disk only**; it is **not** uploaded to R2. Before rendering, when R2 is configured, the worker **lazy-hydrates** the voiceover from `voiceovers/<jobId>/<audioBasename>` if `runtime/uploads` does not already have a non-empty file.
 
-After render success:
+`JobRecord.status === completed` and `output_url` still describe the **basename** of the local output file; on another device they indicate “finished elsewhere” until this machine renders (preview may 404 on `GET /api/outputs/...`).
 
-```txt
-upload output MP4 to R2
-save remote output key/url on the job
-keep local fallback
-```
-
-Likely touch point:
+Likely touch points:
 
 ```txt
 src/server/jobs/worker.ts
+src/server/sync/r2/hydrate-voiceover.ts
 ```
 
 ---
@@ -448,14 +521,14 @@ Goal: prove R2 storage works with the current local app.
 - create R2 bucket
 - create tenant prefix
 - create local-only upload script or service
-- upload catalog/videos/voiceovers/outputs manually from app code
+- upload catalog/videos/voiceovers manually from app code
 - no full auth system yet
 - use one internal tenant
 
 Success:
 
 ```txt
-A rendered output is uploaded to R2 after local render.
+A voiceover is uploaded to R2 after transcription; a second machine can hydrate it and render locally.
 ```
 
 ### Phase 2 — Worker-gated credentials
@@ -496,8 +569,7 @@ Goal: R2 becomes the durable media library.
 
 - upload source videos after import
 - download missing videos on demand
-- upload voiceovers
-- upload outputs
+- upload voiceovers; hydrate from R2 before render when local cache misses
 - optional upload posters/previews
 - add progress and retry UI
 
@@ -550,11 +622,14 @@ Design for cheap growth by keeping big transfers direct between Electron and R2,
 Start with the smallest useful slice:
 
 ```txt
-After local render completes:
+After transcription succeeds:
 1. ask Worker for temporary R2 credentials
-2. upload runtime/outputs/forecast_<jobId>.mp4 to R2
-3. save remote output key/url in the job record
-4. keep the local output as fallback
+2. upload the voiceover to voiceovers/<jobId>/<basename> on R2
+3. keep the local copy in runtime/uploads
+
+On a fresh machine with jobs/plan restored:
+1. before render, download the voiceover from R2 into runtime/uploads when missing
+2. render forecast_<jobId>.mp4 locally only
 ```
 
-This proves the security model and R2 integration without touching catalog import, source videos, or ffmpeg rendering.
+This proves the security model and R2 integration without persisting rendered MP4 in the bucket.

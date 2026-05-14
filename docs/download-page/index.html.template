@@ -192,6 +192,56 @@
       white-space: nowrap;
     }
 
+    .pitch-step-nav {
+      position: fixed;
+      inset-block-end: max(1rem, env(safe-area-inset-bottom, 0px), 8px);
+      inset-inline-end: max(12px, env(safe-area-inset-inline-end, 0px));
+      z-index: 48;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .pitch-step-nav button {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      margin: 0;
+      padding: 0;
+      border: 1.5px solid var(--v1-ink);
+      border-radius: 12px;
+      background: rgb(255 255 255 / .84);
+      color: var(--v1-ink);
+      box-shadow: 2px 2px 0 var(--v1-ink);
+      font-size: 1.1rem;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .pitch-step-nav button:hover,
+    .pitch-step-nav button:focus-visible {
+      background: var(--v1-yellow);
+      box-shadow: 3px 3px 0 var(--v1-ink);
+      outline: 3px solid var(--v1-paper);
+      outline-offset: 2px;
+      transform: translateY(-2px);
+    }
+
+    .pitch-step-nav button:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 2px 2px 0 var(--v1-ink);
+    }
+
+    .pitch-step-nav button:disabled:hover {
+      background: rgb(255 255 255 / .84);
+    }
+
     .story-shell {
       min-height: 100svh;
       overflow: hidden;
@@ -888,7 +938,7 @@
 
     @media (min-width: 861px) {
       html.pitch-vertical-desktop {
-        scroll-snap-type: y proximity;
+        scroll-snap-type: none;
       }
 
       body.pitch-vertical .scroll-hint {
@@ -913,10 +963,10 @@
       }
 
       body.pitch-vertical .story-panel {
-        scroll-snap-align: start;
+        scroll-snap-align: none;
       }
 
-      /** `desktopCluster` ב־TTB (שולחן עבודה): פרקים ממוסגרים מתפרקים לרצף snap אנכי — לא עמודה אופקית עם גלילה פנימית. */
+      /** `desktopCluster` ב־TTB (שולחן עבודה): פרקים ממוסגרים מתפרקים לרצף אנכי — לא עמודה אופקית עם גלילה פנימית. */
       body.pitch-vertical .story-panel.story-panel--vcluster {
         padding: 0;
         min-height: 0;
@@ -925,12 +975,12 @@
       body.pitch-vertical .story-panel.story-panel--vcluster > .story-vstack {
         overflow: visible;
         height: auto;
-        scroll-snap-type: y proximity;
+        scroll-snap-type: none;
       }
 
       body.pitch-vertical .story-panel.story-panel--vcluster .story-subslide {
         min-height: 100svh;
-        scroll-snap-align: start;
+        scroll-snap-align: none;
         box-sizing: border-box;
         padding-block: calc(var(--nav-height) + 36px) 64px;
         padding-inline: clamp(20px, 5vw, 72px);
@@ -986,13 +1036,13 @@
         height: 100%;
         overflow-y: auto;
         overscroll-behavior-y: contain;
-        scroll-snap-type: y proximity;
+        scroll-snap-type: none;
         scrollbar-gutter: stable;
       }
 
       body.is-scrollstory:not(.pitch-vertical) .story-panel.story-panel--vcluster .story-subslide {
         min-height: 100svh;
-        scroll-snap-align: start;
+        scroll-snap-align: none;
         box-sizing: border-box;
         padding-block: calc(var(--nav-height) + 36px) 64px;
         padding-inline: clamp(20px, 5vw, 72px);
@@ -1012,7 +1062,7 @@
       }
 
       html {
-        scroll-snap-type: y proximity;
+        scroll-snap-type: none;
         scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 14px);
         scroll-padding-bottom: env(safe-area-inset-bottom, 0px);
       }
@@ -1108,8 +1158,7 @@
         width: 100%;
         min-height: 100svh;
         min-height: min(100dvh, 100svh);
-        scroll-snap-align: start;
-        scroll-snap-stop: normal;
+        scroll-snap-align: none;
         padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 22px) max(1.5rem, env(safe-area-inset-bottom, 0px), 20px);
         padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
       }
@@ -1122,13 +1171,13 @@
       .story-panel.story-panel--vcluster > .story-vstack {
         overflow: visible;
         height: auto;
-        scroll-snap-type: y proximity;
+        scroll-snap-type: none;
       }
 
       .story-panel.story-panel--vcluster .story-subslide {
         min-height: 100svh;
         min-height: min(100dvh, 100svh);
-        scroll-snap-align: start;
+        scroll-snap-align: none;
         padding-block: calc(env(safe-area-inset-top, 0px) + var(--nav-height) + var(--pitch-mobile-nav-buffer) + 22px) max(1.5rem, env(safe-area-inset-bottom, 0px), 20px);
         padding-inline: max(16px, env(safe-area-inset-inline-start, 6px)) max(16px, env(safe-area-inset-inline-end, 6px));
         display: grid;
@@ -1302,7 +1351,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      html { scroll-snap-type: y proximity; scroll-behavior: auto; }
+      html { scroll-snap-type: none; scroll-behavior: auto; }
       .story-shell { overflow: visible; }
       .story-track {
         width: 100%;
@@ -1321,7 +1370,7 @@
       .story-panel {
         width: 100%;
         min-height: 100svh;
-        scroll-snap-align: start;
+        scroll-snap-align: none;
       }
 
       #intro .panel-inner {
@@ -1348,6 +1397,11 @@
 
       .builder-credit:hover,
       .builder-credit:focus-visible {
+        transform: none;
+      }
+
+      .pitch-step-nav button:hover,
+      .pitch-step-nav button:focus-visible {
         transform: none;
       }
     }
@@ -1383,6 +1437,11 @@
       </div>
     </div>
   </main>
+
+  <div class="pitch-step-nav" role="group" aria-label="ניווט בין שקופיות">
+    <button type="button" id="pitch-step-up" aria-label="שקופית קודמת">↑</button>
+    <button type="button" id="pitch-step-down" aria-label="שקופית הבאה">↓</button>
+  </div>
 
   <a class="builder-credit" href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
     <span>Builder</span>
@@ -1847,6 +1906,182 @@
 
     trackRoll.innerHTML = buildStoryRollHtml(storySections);
 
+    const pitchStepUp = document.getElementById("pitch-step-up");
+    const pitchStepDown = document.getElementById("pitch-step-down");
+
+    function collectPitchSteps() {
+      const out = [];
+      document.querySelectorAll("#storyRoll > .story-panel").forEach(panel => {
+        if (panel.classList.contains("story-panel--vcluster")) {
+          const vstack = panel.querySelector(":scope > .story-vstack");
+          if (!vstack) return;
+          vstack.querySelectorAll(":scope > .story-subslide").forEach(sub => {
+            out.push({ el: sub, panel, vstack });
+          });
+        } else {
+          out.push({ el: panel, panel, vstack: null });
+        }
+      });
+      return out;
+    }
+
+    function isHorizontalStoryDesktop() {
+      return (
+        window.matchMedia("(min-width: 861px)").matches &&
+        document.body.classList.contains("is-scrollstory") &&
+        !document.body.classList.contains("pitch-vertical") &&
+        !!mainScrollTrigger
+      );
+    }
+
+    function getActivePitchStepIndex(steps) {
+      if (!steps.length) return 0;
+      if (isHorizontalStoryDesktop()) {
+        const rollPanels = gsap.utils.toArray("#storyRoll > .story-panel");
+        const st = mainScrollTrigger;
+        const n = rollPanels.length;
+        if (n < 1) return 0;
+        const denom = Math.max(1, n - 1);
+        const rollIdx = Math.min(n - 1, Math.max(0, Math.round(st.progress * denom)));
+        const activePanel = rollPanels[rollIdx];
+        const cand = steps.map((s, i) => ({ s, i })).filter(x => x.s.panel === activePanel);
+        if (!cand.length) return 0;
+        if (cand.length === 1) return cand[0].i;
+        const vstack = cand[0].s.vstack;
+        if (!vstack) return cand[0].i;
+        const vr = vstack.getBoundingClientRect();
+        const midY = vr.top + vr.height / 2;
+        let bestI = cand[0].i;
+        let bestD = Infinity;
+        cand.forEach(({ s, i }) => {
+          const r = s.el.getBoundingClientRect();
+          const d = Math.abs(r.top + r.height / 2 - midY);
+          if (d < bestD) {
+            bestD = d;
+            bestI = i;
+          }
+        });
+        return bestI;
+      }
+
+      const cy = window.innerHeight / 2;
+      let best = 0;
+      let bestD = Infinity;
+      steps.forEach((s, i) => {
+        const r = s.el.getBoundingClientRect();
+        if (!r.height && !r.width) return;
+        const d = Math.abs(r.top + r.height / 2 - cy);
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      });
+      return best;
+    }
+
+    function syncPitchStepHash(step) {
+      if (!step || !step.el.id) return;
+      const h = "#" + step.el.id;
+      if (location.hash === h) return;
+      try {
+        history.replaceState(null, "", h);
+      } catch (_) {}
+    }
+
+    function centerSubslideInVstack(step) {
+      if (!step || !step.el.classList.contains("story-subslide") || !step.vstack) return;
+      const v = step.vstack;
+      const sub = step.el;
+      const maxS = Math.max(0, v.scrollHeight - v.clientHeight);
+      const desired = sub.offsetTop - (v.clientHeight - sub.offsetHeight) / 2;
+      v.scrollTop = Math.max(0, Math.min(maxS, desired));
+    }
+
+    function updatePitchStepNavButtons(idx, total) {
+      if (pitchStepUp) pitchStepUp.disabled = idx <= 0;
+      if (pitchStepDown) pitchStepDown.disabled = idx >= total - 1;
+    }
+
+    function goToPitchStepIndex(targetIdx) {
+      const steps = collectPitchSteps();
+      if (!steps.length) return;
+      const idx = Math.min(steps.length - 1, Math.max(0, targetIdx));
+      const step = steps[idx];
+      const behavior = reduceMotion ? "auto" : "smooth";
+
+      if (!isHorizontalStoryDesktop()) {
+        step.el.scrollIntoView({ block: "center", inline: "nearest", behavior });
+        syncPitchStepHash(step);
+        updatePitchStepNavButtons(idx, steps.length);
+        return;
+      }
+
+      const st = mainScrollTrigger;
+      if (!st) {
+        step.el.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+        syncPitchStepHash(step);
+        updatePitchStepNavButtons(idx, steps.length);
+        return;
+      }
+
+      const rollPanels = gsap.utils.toArray("#storyRoll > .story-panel");
+      const denom = Math.max(1, rollPanels.length - 1);
+      const rollIdx = Number(step.panel.dataset.rollIndex ?? step.panel.dataset.index ?? 0);
+      const progress = denom ? rollIdx / denom : 0;
+      const top = st.start + (st.end - st.start) * progress;
+
+      const finish = () => {
+        centerSubslideInVstack(step);
+        if (window.ScrollTrigger) ScrollTrigger.refresh();
+        syncPitchStepHash(step);
+        updatePitchStepNavButtons(idx, steps.length);
+      };
+
+      window.scrollTo({ top, behavior: "auto" });
+      requestAnimationFrame(() => {
+        requestAnimationFrame(finish);
+      });
+    }
+
+    function goToPitchStepDelta(delta) {
+      const steps = collectPitchSteps();
+      if (!steps.length) return;
+      const cur = getActivePitchStepIndex(steps);
+      goToPitchStepIndex(cur + delta);
+    }
+
+    function onPitchStepKeydown(ev) {
+      const t = ev.target;
+      if (t && t.closest && t.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (ev.defaultPrevented) return;
+      if (ev.key === "ArrowUp") {
+        ev.preventDefault();
+        goToPitchStepDelta(-1);
+      } else if (ev.key === "ArrowDown") {
+        ev.preventDefault();
+        goToPitchStepDelta(1);
+      }
+    }
+
+    function refreshPitchStepNavUi() {
+      const steps = collectPitchSteps();
+      if (!steps.length) return;
+      const idx = getActivePitchStepIndex(steps);
+      updatePitchStepNavButtons(idx, steps.length);
+    }
+
+    let pitchStepNavInitialized = false;
+    function initPitchStepNav() {
+      if (pitchStepNavInitialized) return;
+      if (!pitchStepUp || !pitchStepDown) return;
+      pitchStepNavInitialized = true;
+      pitchStepUp.addEventListener("click", () => goToPitchStepDelta(-1));
+      pitchStepDown.addEventListener("click", () => goToPitchStepDelta(1));
+      document.addEventListener("keydown", onPitchStepKeydown);
+      window.addEventListener("scroll", refreshPitchStepNavUi, { passive: true });
+      refreshPitchStepNavUi();
+    }
+
     function setProgress(value) {
       const clamped = Math.max(0, Math.min(1, value));
       progressFill.style.transform = `scaleX(${clamped})`;
@@ -1955,6 +2190,8 @@
       document.querySelectorAll(".story-panel--vcluster .story-vstack").forEach(box => {
         box.addEventListener("wheel", clusterInnerWheelGuard, { passive: false });
         verticalClusterWheelCleanups.push(() => box.removeEventListener("wheel", clusterInnerWheelGuard));
+        box.addEventListener("scroll", refreshPitchStepNavUi, { passive: true });
+        verticalClusterWheelCleanups.push(() => box.removeEventListener("scroll", refreshPitchStepNavUi));
       });
     }
 
@@ -2089,6 +2326,7 @@
 
       if (!hasGsap || reduceMotion) {
         addPassiveProgress();
+        refreshPitchStepNavUi();
         return;
       }
 
@@ -2097,11 +2335,13 @@
         document.documentElement.classList.add("pitch-vertical-desktop");
         addPassiveProgress();
         initVerticalPanelReveals();
+        refreshPitchStepNavUi();
         return;
       }
 
       if (!isDesktop) {
         addPassiveProgress();
+        refreshPitchStepNavUi();
         return;
       }
 
@@ -2187,6 +2427,7 @@
               ScrollTrigger.refresh();
               initHorizontalPanelReveals(horizontalTween);
               attachHorizontalVerticalClusters();
+              refreshPitchStepNavUi();
             });
           } catch (err) {
             console.warn("[scrollstory]", err);
@@ -2234,16 +2475,22 @@
 
     initScrollStory();
 
+    initPitchStepNav();
+
     syncStoryViewportWidthCss();
     window.addEventListener("resize", () => {
       syncStoryViewportWidthCss();
       if (window.ScrollTrigger) ScrollTrigger.refresh();
+      refreshPitchStepNavUi();
     });
 
     const desktopStoryMq = window.matchMedia("(min-width: 861px)");
     const onViewportStoryTierChange = () => {
       syncStoryViewportWidthCss();
       initScrollStory();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(refreshPitchStepNavUi);
+      });
     };
     if (typeof desktopStoryMq.addEventListener === "function") {
       desktopStoryMq.addEventListener("change", onViewportStoryTierChange);
