@@ -662,6 +662,26 @@
       border-color: rgb(0 0 0 / 0.12);
     }
 
+    #studio .bullets--studio-wizard li[data-studio-phase-bullet] {
+      cursor: pointer;
+    }
+
+    #studio .bullets--studio-wizard li[data-studio-phase-bullet]:focus-visible {
+      outline: 2px solid var(--panel-accent, var(--v1-coral));
+      outline-offset: 3px;
+    }
+
+    [data-pitch-layout="product-app"] .bullets--studio-wizard li.is-studio-phase-complete {
+      border-color: color-mix(in srgb, rgb(22 163 91 / 1) 32%, rgb(0 0 0 / 0.1));
+      background: color-mix(in srgb, rgb(22 163 91 / 1) 6%, rgb(255 255 255 / 0.94));
+    }
+
+    [data-pitch-layout="product-app"] .bullets--studio-wizard li.is-studio-phase-complete::before {
+      background: color-mix(in srgb, rgb(22 163 91 / 1) 88%, rgb(255 255 255 / 0.12));
+      color: #fff;
+      border-color: rgb(0 0 0 / 0.1);
+    }
+
     [data-pitch-layout="product-app"] .panel-visual {
       place-items: stretch;
       justify-items: stretch;
@@ -912,91 +932,6 @@
       overflow: hidden;
       direction: rtl;
       unicode-bidi: isolate;
-    }
-
-    .pitch-wizard-track {
-      list-style: none;
-      margin: 0;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 9px 10px 8px;
-      background: linear-gradient(180deg, rgb(255 255 255 / 0.72), rgb(248 246 243 / 0.35));
-      border-bottom: 1px solid rgb(0 0 0 / 0.06);
-    }
-
-    .pitch-wizard-track__item {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    #studio button.pitch-wiz-step {
-      font: inherit;
-      font-size: 0.61rem;
-      font-weight: 820;
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    .pitch-wiz-step {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 11px;
-      border-radius: 999px;
-      font-size: 0.61rem;
-      font-weight: 820;
-      letter-spacing: 0.02em;
-      color: rgb(95 96 108 / 1);
-      background: rgb(255 255 255 / 0.78);
-      border: 1px solid rgb(0 0 0 / 0.07);
-      transition:
-        color 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        transform 0.2s ease,
-        background 0.2s ease;
-    }
-
-    .pitch-wiz-step-num {
-      font-weight: 950;
-      font-variant-numeric: tabular-nums;
-      opacity: 0.65;
-    }
-
-    .pitch-wiz-step.is-active {
-      color: var(--v1-ink);
-      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 35%, rgb(0 0 0 / 0.12));
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 25%, transparent);
-      transform: translateY(-1px);
-    }
-
-    .pitch-wiz-step.is-active .pitch-wiz-step-num {
-      opacity: 1;
-      color: var(--panel-accent, var(--v1-coral));
-    }
-
-    .pitch-wiz-step.is-complete {
-      color: rgb(21 92 58 / 1);
-      border-color: color-mix(in srgb, rgb(22 163 91 / 1) 32%, rgb(0 0 0 / 0.1));
-      background: color-mix(in srgb, rgb(22 163 91 / 1) 9%, rgb(255 255 255 / 0.94));
-      transform: none;
-    }
-
-    .pitch-wiz-step.is-complete .pitch-wiz-step-num {
-      opacity: 0.92;
-      color: rgb(21 118 74 / 1);
-    }
-
-    #studio .pitch-wiz-step:focus-visible {
-      outline: 2px solid var(--panel-accent, var(--v1-coral));
-      outline-offset: 3px;
     }
 
     [data-pitch-layout="product-app"] .pitch-studio-wiz-controls-wrap {
@@ -1258,7 +1193,6 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      #studio .pitch-wiz-step,
       #studio .pitch-bento,
       #studio .studio-phase-panel {
         transition: none !important;
@@ -4168,7 +4102,7 @@
     let verticalPanelRevealAnims = [];
     /** Trapped wheel on merged vertical stacks; cleaned before killing horizontal tween. */
     let verticalClusterWheelCleanups = [];
-    /** Studio slide: click-to-advance phase wizard (`#studio .pitch-wiz-step`), no autoplay. */
+    /** Studio slide: phase chosen from copy-column bullet list (`data-studio-phase-bullet`); no autoplay. */
     let studioWizardCleanup = null;
 
     function teardownPassiveProgress() {
@@ -4357,28 +4291,6 @@
         ? `<div class="pitch-drop-file mixed-ltr" lang="en" dir="ltr">${escapeHtml(audioName)}</div>`
         : "";
       return `<div class="pitch-app-shell" data-studio-phase="upload" data-highlight="upload">
-          <ul class="pitch-wizard-track" role="list" aria-label="שלבי יצירת תחזית">
-            <li class="pitch-wizard-track__item" role="listitem">
-              <button type="button" class="pitch-wiz-step is-active" data-studio-phase-button="upload" aria-current="step">
-                <span class="pitch-wiz-step-num" aria-hidden="true">1</span> העלאה
-              </button>
-            </li>
-            <li class="pitch-wizard-track__item" role="listitem">
-              <button type="button" class="pitch-wiz-step" data-studio-phase-button="transcript">
-                <span class="pitch-wiz-step-num" aria-hidden="true">2</span> תמלול
-              </button>
-            </li>
-            <li class="pitch-wizard-track__item" role="listitem">
-              <button type="button" class="pitch-wiz-step" data-studio-phase-button="planning">
-                <span class="pitch-wiz-step-num" aria-hidden="true">3</span> תכנון והחלטות
-              </button>
-            </li>
-            <li class="pitch-wizard-track__item" role="listitem">
-              <button type="button" class="pitch-wiz-step" data-studio-phase-button="render">
-                <span class="pitch-wiz-step-num" aria-hidden="true">4</span> רינדור והורדה
-              </button>
-            </li>
-          </ul>
           <div class="pitch-app-main">
             <nav class="pitch-app-tabs" aria-hidden="true">
               <span class="pitch-app-tab is-active">סטודיו</span>
@@ -4931,15 +4843,15 @@
       const hasMobileBullets = mobileList && mobileList.length > 0;
 
       if (section.id === "studio" && section.bullets.length > 0) {
-        const wizardItems = section.bullets
-          .map(
-            (item, i) =>
-              `<li data-studio-phase-bullet="${["upload", "transcript", "planning", "render"][i] || "upload"}">${escapeHtml(item)}</li>`
-          )
-          .join("");
+        const phases = ["upload", "transcript", "planning", "render"];
+        const studioLi = (item, i) => {
+          const ph = phases[i] || "upload";
+          return `<li role="button" tabindex="0" class="pitch-studio-phase-pick" data-studio-phase-bullet="${ph}">${escapeHtml(item)}</li>`;
+        };
+        const wizardItems = section.bullets.map(studioLi).join("");
         if (hasMobileBullets) {
-          const mob = mobileList.map(item => `<li>${escapeHtml(item)}</li>`).join("");
-          return `<ul class="bullets bullets--studio-wizard bullets-desktop-only">${wizardItems}</ul><ul class="bullets panel-mobile-bullets">${mob}</ul>`;
+          const mob = mobileList.map(studioLi).join("");
+          return `<ul class="bullets bullets--studio-wizard bullets-desktop-only">${wizardItems}</ul><ul class="bullets bullets--studio-wizard panel-mobile-bullets">${mob}</ul>`;
         }
         return `<ul class="bullets bullets--studio-wizard">${wizardItems}</ul>`;
       }
@@ -4981,7 +4893,7 @@
       const studioWizardToolbar =
         section.id === "studio"
           ? `<div class="pitch-studio-wiz-controls-wrap" role="note" aria-labelledby="pitch-studio-wiz-legend">
-            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב בשורת ההתקדמות במוקאפ כדי לראות איך התחזית נבנית — ללא הפעלה אוטומטית.</p>
+            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ — ללא הפעלה אוטומטית.</p>
           </div>`
           : "";
       const pitchLayoutAttr = pitchProductLayout ? ` data-pitch-layout="product-app"` : "";
@@ -5375,35 +5287,24 @@
         shell.dataset.studioPhase = phase;
         shell.dataset.highlight = STUDIO_HIGHLIGHT_FOR_PHASE[phase] || phase;
       }
-      updateStudioWizardSteps(phase);
-      updateStudioStoryBullets(phase);
+      updateStudioBulletPhases(phase);
     }
 
-    function updateStudioWizardSteps(activePhase) {
+    function updateStudioBulletPhases(activePhase) {
+      const panel = document.getElementById("studio");
+      if (!panel) return;
       const activeIndex = STUDIO_PHASES.indexOf(activePhase);
 
-      document.querySelectorAll("#studio .pitch-wiz-step").forEach(button => {
-        const raw = button.getAttribute("data-studio-phase-button") || "";
+      panel.querySelectorAll(".panel-copy .bullets--studio-wizard li[data-studio-phase-bullet]").forEach(li => {
+        const raw = li.getAttribute("data-studio-phase-bullet") || "";
         const index = STUDIO_PHASES.indexOf(raw);
-
         const isActive = raw === activePhase;
         const isComplete = index >= 0 && index < activeIndex;
 
-        button.classList.toggle("is-active", isActive);
-        button.classList.toggle("is-complete", isComplete);
-
-        if (isActive) button.setAttribute("aria-current", "step");
-        else button.removeAttribute("aria-current");
-      });
-    }
-
-    function updateStudioStoryBullets(activePhase) {
-      const panel = document.getElementById("studio");
-      if (!panel) return;
-
-      panel.querySelectorAll(".bullets--studio-wizard li[data-studio-phase-bullet]").forEach(li => {
-        const b = li.getAttribute("data-studio-phase-bullet") || "";
-        li.classList.toggle("is-wizard-active", b === activePhase);
+        li.classList.toggle("is-wizard-active", isActive);
+        li.classList.toggle("is-studio-phase-complete", isComplete);
+        if (isActive) li.setAttribute("aria-current", "step");
+        else li.removeAttribute("aria-current");
       });
     }
 
@@ -5421,8 +5322,21 @@
         shell.dataset.highlight = "upload";
       }
 
-      updateStudioWizardSteps("upload");
-      updateStudioStoryBullets("upload");
+      updateStudioBulletPhases("upload");
+    }
+
+    function focusStudioPhaseListitem(phase) {
+      const panel = document.getElementById("studio");
+      if (!panel || !phase) return;
+      const sel = `li[data-studio-phase-bullet="${phase}"]`;
+      for (const ul of panel.querySelectorAll(".panel-copy .bullets--studio-wizard")) {
+        const li = ul.querySelector(sel);
+        if (li && li.offsetParent !== null) {
+          li.focus();
+          return;
+        }
+      }
+      panel.querySelector(`.panel-copy ${sel}`)?.focus();
     }
 
     function initStudioWizardHighlight() {
@@ -5431,36 +5345,39 @@
       if (!root) return;
 
       const onClick = event => {
-        const button = event.target.closest("[data-studio-phase-button]");
-        if (!button || !root.contains(button)) return;
-        const phase = button.getAttribute("data-studio-phase-button");
-        if (!phase || !STUDIO_PHASES.includes(phase)) return;
+        const li = event.target.closest("#studio .panel-copy li[data-studio-phase-bullet]");
+        if (!li || !root.contains(li)) return;
+        const phase = li.getAttribute("data-studio-phase-bullet") || "";
+        if (!STUDIO_PHASES.includes(phase)) return;
         setStudioPhase(phase);
       };
 
       const onKeydown = event => {
-        const activeElement = document.activeElement;
-        if (
-          !activeElement ||
-          !activeElement.matches("[data-studio-phase-button]") ||
-          !root.contains(activeElement)
-        ) {
+        const t = event.target;
+        if (!t || !t.matches("li[data-studio-phase-bullet]") || !root.contains(t) || !t.closest(".panel-copy")) {
           return;
         }
 
-        const currentIndex = STUDIO_PHASES.indexOf(studioWizardPhase);
-        if (currentIndex < 0) return;
+        const phase = t.getAttribute("data-studio-phase-bullet") || "";
+        if (!STUDIO_PHASES.includes(phase)) return;
+
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setStudioPhase(phase);
+          return;
+        }
 
         if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
 
         event.preventDefault();
+        const currentIndex = STUDIO_PHASES.indexOf(studioWizardPhase);
+        if (currentIndex < 0) return;
 
         const direction = event.key === "ArrowRight" ? 1 : -1;
         const nextIndex = Math.max(0, Math.min(STUDIO_PHASES.length - 1, currentIndex + direction));
         const nextPhase = STUDIO_PHASES[nextIndex];
         setStudioPhase(nextPhase);
-
-        root.querySelector(`[data-studio-phase-button="${nextPhase}"]`)?.focus();
+        focusStudioPhaseListitem(nextPhase);
       };
 
       root.addEventListener("click", onClick);
@@ -5490,9 +5407,9 @@
       mainScrollTrigger = null;
     }
 
-    /** Panel reveal tweens targets in this selector; Studio wizard `.pitch-wiz-step` is included alongside `.panel-visual > *`. */
+    /** Panel reveal: studio steps are copy-column `.pitch-studio-phase-pick` items. */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-edge, .hero-downloads, .panel-visual > *";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .panel-mobile-summary, .bullets li, .pitch-pricing-quote, .pitch-studio-phase-pick, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-edge, .hero-downloads, .panel-visual > *";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
