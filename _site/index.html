@@ -694,6 +694,94 @@
       margin-top: 0.45em;
     }
 
+    #intro .intro-pipeline-wrap {
+      margin-top: 4px;
+    }
+
+    /* Excalidraw-ish RTL flow (intro): hand-skewed nodes + chunky arrows */
+    .intro-pipeline-wrap {
+      margin: 0;
+      width: 100%;
+      max-width: min(100%, 44rem);
+    }
+
+    .intro-pipeline-excal {
+      margin: 0;
+      padding: clamp(14px, 2.2vw, 22px);
+      border: 2px solid var(--v1-ink);
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / .94), rgb(252 233 228 / .55));
+      box-shadow: var(--shadow);
+    }
+
+    .intro-pipeline-flow {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 10px;
+      direction: rtl;
+    }
+
+    .intro-pipeline-node {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px 14px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 16px 20px 14px 18px;
+      background: rgb(255 255 255 / .92);
+      box-shadow: 3px 3px 0 var(--v1-ink);
+      font-weight: 950;
+      font-size: clamp(0.76rem, 0.32vw + 0.7rem, 0.94rem);
+      line-height: 1.25;
+      max-width: min(100%, 10.5rem);
+      color: var(--v1-ink);
+    }
+
+    .intro-pipeline-node--a {
+      transform: rotate(-0.65deg);
+    }
+
+    .intro-pipeline-node--b {
+      transform: rotate(0.55deg);
+    }
+
+    .intro-pipeline-node--c {
+      transform: rotate(-0.45deg);
+    }
+
+    .intro-pipeline-node--d {
+      transform: rotate(0.5deg);
+    }
+
+    .intro-pipeline-node--e {
+      transform: rotate(-0.4deg);
+    }
+
+    .intro-pipeline-arrow {
+      flex-shrink: 0;
+      font-size: clamp(1.05rem, 0.6vw + 0.85rem, 1.35rem);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--v1-muted);
+      user-select: none;
+    }
+
+    @media (max-width: 520px) {
+      .intro-pipeline-flow {
+        gap: 6px 8px;
+      }
+
+      .intro-pipeline-node {
+        padding: 8px 11px;
+        max-width: 100%;
+      }
+    }
+
     #intro .hero-downloads {
       margin-top: 6px;
       max-width: none;
@@ -1667,12 +1755,8 @@
         title: "Weather V1 — מה זה בקצרה",
         lead:
           "מעלים קובץ קריינות תחזית — האפליקציה מתמללת אותו (למשל בעזרת Whisper), מפעילה רצף היגיון שמחבר את הטקסט לסצנות, מתאימה קטעי וידאו רקע מתוך קטלוג V1, ובסוף נוצר בסיס לסרטון תחזית בפורמט אנכי.",
-        bullets: [
-          "קריינות → תמלול → סצנות מתוכננות",
-          "רקעים מקטלוג V1 לכל חלק בסיפור",
-          "פלט בסיס לאנכי — מוכן להמשך הפקה"
-        ],
-        visual: "none",
+        bullets: [],
+        visual: "introPipeline",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
       },
@@ -1981,6 +2065,21 @@
           <p class="excal-caption">ניתן להחליף ב־SVG שייצא מהכלי הציבורי <a href="https://dai-shi.github.io/excalidraw-animate" target="_blank" rel="noreferrer">excalidraw-animate</a> (<a href="https://github.com/dai-shi/excalidraw-animate" target="_blank" rel="noreferrer">מקור</a>).</p>
         </div>`;
       }
+      if (type === "introPipeline") {
+        return `<div class="intro-pipeline-excal">
+          <div class="intro-pipeline-flow">
+            <span class="intro-pipeline-node intro-pipeline-node--a">קריינות</span>
+            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
+            <span class="intro-pipeline-node intro-pipeline-node--b">תמלול</span>
+            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
+            <span class="intro-pipeline-node intro-pipeline-node--c">סצנות מתוכננות</span>
+            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
+            <span class="intro-pipeline-node intro-pipeline-node--d">רינדור</span>
+            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
+            <span class="intro-pipeline-node intro-pipeline-node--e">הורדה</span>
+          </div>
+        </div>`;
+      }
       if (type === "llmPricing") {
         return `<div class="pricing-board visual-board">
           <div class="pricing-head"><span>מודל</span><span class="mixed-ltr" lang="en" dir="ltr">$/1M טוקנים</span></div>
@@ -2065,6 +2164,14 @@
         section.id === "intro"
           ? ""
           : `<div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>`;
+      const introPipelineBlock =
+        section.id === "intro" && section.visual === "introPipeline"
+          ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ייצור: קריינות, תמלול, סצנות מתוכננות, רינדור, הורדה">${visualMarkup("introPipeline", section)}</figure>`
+          : "";
+      const bulletsBlock =
+        section.id === "intro" && section.visual === "introPipeline"
+          ? ""
+          : `<ul class="bullets">${bullets}</ul>`;
       return `<section
         class="story-panel"
         id="${escapeHtml(section.id)}"
@@ -2078,7 +2185,8 @@
             <div class="kicker">${escapeHtml(section.kicker)}</div>
             ${heading}
             <p class="lead">${escapeHtml(section.lead)}</p>
-            <ul class="bullets">${bullets}</ul>
+            ${introPipelineBlock}
+            ${bulletsBlock}
             ${heroDownloads}
           </div>
           ${visualBlock}
@@ -2334,7 +2442,8 @@
       mainScrollTrigger = null;
     }
 
-    const PANEL_REVEAL_SEL = ".kicker, h1, h2, .lead, .bullets li, .hero-downloads, .panel-visual > *";
+    const PANEL_REVEAL_SEL =
+      ".kicker, h1, h2, .lead, .bullets li, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
