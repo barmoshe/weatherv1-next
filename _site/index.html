@@ -559,6 +559,7 @@
       border-color: rgb(0 0 0 / 0.12);
     }
 
+    #v1-next .panel-visual,
     #pricing .panel-visual,
     #analytics .panel-visual,
     #local-first .panel-visual,
@@ -576,6 +577,7 @@
         align-items: start;
       }
 
+      #v1-next .panel-inner,
       #pricing .panel-inner,
       #analytics .panel-inner,
       #local-first .panel-inner,
@@ -586,6 +588,7 @@
         grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
       }
 
+      #v1-next .panel-visual,
       #pricing .panel-visual,
       #analytics .panel-visual,
       #local-first .panel-visual,
@@ -619,6 +622,10 @@
 
     #pricing .pitch-lead-well {
       background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(232 249 242 / 0.82));
+    }
+
+    #v1-next .pitch-lead-well {
+      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(247 243 236 / 0.88));
     }
 
     #pricing .pitch-pricing-quote {
@@ -721,6 +728,67 @@
       background: rgb(255 255 255 / 0.9);
       border: 1px solid rgb(0 0 0 / 0.07);
       color: rgb(56 62 70 / 1);
+    }
+
+    /* —— Pitch: V1 next steps checklist (`#v1-next`) —— */
+    .pitch-v1-next-visual {
+      width: min(100%, 520px);
+      margin-inline: auto;
+      border-radius: 22px;
+      border: 1px solid rgb(0 0 0 / 0.09);
+      background: linear-gradient(
+        168deg,
+        rgb(255 255 255 / 0.96),
+        color-mix(in srgb, var(--panel-accent, #78716c) 5%, rgb(252 251 248))
+      );
+      box-shadow:
+        0 22px 44px rgb(15 23 42 / 0.05),
+        0 0 0 1px rgb(255 255 255 / 0.55) inset;
+      padding: 16px 14px 14px;
+      direction: rtl;
+      unicode-bidi: isolate;
+    }
+
+    .pitch-v1-next-visual__inner {
+      display: grid;
+      gap: 8px;
+    }
+
+    .pitch-v1-next-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
+      gap: 10px;
+      padding: 9px 11px;
+      border-radius: 12px;
+      border: 1px solid rgb(0 0 0 / 0.07);
+      background: rgb(255 255 255 / 0.88);
+      box-shadow: 0 1px 0 rgb(255 255 255 / 0.7) inset;
+    }
+
+    .pitch-v1-next-item__ico {
+      font-size: 1rem;
+      line-height: 1.2;
+      filter: grayscale(0.08);
+      opacity: 0.92;
+    }
+
+    .pitch-v1-next-item__text {
+      font-size: 0.66rem;
+      font-weight: 800;
+      line-height: 1.42;
+      color: rgb(42 46 52 / 1);
+    }
+
+    .pitch-v1-next-visual__note {
+      margin: 12px 0 0;
+      padding-top: 10px;
+      border-top: 1px dashed rgb(0 0 0 / 0.09);
+      font-size: 0.56rem;
+      font-weight: 780;
+      line-height: 1.45;
+      color: rgb(108 112 120 / 1);
+      text-align: center;
     }
 
     /* —— Pitch: analytics tab mock (`#analytics`) —— */
@@ -1906,12 +1974,38 @@
       .pitch-catalog-detail {
         max-height: none;
       }
+
+      .pitch-app-shell--catalog {
+        width: min(100%, 720px);
+        height: auto;
+        max-height: none;
+      }
     }
 
     /* Catalog slide — extends shared product-app copy + app shell */
     .pitch-app-shell--catalog {
       display: grid;
+      grid-template-rows: auto auto auto minmax(0, 1fr);
       gap: 0;
+      box-sizing: border-box;
+      width: 820px;
+      max-width: 100%;
+      height: 380px;
+      max-height: min(380px, 52svh);
+      margin-inline: auto;
+    }
+
+    .pitch-app-shell--catalog .pitch-catalog-workspace {
+      min-height: 0;
+      overflow: auto;
+      align-items: stretch;
+    }
+
+    .pitch-app-shell--catalog .pitch-catalog-detail {
+      max-height: none;
+      align-self: stretch;
+      min-height: 0;
+      overflow: auto;
     }
 
     .pitch-catalog-toolbar {
@@ -2041,6 +2135,7 @@
       box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
       overflow: hidden;
       display: grid;
+      grid-template-rows: auto auto;
       gap: 0;
       transition:
         border-color 0.2s ease,
@@ -2056,10 +2151,11 @@
     }
 
     .pitch-catalog-card-poster {
-      aspect-ratio: 16 / 10;
+      height: 44px;
       width: 100%;
       overflow: hidden;
       background: rgb(236 238 246 / 1);
+      flex-shrink: 0;
     }
 
     .pitch-catalog-card-poster-img {
@@ -3570,7 +3666,7 @@
         kicker: "Weather V1",
         title: "מה זה בקצרה",
         lead:
-          "מעלים קובץ קריינות תחזית — האפליקציה מתמללת אותו (למשל בעזרת Whisper), מפעילה רצף היגיון שמחבר את הטקסט לסצנות, מתאימה קטעי וידאו רקע מתוך קטלוג V1, ובסוף נוצר בסיס לסרטון תחזית בפורמט אנכי.",
+          "מעלים קובץ קריינות תחזית — האפליקציה מתמללת אותו (למשל בעזרת Whisper), מייצרת תהליך שמחבר בין הטקסט לסצנות, מתאימה קטעי וידאו רקע מתוך קטלוג V1, ובסוף נוצר בסיס לסרטון תחזית בפורמט אנכי.",
         bullets: [],
         visual: "introPipeline",
         transition: "ttb",
@@ -3583,6 +3679,7 @@
         lead:
           "בטאב «סטודיו» עובדים על תחזית אחת בכל פעם: מעלים קריינות, רואים תמלול, בונים את הסיפור בציר הזמן עם התאמות מהקטלוג, מרנדרים ובודקים, ומגיעים לווידאו הסופי בפריים אנכי — בלי לצלול לעומק טכני.",
         bullets: [
+          "מוקאפ חי / מדומה שמחקה את הממשק (רקע, טיפוגרפיה, כרטיסי שלב) — לא רק צילום מסך שטוח",
           "העלאת קריינות · תמלול · ציר זמן (סצנות והתאמות מהקטלוג)",
           "רינדור ואז «וידאו סופי» עם נגן כמו באפליקציה",
           "בפס העליון: מזהה עבודה קצר וסטטוס (ממתין / מעבד / הושלם)",
@@ -3629,7 +3726,7 @@
         kicker: "אחרי הרינדור",
         title: "מה יוצא אחרי הרינדור",
         lead:
-          "בסיום הרינדור נוצר קובץ וידאו שמרכיב את הקריינות, רקע וידאו מהקטלוג שחובר וחותך לפי התכנון, ומוזיקת רקע כשיש חומר מתאים — ואם אין, הפלט יוצא בלי מוזיקה. זה בסיס מקצועי לתחזית: לא חבילת מיתוג גרפית מלאה של V1 בפלט (לוגואים, כפולים ומסכי מותג מלאים עשויים להידרש עריכה חיצונית).",
+          "בסיום הרינדור נוצר קובץ וידאו שמרכיב את הקריינות, רקע וידאו מהקטלוג שחובר וחותך לפי התכנון, ומוזיקת רקע כשיש חומר מתאים — ואם אין, הפלט יוצא בלי מוזיקה. זה בסיס מקצועי לתחזית: לא חבילת מיתוג גרפית מלאה של V1 בפלט (לוגואים, כותרות, שכבות גרפיות או מסכי מותג מלאים עשויים להידרש עריכה חיצונית).",
         bullets: [
           "בממשק מוצג שלב «וידאו סופי» עם צפייה והורדה — כמו באפליקציה",
           "הרינדור רץ על המחשב שבו האפליקציה מותקנת (בשלב הנוכחי)",
@@ -3662,9 +3759,8 @@
         lead:
           "בטאב האנליטיקה רואים תמונה משוערת על עלות ושימוש בעבודות מההיסטוריה המקומית — כדי לנהל תקציב ולהבין כיוון, לא כדי לקבל דוח מס או חשבונית רשמית. האזור עדיין בפיתוח והנתונים מתעדכנים.",
         bullets: [
-          "מוצגות עבודות שיש להן נתוני שימוש מהיסטוריה מקומית, עם הערכת עלות כוללת (למשל בדולר)",
-          "פירוק גס בין עלות LLM לבין תמלול, יחד עם טוקני קלט/פלט ושניות אודיו רלוונטיות לחיוב תמלול",
-          "כשיש מספיק נתונים מוצגים גם פילוחים לפי דגם בשימוש ולפי יום — להמחשה בלבד",
+          "במצגת: 2–3 נתונים פשוטים בלבד — למשל מספר עבודות, טוקנים משוערים, עלות משוערת",
+          "לא חובה פירוק לפי LLM / תמלול / דגם / יום אם זה לא נדרש למסר",
           "ליד הסיכומים מודגש שהנתונים הם הערכות — לא חשבוניות"
         ],
         visual: "usageAnalytics",
@@ -3686,6 +3782,24 @@
         visual: "pricingHero",
         transition: "ttb",
         theme: { paper: "#f4fcf8", accent: "#0d9488" }
+      },
+      {
+        id: "v1-next",
+        kicker: "סיכום והמשך",
+        title: "מה צריך מ־V1 כדי להתקדם",
+        lead:
+          "מסך הגדרות מרכזי מציג את מצב הקטלוג, מפתחות AI והגדרות דסקטופ וקבצים — במצגת מתמקדים בהחלטות העסקיות, לא בשמות טכניים פנימיים של טאבים.",
+        bullets: [
+          "אישור כיוון — מה המוצר אמור לפתור בשלב הראשון",
+          "החלטה על אחסון הקטלוג — מקומי מול ענן של V1",
+          "התקנה ראשונית במחשבי העבודה הרלוונטיים",
+          "חיבור מפתח OpenAI API — תמלול ולפי צורך מודלים של OpenAI",
+          "חיבור מפתח Claude API — רק אם בפועל בוחרים Claude לשלב התכנון",
+          "מחזור התאמות לפי פידבק אחרי שימוש אמיתי"
+        ],
+        visual: "v1NextChecklist",
+        transition: "ttb",
+        theme: { paper: "#faf8f5", accent: "#78716c" }
       },
       {
         id: "llm-sample",
@@ -4153,7 +4267,7 @@
           const selClass = c.clipId === data.selectedClipId ? " pitch-catalog-card--selected" : "";
           return `<article class="pitch-catalog-card${selClass}">
                 <div class="pitch-catalog-card-poster" aria-hidden="true">
-                  <img class="pitch-catalog-card-poster-img" src="${escapeHtml(posterSrc)}" alt="" width="320" height="200" decoding="async" loading="lazy" />
+                  <img class="pitch-catalog-card-poster-img" src="${escapeHtml(posterSrc)}" alt="" width="200" height="44" decoding="async" loading="lazy" />
                 </div>
                 <div class="pitch-catalog-card-meta"><span class="pitch-catalog-card-title">${escapeHtml(c.titleHe)}</span><small class="mixed-ltr" lang="en" dir="ltr">${escapeHtml(c.clipId)}</small></div>
               </article>`;
@@ -4349,24 +4463,15 @@
                   <div class="pitch-analytics-card__hint">מהיסטוריה מקומית · דמו</div>
                 </article>
                 <article class="pitch-analytics-card">
+                  <div class="pitch-analytics-card__label">טוקנים משוערים</div>
+                  <div class="pitch-analytics-card__value mixed-ltr" lang="en" dir="ltr">420K in · 160K out</div>
+                  <div class="pitch-analytics-card__hint">קלט ופלט · דמו</div>
+                </article>
+                <article class="pitch-analytics-card">
                   <div class="pitch-analytics-card__label">הערכת עלות כוללת</div>
                   <div class="pitch-analytics-card__value mixed-ltr" lang="en" dir="ltr">~$47.20</div>
                   <div class="pitch-analytics-card__hint">מספרים להמחשה בלבד</div>
                 </article>
-                <article class="pitch-analytics-card">
-                  <div class="pitch-analytics-card__label">פירוק משוער</div>
-                  <div class="pitch-analytics-card__split"><span>LLM</span><span class="mixed-ltr" lang="en" dir="ltr">~$31</span></div>
-                  <div class="pitch-analytics-card__split"><span>תמלול</span><span class="mixed-ltr" lang="en" dir="ltr">~$16</span></div>
-                </article>
-                <article class="pitch-analytics-card">
-                  <div class="pitch-analytics-card__label mixed-ltr" lang="en" dir="ltr">Tokens · אודיו לחיוב</div>
-                  <div class="pitch-analytics-card__sub mixed-ltr" lang="en" dir="ltr">420K in · 160K out</div>
-                  <div class="pitch-analytics-card__sub">842 שניות אודיו לתמחור תמלול (דמו)</div>
-                </article>
-              </div>
-              <div class="pitch-analytics-meta-row mixed-ltr" lang="en" dir="ltr">
-                <span class="pitch-analytics-chip">By model · NovaLite</span>
-                <span class="pitch-analytics-chip">By day · last 7d</span>
               </div>
               <p class="pitch-analytics-disclaimer">הנתונים משוערים ומתעדכנים — לא חשבונית ולא דוח מס.</p>
             </div>
@@ -4386,6 +4491,25 @@
           <span class="pitch-pricing-hero__chip">כולל AI וטוקנים בפיתוח</span>
         </div>
       </div>
+    </div>`;
+    }
+
+    function v1NextChecklistHtml() {
+      const row = (icon, text) =>
+        `<div class="pitch-v1-next-item" role="presentation">
+      <span class="pitch-v1-next-item__ico" aria-hidden="true">${icon}</span>
+      <span class="pitch-v1-next-item__text">${escapeHtml(text)}</span>
+    </div>`;
+      return `<div class="pitch-v1-next-visual" dir="rtl" aria-hidden="true">
+      <div class="pitch-v1-next-visual__inner">
+        ${row("🧭", "אישור כיוון — מה המוצר אמור לפתור בשלב הראשון")}
+        ${row("📚", "החלטה על אחסון הקטלוג — מקומי מול ענן של V1")}
+        ${row("🖥", "התקנה ראשונית במחשבי העבודה הרלוונטיים")}
+        ${row("🔑", "מפתח OpenAI API — תמלול ולפי צורך מודלים של OpenAI")}
+        ${row("✳️", "מפתח Claude API — רק אם בפועל בוחרים Claude לשלב התכנון")}
+        ${row("🔁", "מחזור התאמות לפי פידבק אחרי שימוש אמיתי")}
+      </div>
+      <p class="pitch-v1-next-visual__note">רשימת החלטות — לא רשימת משימות פיתוח פנימיות.</p>
     </div>`;
     }
 
@@ -4451,6 +4575,9 @@
       }
       if (type === "pricingHero") {
         return pricingHeroHtml();
+      }
+      if (type === "v1NextChecklist") {
+        return v1NextChecklistHtml();
       }
       if (type === "catalogBrowser") {
         return catalogBrowserHtml();
@@ -4630,11 +4757,12 @@
         section.id === "render" ||
         section.id === "local-first" ||
         section.id === "analytics" ||
-        section.id === "pricing";
+        section.id === "pricing" ||
+        section.id === "v1-next";
       const pricingPullquoteBlock =
         section.id === "pricing"
           ? `<blockquote class="pitch-pricing-quote"><p>${escapeHtml(
-              "נבנתה אפליקציית ייצור מקומית שמחברת בין קריינות, תמלול, תכנון סצנות, קטלוג קליפים ורינדור לווידאו אנכי, כולל מעקב עבודות, אנליטיקת שימוש משוערת והגדרות להתחברות לעזרי AI ולסנכרון קטלוג לצורכי פיתוח."
+              "נבנתה אפליקציה מקומית שמחברת בין קריינות, תמלול, תכנון סצנות, קטלוג קליפים ורינדור לווידאו אנכי."
             )}</p></blockquote>`
           : "";
       const studioWizardToolbar =
@@ -5220,7 +5348,7 @@
 
     /** `#thinking`: `.pitch-flow-step` omitted on purpose — step motion is `initThinkingFlowMotion` (scrub/passive); reveal tween hits `.panel-visual > *` only (outer `.pitch-thinking-visual`). */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *:not(.pitch-v1-next-visual), .pitch-v1-next-item";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
