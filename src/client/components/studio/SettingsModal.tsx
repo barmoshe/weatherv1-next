@@ -1,6 +1,6 @@
 "use client";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { downloadJsonFile } from "@/client/lib/download-json-file";
+
+import { useCallback, useEffect, useState } from "react";
 import { desktop } from "@/client/lib/desktop";
 import type {
   DesktopAppInfo,
@@ -8,147 +8,43 @@ import type {
   DesktopUpdateState,
   LlmProviderPreference,
 } from "@/shared/desktop";
-import type { StorageStatus } from "@/client/hooks/useStorageStatus";
+import { downloadJsonFile } from "@/client/lib/download-json-file";
 
-interface CatalogHealth {
-  loaded_count?: number;
-  claimed_count?: number;
-  missing_ids?: string[];
-  version?: string;
-}
-
-interface DesktopStatus {
-  success: boolean;
-  desktop_mode: boolean;
-  workspace: {
-    workspaceDir: string;
-    catalogPath: string;
-    videosDir: string;
-    musicDir: string;
-    missing: string[];
-    ready: boolean;
-  };
-  runtime: {
-    runtime_dir: string;
-    uploads_dir: string;
-    outputs_dir: string;
-    cache_dir: string;
-  };
-  keys: {
-    openai_configured: boolean;
-    anthropic_configured: boolean;
-    gemini_configured: boolean;
-  };
-  providers?: {
-    llm_pref: LlmProviderPreference;
-  };
-  ffmpeg: {
-    ffmpeg_path: string | null;
-    ffprobe_path: string | null;
-    bg_music_path: string;
-  };
-  catalog_store?: {
-    kind: "local";
-    enabled: boolean;
-    ready: boolean;
-  };
-  r2?: {
-    enabled: boolean;
-    ready: boolean;
-    gatewayUrl?: string;
-    tenantId?: string;
-    bucketName?: string;
-    appUsername?: string;
-    lastCatalogEtag?: string;
-    lastSyncAt?: string;
-    conflict?: { remoteEtag: string; localHash: string; detectedAt: string };
-    counts: { local: number; cloudOnly: number; syncing: number; error: number };
-    error?: string;
-  };
-  storage?: StorageStatus;
-}
+import type { CatalogHealth, DesktopStatus, DotVariant } from "./settings/settingsTypes";
+import { SettingsAiPanel } from "./settings/SettingsAiPanel";
+import { SettingsCatalogPanel } from "./settings/SettingsCatalogPanel";
+import { SettingsCloudPanel } from "./settings/SettingsCloudPanel";
+import { SettingsDesktopPanel } from "./settings/SettingsDesktopPanel";
+import { SettingsOverviewPanel } from "./settings/SettingsOverviewPanel";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type DotVariant = "ok" | "warn" | "danger";
+type SettingsTabId = "overview" | "catalog" | "desktop" | "ai" | "cloud";
 
-function StatusDot({ variant }: { variant: DotVariant }) {
-  const cls =
-    variant === "ok" ? "is-healthy" : variant === "warn" ? "is-warn" : "is-missing";
-  return <span className={`dot ${cls}`} />;
-}
+const SETTINGS_TABS_DESKTOP: { id: SettingsTabId; label: string }[] = [
+  { id: "overview", label: "סקירה" },
+  { id: "catalog", label: "קטלוג קליפים" },
+  { id: "desktop", label: "דסקטופ וקבצים" },
+  { id: "ai", label: "AI ומודלים" },
+  { id: "cloud", label: "ענן (R2)" },
+];
 
-interface SettingsStatCardProps {
-  label: string;
-  value: ReactNode;
-  dotVariant: DotVariant;
-  hint?: string;
-}
+const SETTINGS_TABS_BROWSER: { id: SettingsTabId; label: string }[] = [
+  { id: "overview", label: "סקירה" },
+  { id: "catalog", label: "קטלוג קליפים" },
+];
 
-function SettingsStatCard({ label, value, dotVariant, hint }: SettingsStatCardProps) {
-  return (
-    <div className="settings-stat-card">
-      <div className="settings-stat-card-top">
-        <StatusDot variant={dotVariant} />
-        <span>{label}</span>
-      </div>
-      <strong>{value}</strong>
-      {hint && <small>{hint}</small>}
-    </div>
-  );
-}
-
-interface SecretFieldProps {
-  label: string;
-  value: string;
-  configured: boolean;
-  placeholder: string;
-  disabled: boolean;
-  onValueChange: (value: string) => void;
-  onClear: () => void;
-}
-
-function SecretField({
-  label,
-  value,
-  configured,
-  placeholder,
-  disabled,
-  onValueChange,
-  onClear,
-}: SecretFieldProps) {
-  return (
-    <label className="settings-field">
-      <span>{label}</span>
-      <div className="settings-input-group">
-        <input
-          type="password"
-          value={value}
-          onChange={(e) => onValueChange(e.target.value)}
-          placeholder={placeholder}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        {configured && (
-          <button type="button" className="btn btn--ghost" onClick={onClear} disabled={disabled}>
-            נקה
-          </button>
-        )}
-      </div>
-    </label>
-  );
-}
-
-function shortPath(value: string | null | undefined): string {
-  if (!value) return "לא הוגדר";
-  if (value.length <= 64) return value;
-  return `…${value.slice(-61)}`;
-}
+const EMPTY_KEYS: DesktopStatus["keys"] = {
+  openai_configured: false,
+  anthropic_configured: false,
+  gemini_configured: false,
+};
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+  const [activeTab, setActiveTab] = useState<SettingsTabId>("overview");
   const [health, setHealth] = useState<CatalogHealth | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
@@ -183,7 +79,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setHealthError(null);
     try {
       const r = await fetch("/api/catalog/health");
-      const data = await r.json() as { success: boolean; health?: CatalogHealth; error?: string };
+      const data = (await r.json()) as { success: boolean; health?: CatalogHealth; error?: string };
       if (!data.success) throw new Error(data.error ?? "שגיאה");
       setHealth(data.health ?? {});
     } catch (e) {
@@ -203,7 +99,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         desktop.getUpdateState(),
         fetch("/api/desktop/status"),
       ]);
-      const status = await statusResponse.json() as DesktopStatus;
+      const status = (await statusResponse.json()) as DesktopStatus;
       if (!statusResponse.ok || !status.success) {
         throw new Error(`HTTP ${statusResponse.status}`);
       }
@@ -242,8 +138,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setSaving(true);
     setDesktopError(null);
     try {
-      // Empty workspaceDir tells Electron to fall back to the app-managed
-      // default local cache under userData (packaged builds only).
       await desktop.saveSettings({ workspaceDir: "" });
       setWorkspaceDir("");
       await loadDesktopStatus();
@@ -325,28 +219,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     workspaceDir,
   ]);
 
-  const clearKey = useCallback(async (provider: "openai" | "anthropic" | "gemini" | "r2") => {
-    if (!desktop) return;
-    setSaving(true);
-    setDesktopError(null);
-    try {
-      await desktop.saveSettings({ clearKeys: [provider] });
-      if (provider === "openai") setOpenaiKey("");
-      if (provider === "anthropic") setAnthropicKey("");
-      if (provider === "gemini") setGeminiKey("");
-      if (provider === "r2") {
-        setR2AppPassword("");
-        setShowR2Password(false);
+  const clearKey = useCallback(
+    async (provider: "openai" | "anthropic" | "gemini" | "r2") => {
+      if (!desktop) return;
+      setSaving(true);
+      setDesktopError(null);
+      try {
+        await desktop.saveSettings({ clearKeys: [provider] });
+        if (provider === "openai") setOpenaiKey("");
+        if (provider === "anthropic") setAnthropicKey("");
+        if (provider === "gemini") setGeminiKey("");
+        if (provider === "r2") {
+          setR2AppPassword("");
+          setShowR2Password(false);
+        }
+        await loadDesktopStatus();
+        await loadHealth();
+        setSaved(true);
+      } catch (e) {
+        setDesktopError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setSaving(false);
       }
-      await loadDesktopStatus();
-      await loadHealth();
-      setSaved(true);
-    } catch (e) {
-      setDesktopError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setSaving(false);
-    }
-  }, [loadDesktopStatus, loadHealth]);
+    },
+    [loadDesktopStatus, loadHealth],
+  );
 
   const clearDerivedCache = useCallback(async () => {
     if (
@@ -388,21 +285,26 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [loadDesktopStatus, loadHealth]);
 
-  const pushCatalogToR2 = useCallback(async (replaceRemote = false) => {
-    setSyncingR2(true);
-    setDesktopError(null);
-    try {
-      const r = await fetch(replaceRemote ? "/api/sync/r2/replace-remote" : "/api/sync/r2/push", { method: "POST" });
-      const data = (await r.json()) as { success: boolean; error?: string };
-      if (!r.ok || !data.success) throw new Error(data.error ?? `HTTP ${r.status}`);
-      await loadDesktopStatus();
-      await loadHealth();
-    } catch (e) {
-      setDesktopError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setSyncingR2(false);
-    }
-  }, [loadDesktopStatus, loadHealth]);
+  const pushCatalogToR2 = useCallback(
+    async (replaceRemote = false) => {
+      setSyncingR2(true);
+      setDesktopError(null);
+      try {
+        const r = await fetch(replaceRemote ? "/api/sync/r2/replace-remote" : "/api/sync/r2/push", {
+          method: "POST",
+        });
+        const data = (await r.json()) as { success: boolean; error?: string };
+        if (!r.ok || !data.success) throw new Error(data.error ?? `HTTP ${r.status}`);
+        await loadDesktopStatus();
+        await loadHealth();
+      } catch (e) {
+        setDesktopError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setSyncingR2(false);
+      }
+    },
+    [loadDesktopStatus, loadHealth],
+  );
 
   const exportJobsFromR2 = useCallback(async () => {
     setExportR2JobsLoading(true);
@@ -450,6 +352,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (!isOpen) return;
     void loadHealth();
     void loadDesktopStatus();
+    setActiveTab("overview");
   }, [isOpen, loadDesktopStatus, loadHealth]);
 
   useEffect(() => {
@@ -461,13 +364,24 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, onClose]);
 
+  const isDesktop = Boolean(desktop);
+  const visibleTabs = isDesktop ? SETTINGS_TABS_DESKTOP : SETTINGS_TABS_BROWSER;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!visibleTabs.some((t) => t.id === activeTab)) {
+      setActiveTab("overview");
+    }
+  }, [isOpen, activeTab, visibleTabs]);
+
+  const safeTab = visibleTabs.some((t) => t.id === activeTab) ? activeTab : "overview";
+
   if (!isOpen) return null;
 
   const claimed = health?.claimed_count ?? 0;
   const missing = health?.missing_ids ?? [];
   const ver = health?.version ? health.version.slice(0, 8) : "?";
   const onDiskCount = Math.max(0, claimed - missing.length);
-  const isDesktop = Boolean(desktop);
   const workspaceReady = desktopStatus?.workspace.ready ?? false;
   const ffmpegReady = appInfo?.ffmpeg.ok ?? false;
   const catalogKnown = Boolean(health);
@@ -479,8 +393,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const r2Ready = Boolean(desktopStatus?.r2?.ready);
   const r2EnabledFlag = Boolean(desktopStatus?.r2?.enabled);
   const r2ErrorCount = desktopStatus?.r2?.counts.error ?? 0;
-  const catalogHealthBlocked =
-    Boolean(healthError) || (r2EnabledFlag && r2ErrorCount > 0);
+  const catalogHealthBlocked = Boolean(healthError) || (r2EnabledFlag && r2ErrorCount > 0);
   let catalogDotVariant: DotVariant = "ok";
   if (catalogHealthBlocked) {
     catalogDotVariant = "danger";
@@ -500,23 +413,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     return `${missing.length} קבצי מקור חסרים במטמון המקומי`;
   })();
 
+  const desktopStatusKeys = desktopStatus?.keys ?? EMPTY_KEYS;
+
   return (
-    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby="settings-description">
+    <div
+      className="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+      aria-describedby="settings-description"
+    >
       <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal-dialog modal-dialog--settings" aria-busy={saving || desktopLoading || exportR2JobsLoading || clearCacheBusy}>
-        {saving && (
+      <div
+        className="modal-dialog modal-dialog--settings"
+        aria-busy={saving || desktopLoading || exportR2JobsLoading || clearCacheBusy}
+      >
+        {saving ? (
           <div className="settings-reloading" role="status">
             שומר ומרענן את השרת המקומי…
           </div>
-        )}
+        ) : null}
         <header className="modal-header">
-          <h2 className="modal-title" id="settings-title">הגדרות</h2>
-          <button
-            className="modal-close"
-            type="button"
-            aria-label="סגור"
-            onClick={onClose}
-          >
+          <h2 className="modal-title" id="settings-title">
+            הגדרות
+          </h2>
+          <button className="modal-close" type="button" aria-label="סגור" onClick={onClose}>
             ×
           </button>
         </header>
@@ -526,623 +447,225 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             if (isDesktop && !saving && !desktopLoading) void saveDesktopSettings();
           }}
         >
-        <div className="modal-body">
-          <section className="settings-overview" aria-label="תקציר הגדרות">
-            <div>
-              <p className="settings-eyebrow">WeatherV1 Control Center</p>
-              <p className="settings-intro" id="settings-description">
-                בדיקה מהירה של מצב הקטלוג, הדסקטופ, מפתחות ה-AI והסנכרון לענן לפני שינוי הגדרות.
-              </p>
-            </div>
-            <div className="settings-stat-grid">
-              <SettingsStatCard
-                label="קטלוג"
-                value={
-                  healthLoading ? (
-                    "טוען…"
-                  ) : catalogKnown ? (
-                    <>
-                      <bdi>{claimed}</bdi> קליפים בקטלוג
-                    </>
-                  ) : (
-                    "ממתין"
-                  )
-                }
-                dotVariant={
-                  healthLoading || !catalogKnown
-                    ? "warn"
-                    : catalogDotVariant
-                }
-                hint={healthLoading || !catalogKnown ? "בודק קטלוג" : catalogStatHint}
-              />
-              <SettingsStatCard
-                label="דסקטופ"
-                value={desktopLoading ? "טוען…" : isDesktop ? (workspaceReady ? "מוכן" : "דורש בדיקה") : "לא פעיל"}
-                dotVariant={isDesktop && workspaceReady ? "ok" : "danger"}
-                hint={isDesktop ? shortPath(desktopStatus?.workspace.workspaceDir) : "פתח דרך Electron"}
-              />
-              <SettingsStatCard
-                label="AI"
-                value={<span dir="ltr">{configuredKeysCount}/3</span>}
-                dotVariant={configuredKeysCount > 0 ? "ok" : "danger"}
-                hint={configuredKeysCount > 0 ? "מפתח אחד לפחות מוגדר" : "צריך מפתח לתכנון"}
-              />
-              <SettingsStatCard
-                label="R2"
-                value={r2Ready ? "מחובר" : desktopStatus?.r2?.enabled ? "חסר פרטים" : "כבוי"}
-                dotVariant={r2Ready ? "ok" : "danger"}
-                hint={desktopStatus?.r2?.lastSyncAt ? `סונכרן ${desktopStatus.r2.lastSyncAt}` : "טרם סונכרן"}
-              />
-            </div>
-          </section>
-
-          <section className="settings-section">
-            <div className="settings-section-header">
-              <h3>קטלוג קליפים</h3>
+          <div className="settings-modal-intro">
+            <p id="settings-description" className="settings-modal-intro__text">
+              בדיקה מהירה של מצב הקטלוג, הדסקטופ, מפתחות ה-AI והסנכרון לענן.
+            </p>
+          </div>
+          <div className="settings-modal-tabstrip" role="tablist" aria-label="סעיפי הגדרות">
+            {visibleTabs.map((t) => (
               <button
+                key={t.id}
                 type="button"
-                className="settings-link"
-                onClick={loadHealth}
-                disabled={healthLoading}
+                role="tab"
+                id={`settings-tab-${t.id}`}
+                aria-selected={safeTab === t.id}
+                aria-controls={`settings-panel-${t.id}`}
+                className={`settings-modal-tab ${safeTab === t.id ? "is-active" : undefined}`}
+                onClick={() => setActiveTab(t.id)}
               >
-                רענן
+                {t.label}
               </button>
+            ))}
+          </div>
+          <div className="modal-body modal-body--settings-tabs">
+            <div
+              className="settings-modal-tabpanel"
+              role="tabpanel"
+              id="settings-panel-overview"
+              aria-labelledby="settings-tab-overview"
+              hidden={safeTab !== "overview"}
+            >
+              <SettingsOverviewPanel
+                healthLoading={healthLoading}
+                catalogKnown={catalogKnown}
+                claimed={claimed}
+                catalogDotVariant={catalogDotVariant}
+                catalogStatHint={catalogStatHint}
+                desktopLoading={desktopLoading}
+                isDesktop={isDesktop}
+                workspaceReady={workspaceReady}
+                workspaceDir={desktopStatus?.workspace.workspaceDir}
+                configuredKeysCount={configuredKeysCount}
+                r2Ready={r2Ready}
+                desktopR2={desktopStatus?.r2}
+              />
             </div>
-            <p className="settings-hint">
-              <strong>שורות בקטלוג</strong> — כמה קליפים מוגדרים ב־{' '}
-              <span dir="ltr" lang="en" className="settings-ltr-seg">
-                catalog
-              </span>
-              {' '}
-              (מטא-דאטה ומקטעים).{' '}
-              <strong>קבצי מקור במטמון</strong> — האם קובץ הווידאו המלא קיים בתיקיית הווידאו של סביבת העבודה.
-            </p>
-            <p className="settings-hint">
-              כש־<span dir="ltr" className="settings-ltr-seg">R2</span> מחובר, הרנדר יכול למשוך את קובץ המקור מהענן לתיקייה זמנית לצורך החיתוך — מטמון מקומי מלא אינו תנאי לרנדר.
-            </p>
-            <div id="catalog-status">
-              {healthLoading && (
-                <div className="catalog-card">
-                  <span className="dot is-healthy is-muted" />
-                  <span>טוען…</span>
-                </div>
-              )}
-              {!healthLoading && healthError && (
-                <div className="catalog-card">
-                  <span className="dot is-missing" />
-                  <span>
-                    שגיאה בטעינת מצב הקטלוג:{' '}
-                    <span dir="ltr" lang="en" className="settings-ltr-snippet">
-                      {healthError}
+
+            <div
+              className="settings-modal-tabpanel"
+              role="tabpanel"
+              id="settings-panel-catalog"
+              aria-labelledby="settings-tab-catalog"
+              hidden={safeTab !== "catalog"}
+            >
+              <SettingsCatalogPanel
+                onRefreshHealth={loadHealth}
+                healthLoading={healthLoading}
+                healthError={healthError}
+                health={health}
+                claimed={claimed}
+                missing={missing}
+                ver={ver}
+                onDiskCount={onDiskCount}
+                catalogDotVariant={catalogDotVariant}
+              />
+              {!isDesktop ? (
+                <section className="settings-section settings-section--browser-note">
+                  <div className="catalog-card">
+                    <span className="dot is-missing" />
+                    <span>
+                      טאב דסקטופ, AI וענן מוצגים רק בעת הפעלה דרך אפליקציית WeatherV1 (Electron).
                     </span>
-                  </span>
-                </div>
-              )}
-              {!healthLoading && !healthError && health && (
-                <>
-                  <div className="catalog-card catalog-card--multiline">
-                    <StatusDot variant={catalogDotVariant} />
-                    <div className="catalog-card__lines" dir="rtl">
-                      <div className="catalog-card__line">
-                        <span className="count">
-                          <bdi>{claimed}</bdi>
-                        </span>{' '}
-                        קליפים בקטלוג
-                        <span className="ver" dir="ltr" lang="en">
-                          {' '}
-                          · {ver}
-                        </span>
-                      </div>
-                      <div className="catalog-card__sub">
-                        <bdi>{onDiskCount}</bdi> מתוך <bdi>{claimed}</bdi> קבצי מקור במטמון המקומי
-                      </div>
-                    </div>
                   </div>
-                  {missing.length > 0 && (
-                    <details className="catalog-missing-details">
-                      <summary className="catalog-missing-summary">
-                        <span className="catalog-missing-summary__he">
-                          חסרים במטמון (<bdi>{missing.length}</bdi>) — לחץ להרחבה
-                        </span>
-                        <span dir="ltr" lang="en" className="catalog-missing-preview">
-                          {missing.slice(0, 6).join(", ")}
-                          {missing.length > 6 ? "…" : ""}
-                        </span>
-                      </summary>
-                      <div className="catalog-missing-list-scroll" dir="ltr" lang="en">
-                        {missing.join(", ")}
-                      </div>
-                    </details>
-                  )}
-                </>
-              )}
-            </div>
-          </section>
-
-          <section className="settings-section">
-            <div className="settings-section-header">
-              <h3>אפליקציית דסקטופ</h3>
-              {saved && <span className="settings-saved-pill">נשמר</span>}
-              {isDesktop && (
-                <button
-                  type="button"
-                  className="settings-link"
-                  onClick={loadDesktopStatus}
-                  disabled={desktopLoading || saving}
-                >
-                  רענן
-                </button>
-              )}
-            </div>
-            {!isDesktop && (
-              <div className="catalog-card">
-                <span className="dot is-missing" />
-                <span>מצב דסקטופ לא פעיל בחלון הנוכחי.</span>
-              </div>
-            )}
-            {isDesktop && desktopError && (
-              <div className="catalog-card">
-                <span className="dot is-missing" />
-                <span>
-                  שגיאה בטעינת מצב הדסקטופ:{' '}
-                  <span dir="ltr" lang="en" className="settings-ltr-snippet">
-                    {desktopError}
-                  </span>
-                </span>
-              </div>
-            )}
-            {isDesktop && !desktopError && (
-              <div className="settings-status-grid">
-                <div className="settings-status-row">
-                  <StatusDot variant={workspaceReady ? "ok" : "danger"} />
-                  <span>סביבת עבודה</span>
-                  <code title={desktopStatus?.workspace.workspaceDir}>{shortPath(desktopStatus?.workspace.workspaceDir)}</code>
-                </div>
-                <div className="settings-status-row">
-                  <StatusDot variant={ffmpegReady ? "ok" : "danger"} />
-                  <span>FFmpeg</span>
-                  <code title={appInfo?.ffmpeg.ffmpegPath ?? undefined}>{shortPath(appInfo?.ffmpeg.ffmpegPath)}</code>
-                </div>
-                <div className="settings-status-row">
-                  <StatusDot variant={Boolean(desktopStatus?.keys.anthropic_configured) ? "ok" : "danger"} />
-                  <span>Anthropic</span>
-                  <span>{desktopStatus?.keys.anthropic_configured ? "מוגדר" : "לא מוגדר"}</span>
-                </div>
-                <div className="settings-status-row">
-                  <StatusDot variant={Boolean(desktopStatus?.keys.openai_configured) ? "ok" : "danger"} />
-                  <span>OpenAI</span>
-                  <span>{desktopStatus?.keys.openai_configured ? "מוגדר" : "לא מוגדר"}</span>
-                </div>
-                <div className="settings-status-row">
-                  <StatusDot variant={Boolean(desktopStatus?.keys.gemini_configured) ? "ok" : "danger"} />
-                  <span>Gemini</span>
-                  <span>{desktopStatus?.keys.gemini_configured ? "מוגדר" : "לא מוגדר"}</span>
-                </div>
-                <div className="settings-status-row">
-                  <span className="dot is-healthy" />
-                  <span>גרסה</span>
-                  <span>{appInfo ? `${appInfo.appVersion} · Electron ${appInfo.electronVersion}` : "טוען…"}</span>
-                </div>
-                <div className="settings-status-row">
-                  <span className="dot is-healthy" />
-                  <span>עדכונים</span>
-                  <span>{updateState ? updateState.status : "טוען…"}</span>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {isDesktop && (
-            <section className="settings-section">
-              <div className="settings-section-header">
-                <h3>מפתחות API</h3>
-              </div>
-              <p className="settings-hint">
-                הזן לפחות מפתח אחד מבין Anthropic או OpenAI לתכנון. תמלול האודיו רץ דרך OpenAI Whisper
-                בענן, ולכן צריך OPENAI_API_KEY כדי לתמלל.
-              </p>
-              <SecretField
-                label="ANTHROPIC_API_KEY"
-                value={anthropicKey}
-                configured={Boolean(desktopStatus?.keys.anthropic_configured)}
-                placeholder={desktopStatus?.keys.anthropic_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"}
-                disabled={saving}
-                onValueChange={(value) => {
-                  setAnthropicKey(value);
-                  setSaved(false);
-                }}
-                onClear={() => void clearKey("anthropic")}
-              />
-              <SecretField
-                label="OPENAI_API_KEY"
-                value={openaiKey}
-                configured={Boolean(desktopStatus?.keys.openai_configured)}
-                placeholder={desktopStatus?.keys.openai_configured ? "מוגדר — הקלד כדי להחליף" : "לא מוגדר"}
-                disabled={saving}
-                onValueChange={(value) => {
-                  setOpenaiKey(value);
-                  setSaved(false);
-                }}
-                onClear={() => void clearKey("openai")}
-              />
-              <SecretField
-                label="GEMINI_API_KEY"
-                value={geminiKey}
-                configured={Boolean(desktopStatus?.keys.gemini_configured)}
-                placeholder={desktopStatus?.keys.gemini_configured ? "מוגדר — הקלד כדי להחליף" : "אופציונלי"}
-                disabled={saving}
-                onValueChange={(value) => {
-                  setGeminiKey(value);
-                  setSaved(false);
-                }}
-                onClear={() => void clearKey("gemini")}
-              />
-            </section>
-          )}
-
-          {isDesktop && (
-            <section className="settings-section">
-              <div className="settings-section-header">
-                <h3>{appInfo?.packaged ? "מטמון מקומי" : "סביבת עבודה ונתיבי FFmpeg"}</h3>
-                <button type="button" className="settings-link" onClick={pickWorkspace} disabled={saving}>
-                  בחר תיקייה
-                </button>
-              </div>
-              {appInfo?.packaged ? (
-                <p className="settings-hint">
-                  R2 הוא מקור האמת לקטלוג. התיקייה הזו משמשת כמטמון מקומי לקליפים שירדו מהענן,
-                  לתצוגות מקדימות, להעלאות ולקבצי הפלט.
-                  {desktopStatus?.storage?.localCache.isDefault
-                    ? " כרגע נעשה שימוש במטמון ברירת המחדל של האפליקציה."
-                    : " נבחרה תיקייה ידנית."}
-                </p>
-              ) : (
-                <p className="settings-hint">
-                  בגרסת פיתוח התיקייה הזו היא סביבת העבודה המקומית הראשית.
-                </p>
-              )}
-              <label className="settings-field">
-                <span>{appInfo?.packaged ? "תיקיית מטמון" : "Workspace"}</span>
-                <input
-                  value={workspaceDir}
-                  onChange={(e) => { setWorkspaceDir(e.target.value); setSaved(false); }}
-                  placeholder={
-                    appInfo?.packaged && desktopStatus?.storage?.localCache.isDefault
-                      ? `ברירת מחדל · ${shortPath(desktopStatus?.storage?.localCache.workspaceDir)}`
-                      : ""
-                  }
-                />
-              </label>
-              {appInfo?.packaged && !desktopStatus?.storage?.localCache.isDefault && (
-                <div className="settings-actions-row">
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    onClick={() => void resetWorkspaceToDefault()}
-                    disabled={saving}
-                  >
-                    חזור למטמון ברירת המחדל
-                  </button>
-                </div>
-              )}
-              <div className="settings-field-grid">
-                <label className="settings-field">
-                  <span>FFmpeg</span>
-                  <input value={ffmpegPath} onChange={(e) => { setFfmpegPath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
-                </label>
-                <label className="settings-field">
-                  <span>FFprobe</span>
-                  <input value={ffprobePath} onChange={(e) => { setFfprobePath(e.target.value); setSaved(false); }} placeholder="PATH או נתיב מלא" />
-                </label>
-              </div>
-              <p className="settings-hint">
-                ניקוי מטמון מוחק מהדיסק פוסטרים, תצוגות מקדימות, תמונות מקטעים וקבצי רינדור זמניים. הקטלוג וקבצי הווידאו המלאים לא נמחקים.
-                הדפדפן עשוי להמשיך להציג תמונות ישנות עד רענון מלא (עד כשעה).
-              </p>
-              <div className="settings-actions-row">
-                <button
-                  type="button"
-                  className="btn btn--secondary"
-                  onClick={() => void clearDerivedCache()}
-                  disabled={saving || desktopLoading || clearCacheBusy}
-                >
-                  {clearCacheBusy ? "מנקה…" : "נקה מטמון"}
-                </button>
-              </div>
-              {desktopStatus && desktopStatus.workspace.missing.length > 0 && (
-                <p className="settings-hint">
-                  חסרים בתיקייה: {desktopStatus.workspace.missing.join(", ")}
-                </p>
-              )}
-            </section>
-          )}
-
-          {isDesktop && appInfo?.packaged && (
-            <section className="settings-section">
-              <div className="settings-section-header">
-                <h3>הסרת אפליקציה</h3>
-              </div>
-              <p className="settings-hint">
-                ב-Windows יופעל מסיר ההתקנה של המערכת. ב-macOS ייפתח Finder ליד WeatherV1.app — סגור את האפליקציה
-                וגרור את היישום לסל המחזור.
-              </p>
-              <div className="settings-actions-row">
-                <button
-                  type="button"
-                  className="btn btn--danger"
-                  onClick={() => void beginUninstall()}
-                  disabled={saving || desktopLoading || uninstallBusy}
-                >
-                  {uninstallBusy ? "מעבד…" : "הסר את WeatherV1"}
-                </button>
-              </div>
-            </section>
-          )}
-
-          {isDesktop && (
-            <section className="settings-section">
-              <div className="settings-section-header">
-                <h3>{appInfo?.packaged ? "ספריית הענן (R2)" : "Cloudflare R2 Sync"}</h3>
-                <button
-                  type="button"
-                  className="settings-link"
-                  onClick={() => void pullCatalogFromR2()}
-                  disabled={syncingR2 || !desktopStatus?.r2?.ready}
-                >
-                  {syncingR2 ? "מסנכרן…" : "משוך קטלוג"}
-                </button>
-              </div>
-              {appInfo?.packaged ? (
-                <>
-                  <p className="settings-hint">
-                    החיבור ל-R2 מוגדר מראש בגרסת ההפצה. אם חסרים פרטי הכניסה, מסך התחברות יופיע בעת הפעלת האפליקציה.
-                  </p>
-                  <div className="settings-status-grid">
-                    <div className="settings-status-row">
-                      <StatusDot variant={Boolean(desktopStatus?.r2?.ready) ? "ok" : "danger"} />
-                      <span>סטטוס</span>
-                      <span>
-                        {desktopStatus?.r2?.ready
-                          ? "מחובר"
-                          : desktopStatus?.r2?.enabled
-                            ? "ממתין להתחברות"
-                            : "לא פעיל"}
-                      </span>
-                    </div>
-                    {desktopStatus?.r2?.appUsername && (
-                      <div className="settings-status-row">
-                        <span className="dot is-healthy" />
-                        <span>שם משתמש</span>
-                        <code>{desktopStatus.r2.appUsername}</code>
-                      </div>
-                    )}
-                    {desktopStatus?.r2?.gatewayUrl && (
-                      <div className="settings-status-row">
-                        <span className="dot is-healthy" />
-                        <span>Gateway</span>
-                        <code title={desktopStatus.r2.gatewayUrl}>{shortPath(desktopStatus.r2.gatewayUrl)}</code>
-                      </div>
-                    )}
-                    {desktopStatus?.r2?.bucketName && (
-                      <div className="settings-status-row">
-                        <span className="dot is-healthy" />
-                        <span>Bucket</span>
-                        <code>{desktopStatus.r2.bucketName}</code>
-                      </div>
-                    )}
-                    <div className="settings-status-row">
-                      <span className="dot is-healthy" />
-                      <span>סנכרון אחרון</span>
-                      <span>{desktopStatus?.r2?.lastSyncAt ?? "טרם בוצע"}</span>
-                    </div>
-                  </div>
-                  {desktopStatus?.r2?.ready && (
-                    <div className="settings-actions-row">
-                      <button type="button" className="btn btn--ghost" onClick={() => clearKey("r2")} disabled={saving}>
-                        התנתק (נקה סיסמה)
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <p className="settings-hint">
-                    בפיתוח אפשר להגדיר Gateway, Tenant ו-Bucket באופן ידני. בגרסת ההפצה הם נעולים על
-                    החשבון של WeatherV1.
-                  </p>
-                  <label className="settings-field">
-                    <span>Gateway URL</span>
-                    <input
-                      value={r2GatewayUrl}
-                      onChange={(e) => {
-                        setR2GatewayUrl(e.target.value);
-                        setSaved(false);
-                      }}
-                      placeholder="https://weatherv1-r2-gateway.example.workers.dev"
-                    />
-                  </label>
-                  <label className="settings-field">
-                    <span>Tenant ID</span>
-                    <input
-                      value={r2TenantId}
-                      onChange={(e) => {
-                        setR2TenantId(e.target.value);
-                        setSaved(false);
-                      }}
-                      placeholder="default"
-                    />
-                  </label>
-                  <label className="settings-field">
-                    <span>Bucket</span>
-                    <input
-                      value={r2BucketName}
-                      onChange={(e) => {
-                        setR2BucketName(e.target.value);
-                        setSaved(false);
-                      }}
-                      placeholder="weatherv1-media"
-                    />
-                  </label>
-                  <label className="settings-field">
-                    <span>שם משתמש</span>
-                    <input
-                      value={r2AppUsername}
-                      onChange={(e) => {
-                        setR2AppUsername(e.target.value);
-                        setSaved(false);
-                      }}
-                      placeholder="weatherv1"
-                      autoComplete="username"
-                      spellCheck={false}
-                    />
-                  </label>
-                  <label className="settings-field">
-                    <span>סיסמה</span>
-                    <div className="settings-password">
-                      <input
-                        type={showR2Password ? "text" : "password"}
-                        className="settings-password__input"
-                        value={r2AppPassword}
-                        onChange={(e) => {
-                          setR2AppPassword(e.target.value);
-                          setSaved(false);
-                        }}
-                        placeholder={desktopStatus?.r2?.ready ? "מוגדר — הקלד כדי להחליף" : "סיסמה לעובד R2"}
-                        autoComplete="current-password"
-                      />
-                      <button
-                        type="button"
-                        className="settings-password__toggle"
-                        onClick={() => setShowR2Password((v) => !v)}
-                        aria-pressed={showR2Password}
-                        aria-label={showR2Password ? "הסתר סיסמה" : "הצג סיסמה"}
-                        tabIndex={-1}
-                      >
-                        {showR2Password ? "הסתר" : "הצג"}
-                      </button>
-                      {desktopStatus?.r2?.ready && (
-                        <button type="button" className="btn btn--ghost" onClick={() => clearKey("r2")} disabled={saving}>
-                          נקה
-                        </button>
-                      )}
-                    </div>
-                  </label>
-                  <label className="settings-radio">
-                    <input
-                      type="checkbox"
-                      checked={r2Enabled}
-                      onChange={(e) => {
-                        setR2Enabled(e.target.checked);
-                        setSaved(false);
-                      }}
-                    />
-                    <span>הפעל סנכרון ל-R2</span>
-                  </label>
-                </>
-              )}
-              {desktopStatus?.r2?.enabled ? (
-                <p className="settings-hint">
-                  כפתור Export JSON מוריד את snapshot של המשימות מתוך R2 (<code dir="ltr">jobs/jobs.json</code>) — מה שהשרת משחזר לענן.
-                </p>
+                </section>
               ) : null}
-              <div className="settings-actions-row">
-                {desktopStatus?.r2?.enabled ? (
-                  <button
-                    type="button"
-                    className="btn btn--secondary"
-                    id="export-jobs-json-r2"
-                    onClick={() => void exportJobsFromR2()}
-                    disabled={exportR2JobsLoading || syncingR2 || saving || !desktopStatus?.r2?.ready}
-                    title={
-                      desktopStatus?.r2?.ready
-                        ? "ייצוא jobs.json מ-R2"
-                        : "נדרש חיבור תקף ל-R2"
-                    }
-                  >
-                    {exportR2JobsLoading ? "טוען…" : "Export JSON"}
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  onClick={() => void pushCatalogToR2(false)}
-                  disabled={syncingR2 || saving || !desktopStatus?.r2?.ready}
-                >
-                  דחוף קטלוג
-                </button>
-                {desktopStatus?.r2?.conflict && (
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    onClick={() => void pushCatalogToR2(true)}
-                    disabled={syncingR2 || saving || !desktopStatus?.r2?.ready}
-                  >
-                    החלף מרוחק
-                  </button>
-                )}
-              </div>
-              {desktopStatus?.r2 && (
-                <p className="settings-hint">
-                  מקומי: {desktopStatus.r2.counts.local} · בענן בלבד: {desktopStatus.r2.counts.cloudOnly} · מסנכרן: {desktopStatus.r2.counts.syncing} · שגיאות: {desktopStatus.r2.counts.error}
-                </p>
-              )}
-              {desktopStatus?.r2?.error && <p className="settings-hint">{desktopStatus.r2.error}</p>}
-              {desktopStatus?.r2?.conflict && <p className="settings-hint">הקטלוג המרוחק השתנה. משוך מרחוק או החלף את המרוחק.</p>}
-            </section>
-          )}
+            </div>
 
-          {isDesktop && (
-            <section className="settings-section">
-              <div className="settings-section-header">
-                <h3 id="settings-llm-provider-title">בחירת ספק LLM</h3>
-              </div>
-              <fieldset
-                className="settings-field"
-                aria-labelledby="settings-llm-provider-title"
+            {isDesktop ? (
+              <div
+                className="settings-modal-tabpanel"
+                role="tabpanel"
+                id="settings-panel-desktop"
+                aria-labelledby="settings-tab-desktop"
+                hidden={safeTab !== "desktop"}
               >
-                <legend className="sr-only">ספק LLM לתכנון סצנות וקליפים</legend>
-                {(
-                  [
-                    ["auto", "אוטומטי — לפי המפתחות הקיימים"],
-                    [
-                      "anthropic",
-                      <span dir="ltr">Anthropic (Claude)</span>,
-                    ],
-                    [
-                      "openai",
-                      <span dir="ltr">OpenAI (GPT-4o)</span>,
-                    ],
-                  ] as Array<[LlmProviderPreference, ReactNode]>
-                ).map(([id, label]) => (
-                  <label key={id} className="settings-radio">
-                    <input
-                      type="radio"
-                      name="llm-provider"
-                      value={id}
-                      checked={llmProvider === id}
-                      onChange={() => {
-                        setLlmProvider(id);
-                        setSaved(false);
-                      }}
-                    />
-                    <span className="settings-radio-label">{label}</span>
-                  </label>
-                ))}
-              </fieldset>
-              <p className="settings-hint">
-                תמלול האודיו (Whisper) דורש מפתח OpenAI לפי הסעיף &quot;מפתחות API&quot; למעלה.
-              </p>
-            </section>
-          )}
-        </div>
-        <footer className="modal-footer">
-          {isDesktop && (
-            <button className="btn" type="submit" disabled={saving || desktopLoading}>
-              {saving ? "שומר…" : "שמור דסקטופ"}
+                <SettingsDesktopPanel
+                  saved={saved}
+                  onRefreshDesktopStatus={loadDesktopStatus}
+                  desktopLoading={desktopLoading}
+                  saving={saving}
+                  desktopError={desktopError}
+                  desktopStatus={desktopStatus}
+                  appInfo={appInfo}
+                  updateState={updateState}
+                  workspaceReady={workspaceReady}
+                  ffmpegReady={ffmpegReady}
+                  onPickWorkspace={pickWorkspace}
+                  workspaceDir={workspaceDir}
+                  onWorkspaceDirChange={(v) => {
+                    setWorkspaceDir(v);
+                    setSaved(false);
+                  }}
+                  ffmpegPath={ffmpegPath}
+                  ffprobePath={ffprobePath}
+                  onFfmpegPathChange={(v) => {
+                    setFfmpegPath(v);
+                    setSaved(false);
+                  }}
+                  onFfprobePathChange={(v) => {
+                    setFfprobePath(v);
+                    setSaved(false);
+                  }}
+                  onResetWorkspaceToDefault={resetWorkspaceToDefault}
+                  onClearDerivedCache={clearDerivedCache}
+                  clearCacheBusy={clearCacheBusy}
+                  onBeginUninstall={beginUninstall}
+                  uninstallBusy={uninstallBusy}
+                />
+              </div>
+            ) : null}
+
+            {isDesktop ? (
+              <div
+                className="settings-modal-tabpanel"
+                role="tabpanel"
+                id="settings-panel-ai"
+                aria-labelledby="settings-tab-ai"
+                hidden={safeTab !== "ai"}
+              >
+                <SettingsAiPanel
+                  desktopStatusKeys={desktopStatusKeys}
+                  saving={saving}
+                  anthropicKey={anthropicKey}
+                  openaiKey={openaiKey}
+                  geminiKey={geminiKey}
+                  onAnthropicKeyChange={(v) => {
+                    setAnthropicKey(v);
+                    setSaved(false);
+                  }}
+                  onOpenaiKeyChange={(v) => {
+                    setOpenaiKey(v);
+                    setSaved(false);
+                  }}
+                  onGeminiKeyChange={(v) => {
+                    setGeminiKey(v);
+                    setSaved(false);
+                  }}
+                  onClearKey={(provider) => void clearKey(provider)}
+                  llmProvider={llmProvider}
+                  onLlmProviderChange={(pref) => {
+                    setLlmProvider(pref);
+                    setSaved(false);
+                  }}
+                />
+              </div>
+            ) : null}
+
+            {isDesktop ? (
+              <div
+                className="settings-modal-tabpanel"
+                role="tabpanel"
+                id="settings-panel-cloud"
+                aria-labelledby="settings-tab-cloud"
+                hidden={safeTab !== "cloud"}
+              >
+                <SettingsCloudPanel
+                  appInfo={appInfo}
+                  desktopStatus={desktopStatus}
+                  saving={saving}
+                  syncingR2={syncingR2}
+                  exportR2JobsLoading={exportR2JobsLoading}
+                  r2Enabled={r2Enabled}
+                  r2GatewayUrl={r2GatewayUrl}
+                  r2TenantId={r2TenantId}
+                  r2BucketName={r2BucketName}
+                  r2AppUsername={r2AppUsername}
+                  r2AppPassword={r2AppPassword}
+                  showR2Password={showR2Password}
+                  onR2GatewayUrlChange={(v) => {
+                    setR2GatewayUrl(v);
+                    setSaved(false);
+                  }}
+                  onR2TenantIdChange={(v) => {
+                    setR2TenantId(v);
+                    setSaved(false);
+                  }}
+                  onR2BucketNameChange={(v) => {
+                    setR2BucketName(v);
+                    setSaved(false);
+                  }}
+                  onR2AppUsernameChange={(v) => {
+                    setR2AppUsername(v);
+                    setSaved(false);
+                  }}
+                  onR2AppPasswordChange={(v) => {
+                    setR2AppPassword(v);
+                    setSaved(false);
+                  }}
+                  onR2EnabledChange={(enabled) => {
+                    setR2Enabled(enabled);
+                    setSaved(false);
+                  }}
+                  onShowR2PasswordToggle={() => setShowR2Password((v) => !v)}
+                  onClearR2Key={() => void clearKey("r2")}
+                  onPullCatalogFromR2={pullCatalogFromR2}
+                  onPushCatalogToR2={(replace) => void pushCatalogToR2(replace)}
+                  onExportJobsFromR2={exportJobsFromR2}
+                />
+              </div>
+            ) : null}
+          </div>
+          <footer className="modal-footer">
+            {isDesktop ? (
+              <button className="btn" type="submit" disabled={saving || desktopLoading}>
+                {saving ? "שומר…" : "שמור דסקטופ"}
+              </button>
+            ) : null}
+            <button className="btn btn--ghost" type="button" onClick={onClose}>
+              סגור
             </button>
-          )}
-          <button className="btn btn--ghost" type="button" onClick={onClose}>סגור</button>
-        </footer>
+          </footer>
         </form>
       </div>
     </div>

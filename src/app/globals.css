@@ -1115,6 +1115,65 @@
             flex-direction: column;
             max-width: 760px;
         }
+        .modal-dialog--settings .settings-modal-intro {
+            flex: none;
+            padding: 0.65rem 1.1rem 0;
+            background: var(--v1-paper);
+        }
+        .modal-dialog--settings .settings-modal-intro__text {
+            margin: 0;
+            font-size: 0.82rem;
+            color: var(--v1-ink-muted);
+            line-height: 1.45;
+            text-align: start;
+        }
+        .modal-dialog--settings .settings-modal-tabstrip {
+            position: relative;
+            flex: none;
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 1rem;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            padding: 0.35rem 1.1rem 0;
+            background: var(--v1-cream);
+            border-block-end: 1px solid var(--v1-coral-soft);
+            -webkit-overflow-scrolling: touch;
+        }
+        .modal-dialog--settings .settings-modal-tab {
+            background: transparent;
+            border: none;
+            padding: 0.55rem 0;
+            color: var(--v1-ink-muted);
+            font: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            border-block-end: 3px solid transparent;
+            margin-block-end: -1px;
+            white-space: nowrap;
+            flex: none;
+            transition: color 0.15s ease;
+        }
+        .modal-dialog--settings .settings-modal-tab:hover { color: var(--v1-ink); }
+        .modal-dialog--settings .settings-modal-tab.is-active {
+            color: var(--v1-ink);
+            font-weight: 800;
+            border-block-end-color: var(--v1-red);
+        }
+        .modal-dialog--settings .settings-modal-tab:focus-visible {
+            outline: 2px solid var(--v1-coral);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        .modal-dialog--settings .modal-body--settings-tabs {
+            padding-block-start: 0.85rem;
+        }
+        .modal-dialog--settings .settings-modal-tabpanel[hidden] {
+            display: none;
+        }
+        .modal-dialog--settings .settings-section--browser-note {
+            margin-block-start: 0.75rem;
+        }
         .settings-overview {
             display: grid;
             grid-template-columns: minmax(14rem, 0.85fr) minmax(0, 1.3fr);
