@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "docs/download-page/**"
+      - "public/weather-v1-icon-512.png"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -26,8 +27,9 @@ jobs:
       - name: Render download page
         run: |
           set -euo pipefail
-          mkdir -p _site
+          mkdir -p _site/public
           sed "s|__REPO__|${{ github.repository }}|g" docs/download-page/index.html.template > _site/index.html
+          cp public/weather-v1-icon-512.png _site/public/weather-v1-icon-512.png
           touch _site/.nojekyll
 
       - uses: actions/upload-pages-artifact@v4
