@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Weather V1 — מחולל תחזית לווידאו אנכי: קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים מהקטלוג ורינדור.">
+  <meta name="description" content="Weather V1 — מחולל תחזית לווידאו אנכי: קריינות, תמלול, תכנון סצנות, התאמת וידאו מהקטלוג ורינדור.">
   <title>Weather V1 — מצגת פתיחה</title>
   <style>
     :root {
@@ -1892,22 +1892,6 @@
         0 10px 22px rgb(200 32 43 / 0.07);
     }
 
-    .pitch-app-shell[data-highlight="segments"] .pitch-bento__cell--timeline {
-      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 48%, rgb(0 0 0 / 0.1));
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 28%, transparent),
-        0 12px 26px rgb(200 32 43 / 0.09);
-    }
-
-    .pitch-app-shell[data-highlight="segments"] .pitch-timeline-scene {
-      border-radius: 10px;
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 35%, rgb(0 0 0 / 0.08));
-    }
-
-    .pitch-app-shell[data-highlight="segments"] .pitch-timeline-scene-thumb {
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 40%, transparent);
-    }
-
     .pitch-app-shell[data-highlight="render"] .pitch-mini-card--render {
       border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 38%, rgb(0 0 0 / 0.1));
       box-shadow: 0 0 0 1px color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 22%, transparent);
@@ -1928,10 +1912,6 @@
 
     @media (prefers-reduced-motion: no-preference) {
       .pitch-app-shell[data-highlight="timeline"] .pitch-bento__cell--timeline {
-        animation: pitch-app-softpulse 3s ease-in-out infinite;
-      }
-
-      .pitch-app-shell[data-highlight="segments"] .pitch-bento__cell--timeline {
         animation: pitch-app-softpulse 3s ease-in-out infinite;
       }
 
@@ -2641,7 +2621,9 @@
       border-radius: 22px;
       background:
         linear-gradient(135deg, rgb(255 255 255 / .94), rgb(252 233 228 / .55));
-      box-shadow: var(--shadow);
+      box-shadow:
+        0 14px 34px rgb(15 23 42 / 0.07),
+        4px 4px 0 rgb(0 0 0 / 0.1);
     }
 
     .intro-pipeline-flow {
@@ -2663,7 +2645,7 @@
       border: 2px solid var(--v1-ink);
       border-radius: 16px 20px 14px 18px;
       background: rgb(255 255 255 / .92);
-      box-shadow: 3px 3px 0 var(--v1-ink);
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.12);
       font-weight: 950;
       font-size: clamp(0.76rem, 0.32vw + 0.7rem, 0.94rem);
       line-height: 1.25;
@@ -2691,10 +2673,6 @@
       transform: rotate(-0.4deg);
     }
 
-    .intro-pipeline-node--f {
-      transform: rotate(0.42deg);
-    }
-
     .intro-pipeline-arrow {
       flex-shrink: 0;
       font-size: clamp(1.05rem, 0.6vw + 0.85rem, 1.35rem);
@@ -2719,11 +2697,14 @@
       margin-top: 6px;
       max-width: none;
       width: 100%;
-      padding: 16px 18px;
+      padding: clamp(16px, 2.5vw, 20px) clamp(18px, 2.8vw, 22px);
       border: 2px solid var(--v1-ink);
-      border-radius: 16px;
-      background: rgb(255 255 255 / 0.68);
-      box-shadow: 4px 4px 0 rgb(0 0 0 / 0.07);
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 0.96), rgb(252 236 232 / 0.45));
+      box-shadow:
+        0 14px 34px rgb(15 23 42 / 0.07),
+        4px 4px 0 rgb(0 0 0 / 0.1);
     }
 
     #intro .hero-downloads-title {
@@ -2746,7 +2727,9 @@
       padding: 0 12px;
       font-size: clamp(0.72rem, 0.55vw + 0.65rem, 0.88rem);
       border-radius: 12px;
-      box-shadow: 2px 2px 0 var(--v1-ink);
+      box-shadow:
+        0 6px 18px rgb(249 84 62 / 0.22),
+        2px 2px 0 rgb(0 0 0 / 0.12);
       gap: 10px;
       justify-content: center;
       text-align: center;
@@ -2765,6 +2748,9 @@
       min-height: 48px;
       font-size: clamp(0.78rem, 0.5vw + 0.68rem, 0.92rem);
       font-weight: 950;
+      box-shadow:
+        0 8px 22px rgb(249 84 62 / 0.28),
+        2px 2px 0 rgb(0 0 0 / 0.14);
     }
 
     #intro .download-links--hero > .download-links--hero-extra {
@@ -3359,7 +3345,7 @@
       #intro .hero-downloads {
         padding: 14px 16px;
         margin-top: 6px;
-        border-radius: 14px;
+        border-radius: 18px;
       }
 
       #intro .hero-downloads-title {
@@ -3714,9 +3700,7 @@
         label: "התקנה ל־Mac",
         href: "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-macOS.zip",
         primary: true
-      },
-      { label: "כל הגרסאות", href: "https://github.com/barmoshe/weatherv1-next/releases", secondary: true },
-      { label: "מאגר GitHub", href: "https://github.com/barmoshe/weatherv1-next", secondary: true }
+      }
     ];
 
     const storySections = [
@@ -3725,8 +3709,8 @@
         kicker: "Weather V1",
         title: "מה זה בקצרה",
         lead:
-          "Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת את התוכן לסצנות, ומתאימה לכל סצנה קטעי וידאו רקע מתוך הקטלוג שלכם. בסוף נוצר בסיס לסרטון תחזית אנכי — קריינות, וידאו רקע ערוך ומוזיקת רקע.",
-        bullets: ["קריינות → תמלול → תוכנית סצנות → התאמת סגמנטים → רינדור → צפייה בתוצאה"],
+          "Weather V1 היא אפליקציה שמקבלת הקלטת קריינות של תחזית, מתמללת אותה, מפרקת את התוכן לסצנות, ומתאימה לכל סצנה קטעי וידאו רקע מתוך הקטלוג של V1. בסוף התהליך נוצר בסיס לסרטון תחזית בפורמט אנכי, שכולל קריינות, וידאו רקע ערוך ומוזיקת רקע.",
+        bullets: ["קריינות → תמלול → תכנון סצנות → התאמת וידאו → רינדור"],
         visual: "introPipeline",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
@@ -3734,12 +3718,12 @@
       {
         id: "studio",
         kicker: "סטודיו",
-        title: "טאב הסטודיו — איפה יוצרים את התחזית",
+        title: "הסטודיו — המקום שבו יוצרים תחזית",
         lead:
-          "בסטודיו עובדים על תחזית אחת בכל פעם: העלאת קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים מהקטלוג, רינדור ואז צפייה בתוצאה — הכל באותה סביבת עבודה, בלי להיכנס לעומק טכני.",
+          "בטאב הסטודיו עובדים על תחזית אחת בכל פעם. התהליך מתחיל מהעלאת קובץ קריינות, ממשיך לתמלול ותכנון סצנות, ואז להתאמת קטעי וידאו מתוך הקטלוג. לאחר מכן אפשר לרנדר את הסרטון ולצפות בתוצאה. המטרה של המסך היא לרכז את כל תהליך יצירת הסרטון במקום אחד — בצורה פשוטה וברורה, בלי צורך להיכנס לעומק טכני.",
         bullets: [
           "מוקאפ חי שמרגיש כמו האפליקציה עצמה — לא צילום מסך שטוח",
-          "שכבת אשף מדגישה לפי סדר: העלאת קריינות · תמלול · תוכנית סצנות · התאמת סגמנטים · רינדור · צפייה בתוצאה"
+          "להדגיש לפי שלבים: העלאת קריינות · תמלול · תכנון סצנות · התאמת קטעי וידאו מהקטלוג · רינדור וצפייה בתוצאה"
         ],
         visual: "studioDashboard",
         transition: "ttb",
@@ -3749,12 +3733,14 @@
       {
         id: "catalog",
         kicker: "קטלוג",
-        title: "טאב הקטלוג — הבסיס החומרים שלכם",
+        title: "הקטלוג — מאגר החומרים של V1",
         lead:
-          "הקטלוג שלכם מרכז וידאו ותמונות במקום אחד — עם חיפוש, סינון וצפייה בקטעים. לכל פריט יכולים להיות פוסטר לכל סגמנט, תיאור קצר ותגיות, ואפשר להוסיף חומרים חדשים דרך האפליקציה. מהקטלוג המערכת בוחרת רקע מתאים לכל סצנה.",
+          "הקטלוג מרכז את חומרי הווידאו והתמונות של V1 במקום אחד. זה לא רק מקום לאחסן קבצים, אלא מסך עבודה שמאפשר לחפש, לסנן, לצפות בקטעים, ולהבין אילו חומרים יכולים להתאים לכל סצנה בתחזית. לכל קטע יכולים להיות פוסטר, תיאור קצר, תגיות וחלוקה לסגמנטים — כדי שהמערכת תוכל להשתמש בו בצורה חכמה בזמן תכנון הסרטון.",
         bullets: [
-          "סרטונים ותמונות · חלוקה לסגמנטים · פוסטר לכל סגמנט · תיאור קצר · תגיות · העלאה מהאפליקציה",
-          "מסר מרכזי: הקטלוג הוא שכבת החומרים שממנה נגזרות ההתאמות לווידאו בכל סצנה — לא תיקייה אקראית"
+          "חיפוש וסינון · העלאת וידאו חדש · רשת כרטיסים של קטעים",
+          "פריט פתוח עם פוסטר, תיאור, תגיות וסגמנטים",
+          "חיווי אם החומר מקומי או בענן — בלי הסבר טכני במצגת",
+          "מסר מרכזי: מהקטלוג נבחרים רקעים מתאימים מתוך חומרי V1 — לא וידאו אקראי"
         ],
         visual: "catalogBrowser",
         transition: "ttb",
@@ -3764,13 +3750,13 @@
       {
         id: "thinking",
         kicker: "מהלך חשיבה",
-        title: "איך המערכת חושבת — בלי ז׳רגון",
+        title: "מה קורה לקריינות מהרגע שהיא נכנסת ועד לתכנון הסצנות",
         lead:
-          "אחרי שהקריינות הופכת לטקסט, המערכת מנסה להבין את התחזית: מה נאמר בכל חלק, איפה המעברים, ואיזה סוג רקע מתאים. מתוך זה נבנית תוכנית סצנות, ואז נבחרים סגמנטים מהקטלוג שלכם שמתאימים לכל רגע.",
+          "Weather V1 לא רק מתמללת את הקריינות — היא מנסה להבין את המבנה של התחזית: מה הנושא בכל חלק, איפה יש מעבר בין רעיונות, ואיזה סוג רקע ויזואלי מתאים לכל רגע. אחרי שהקריינות הופכת לטקסט, המערכת בונה תוכנית סצנות: מה נאמר בכל חלק, מה משך הסצנה, ואילו קטעי וידאו מהקטלוג יכולים להתאים.",
         bullets: [
-          "הרצף: קריינות → תמלול → הבנת משמעות → חלוקה לסצנות → התאמת סגמנטים מהקטלוג",
-          "הקטלוג הוא שכבת ידע — לא רק קבצים: מה יש בכל סגמנט, מה האווירה, ולמה הוא מתאים לסצנה מסוימת בתחזית",
-          "בקוד ובממשק: איך סצנות, סגמנטים ותגיות מיוצגים — להשלמה מהריפו כשמשווים למציאות"
+          "הרצף הלוגי: קריינות → תמלול → הבנת משמעות → חלוקה לסצנות → התאמת קטעים מהקטלוג",
+          "הקטלוג כשכבת ידע: לא רק איפה הקובץ — מה יש בכל קטע, איזו אווירה, ולאיזה סוג סצנה הוא מתאים",
+          "ככל שהקטלוג מתויג טוב יותר, ההצעות להתאמות במציאות התחזית מדויקות יותר"
         ],
         visual: "cognitionFlow",
         transition: "ttb",
@@ -3779,13 +3765,13 @@
       },
       {
         id: "render",
-        kicker: "רינדור",
-        title: "רינדור הסרטון — מה נכנס לפלט",
+        kicker: "אחרי הרינדור",
+        title: "מה יוצא בסוף התהליך",
         lead:
-          "בשלב הרינדור האפליקציה מרכיבה בסיס לסרטון מקריינות, מקטעי וידאו רקע שנבחרו מהקטלוג שלכם וממוזיקת רקע כשמתאים. הפלט הנוכחי הוא בסיס טוב לעריכה נוספת — עדיין בלי חבילה גרפית מלאה (לוגואים, כותרות, שכבות גרפיות או מסכי מותג מלאים). איך נראה תהליך הרינדור בפועל בממשק — להשלמה מהריפו.",
+          "בסיום הרינדור מתקבל קובץ וידאו שמחבר בין הקריינות, קטעי הווידאו שנבחרו מהקטלוג, ומוזיקת רקע אם קיימת התאמה. בשלב הנוכחי הפלט הוא בסיס עריכה לסרטון תחזית: קריינות, וידאו רקע ערוך ומוזיקת רקע. הפלט עדיין לא חבילה גרפית מלאה של V1 — למשל לוגואים, כותרות, שכבות גרפיות או מסכי מותג מלאים עשויים להידרש עריכה חיצונית.",
         bullets: [
-          "בממשק: צפייה · הורדה · דוגמת פורמט אנכי",
-          "להשלמה מהריפו: צעדי הרינדור והחיוויים במסך"
+          "בממשק: וידאו לבדיקה · צפייה · הורדה",
+          "פורמט לדוגמה: MP4 אנכי (9:16)"
         ],
         visual: "finalVideoOutput",
         transition: "ttb",
@@ -3795,14 +3781,14 @@
       {
         id: "local-first",
         kicker: "מקומית",
-        title: "למה מקומית עכשיו, ומה אפשר בהמשך",
+        title: "מקומית היום — אפשרויות להמשך",
         lead:
-          "כרגע Weather V1 מיועדת להתקנה על מחשב אצלכם — זה הנתיב הפשוט לעבודה עם קבצי מדיה ועם רינדור.",
+          "בשלב הנוכחי Weather V1 היא אפליקציה מקומית שמתקינים על מחשב. הסיבה המרכזית היא שהעבודה עם קבצי וידאו ואודיו, ובעיקר תהליך הרינדור, מתבצעים על המחשב שבו האפליקציה מותקנת.",
         bullets: [
-          "הקטלוג: כיום בענן פרטי לפיתוח ובדיקות · לשימוש קבוע תבחרו אם לשמור אותו מקומית בסביבת העבודה שלכם או באחסון בענן שלכם",
-          "הרינדור רץ על המחשב שבו האפליקציה מותקנת",
-          "אם בעתיד תרצו לעבוד מהטלפון או ממכשיר מרחוק — זה דורש פתרון ענן מתקדם יותר שבו גם הקטלוג וגם הרינדור זמינים מרחוק",
-          "בשלב הזה התקנה מקומית היא הדרך הישירה ביותר להתחיל לעבוד עם האפליקציה"
+          "הקטלוג: כיום בענן פרטי לפיתוח ובדיקות · לשימוש קבוע צריך לבחור שמירה מקומית של הקטלוג אצל V1 או אחסון בענן של V1",
+          "הרינדור מתבצע על המחשב המקומי",
+          "עבודה מהטלפון או מכל מכשיר מרחוק בעתיד תדרוש פתרון ענן מתקדם יותר — קטלוג ורינדור זמינים מרחוק",
+          "בשלב הנוכחי הפתרון המקומי הוא הדרך הפשוטה והישירה ביותר להפעיל את האפליקציה אצל V1"
         ],
         visual: "localFirstPitch",
         transition: "ttb",
@@ -3811,13 +3797,13 @@
       },
       {
         id: "analytics",
-        kicker: "אנליטיקות",
-        title: "אנליטיקות ועלויות — עדיין בפיתוח ובטא",
+        kicker: "בטא",
+        title: "תמונת מצב על שימוש ועלויות",
         lead:
-          "בטאב האנליטיקות רואים תמונת מצב על כל עבודה או סרטון — בערך כמה טוקנים נוצלו ומה נראית העלות הכספית המשוערת. האזור עדיין בטא; הנתונים להערכה בלבד.",
+          "בטאב האנליטיקה אפשר לראות הערכה פשוטה של השימוש בעבודה או בסרטון — כמה טוקנים נוצלו בערך ומה העלות המשוערת. זה עדיין אזור בפיתוח ובטא; הנתונים להערכה בלבד ולא כדוח רשמי או חשבונית.",
         bullets: [
-          "לכל עבודה / סרטון: טוקנים משוערים ועלות משוערת — למצגת",
-          "להשלמה מהריפו: אילו שדות ומדדים מוצגים בפועל בממשק"
+          "מספר עבודות עם נתוני שימוש · טוקנים משוערים · עלות משוערת — למצגת",
+          "הנתונים משוערים ומתעדכנים · נועדו לתמונת מצב על שימוש ועלות — לא להחלפת דוח כספי רשמי"
         ],
         visual: "analyticsSimple",
         transition: "ttb",
@@ -3829,13 +3815,12 @@
         kicker: "הצעת מחיר",
         title: "עלות והמשך עבודה",
         lead:
-          "מחיר ראשוני ושקוף, עם מקום לעדכון אם ההיקף משתנה.",
+          "חשוב לשמור על שקיפות: מה נכלל בהצעה, מה קורה כשמשנים היקף, ואיך מתייחסים למע״מ ולחשבונית כשנדרש.",
         bullets: [
-          "הצעת מחיר ראשונית: 4,000 ₪ לפני מע״מ / אם צריך — ניסוח סופי מול רואה חשבון כשנדרש",
-          "המחיר כולל את מה שכבר נעשה ואת המשך העבודה עד להתקנה ראשונית אצלכם במחשבי העבודה הרלוונטיים",
-          "לא רק שעות פיתוח — גם שימוש בכלי AI ובטוקנים תוך כדי העבודה",
-          "אם בהמשך העבודה תצמח מעבר למוסכמות — נדבר ונעדכן מחיר בהתאם",
-          "מה נבנה בפועל (לפי הריפו והקומיטים האחרונים): אפליקציית דסקטופ עם סטודיו, קטלוג, תכנון סצנות ותמלול מקריינות, רינדור בסיסי לאנכי, הגדרות וסנכרון לענן — ודף ההורדות הזה במצגת."
+          "הצעת מחיר ראשונית: 4,000 ₪ לפני מע״מ — ניסוח סופי מול רואה חשבון כשנדרש",
+          "המחיר כולל את העבודה שבוצעה עד עכשיו ואת המשך העבודה עד התקנה ראשונה של האפליקציה אצל V1",
+          "הפיתוח כולל גם שימוש בכלי AI ובטוקנים תוך כדי העבודה — לא רק שעות",
+          "אם בהמשך נראה שהעבודה גדלה מעבר למה שתכננו — נדבר ונעדכן את המחיר בהתאם"
         ],
         visual: "pricingHero",
         transition: "ttb",
@@ -3845,15 +3830,15 @@
       {
         id: "v1-next",
         kicker: "סיכום והמשך",
-        title: "מה צריך כדי להתקדם להתקנה ראשונית",
+        title: "מה צריך מ־V1 כדי להתקדם",
         lead:
-          "כמה החלטות פשוטות וחיבורים בסיסיים — ואפשר להתחיל לעבוד באמת על תחזיות.",
+          "כדי לעבור לשימוש ראשוני באפליקציה, צריך לקבל כמה החלטות ולחבר את הדברים הבסיסיים להפעלה.",
         bullets: [
           "אישור כיוון העבודה",
-          "החלטה לגבי אחסון הקטלוג — מקומי או בענן שלכם",
+          "החלטה איפה יישמר הקטלוג — מקומי או בענן של V1",
           "התקנה ראשונית במחשבי העבודה הרלוונטיים",
-          "חיבור OpenAI API key",
-          "חיבור Claude API key רק אם בוחרים להשתמש ב־Claude לתכנון",
+          "חיבור OpenAI API key לתמלול ולפי הצורך גם לתכנון",
+          "חיבור Claude API key רק אם בוחרים להשתמש ב־Claude לתכנון הסצנות",
           "סבב התאמות לפי פידבק אחרי שימוש אמיתי"
         ],
         visual: "v1NextChecklist",
@@ -3911,8 +3896,8 @@
     let studioWizardStepTimer = null;
     let studioWizardAnimProgress = 0;
     let studioWizardDelegated = false;
-    const STUDIO_WIZARD_STEP_COUNT = 6;
-    const STUDIO_WIZARD_TWEEN_SEC = 13;
+    const STUDIO_WIZARD_STEP_COUNT = 5;
+    const STUDIO_WIZARD_TWEEN_SEC = 11;
     /** Thinking slide: scrub sync on cognition-flow diagram (same lifecycle as studio wizard). */
     let thinkingFlowScrollTrigger = null;
     let thinkingFlowPassiveCleanup = null;
@@ -4096,10 +4081,9 @@
           <div class="pitch-wizard-track" aria-hidden="true">
             <span class="pitch-wiz-step is-active" data-wiz="upload"><span class="pitch-wiz-step-num">1</span> העלאת קריינות</span>
             <span class="pitch-wiz-step" data-wiz="transcript"><span class="pitch-wiz-step-num">2</span> תמלול</span>
-            <span class="pitch-wiz-step" data-wiz="timeline"><span class="pitch-wiz-step-num">3</span> תוכנית סצנות</span>
-            <span class="pitch-wiz-step" data-wiz="segments"><span class="pitch-wiz-step-num">4</span> התאמת סגמנטים</span>
-            <span class="pitch-wiz-step" data-wiz="render"><span class="pitch-wiz-step-num">5</span> רינדור</span>
-            <span class="pitch-wiz-step" data-wiz="output"><span class="pitch-wiz-step-num">6</span> צפייה בתוצאה</span>
+            <span class="pitch-wiz-step" data-wiz="timeline"><span class="pitch-wiz-step-num">3</span> תכנון סצנות</span>
+            <span class="pitch-wiz-step" data-wiz="render"><span class="pitch-wiz-step-num">4</span> רינדור</span>
+            <span class="pitch-wiz-step" data-wiz="output"><span class="pitch-wiz-step-num">5</span> וידאו לבדיקה</span>
           </div>
           <header class="pitch-app-head" aria-hidden="true">
             <div class="pitch-app-head-brand">
@@ -4147,14 +4131,14 @@
               </div>
               <section class="pitch-bento__cell--timeline">
                 <span class="pitch-cell-badge pitch-cell-badge--done">הושלם</span>
-                <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">🎚️</span> תוכנית סצנות</div>
+                <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">🎚️</span> תכנון סצנות</div>
                 <div class="pitch-timeline-lanes">
                   ${timelineHtml}
                 </div>
               </section>
               <section class="pitch-bento__cell--output">
                 <span class="pitch-cell-badge pitch-cell-badge--done">הושלם</span>
-                <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📱</span> צפייה בתוצאה</div>
+                <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📱</span> וידאו לבדיקה</div>
                 <div class="pitch-device">
                   <div class="pitch-device-screen pitch-device-screen--preview">
                     <img class="pitch-device-poster" src="${escapeHtml(firstPosterSrc)}" alt="" width="180" height="320" decoding="async" loading="lazy" />
@@ -4334,7 +4318,7 @@
               <span class="pitch-catalog-upload" role="presentation">העלאת וידאו</span>
             </div>
           </header>
-          <p class="pitch-catalog-sync-hint">חומר מקומי אצלכם או בענן — בלי הסבר טכני במצגת.</p>
+          <p class="pitch-catalog-sync-hint">חומר מקומי או בענן — בלי הסבר טכני במצגת.</p>
           <div class="pitch-catalog-filters" role="presentation">
             ${filtersHtml}
           </div>
@@ -4366,7 +4350,7 @@
                   ${tagsHtml}
                 </div>
               </section>
-              <p class="pitch-catalog-bridge">מהקטלוג שלכם נבחרים רקעים מתאימים לכל סצנה — לא קבצים ברירת מחדל אקראיים.</p>
+              <p class="pitch-catalog-bridge">מהקטלוג נבחרים רקעים מתאימים מתוך חומרי V1 — לא וידאו אקראי.</p>
             </aside>
           </div>
         </div>`;
@@ -4376,9 +4360,9 @@
       const steps = [
         "קריינות",
         "תמלול",
-        "הבנת משמעות",
+        'הבנת משמעות<span class="pitch-flow-step-break"></span>וניסוח תכנית',
         "חלוקה לסצנות",
-        "התאמת סגמנטים מהקטלוג"
+        "התאמת קטעים מהקטלוג"
       ];
       const parts = [];
       steps.forEach((labelInner, i) => {
@@ -4406,7 +4390,7 @@
         ${parts.join("")}
         <aside class="pitch-thinking-callout" aria-hidden="true">
           <div class="pitch-thinking-callout__title">קטלוג כשכבת ידע</div>
-          <p class="pitch-thinking-callout__body">התיוג בקטלוג לא רק מציין איפה הקובץ — אלא מה יש בכל סגמנט, איזו אווירה יש בו ולמה הוא מתאים לסצנה מסוימת בתחזית. ככל שהקטלוג שלכם מתויג טוב יותר, ההתאמות בתוכן התחזית מדויקות יותר.</p>
+          <p class="pitch-thinking-callout__body">התיוג בקטלוג לא רק מציין איפה הקובץ — אלא מה יש בכל קטע, איזו אווירה יש בו ולאיזה סוג סצנה הוא יכול להתאים. ככל שהקטלוג מתויג טוב יותר, ההתאמות לתחזית מדויקות יותר.</p>
         </aside>
         <div class="pitch-scene-hint-chips" aria-hidden="true">
           <span class="pitch-scene-chip">תיאור</span>
@@ -4450,8 +4434,8 @@
       <div class="pitch-local-first-visual__bg" aria-hidden="true"></div>
       <div class="pitch-local-first-grid">
         ${pillar("💻", "מקומית על המחשב", "העבודה עם קבצי מדיה והרינדור מתבצעים על המחשב שבו האפליקציה מותקנת — לכן בשלב הזה מתקינים אפליקציה, לא רק דפדפן.")}
-        ${pillar("☁️", "הקטלוג — החלטה בהמשך", "כיום הקטלוג בענן פרטי לפיתוח ובדיקות. לשימוש קבוע: שמירה מקומית בסביבת העבודה שלכם או אחסון בענן שלכם.")}
-        ${pillar("📱", "טלפון ומרחוק · עתיד", "אם בעתיד תרצו מהטלפון או ממכשיר מרחוק — נדרש ענן עם קטלוג ורינדור זמינים מרחוק.")}
+        ${pillar("☁️", "הקטלוג — החלטה בהמשך", "כיום הקטלוג בענן פרטי לפיתוח ובדיקות. לשימוש קבוע אצל V1: שמירה מקומית של הקטלוג או אחסון בענן של V1.")}
+        ${pillar("📱", "טלפון ומרחוק · עתיד", "אם בעתיד רוצים לעבוד מהטלפון או מכל מכשיר מרחוק — נדרש ענן עם קטלוג ורינדור זמינים מרחוק.")}
       </div>
     </div>`;
     }
@@ -4461,10 +4445,10 @@
       <div class="pitch-pricing-hero__card">
         <div class="pitch-pricing-hero__eyebrow">הצעה ראשונית · להמחשה במצגת</div>
         <div class="pitch-pricing-hero__amount">4,000<span class="pitch-pricing-hero__currency">₪</span></div>
-        <div class="pitch-pricing-hero__vat">לפני מע״מ · אם צריך</div>
+        <div class="pitch-pricing-hero__vat">לפני מע״מ</div>
         <p class="pitch-pricing-hero__fineprint">דמו מצגת — לא חוזה</p>
         <div class="pitch-pricing-hero__chips">
-          <span class="pitch-pricing-hero__chip">עד התקנה ראשונה אצלכם</span>
+          <span class="pitch-pricing-hero__chip">עד התקנה ראשונה אצל V1</span>
           <span class="pitch-pricing-hero__chip">כולל AI וטוקנים בפיתוח</span>
         </div>
       </div>
@@ -4482,7 +4466,10 @@
       return `<div class="pitch-v1-next-visual" dir="rtl" aria-hidden="true">
       <div class="pitch-v1-next-visual__inner">
         ${row("🧭", escapeHtml("אישור כיוון העבודה"))}
-        ${row("📚", escapeHtml("החלטה לגבי אחסון הקטלוג — מקומי או בענן שלכם"))}
+        ${row(
+          "📚",
+          `${escapeHtml("החלטה איפה יישמר הקטלוג — מקומי או בענן של ")}${en("V1")}`
+        )}
         ${row("🖥", escapeHtml("התקנה ראשונית במחשבי העבודה הרלוונטיים"))}
         ${row(
           "🔑",
@@ -4494,7 +4481,7 @@
         )}
         ${row("🔁", escapeHtml("סבב התאמות לפי פידבק אחרי שימוש אמיתי"))}
       </div>
-      <p class="pitch-v1-next-visual__note">המטרה: התקנה ראשונית אצלכם, ניסוי על תחזיות אמיתיות, ואז דיוק לפי מה שתראו בשטח.</p>
+      <p class="pitch-v1-next-visual__note">המטרה היא להגיע להתקנה ראשונית אצל V1, לבדוק את התהליך על תחזיות אמיתיות, ואז לדייק את המערכת לפי הצרכים בפועל.</p>
     </div>`;
     }
 
@@ -4555,23 +4542,21 @@
       if (type === "localFirstPitch") {
         return localFirstPitchHtml();
       }
-      if (type === "catalogBrowser") {
-        return catalogBrowserHtml();
-      }
-      if (type === "analyticsSimple") {
-        return `<div class="pricing-board visual-board" dir="rtl">
+      return `<div class="pricing-board visual-board" dir="rtl">
           <div class="pricing-head"><span>מדד</span><span>ערך להמחשה</span></div>
           <div class="pricing-row"><span>עבודות עם נתוני שימוש</span><small class="mixed-ltr" lang="en" dir="ltr">12</small></div>
           <div class="pricing-row"><span>טוקנים משוערים</span><small class="mixed-ltr" lang="en" dir="ltr">420K in · 160K out</small></div>
           <div class="pricing-row"><span>עלות משוערת לעבודה</span><small class="mixed-ltr" lang="en" dir="ltr">~$47.20</small></div>
           <div class="token-chip"><span>בטא · מהיסטוריה מקומית</span><span>להערכה בלבד — לא דוח רשמי או חשבונית</span></div>
         </div>`;
-      }
       if (type === "pricingHero") {
         return pricingHeroHtml();
       }
       if (type === "v1NextChecklist") {
         return v1NextChecklistHtml();
+      }
+      if (type === "catalogBrowser") {
+        return catalogBrowserHtml();
       }
       if (type === "mess") {
         return `<div class="visual-board">
@@ -4641,13 +4626,11 @@
             <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
             <span class="intro-pipeline-node intro-pipeline-node--b">תמלול</span>
             <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
-            <span class="intro-pipeline-node intro-pipeline-node--c">תוכנית סצנות</span>
+            <span class="intro-pipeline-node intro-pipeline-node--c">תכנון סצנות</span>
             <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
-            <span class="intro-pipeline-node intro-pipeline-node--d">התאמת סגמנטים</span>
+            <span class="intro-pipeline-node intro-pipeline-node--d">התאמת וידאו</span>
             <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
             <span class="intro-pipeline-node intro-pipeline-node--e">רינדור</span>
-            <span class="intro-pipeline-arrow" aria-hidden="true">←</span>
-            <span class="intro-pipeline-node intro-pipeline-node--f">צפייה בתוצאה</span>
           </div>
         </div>`;
       }
@@ -4704,7 +4687,7 @@
           : `<div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>`;
       const introPipelineBlock =
         section.id === "intro" && section.visual === "introPipeline"
-          ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ייצור: קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים, רינדור, צפייה בתוצאה">${visualMarkup("introPipeline", section)}</figure>`
+          ? `<figure class="intro-pipeline-wrap" role="group" aria-label="זרימת ייצור: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור">${visualMarkup("introPipeline", section)}</figure>`
           : "";
       const bulletsBlock =
         section.id === "intro" && section.visual === "introPipeline"
@@ -5155,7 +5138,7 @@
       const panel = document.getElementById("studio");
       const shell = panel?.querySelector(".pitch-app-shell");
       if (!panel || !shell) return;
-      const zones = ["upload", "transcript", "timeline", "segments", "render", "output"];
+      const zones = ["upload", "transcript", "timeline", "render", "output"];
       const zi = Math.min(zones.length - 1, Math.max(0, Math.floor(p * zones.length)));
       shell.dataset.highlight = zones[zi];
 
@@ -5167,7 +5150,7 @@
       }
 
       const active = zones[zi];
-      const railIds = new Set(["upload", "transcript", "timeline", "segments", "render", "output"]);
+      const railIds = new Set(["upload", "transcript", "timeline", "render", "output"]);
       shell.querySelectorAll(".pitch-wiz-step").forEach(el => {
         const w = el.getAttribute("data-wiz");
         el.classList.toggle("is-active", railIds.has(active) && w === active);

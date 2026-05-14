@@ -2641,7 +2641,9 @@
       border-radius: 22px;
       background:
         linear-gradient(135deg, rgb(255 255 255 / .94), rgb(252 233 228 / .55));
-      box-shadow: var(--shadow);
+      box-shadow:
+        0 14px 34px rgb(15 23 42 / 0.07),
+        4px 4px 0 rgb(0 0 0 / 0.1);
     }
 
     .intro-pipeline-flow {
@@ -2663,7 +2665,7 @@
       border: 2px solid var(--v1-ink);
       border-radius: 16px 20px 14px 18px;
       background: rgb(255 255 255 / .92);
-      box-shadow: 3px 3px 0 var(--v1-ink);
+      box-shadow: 2px 2px 0 rgb(0 0 0 / 0.12);
       font-weight: 950;
       font-size: clamp(0.76rem, 0.32vw + 0.7rem, 0.94rem);
       line-height: 1.25;
@@ -2719,11 +2721,14 @@
       margin-top: 6px;
       max-width: none;
       width: 100%;
-      padding: 16px 18px;
+      padding: clamp(16px, 2.5vw, 20px) clamp(18px, 2.8vw, 22px);
       border: 2px solid var(--v1-ink);
-      border-radius: 16px;
-      background: rgb(255 255 255 / 0.68);
-      box-shadow: 4px 4px 0 rgb(0 0 0 / 0.07);
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 0.96), rgb(252 236 232 / 0.45));
+      box-shadow:
+        0 14px 34px rgb(15 23 42 / 0.07),
+        4px 4px 0 rgb(0 0 0 / 0.1);
     }
 
     #intro .hero-downloads-title {
@@ -2746,7 +2751,9 @@
       padding: 0 12px;
       font-size: clamp(0.72rem, 0.55vw + 0.65rem, 0.88rem);
       border-radius: 12px;
-      box-shadow: 2px 2px 0 var(--v1-ink);
+      box-shadow:
+        0 6px 18px rgb(249 84 62 / 0.22),
+        2px 2px 0 rgb(0 0 0 / 0.12);
       gap: 10px;
       justify-content: center;
       text-align: center;
@@ -2765,6 +2772,9 @@
       min-height: 48px;
       font-size: clamp(0.78rem, 0.5vw + 0.68rem, 0.92rem);
       font-weight: 950;
+      box-shadow:
+        0 8px 22px rgb(249 84 62 / 0.28),
+        2px 2px 0 rgb(0 0 0 / 0.14);
     }
 
     #intro .download-links--hero > .download-links--hero-extra {
@@ -3359,7 +3369,7 @@
       #intro .hero-downloads {
         padding: 14px 16px;
         margin-top: 6px;
-        border-radius: 14px;
+        border-radius: 18px;
       }
 
       #intro .hero-downloads-title {
@@ -3714,9 +3724,7 @@
         label: "התקנה ל־Mac",
         href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-macOS.zip",
         primary: true
-      },
-      { label: "כל הגרסאות", href: "https://github.com/__REPO__/releases", secondary: true },
-      { label: "מאגר GitHub", href: "https://github.com/__REPO__", secondary: true }
+      }
     ];
 
     const storySections = [
