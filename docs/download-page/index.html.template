@@ -486,6 +486,117 @@
       font-size: 0.9rem;
     }
 
+    /* First slide: hero + bullets + downloads + preview fits one viewport */
+    #intro.story-panel {
+      padding-block: calc(var(--nav-height) + 14px) 24px;
+      padding-inline: clamp(14px, 3.8vw, 52px);
+    }
+
+    #intro .panel-inner {
+      align-items: stretch;
+      gap: clamp(10px, 2.5vw, 32px);
+      grid-template-columns: minmax(0, 1.08fr) minmax(min(160px, 18vw), 0.38fr);
+      box-sizing: border-box;
+      max-height: calc(100svh - var(--nav-height) - 40px);
+    }
+
+    #intro .panel-copy {
+      gap: clamp(8px, 1.5vw, 14px);
+      min-height: 0;
+      align-self: center;
+    }
+
+    #intro h1 {
+      font-size: clamp(1.7rem, 4.8vw, 4rem);
+      max-width: 12ch;
+      line-height: 0.98;
+    }
+
+    #intro .lead {
+      font-size: clamp(0.88rem, 1.25vw, 1.22rem);
+      max-width: 28rem;
+      line-height: 1.28;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    #intro .bullets {
+      margin-top: 0;
+      gap: 5px;
+      font-size: clamp(0.8rem, 1.05vw, 0.98rem);
+    }
+
+    #intro .bullets li::before {
+      margin-top: 0.45em;
+    }
+
+    #intro .hero-downloads {
+      margin-top: 2px;
+      max-width: none;
+      width: 100%;
+    }
+
+    #intro .hero-downloads-title {
+      margin: 0 0 5px;
+      font-size: clamp(0.78rem, 1vw, 0.94rem);
+    }
+
+    #intro .download-links--hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    #intro .download-links--hero a {
+      min-height: 34px;
+      padding: 0 8px 0 10px;
+      font-size: 0.72rem;
+      border-radius: 10px;
+      box-shadow: 2px 2px 0 var(--v1-ink);
+      gap: 8px;
+    }
+
+    #intro .panel-visual {
+      min-height: 0;
+      max-height: min(46svh, 320px);
+      align-self: center;
+    }
+
+    #intro .phone-frame {
+      width: min(118px, 18vw);
+      max-height: min(42svh, 300px);
+      padding: 10px;
+    }
+
+    #intro .phone-screen {
+      font-size: clamp(0.78rem, 1.2vw, 1rem);
+    }
+
+    @media (max-height: 720px) {
+      #intro .panel-inner {
+        max-height: calc(100svh - var(--nav-height) - 28px);
+      }
+
+      #intro h1 {
+        font-size: clamp(1.45rem, 4.2vh, 2.75rem);
+      }
+
+      #intro .lead {
+        -webkit-line-clamp: 3;
+      }
+
+      #intro .panel-visual {
+        max-height: min(38svh, 260px);
+      }
+
+      #intro .phone-frame {
+        max-height: min(36svh, 240px);
+      }
+    }
+
     .excal-embed-wrap {
       width: min(100%, 520px);
       display: grid;
@@ -634,12 +745,46 @@
         grid-template-columns: 1fr;
         gap: 28px;
       }
+
+      #intro .panel-inner {
+        max-height: none;
+      }
+
+      #intro .lead {
+        display: block;
+        -webkit-line-clamp: unset;
+        line-clamp: unset;
+        overflow: visible;
+      }
+
+      #intro .download-links--hero {
+        gap: 8px;
+      }
+
+      #intro .download-links--hero a {
+        min-height: 44px;
+        font-size: 0.82rem;
+      }
+
+      #intro .panel-visual {
+        max-height: none;
+      }
+
+      #intro .phone-frame {
+        width: min(230px, 62vw);
+        max-height: none;
+      }
       .panel-copy {
         justify-items: stretch;
       }
       h1, h2 {
         max-width: 11ch;
         font-size: clamp(2.8rem, 15vw, 4.7rem);
+      }
+
+      #intro h1 {
+        font-size: clamp(2rem, 9vw, 3.85rem);
+        max-width: 12ch;
       }
       .panel-visual {
         min-height: auto;
@@ -670,6 +815,25 @@
         width: 100%;
         min-height: 100svh;
         scroll-snap-align: start;
+      }
+
+      #intro .panel-inner {
+        max-height: none;
+      }
+
+      #intro .lead {
+        display: block;
+        -webkit-line-clamp: unset;
+        line-clamp: unset;
+        overflow: visible;
+      }
+
+      #intro .panel-visual {
+        max-height: none;
+      }
+
+      #intro .phone-frame {
+        max-height: none;
       }
       .scroll-progress {
         display: none;
