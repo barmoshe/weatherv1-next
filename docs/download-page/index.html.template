@@ -559,7 +559,6 @@
       border-color: rgb(0 0 0 / 0.12);
     }
 
-    #v1-next .panel-visual,
     #pricing .panel-visual,
     #analytics .panel-visual,
     #local-first .panel-visual,
@@ -570,6 +569,13 @@
       min-height: min(52svh, 480px);
       align-items: stretch;
       place-items: stretch;
+    }
+
+    #v1-next .panel-visual {
+      min-height: min(52svh, 480px);
+      place-items: start;
+      align-items: start;
+      align-content: start;
     }
 
     @media (min-width: 861px) {
@@ -732,7 +738,7 @@
 
     /* —— Pitch: V1 next steps checklist (`#v1-next`) —— */
     .pitch-v1-next-visual {
-      width: min(100%, 520px);
+      width: min(100%, 400px);
       margin-inline: auto;
       border-radius: 22px;
       border: 1px solid rgb(0 0 0 / 0.09);
@@ -3754,16 +3760,16 @@
       },
       {
         id: "analytics",
-        kicker: "בטא · תמונה למנהלים",
+        kicker: "עלות ושימוש",
         title: "אנליטיקת שימוש",
         lead:
-          "בטאב האנליטיקה רואים תמונה משוערת על עלות ושימוש בעבודות מההיסטוריה המקומית — כדי לנהל תקציב ולהבין כיוון, לא כדי לקבל דוח מס או חשבונית רשמית. האזור עדיין בפיתוח והנתונים מתעדכנים.",
+          "לוח סיכום בסגנון מחירון — לא מסך האפליקציה. המספרים להמחשה בלבד; בפועל מבוססים על היסטוריה מקומית. האזור במוצר עדיין ב־beta ובפיתוח — לא דוח מס או חשבונית רשמית.",
         bullets: [
           "במצגת: 2–3 נתונים פשוטים בלבד — למשל מספר עבודות, טוקנים משוערים, עלות משוערת",
           "לא חובה פירוק לפי LLM / תמלול / דגם / יום אם זה לא נדרש למסר",
           "ליד הסיכומים מודגש שהנתונים הם הערכות — לא חשבוניות"
         ],
-        visual: "usageAnalytics",
+        visual: "analyticsSimple",
         transition: "ttb",
         theme: { paper: "#f8f7fc", accent: "#4f46e5" }
       },
@@ -3800,67 +3806,6 @@
         visual: "v1NextChecklist",
         transition: "ttb",
         theme: { paper: "#faf8f5", accent: "#78716c" }
-      },
-      {
-        id: "llm-sample",
-        kicker: "דוגמת מעבר",
-        title: "טוקנים ומחירון מודלים",
-        lead: "שקופית לדוגמה לבדיקת מעברים בין פרקים. המספרים להמחשה בלבד — החליפו למקור הפיננסי הרשמי שלכם.",
-        bullets: ["חישוב לפי קלט+פלט בטוקנים", "השוו מודלים לפני בחירה", "שריינו אלרט כשמתקרבים לתקרה"],
-        visual: "llmPricing",
-        transition: "rtl",
-        theme: { paper: "#eef1ff", accent: "#4f52c8" }
-      },
-      {
-        id: "tutorial-sample",
-        kicker: "דוגמת מעבר",
-        title: "מדריך קצר",
-        lead: "שלבים פשוטים כדי להרגיש את אנימציית הגלילה והזזת השקופיות בגרסת שולחן העבודה.",
-        bullets: [
-          "גללו לאט ובמכוון למדוד scrub",
-          "במובייל הפרקים נערמים אנכית",
-          'בנתוני השקופית: `transition: "ttb"` ← כניסת TTB בולטת; `transition: "rtl"` ← מעבר צדדי',
-          'לאותה מחרוזת ב־`desktopCluster` ב־2+ פרקים עוקבים: עמודה אופקית אחת עם גלילה אנכית פנימית (בדסקטופ אופקי)',
-          "TTB בדסקטופ: בהגדרות המחבר במקור — `AUTHOR_DESKTOP_STORY_AXIS` ← `\"vertical\"`",
-          "אפשר למחוק את פרקי `pitch-test-*` והמדריך הזה אחרי הבדיקה"
-        ],
-        visual: "tutorialDemo",
-        transition: "ttb",
-        theme: { paper: "#f2fff7", accent: "#169a62" }
-      },
-      {
-        id: "pitch-test-01",
-        kicker: "דוגמת מעבר · 01",
-        title: "שקופית בדיקה 01",
-        lead: "כרטיס עם מספר גדול — קל לאמת סדר פרקים בגלילה אופקית או מאלף למטה.",
-        bullets: ["מפריד בין פרקים בלי משחקי עיצוב", "שלוש הראשונות: אותו `desktopCluster` = עמודה אופקית אחת + גלילה אנכית פנימית"],
-        visual: "numberedSample",
-        sampleNumber: 1,
-        desktopCluster: "pitch-vertical-stack-demo",
-        theme: { paper: "#f0f4ff", accent: "#3940ad" }
-      },
-      {
-        id: "pitch-test-02",
-        kicker: "דוגמת מעבר · 02",
-        title: "שקופית בדיקה 02",
-        lead: "המשיכו לגלול — מה שאתם רואים כאן אמור לעקוב בסדר הנכון בסרגל וב־snap.",
-        bullets: ["02 → 03 באותה עמודה — גלילת גלגל בתוך המסך סוגרות לפני המשך האופקי", "מעבר צדדי: בשקיפית יש גם transition: rtl בהנפתכניסה"],
-        visual: "numberedSample",
-        transition: "rtl",
-        sampleNumber: 2,
-        desktopCluster: "pitch-vertical-stack-demo",
-        theme: { paper: "#fff4f8", accent: "#c7155a" }
-      },
-      {
-        id: "pitch-test-03",
-        kicker: "דוגמת מעבר · 03",
-        title: "שקופית בדיקה 03",
-        lead: "סיום הבלוק של שלוש השקופיות הממוזגות — אחר כך ממשיכים בפרקי המוצר הרגילים.",
-        bullets: ["בדיקת scrub איטית (במצב דסקטופ אופקי)", "במצב TTB: שלוש השקופיות האלה מתפרסות ברצף אנכי"],
-        visual: "numberedSample",
-        sampleNumber: 3,
-        desktopCluster: "pitch-vertical-stack-demo",
-        theme: { paper: "#f2fffc", accent: "#0f8f7f" }
       }
     ];
 
@@ -4433,52 +4378,6 @@
     </div>`;
     }
 
-    function usageAnalyticsHtml() {
-      return `<div class="pitch-app-shell pitch-app-shell--analytics" dir="rtl" aria-hidden="true">
-          <header class="pitch-app-head" aria-hidden="true">
-            <div class="pitch-app-head-brand">
-              <span class="pitch-app-btn pitch-app-btn--dark" role="presentation">תחזית חדשה</span>
-              <span class="pitch-app-pill mixed-ltr" lang="en" dir="ltr">V1</span>
-            </div>
-            <div class="pitch-app-head-title">מחולל תחזית · וידאו אנכי</div>
-            <div class="pitch-app-head-actions"><span class="pitch-app-btn pitch-app-btn--ghost" role="presentation">הגדרות</span></div>
-          </header>
-          <div class="pitch-app-main">
-            <nav class="pitch-app-tabs" aria-hidden="true">
-              <span class="pitch-app-tab">סטודיו</span>
-              <span class="pitch-app-tab">פעילים</span>
-              <span class="pitch-app-tab">היסטוריה</span>
-              <span class="pitch-app-tab">קטלוג</span>
-              <span class="pitch-app-tab is-active">אנליטיקה</span>
-            </nav>
-            <div class="pitch-analytics-workspace">
-              <div class="pitch-analytics-head">
-                <span class="pitch-analytics-screen-title">אנליטיקת שימוש</span>
-                <span class="pitch-analytics-beta mixed-ltr" lang="en" dir="ltr">beta</span>
-              </div>
-              <div class="pitch-analytics-cards">
-                <article class="pitch-analytics-card">
-                  <div class="pitch-analytics-card__label">עבודות עם נתוני שימוש</div>
-                  <div class="pitch-analytics-card__value">12</div>
-                  <div class="pitch-analytics-card__hint">מהיסטוריה מקומית · דמו</div>
-                </article>
-                <article class="pitch-analytics-card">
-                  <div class="pitch-analytics-card__label">טוקנים משוערים</div>
-                  <div class="pitch-analytics-card__value mixed-ltr" lang="en" dir="ltr">420K in · 160K out</div>
-                  <div class="pitch-analytics-card__hint">קלט ופלט · דמו</div>
-                </article>
-                <article class="pitch-analytics-card">
-                  <div class="pitch-analytics-card__label">הערכת עלות כוללת</div>
-                  <div class="pitch-analytics-card__value mixed-ltr" lang="en" dir="ltr">~$47.20</div>
-                  <div class="pitch-analytics-card__hint">מספרים להמחשה בלבד</div>
-                </article>
-              </div>
-              <p class="pitch-analytics-disclaimer">הנתונים משוערים ומתעדכנים — לא חשבונית ולא דוח מס.</p>
-            </div>
-          </div>
-        </div>`;
-    }
-
     function pricingHeroHtml() {
       return `<div class="pitch-pricing-hero" dir="rtl" aria-hidden="true">
       <div class="pitch-pricing-hero__card">
@@ -4495,19 +4394,30 @@
     }
 
     function v1NextChecklistHtml() {
-      const row = (icon, text) =>
+      const en = s =>
+        `<span class="mixed-ltr" lang="en" dir="ltr">${escapeHtml(s)}</span>`;
+      const row = (icon, textHtml) =>
         `<div class="pitch-v1-next-item" role="presentation">
       <span class="pitch-v1-next-item__ico" aria-hidden="true">${icon}</span>
-      <span class="pitch-v1-next-item__text">${escapeHtml(text)}</span>
+      <span class="pitch-v1-next-item__text">${textHtml}</span>
     </div>`;
       return `<div class="pitch-v1-next-visual" dir="rtl" aria-hidden="true">
       <div class="pitch-v1-next-visual__inner">
-        ${row("🧭", "אישור כיוון — מה המוצר אמור לפתור בשלב הראשון")}
-        ${row("📚", "החלטה על אחסון הקטלוג — מקומי מול ענן של V1")}
-        ${row("🖥", "התקנה ראשונית במחשבי העבודה הרלוונטיים")}
-        ${row("🔑", "מפתח OpenAI API — תמלול ולפי צורך מודלים של OpenAI")}
-        ${row("✳️", "מפתח Claude API — רק אם בפועל בוחרים Claude לשלב התכנון")}
-        ${row("🔁", "מחזור התאמות לפי פידבק אחרי שימוש אמיתי")}
+        ${row("🧭", escapeHtml("אישור כיוון — מה המוצר אמור לפתור בשלב הראשון"))}
+        ${row(
+          "📚",
+          `${escapeHtml("החלטה על אחסון הקטלוג — מקומי מול ענן של ")}${en("V1")}`
+        )}
+        ${row("🖥", escapeHtml("התקנה ראשונית במחשבי העבודה הרלוונטיים"))}
+        ${row(
+          "🔑",
+          `${escapeHtml("מפתח ")}${en("OpenAI API")}${escapeHtml(" — תמלול ולפי צורך מודלים של ")}${en("OpenAI")}`
+        )}
+        ${row(
+          "✳️",
+          `${escapeHtml("מפתח ")}${en("Claude API")}${escapeHtml(" — רק אם בפועל בוחרים ")}${en("Claude")}${escapeHtml(" לשלב התכנון")}`
+        )}
+        ${row("🔁", escapeHtml("מחזור התאמות לפי פידבק אחרי שימוש אמיתי"))}
       </div>
       <p class="pitch-v1-next-visual__note">רשימת החלטות — לא רשימת משימות פיתוח פנימיות.</p>
     </div>`;
@@ -4570,8 +4480,14 @@
       if (type === "localFirstPitch") {
         return localFirstPitchHtml();
       }
-      if (type === "usageAnalytics") {
-        return usageAnalyticsHtml();
+      if (type === "analyticsSimple") {
+        return `<div class="pricing-board visual-board" dir="rtl">
+          <div class="pricing-head"><span>מדד</span><span>ערך להמחשה</span></div>
+          <div class="pricing-row"><span>עבודות עם נתוני שימוש</span><small class="mixed-ltr" lang="en" dir="ltr">12</small></div>
+          <div class="pricing-row"><span>טוקנים משוערים (קלט+פלט)</span><small class="mixed-ltr" lang="en" dir="ltr">420K in · 160K out</small></div>
+          <div class="pricing-row"><span>הערכת עלות כוללת</span><small class="mixed-ltr" lang="en" dir="ltr">~$47.20</small></div>
+          <div class="token-chip"><span>beta · מהיסטוריה מקומית</span><span>הערכות בלבד — לא חשבונית</span></div>
+        </div>`;
       }
       if (type === "pricingHero") {
         return pricingHeroHtml();
@@ -4658,39 +4574,6 @@
           </div>
         </div>`;
       }
-      if (type === "llmPricing") {
-        return `<div class="pricing-board visual-board">
-          <div class="pricing-head"><span>מודל</span><span class="mixed-ltr" lang="en" dir="ltr">$/1M טוקנים</span></div>
-          <div class="pricing-row"><span class="mixed-ltr" lang="en" dir="ltr">NovaLite · מהיר</span><small class="mixed-ltr">$2.50 in / $5 out</small></div>
-          <div class="pricing-row"><span class="mixed-ltr" lang="en" dir="ltr">NovaPro · איכות</span><small class="mixed-ltr">$12 in / $24 out</small></div>
-          <div class="pricing-row"><span>ממוצע שימוש בשבוע (דמו)</span><small class="mixed-ltr">~420K in · 160K out</small></div>
-          <div class="token-chip"><span>ארנק פרויקט</span><span class="mixed-ltr" lang="en" dir="ltr">-18% מתקרה</span></div>
-        </div>`;
-      }
-      if (type === "tutorialDemo") {
-        return `<div class="tutorial-panel">
-          <ul class="tutorial-list">
-            <li class="tutorial-item">
-              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">1</span>
-              <div class="tutorial-body"><strong>התחזית הראשונה</strong><span>גללו מטה בצעד רגוע ובדקו שנעימות ה־snap מחברת פרק לפרק.</span></div>
-            </li>
-            <li class="tutorial-item">
-              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">2</span>
-              <div class="tutorial-body"><strong>דילוג פרקים</strong><span>לחצו על “הורדה” בשורת הניווט — הקפיצה חוזרת לעמודת ההורדה בשקופית הפתיחה (#download-hero).</span></div>
-            </li>
-            <li class="tutorial-item">
-              <span class="tutorial-num mixed-ltr" lang="en" dir="ltr">3</span>
-              <div class="tutorial-body"><strong>נסו הפוך</strong><span>גללו למעלה שוב ובדקו ש־snap מחזיר אתכם בצורה ברורה בין פרקים.</span></div>
-            </li>
-          </ul>
-          <p class="tutorial-tip"><span class="mixed-ltr" lang="en" dir="ltr">prefers-reduced-motion</span>: כבו אנימציה במערכת כדי לראות פריסה סטטית.</p>
-        </div>`;
-      }
-      if (type === "numberedSample") {
-        const raw = Number(section.sampleNumber);
-        const n = Number.isFinite(raw) ? String(Math.trunc(raw)) : "?";
-        return `<div class="numbered-sample-visual"><span class="numbered-sample-num mixed-ltr" lang="en" dir="ltr">${escapeHtml(n)}</span></div>`;
-      }
       return `<div class="visual-board"><div class="mini-card"><span>${escapeHtml(section.title)}</span><small>Placeholder</small></div></div>`;
     }
 
@@ -4756,7 +4639,6 @@
         section.id === "thinking" ||
         section.id === "render" ||
         section.id === "local-first" ||
-        section.id === "analytics" ||
         section.id === "pricing" ||
         section.id === "v1-next";
       const pricingPullquoteBlock =
@@ -5348,7 +5230,7 @@
 
     /** `#thinking`: `.pitch-flow-step` omitted on purpose — step motion is `initThinkingFlowMotion` (scrub/passive); reveal tween hits `.panel-visual > *` only (outer `.pitch-thinking-visual`). */
     const PANEL_REVEAL_SEL =
-      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *:not(.pitch-v1-next-visual), .pitch-v1-next-item";
+      ".kicker, h1, h2, .pitch-lead-well .lead, .lead, .bullets li, .pitch-pricing-quote, .pitch-wiz-step, .pitch-catalog-card, .pitch-catalog-detail, .intro-pipeline-node, .intro-pipeline-arrow, .hero-downloads, .panel-visual > *:not(.pitch-v1-next-visual), .pitch-v1-next-item, .pitch-v1-next-visual__note";
 
     /**
      * verticalStack = desktop TTB pitch; false = entrances during horizontal-pin (`ScrollTrigger.horizontal` + containerAnimation).
