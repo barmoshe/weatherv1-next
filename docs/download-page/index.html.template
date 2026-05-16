@@ -2756,7 +2756,7 @@
       font-size: 0.9rem;
     }
 
-    /* Intro hero: copy + hero downloads only (no device mockup) */
+    /* Intro hero: stacked copy — title, pipeline, lead, downloads */
     #intro.story-panel {
       padding-block: calc(var(--nav-height) + 22px) clamp(28px, 5vh, 52px);
       padding-inline: clamp(18px, 4vw, 64px);
@@ -2767,17 +2767,23 @@
       grid-template-columns: 1fr;
       align-items: stretch;
       justify-items: stretch;
-      gap: clamp(18px, 3.5vw, 36px);
+      gap: 0;
       box-sizing: border-box;
-      max-width: min(47rem, 92vw);
+      max-width: min(68rem, 98vw);
       margin-inline: auto;
     }
 
     #intro .panel-copy--intro {
-      gap: clamp(14px, 1.6vw, 22px);
+      gap: clamp(16px, 2.2vw, 28px);
       min-height: 0;
       width: 100%;
       max-width: none;
+      align-content: start;
+    }
+
+    #intro .pitch-intro-flow--inline {
+      width: 100%;
+      justify-self: stretch;
     }
 
     #intro .panel-copy--intro .kicker {
@@ -2788,12 +2794,13 @@
     }
 
     #intro h1 {
-      font-size: clamp(2.35rem, 0.45rem + 4vw, 4.65rem);
-      max-width: min(100%, 26rem);
-      line-height: 1.08;
+      max-width: none;
+      font-size: clamp(2.5rem, 0.55rem + 4.8vw, 5.25rem);
+      line-height: 1.05;
       letter-spacing: -0.03em;
       font-weight: 950;
-      text-wrap: balance;
+      white-space: nowrap;
+      text-wrap: nowrap;
     }
 
     #intro .lead {
@@ -2902,15 +2909,77 @@
       }
 
       #intro h1 {
-        font-size: clamp(1.55rem, 3.5vh, 2.9rem);
-        max-width: min(100%, 24rem);
-        line-height: 1.08;
+        font-size: clamp(1.85rem, 3.8vh, 3.35rem);
+        max-width: none;
+        line-height: 1.05;
         letter-spacing: -0.03em;
+        white-space: nowrap;
+        text-wrap: nowrap;
       }
     }
 
-    @media (min-width: 861px) and (max-width: 1024px) {
+    .pitch-intro-flow {
+      width: min(100%, 100%);
+      margin: 0;
+      padding: clamp(18px, 2.8vw, 26px);
+      border: 2px solid var(--v1-ink);
+      border-radius: 22px;
+      background:
+        linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(252 236 232 / 0.35));
+      box-shadow: var(--shadow);
+    }
+
+    .pitch-intro-flow__track {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 6px 4px;
+      direction: rtl;
+    }
+
+    .pitch-intro-flow__step {
+      display: inline-block;
+      margin: 0;
+      padding: clamp(8px, 1.2vw, 11px) clamp(11px, 1.6vw, 15px);
+      border: 2px solid var(--v1-ink);
+      border-radius: 999px;
+      background: var(--v1-paper);
+      box-shadow: 2px 2px 0 var(--v1-ink);
+      font-weight: 900;
+      font-size: clamp(0.7rem, 1vw, 0.88rem);
+      line-height: 1.25;
+      text-align: center;
+    }
+
+    .pitch-intro-flow__arrow {
+      flex-shrink: 0;
+      color: var(--v1-muted);
+      font-weight: 900;
+      font-size: clamp(0.85rem, 1.2vw, 1rem);
+      line-height: 1;
+      direction: ltr;
+      unicode-bidi: isolate;
+      user-select: none;
+    }
+
+    @media (max-height: 720px) and (min-width: 861px) {
+      .pitch-intro-flow {
+        padding: 14px 16px;
+      }
+
+      .pitch-intro-flow__step {
+        font-size: clamp(0.65rem, 0.9vw, 0.78rem);
+        padding: 7px 10px;
+      }
+    }
+
+    @media (max-width: 860px) {
       #intro .panel-inner {
+        grid-template-columns: 1fr;
         max-width: min(47rem, 92vw);
       }
     }
@@ -3602,7 +3671,7 @@
 
       #intro .panel-copy--intro {
         width: 100%;
-        max-width: min(100%, 28rem);
+        max-width: min(100%, 100%);
         margin-inline: auto;
         gap: clamp(14px, 4vw, 20px);
       }
@@ -3677,10 +3746,12 @@
       }
 
       #intro h1 {
-        font-size: clamp(1.58rem, 5.8vw + 0.65rem, 2.72rem);
-        line-height: 1.08;
+        font-size: clamp(1.65rem, 6.2vw + 0.5rem, 2.85rem);
+        line-height: 1.05;
         letter-spacing: -0.03em;
         max-width: none;
+        white-space: nowrap;
+        text-wrap: nowrap;
       }
 
       .lead {
@@ -3832,9 +3903,11 @@
       }
 
       #intro h1 {
-        font-size: clamp(1.28rem, 3.2vw, 1.88rem);
-        line-height: 1.08;
+        font-size: clamp(1.35rem, 4.5vw, 2rem);
+        line-height: 1.05;
         letter-spacing: -0.025em;
+        white-space: nowrap;
+        text-wrap: nowrap;
       }
 
       #intro .lead {
@@ -4027,12 +4100,13 @@
       {
         id: "intro",
         kicker: "Weather V1",
-        title: "מה זה בקצרה",
+        title: "מקריינות תחזית לסרטון אנכי",
         lead:
-          "האפליקציה מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו רקע מתוך הקטלוג, ומאפשרת ליצור בסיס לסרטון תחזית.",
+          "Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו מהקטלוג, ומייצרת בסיס לסרטון תחזית.",
         mobileSummary:
           "קריינות תחזית, תמלול, פירוק לסצנות, רקע מהקטלוג, ובסיס לסרטון תחזית.",
         bullets: [],
+        visual: "introPipeline",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
       },
@@ -4064,22 +4138,22 @@
       {
         id: "catalog",
         kicker: "קטלוג",
-        title: "טאב הקטלוג — הבסיס החומרים שלכם",
+        title: "הקטלוג — מחסן חכם לחומרי הווידאו של V1",
         lead:
-          "הקטלוג שלכם מרכז וידאו ותמונות במקום אחד — עם חיפוש, סינון ותיוג. לכל פריט יכולים להיות פוסטר לסגמנטים, תיאור ותגיות, ואפשר להוסיף חומרים דרך האפליקציה. מהקטלוג המערכת בוחרת רקע מתאים לכל סצנה. בצד המסך — צילום מסך אמיתי מהממשק (רשת, סטטוס וכרטיסי קטעים).",
+          "הקטלוג הוא לא רק תיקייה של קבצים, אלא <strong>מאגר מסודר וחכם</strong> של סרטונים וסגמנטים קצרים. לכל קטע אפשר להוסיף תיאור ותגיות — ידנית או בעזרת AI — כדי להסביר מה רואים בו, איזו אווירה יש לו, ולאיזה סוג סצנה בתחזית הוא יכול להתאים. כשמגיעה סצנה מהתמלול, המערכת יכולה לבחור רקעים לפי המשמעות של הקריינות והסגמנט, ולא לפי שם קובץ אקראי. ככל שהתיוג והתיאור טובים יותר, כך הבחירה האוטומטית יכולה להיות מדויקת יותר.",
         mobileSummary:
-          "חומרי רקע מסודרים עם חיפוש ותיוג; בצילום המסך — רשת קליפים אמיתית מהמוצר.",
+          "מחסן חכם לסגמנטים עם תיאור ותגיות — בחירת רקעים לפי משמעות הסצנה, לא לפי שם קובץ.",
         bullets: [
-          "רשת קליפים ומקטעים — סטטוס, סינון וספירות במבט אחד.",
-          "חיפוש ומיון — מציאת חומר לפי מזהה, תגיות וטקסט חופשי.",
-          "כרטיס לכל קטע — תיאור, תגיות ומקור (למשל Getty / Artlist) לפי הצורך.",
-          "מהקטלוג נבחרים רקעים לסצנות — לא קבצי מילוי אקראיים."
+          "רשת קליפים וסגמנטים — חיפוש, סינון, פוסטרים וסטטוס במבט אחד.",
+          "תיאור ותגיות לכל קטע — מה רואים, איזו אווירה, ולאיזו סצנה בתחזית הוא מתאים.",
+          "תיוג ידני או בעזרת AI — כדי להפוך חומרי וידאו לשכבת ידע שימושית.",
+          "מהקטלוג נבחרים רקעים לסצנות לפי משמעות הקריינות, לא לפי שם קובץ אקראי."
         ],
         mobileBullets: [
-          "רשת וסטטוס במבט אחד.",
-          "חיפוש ומיון.",
-          "כרטיס קטע עם תיאור ותגיות.",
-          "בחירת רקע לסצנות מהקטלוג."
+          "סגמנטים קצרים עם פוסטר, תיאור ותגיות.",
+          "חיפוש וסינון של חומרי V1 במקום אחד.",
+          "תיוג ידני או בעזרת AI.",
+          "בחירת רקעים לפי משמעות הקריינות."
         ],
         visual: "catalogScreenshot",
         transition: "ttb",
@@ -4592,6 +4666,23 @@
       return `${primaryHtml}${secondaryHtml}`;
     }
 
+    function introPipelineFlowHtml() {
+      const steps = ["קריינות", "תמלול", "תכנון סצנות", "התאמת וידאו", "רינדור"];
+      const track = steps
+        .map((label, idx) => {
+          const step = `<span class="pitch-intro-flow__step">${escapeHtml(label)}</span>`;
+          const arrow =
+            idx < steps.length - 1
+              ? `<span class="pitch-intro-flow__arrow" aria-hidden="true">←</span>`
+              : "";
+          return step + arrow;
+        })
+        .join("");
+      return `<div class="pitch-intro-flow pitch-intro-flow--inline" role="img" aria-label="תהליך: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור">
+        <div class="pitch-intro-flow__track">${track}</div>
+      </div>`;
+    }
+
     function heroDownloadsBlock() {
       return `
           <div class="hero-downloads" id="download-hero" aria-labelledby="hero-download-heading">
@@ -4603,6 +4694,9 @@
     function visualMarkup(type, section) {
       if (type === "none" || type == null) {
         return "";
+      }
+      if (type === "introPipeline") {
+        return introPipelineFlowHtml();
       }
       if (type === "phone") {
         return `<div class="phone-frame"><div class="phone-screen"><span class="mixed-ltr" lang="en" dir="ltr">MP4<br>9:16</span><br><small>תחזית מוכנה</small></div></div>`;
@@ -4781,7 +4875,9 @@
     function singlePanelSectionHtml(section, globalIdx, rollIdx) {
       const heroDownloads = section.id === "intro" ? heroDownloadsBlock() : "";
       const visualAria =
-        section.visual === "excalidrawDemo" || section.visual === "catalogScreenshot"
+        section.visual === "excalidrawDemo" ||
+        section.visual === "catalogScreenshot" ||
+        section.visual === "introPipeline"
           ? ""
           : " aria-hidden=\"true\"";
       const copyClass = section.id === "intro" ? "panel-copy panel-copy--intro" : "panel-copy";
@@ -4789,6 +4885,10 @@
         section.id === "intro"
           ? `<h1>${escapeHtml(section.title)}</h1>`
           : `<h2>${escapeHtml(section.title)}</h2>`;
+      const introPipelineBlock =
+        section.id === "intro" && section.visual === "introPipeline"
+          ? introPipelineFlowHtml()
+          : "";
       const visualBlock =
         section.id === "intro" || section.id === "v1-next"
           ? ""
@@ -4825,6 +4925,7 @@
           <div class="${copyClass}">
             <div class="kicker">${escapeHtml(section.kicker)}</div>
             ${heading}
+            ${introPipelineBlock}
             ${leadBlock}
             ${bulletsBlock}
             ${pricingPullquoteBlock}
