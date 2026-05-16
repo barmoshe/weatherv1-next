@@ -20,6 +20,10 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    # No gate-password env vars here on purpose. `npm test` does not
+    # invoke the prebuild hash-emit step — the auth-passwords vitest
+    # mints its own fixture hashes in beforeAll. Real secrets only
+    # flow through the release-building workflows (Desktop, Docker).
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,3 +55,10 @@ jobs:
           platforms: linux/arm64,linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/weatherv1-next:${{ github.ref_name }}
+          # Forwarded to Dockerfile ARGs so the prebuild hash-emit step
+          # has the plaintext passwords during `npm run build`. Build
+          # args do not persist into the final image layers as env vars
+          # unless explicitly re-ENVed, which the Dockerfile does not.
+          build-args: |
+            EDITOR_PASSWORD=${{ secrets.EDITOR_PASSWORD }}
+            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}

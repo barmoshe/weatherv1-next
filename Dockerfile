@@ -10,9 +10,14 @@ RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 FROM --platform=$BUILDPLATFORM node:20-bookworm-slim AS builder
 WORKDIR /app/weatherV1-next
 ENV NEXT_TELEMETRY_DISABLED=1
+# Plaintext gate passwords consumed only by the prebuild hash-emit step.
+# Build ARGs are not promoted to ENV in this stage, so the resulting
+# image carries the hashes (in .next/) but never the plaintext.
+ARG EDITOR_PASSWORD
+ARG ADMIN_PASSWORD
 COPY --from=deps /app/weatherV1-next/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN EDITOR_PASSWORD="$EDITOR_PASSWORD" ADMIN_PASSWORD="$ADMIN_PASSWORD" npm run build
 RUN npm prune --omit=dev
 
 # ---- runner: minimal runtime with ffmpeg + the built app ----

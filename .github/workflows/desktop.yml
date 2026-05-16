@@ -34,6 +34,13 @@ jobs:
       OSX_SIGN_IDENTITY: ${{ secrets.OSX_SIGN_IDENTITY }}
       WIN_CERT_FILE: ${{ secrets.WIN_CERT_FILE }}
       WIN_CERT_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
+      # Plaintext editor/admin gate passwords. The prebuild step
+      # (scripts/emit-auth-hashes.cjs) hashes them into the gitignored
+      # auth-passwords.generated.ts. The script never echoes the value
+      # or the derived hash — GitHub masks raw secrets but not values
+      # derived from them.
+      EDITOR_PASSWORD: ${{ secrets.EDITOR_PASSWORD }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
       npm_config_arch: ${{ matrix.arch }}
 
     steps:
