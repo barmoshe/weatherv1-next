@@ -5103,10 +5103,6 @@
                 <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">🎚️</span> תוכנית סצנות</div>
                 <div class="pitch-timeline-lanes pitch-timeline-skel">${timelineSkelHtml}</div>
                 <div class="pitch-timeline-lanes pitch-timeline-filled">${timelineHtml}</div>
-                <div class="pitch-planning-callouts" aria-hidden="true">
-                  <p class="pitch-planning-callout-p">המערכת לא רק מתמללת. היא מנסה להבין את מבנה התחזית, לזהות מעברים ונושאים, ולחבר לכל סצנה קטע מתאים מהקטלוג.</p>
-                  <p class="pitch-planning-callout-p pitch-planning-callout-p--tags">התיוגים הופכים את הקטלוג לשכבת ידע: מה מופיע בכל קטע, איזו אווירה יש בו, ולאיזה סוג סצנה הוא יכול להתאים.</p>
-                </div>
               </section>
               <section class="pitch-bento__cell--output studio-phase-panel">
                 <span class="pitch-cell-badge pitch-cell-badge-output-wait">ממתין</span>
