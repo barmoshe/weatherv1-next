@@ -3614,14 +3614,15 @@
       display: inline-flex;
       align-items: center;
       gap: .25rem;
-      padding: .22rem .5rem;
+      padding: clamp(0.2rem, 0.18rem + 0.1vw, 0.26rem)
+               clamp(0.45rem, 0.4rem + 0.25vw, 0.58rem);
       border: 1.5px solid var(--v1-ink);
       border-radius: 999px;
       background: rgb(255 255 255 / .72);
       color: var(--v1-ink);
       box-shadow: 1.5px 1.5px 0 var(--v1-ink);
       text-decoration: none;
-      font-size: .68rem;
+      font-size: clamp(0.62rem, 0.55rem + 0.18vw, 0.74rem);
       font-weight: 850;
       letter-spacing: .01em;
       line-height: 1;
@@ -3641,7 +3642,7 @@
     }
 
     .builder-credit span:first-child {
-      font-size: .58rem;
+      font-size: clamp(0.52rem, 0.48rem + 0.12vw, 0.6rem);
       font-weight: 700;
       letter-spacing: .08em;
       text-transform: uppercase;
@@ -4377,7 +4378,6 @@
       body:not(.is-pitch-active) .pitch-step-nav,
       body:not(.is-pitch-active) .scroll-progress,
       body:not(.is-pitch-active) .scroll-hint,
-      body:not(.is-pitch-active) .builder-credit,
       body:not(.is-pitch-active) .pitch-export-progress {
         opacity: 0;
         visibility: hidden;
@@ -4776,8 +4776,7 @@
       .story-shell,
       .pitch-step-nav,
       .scroll-progress,
-      .scroll-hint,
-      .builder-credit {
+      .scroll-hint {
         display: none !important;
       }
 
@@ -5453,15 +5452,20 @@
         bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + var(--pitch-mobile-step-dock) + 8px);
         z-index: 51;
         margin: 0;
-        max-width: min(16.5rem, calc(100vw - 120px));
-        padding: 0.35rem 0.7rem;
-        font-size: 0.64rem;
+        max-width: min(17rem, calc(100vw - 104px));
+        padding: clamp(0.32rem, 0.28rem + 0.4vw, 0.4rem)
+                 clamp(0.6rem, 0.5rem + 0.7vw, 0.78rem);
+        font-size: clamp(0.6rem, 0.52rem + 0.5vw, 0.7rem);
         box-shadow: 2px 2px 0 var(--v1-ink);
         -webkit-tap-highlight-color: rgb(249 84 62 / 0.15);
       }
 
+      body:not(.is-pitch-active) .builder-credit {
+        bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 10px);
+      }
+
       .builder-credit span:first-child {
-        font-size: 0.54rem;
+        font-size: clamp(0.5rem, 0.46rem + 0.3vw, 0.58rem);
       }
     }
 
