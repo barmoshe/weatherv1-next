@@ -383,7 +383,7 @@
     @media (min-width: 861px) {
       .story-panel[data-panel-layout="split-balanced"] .panel-inner,
       .story-subslide[data-panel-layout="split-balanced"] .panel-inner {
-        grid-template-columns: minmax(0, 0.65fr) minmax(320px, 1.35fr);
+        grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
       }
 
       .story-panel[data-panel-layout="split-visual-heavy"] .panel-inner,
@@ -1139,6 +1139,9 @@
       #next-steps .panel-inner {
         gap: clamp(20px, 3vw, 48px);
         align-items: center;
+        /* RTL: first column renders visually on the right, second on the left.
+           Keep the left (visual) column narrower than the right (copy) column. */
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
       }
       #next-steps .panel-copy {
         align-self: center;
