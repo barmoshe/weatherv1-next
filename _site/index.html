@@ -3787,6 +3787,854 @@
       display: none;
     }
 
+    /* === Download landing (desktop) ===
+       First view on desktop: an animated download page that fronts the deck.
+       The pitch surface stays in the DOM behind it; clicking the CTA toggles
+       `body.is-pitch-active`, fades the landing out, and lets ScrollTrigger
+       drive the deck. Mobile keeps using `.pitch-mobile-page` instead. */
+    .download-landing {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      align-items: center;
+      justify-items: center;
+      padding:
+        calc(env(safe-area-inset-top, 0px) + 96px)
+        clamp(20px, 4vw, 56px)
+        clamp(28px, 5vh, 56px);
+      background:
+        radial-gradient(circle at 18% 22%, rgb(249 84 62 / 0.18), transparent 36rem),
+        radial-gradient(circle at 84% 78%, rgb(242 194 49 / 0.22), transparent 38rem),
+        linear-gradient(180deg, var(--v1-cream) 0%, #fbf6ee 100%);
+      overflow: hidden;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 520ms ease, visibility 0s linear 0s;
+    }
+
+    body.is-pitch-active .download-landing {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 520ms ease, visibility 0s linear 520ms;
+    }
+
+    /* On desktop, lock body scroll while the landing is shown so wheel/touch
+       on the overlay does not silently advance the deck behind it. */
+    @media (min-width: 861px) {
+      html:not(.is-pitch-active),
+      body:not(.is-pitch-active) {
+        overflow-y: hidden;
+      }
+    }
+
+    .download-landing__bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .download-landing__orb {
+      position: absolute;
+      width: clamp(280px, 36vw, 560px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: 0.55;
+      will-change: transform;
+    }
+
+    .download-landing__orb--coral {
+      inset-block-start: -12%;
+      inset-inline-start: -8%;
+      background: rgb(249 84 62 / 0.55);
+      animation: dl-float-a 14s ease-in-out infinite alternate;
+    }
+
+    .download-landing__orb--yellow {
+      inset-block-end: -16%;
+      inset-inline-end: -10%;
+      background: rgb(242 194 49 / 0.5);
+      animation: dl-float-b 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes dl-float-a {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(48px, 62px) scale(1.06); }
+    }
+
+    @keyframes dl-float-b {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-58px, -44px) scale(1.08); }
+    }
+
+    .download-landing__inner {
+      position: relative;
+      z-index: 1;
+      width: min(1280px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      gap: clamp(40px, 5vw, 80px);
+      align-items: center;
+      direction: rtl;
+      unicode-bidi: isolate;
+    }
+
+    .download-landing__copy {
+      display: grid;
+      gap: clamp(18px, 2.4vw, 28px);
+      max-width: 36rem;
+      justify-self: start;
+    }
+
+    .download-landing__copy > * {
+      opacity: 0;
+      transform: translateY(18px);
+      animation: dl-rise 900ms cubic-bezier(.16,.84,.36,1) forwards;
+    }
+
+    .download-landing__copy > *:nth-child(1) { animation-delay: 140ms; }
+    .download-landing__copy > *:nth-child(2) { animation-delay: 280ms; }
+    .download-landing__copy > *:nth-child(3) { animation-delay: 420ms; }
+    .download-landing__copy > *:nth-child(4) { animation-delay: 580ms; }
+    .download-landing__copy > *:nth-child(5) { animation-delay: 740ms; }
+
+    @keyframes dl-rise {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .download-landing__kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      align-self: start;
+      padding: 6px 14px 6px 12px;
+      border: 1.5px solid var(--v1-ink);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 0.82);
+      box-shadow: 2px 2px 0 var(--v1-ink);
+      font-weight: 950;
+      font-size: 0.86rem;
+      letter-spacing: 0.02em;
+    }
+
+    .download-landing__pulse {
+      width: 10px;
+      height: 10px;
+      flex: 0 0 10px;
+      border-radius: 50%;
+      background: var(--v1-success);
+      box-shadow: 0 0 0 0 rgb(31 168 113 / 0.55);
+      animation: dl-pulse 1.8s ease-out infinite;
+    }
+
+    @keyframes dl-pulse {
+      0% { box-shadow: 0 0 0 0 rgb(31 168 113 / 0.55); }
+      70% { box-shadow: 0 0 0 12px rgb(31 168 113 / 0); }
+      100% { box-shadow: 0 0 0 0 rgb(31 168 113 / 0); }
+    }
+
+    .download-landing__title {
+      margin: 0;
+      font-size: clamp(2.4rem, 3.6vw + 0.6rem, 4.6rem);
+      font-weight: 950;
+      line-height: 1.02;
+      letter-spacing: -0.035em;
+      color: var(--v1-ink);
+    }
+
+    .download-landing__title-grad {
+      display: inline-block;
+      background: linear-gradient(120deg, var(--v1-coral) 0%, #c2410c 55%, var(--v1-yellow) 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+              background-clip: text;
+      color: transparent;
+      animation: dl-grad-shift 7s ease-in-out infinite alternate;
+    }
+
+    @keyframes dl-grad-shift {
+      from { background-position: 0% 50%; }
+      to { background-position: 100% 50%; }
+    }
+
+    .download-landing__lead {
+      margin: 0;
+      font-size: clamp(1rem, 0.4vw + 0.95rem, 1.18rem);
+      line-height: 1.55;
+      color: var(--v1-muted);
+      max-width: 32rem;
+    }
+
+    .download-landing__actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .download-landing__download {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 22px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--v1-red) 0%, #f9543e 60%, #f97a3e 100%);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 950;
+      box-shadow:
+        6px 6px 0 var(--v1-ink),
+        0 18px 38px rgb(249 84 62 / 0.32);
+      transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .download-landing__download::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 28% 20%, rgb(255 255 255 / 0.35), transparent 55%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .download-landing__download::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 0.32) 50%, transparent 65%);
+      transform: translateX(-110%);
+      animation: dl-btn-sheen 4.6s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes dl-btn-sheen {
+      0%, 25% { transform: translateX(-110%); }
+      45%, 100% { transform: translateX(110%); }
+    }
+
+    .download-landing__download:hover,
+    .download-landing__download:focus-visible {
+      transform: translateY(-2px);
+      box-shadow:
+        7px 8px 0 var(--v1-ink),
+        0 22px 46px rgb(249 84 62 / 0.42);
+      filter: brightness(1.04);
+      outline: none;
+    }
+
+    .download-landing__download-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      border: 1.5px solid rgb(255 255 255 / 0.55);
+      border-radius: 12px;
+      background: rgb(255 255 255 / 0.18);
+    }
+
+    .download-landing__download-icon svg {
+      width: 22px;
+      height: 22px;
+      color: #fff;
+    }
+
+    .download-landing__download-text {
+      display: grid;
+      gap: 2px;
+      line-height: 1.1;
+      text-align: start;
+    }
+
+    .download-landing__download-text small {
+      font-size: 0.72rem;
+      font-weight: 800;
+      opacity: 0.85;
+      letter-spacing: 0.04em;
+    }
+
+    .download-landing__download-text strong {
+      font-size: 1.06rem;
+      font-weight: 950;
+      letter-spacing: -0.005em;
+    }
+
+    .download-landing__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 20px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 16px;
+      background: rgb(255 255 255 / 0.94);
+      color: var(--v1-ink);
+      font: inherit;
+      font-weight: 950;
+      font-size: 0.96rem;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 var(--v1-ink);
+      transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    }
+
+    .download-landing__cta:hover,
+    .download-landing__cta:focus-visible {
+      transform: translateY(-2px);
+      background: var(--v1-yellow);
+      box-shadow: 5px 6px 0 var(--v1-ink);
+      outline: none;
+    }
+
+    .download-landing__cta-arrow {
+      display: inline-block;
+      transition: transform 200ms ease;
+    }
+
+    .download-landing__cta:hover .download-landing__cta-arrow,
+    .download-landing__cta:focus-visible .download-landing__cta-arrow {
+      transform: translateX(-4px);
+    }
+
+    .download-landing__chips {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .download-landing__chips li {
+      padding: 6px 12px;
+      border: 1.5px solid rgb(0 0 0 / 0.16);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 0.72);
+      color: var(--v1-muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .download-landing__visual {
+      display: grid;
+      place-items: center;
+      position: relative;
+      width: 100%;
+      direction: ltr;
+    }
+
+    .download-landing__phone {
+      position: relative;
+      width: min(320px, 100%);
+      aspect-ratio: 9 / 19;
+      padding: 14px;
+      border: 3px solid var(--v1-ink);
+      border-radius: 42px;
+      background: var(--v1-ink);
+      box-shadow:
+        10px 12px 0 var(--v1-ink),
+        0 36px 80px rgb(15 23 42 / 0.32);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(28px);
+      animation:
+        dl-phone-in 1100ms cubic-bezier(.16,.84,.36,1) 340ms forwards,
+        dl-phone-float 7s ease-in-out 1600ms infinite alternate;
+    }
+
+    @keyframes dl-phone-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes dl-phone-float {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+
+    .download-landing__phone-video {
+      width: 100%;
+      height: 100%;
+      border-radius: 30px;
+      object-fit: cover;
+      display: block;
+      background: #1c1a18;
+    }
+
+    .download-landing__phone-notch {
+      position: absolute;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 96px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--v1-ink);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .download-landing__phone-glare {
+      position: absolute;
+      inset: 14px;
+      border-radius: 30px;
+      background: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.18) 49%, rgb(255 255 255 / 0.36) 51%, rgb(255 255 255 / 0.18) 54%, transparent 66%);
+      transform: translateX(-110%) skewX(-12deg);
+      animation: dl-glare 6s ease-in-out 1600ms infinite;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes dl-glare {
+      0%, 100% { transform: translateX(-110%) skewX(-12deg); opacity: 0; }
+      8% { opacity: 1; }
+      35%, 100% { transform: translateX(120%) skewX(-12deg); opacity: 0; }
+    }
+
+    .download-landing__badge {
+      position: absolute;
+      inset-block-start: 8%;
+      inset-inline-end: -10%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--v1-ink);
+      border-radius: 14px;
+      background: var(--v1-paper);
+      box-shadow: 3px 3px 0 var(--v1-ink);
+      font-size: 0.78rem;
+      font-weight: 900;
+      color: var(--v1-ink);
+      transform: rotate(-4deg);
+      opacity: 0;
+      animation: dl-badge-in 600ms ease 1300ms forwards;
+      direction: rtl;
+    }
+
+    .download-landing__badge--bottom {
+      inset-block-start: auto;
+      inset-block-end: 12%;
+      inset-inline-end: auto;
+      inset-inline-start: -8%;
+      transform: rotate(3deg);
+      animation-delay: 1550ms;
+      background: var(--v1-yellow);
+    }
+
+    @keyframes dl-badge-in {
+      to { opacity: 1; }
+    }
+
+    .download-landing__badge strong {
+      display: block;
+      font-size: 1.05rem;
+      font-weight: 950;
+      letter-spacing: -0.01em;
+    }
+
+    .download-landing__badge small {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--v1-muted);
+      margin-top: 2px;
+    }
+
+    /* Pitch surface stays in the DOM, but is hidden under the landing on desktop. */
+    @media (min-width: 861px) {
+      body:not(.is-pitch-active) .story-shell,
+      body:not(.is-pitch-active) .pitch-step-nav,
+      body:not(.is-pitch-active) .scroll-progress,
+      body:not(.is-pitch-active) .scroll-hint,
+      body:not(.is-pitch-active) .builder-credit,
+      body:not(.is-pitch-active) .pitch-export-progress {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+    }
+
+    /* Nav buttons context-aware: open-pitch on landing, back-to-landing in pitch. */
+    .nav-back-to-landing {
+      display: none;
+    }
+
+    body.is-pitch-active .cta-open-pitch {
+      display: none;
+    }
+
+    body.is-pitch-active .nav-back-to-landing {
+      display: inline-flex;
+    }
+
+    .nav-back-to-landing .nav-back-arrow {
+      display: inline-block;
+      transition: transform 200ms ease;
+    }
+
+    .nav-back-to-landing:hover .nav-back-arrow,
+    .nav-back-to-landing:focus-visible .nav-back-arrow {
+      transform: translateX(4px);
+    }
+
+    @media (max-width: 1100px) and (min-width: 861px) {
+      .download-landing__inner {
+        grid-template-columns: minmax(0, 1fr);
+        gap: clamp(32px, 5vw, 56px);
+        justify-items: center;
+        text-align: start;
+      }
+
+      .download-landing__copy {
+        justify-self: center;
+        max-width: 44rem;
+      }
+
+      .download-landing__visual {
+        order: -1;
+        max-width: 280px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .download-landing,
+      .download-landing__copy > *,
+      .download-landing__phone,
+      .download-landing__orb,
+      .download-landing__pulse,
+      .download-landing__phone-glare,
+      .download-landing__title-grad,
+      .download-landing__download::after,
+      .download-landing__badge {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        transition: opacity 200ms ease, visibility 0s linear 0s !important;
+      }
+    }
+
+    /* === Download landing (mobile) ===
+       On narrow screens the landing becomes a normal flowing page that
+       replaces the old `.pitch-mobile-page`. Hero + phone visual stack;
+       a "what's in the deck" preview and copy-link share section follow. */
+    .download-landing__mobile-extras {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .download-landing {
+        position: static;
+        inset: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-items: stretch;
+        gap: clamp(28px, 6vw, 40px);
+        padding: calc(env(safe-area-inset-top, 0px) + 78px) clamp(18px, 5vw, 24px) calc(40px + env(safe-area-inset-bottom, 0px));
+        overflow: visible;
+        z-index: 1;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        background:
+          radial-gradient(circle at 12% 8%, rgb(249 84 62 / 0.18), transparent 22rem),
+          radial-gradient(circle at 92% 92%, rgb(242 194 49 / 0.2), transparent 24rem),
+          linear-gradient(180deg, var(--v1-cream) 0%, #fbf6ee 100%);
+      }
+
+      .download-landing__bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+      }
+
+      .download-landing__orb {
+        width: clamp(220px, 80vw, 360px);
+      }
+
+      .download-landing__inner {
+        grid-template-columns: minmax(0, 1fr);
+        gap: clamp(20px, 4.5vw, 32px);
+        align-items: stretch;
+        justify-items: stretch;
+        direction: rtl;
+        max-width: 540px;
+        margin-inline: auto;
+      }
+
+      .download-landing__copy {
+        justify-self: stretch;
+        max-width: 100%;
+        align-items: stretch;
+        text-align: start;
+        gap: clamp(14px, 3vw, 20px);
+      }
+
+      .download-landing__copy > * {
+        opacity: 1;
+        transform: none;
+        animation: none;
+      }
+
+      .download-landing__title {
+        font-size: clamp(1.95rem, 7vw + 0.2rem, 2.6rem);
+      }
+
+      .download-landing__lead {
+        font-size: clamp(0.95rem, 0.4vw + 0.9rem, 1.05rem);
+      }
+
+      .download-landing__visual {
+        order: -1;
+        width: 100%;
+        max-width: 320px;
+        margin-inline: auto;
+      }
+
+      .download-landing__phone {
+        width: min(220px, 60vw);
+        border-radius: 36px;
+        margin-inline: auto;
+        box-shadow:
+          7px 9px 0 var(--v1-ink),
+          0 24px 56px rgb(15 23 42 / 0.28);
+        animation:
+          dl-phone-in 900ms cubic-bezier(.16,.84,.36,1) 160ms forwards,
+          dl-phone-float 6s ease-in-out 1100ms infinite alternate;
+      }
+
+      .download-landing__phone-notch {
+        top: 18px;
+        width: 78px;
+        height: 18px;
+      }
+
+      .download-landing__phone-video {
+        border-radius: 26px;
+      }
+
+      .download-landing__phone-glare {
+        border-radius: 26px;
+      }
+
+      .download-landing__badge {
+        display: none;
+      }
+
+      .download-landing__actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .download-landing__download {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 18px;
+        box-shadow:
+          5px 5px 0 var(--v1-ink),
+          0 14px 30px rgb(249 84 62 / 0.3);
+      }
+
+      /* Desktop CTA is hidden on mobile: the share section covers "open deck on desktop". */
+      .download-landing__cta {
+        display: none;
+      }
+
+      .download-landing__chips {
+        gap: 6px;
+      }
+
+      .download-landing__chips li {
+        font-size: 0.76rem;
+        padding: 5px 10px;
+      }
+
+      .download-landing__mobile-extras {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(20px, 5vw, 28px);
+        direction: rtl;
+        max-width: 540px;
+        margin-inline: auto;
+        width: 100%;
+      }
+
+      .download-landing__topics h2 {
+        margin: 0 0 14px;
+        font-size: clamp(1.05rem, 4.4vw, 1.25rem);
+        font-weight: 950;
+        color: var(--v1-ink);
+        letter-spacing: -0.01em;
+      }
+
+      .download-landing__topics ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .download-landing__topics li {
+        display: grid;
+        grid-template-columns: 36px 1fr;
+        column-gap: 14px;
+        align-items: start;
+        padding: 14px 16px;
+        border: 1.5px solid rgb(0 0 0 / 0.16);
+        border-radius: 14px;
+        background: rgb(255 255 255 / 0.86);
+        box-shadow: 0 6px 18px rgb(15 23 42 / 0.05);
+      }
+
+      .download-landing__topics-num {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        background: var(--v1-coral);
+        color: #fff;
+        font-weight: 950;
+        font-size: 0.98rem;
+        border: 1.5px solid var(--v1-ink);
+        box-shadow: 2px 2px 0 var(--v1-ink);
+      }
+
+      .download-landing__topics li strong {
+        display: block;
+        font-weight: 900;
+        font-size: 0.96rem;
+        color: var(--v1-ink);
+      }
+
+      .download-landing__topics li p {
+        margin: 4px 0 0;
+        font-size: 0.86rem;
+        color: var(--v1-muted);
+        line-height: 1.45;
+      }
+
+      .download-landing__share {
+        padding: 18px;
+        border: 2px solid var(--v1-ink);
+        border-radius: 20px;
+        background: rgb(255 255 255 / 0.94);
+        box-shadow: 4px 4px 0 var(--v1-ink);
+      }
+
+      .download-landing__share-title {
+        margin: 0 0 6px;
+        font-size: 0.96rem;
+        font-weight: 950;
+        color: var(--v1-ink);
+      }
+
+      .download-landing__share-text {
+        margin: 0 0 14px;
+        font-size: 0.88rem;
+        color: var(--v1-muted);
+        line-height: 1.5;
+      }
+
+      .download-landing__share-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .download-landing__share-btn {
+        flex: 1 1 auto;
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+        border: 2px solid var(--v1-ink);
+        border-radius: 12px;
+        font: inherit;
+        font-weight: 900;
+        font-size: 0.92rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        box-shadow: 2px 2px 0 var(--v1-ink);
+      }
+
+      .download-landing__share-btn--primary {
+        background: var(--v1-coral);
+        color: #fff;
+      }
+
+      .download-landing__share-btn--ghost {
+        background: rgb(255 255 255 / 0.82);
+        color: var(--v1-ink);
+      }
+
+      .download-landing__share-btn:hover,
+      .download-landing__share-btn:focus-visible {
+        transform: translateY(-2px);
+        box-shadow: 3px 3px 0 var(--v1-ink);
+        outline: none;
+      }
+
+      .download-landing__share-status {
+        margin: 10px 0 0;
+        font-size: 0.82rem;
+        color: var(--v1-success);
+        font-weight: 800;
+        min-height: 1.1em;
+      }
+
+      .download-landing__horizon {
+        margin: 0;
+        padding: 16px 18px;
+        border: 1.5px dashed rgb(0 0 0 / 0.22);
+        border-radius: 16px;
+        background: rgb(252 233 228 / 0.42);
+        font-size: 0.88rem;
+        color: var(--v1-muted);
+        line-height: 1.55;
+      }
+
+      .download-landing__horizon-note {
+        display: block;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed rgb(0 0 0 / 0.18);
+        font-size: 0.8rem;
+      }
+
+      .download-landing__horizon-star {
+        color: var(--v1-coral);
+        font-weight: 950;
+        padding-inline-end: 4px;
+      }
+
+      .download-landing__footer {
+        margin-top: 4px;
+        text-align: center;
+        font-size: 0.78rem;
+        color: var(--v1-muted);
+      }
+
+      .download-landing__footer a {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 800;
+      }
+
+      /* The old mobile pitch overview is replaced by the new landing. */
+      .pitch-mobile-page {
+        display: none !important;
+      }
+    }
+
     @media (max-width: 860px) {
       :root {
         /* Single-row nav: frees vertical space vs old stacked bar (~140px+). */
@@ -4597,7 +5445,7 @@
     try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (_) {}
   </script>
   <nav class="site-nav" aria-label="ניווט ראשי">
-    <a class="brand" href="#intro" aria-label="Weather V1 · מחולל תחזית לווידאו ורטיקלי">
+    <a class="brand" href="#" data-back-to-landing aria-label="Weather V1 · דף הורדה">
       <span class="brand-mark">
         <img src="public/weather-v1-icon-512.png" alt="Weather V1" width="40" height="40" decoding="async">
       </span>
@@ -4607,97 +5455,161 @@
       </span>
     </a>
     <div class="nav-actions">
-      <a class="cta" href="#download-hero">הורדה</a>
+      <a class="nav-link nav-back-to-landing" href="#" data-back-to-landing>
+        <span class="nav-back-arrow" aria-hidden="true">→</span>
+        <span>לדף ההורדה</span>
+      </a>
+      <a class="cta cta-open-pitch" href="#intro" data-open-pitch>
+        <span>פתחו את המצגת</span>
+        <span aria-hidden="true">←</span>
+      </a>
     </div>
   </nav>
 
-  <main class="pitch-mobile-page" aria-label="Weather V1">
-    <header class="pitch-mobile-page__hero">
-      <p class="pitch-mobile-page__kicker">Weather V1</p>
-      <h1 class="pitch-mobile-page__title">מקריינות תחזית לסרטון ורטיקלי</h1>
-      <p class="pitch-mobile-page__lead">
-        Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו מהקטלוג, ומייצרת בסיס לסרטון תחזית.
-      </p>
-    </header>
-
-    <section class="pitch-mobile-page__topics" aria-label="מה במצגת">
-      <h2 class="pitch-mobile-page__h2">מה תראו במצגת</h2>
-      <ol class="pitch-mobile-page__list">
-        <li>
-          <span class="pitch-mobile-page__list-num">1</span>
-          <div>
-            <strong>פתיחה</strong>
-            <p>הזרימה הכללית של Weather V1, מקריינות עד וידאו ורטיקלי.</p>
-          </div>
-        </li>
-        <li>
-          <span class="pitch-mobile-page__list-num">2</span>
-          <div>
-            <strong>סטודיו</strong>
-            <p>המסך המרכזי שבו מעלים קריינות, מתמללים, מתכננים סצנות ומרנדרים.</p>
-          </div>
-        </li>
-        <li>
-          <span class="pitch-mobile-page__list-num">3</span>
-          <div>
-            <strong>קטלוג</strong>
-            <p>כ־200 סרטונים, כ־400 סגמנטים, תיאור ותגיות לכל קטע.</p>
-          </div>
-        </li>
-        <li>
-          <span class="pitch-mobile-page__list-num">4</span>
-          <div>
-            <strong>מצב נוכחי</strong>
-            <p>מה קיים היום, ומה אפשר להעביר בהמשך לתשתיות שלכם.</p>
-          </div>
-        </li>
-        <li>
-          <span class="pitch-mobile-page__list-num">5</span>
-          <div>
-            <strong>איך ממשיכים מכאן</strong>
-            <p>הצעדים שצריך לסגור יחד כדי להביא את המערכת לפעולה אצלכם.</p>
-          </div>
-        </li>
-      </ol>
-    </section>
-
-    <p class="pitch-mobile-page__horizon">
-      אופציות להמשך, אם נרצה: לחבר את שכבות הגרפיקה הקיימות שלכם (לוגואים, כותרות ומיתוג) לתוך Weather V1, כך שהאפליקציה תייצר את הסרטון המוגמר.
-      <span class="pitch-mobile-page__horizon-note">
-        <span class="pitch-mobile-page__horizon-star" aria-hidden="true">*</span>
-        וגם אפשר לחבר את התהליך ל־Adobe Premiere אם זה מתאים יותר לזרימה שלכם.
-      </span>
-    </p>
-
-    <section class="pitch-mobile-page__cta" aria-label="פתיחה במחשב">
-      <p class="pitch-mobile-page__cta-text">
-        החוויה המלאה עם המוקאפים נוחה יותר במסך רחב. העתיקו את הקישור או שלחו אותו לעצמכם, ופתחו במחשב.
-      </p>
-      <div class="pitch-mobile-page__cta-row">
-        <button
-          type="button"
-          class="pitch-mobile-page__btn pitch-mobile-page__btn--primary"
-          id="pitch-copy-page-url"
-        >
-          העתקת קישור
-        </button>
-        <a
-          class="pitch-mobile-page__btn pitch-mobile-page__btn--ghost"
-          id="pitch-open-email-link"
-          href="#"
-          rel="nofollow"
-        >
-          שליחה באימייל
-        </a>
+  <main class="download-landing" id="download-landing" aria-label="הורדה והתקנה של Weather V1">
+    <div class="download-landing__bg" aria-hidden="true">
+      <span class="download-landing__orb download-landing__orb--coral"></span>
+      <span class="download-landing__orb download-landing__orb--yellow"></span>
+    </div>
+    <div class="download-landing__inner">
+      <div class="download-landing__copy">
+        <div class="download-landing__kicker">
+          <span class="download-landing__pulse" aria-hidden="true"></span>
+          <span>Weather V1 · Windows</span>
+        </div>
+        <h1 class="download-landing__title">
+          מקריינות לתחזית<br>
+          <span class="download-landing__title-grad">בסרטון ורטיקלי</span>
+        </h1>
+        <p class="download-landing__lead">
+          Weather V1 ממירה קריינות תחזית לסרטון ורטיקלי. תמלול אוטומטי, תכנון סצנות חכם והרכבה מהקטלוג שלכם, על המחשב שלכם.
+        </p>
+        <div class="download-landing__actions">
+          <a class="download-landing__download" href="https://github.com/__REPO__/releases/latest/download/WeatherV1-Setup.exe" download>
+            <span class="download-landing__download-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v11"/>
+                <path d="m7 11 5 5 5-5"/>
+                <path d="M5 20h14"/>
+              </svg>
+            </span>
+            <span class="download-landing__download-text">
+              <small>התקנה ל־Windows</small>
+              <strong>הורדה והתקנה</strong>
+            </span>
+          </a>
+          <button type="button" class="download-landing__cta" data-open-pitch>
+            <span>פתחו את המצגת</span>
+            <span class="download-landing__cta-arrow" aria-hidden="true">←</span>
+          </button>
+        </div>
+        <ul class="download-landing__chips" aria-label="הצצה למה שיש בפנים">
+          <li>קריינות → תמלול</li>
+          <li>תכנון סצנות AI</li>
+          <li>כ־400 סגמנטים מתויגים</li>
+          <li>פלט 9:16</li>
+        </ul>
       </div>
-      <p class="pitch-mobile-page__status" id="pitch-desktop-cta-status" aria-live="polite"></p>
-    </section>
+      <div class="download-landing__visual" aria-hidden="true">
+        <div class="download-landing__phone">
+          <span class="download-landing__phone-notch" aria-hidden="true"></span>
+          <video class="download-landing__phone-video" autoplay loop muted playsinline preload="metadata">
+            <source src="download-page/assets/mock-video-example.mp4" type="video/mp4">
+          </video>
+          <span class="download-landing__phone-glare" aria-hidden="true"></span>
+        </div>
+        <div class="download-landing__badge" aria-hidden="true">
+          <strong>9:16</strong>
+          <small>פלט מוכן</small>
+        </div>
+        <div class="download-landing__badge download-landing__badge--bottom" aria-hidden="true">
+          <strong>AI</strong>
+          <small>תכנון סצנות</small>
+        </div>
+      </div>
+    </div>
 
-    <footer class="pitch-mobile-page__footer">
-      <a href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
-        Builder · Bar Moshe
-      </a>
-    </footer>
+    <div class="download-landing__mobile-extras">
+      <section class="download-landing__topics" aria-label="מה במצגת">
+        <h2>מה תראו במצגת</h2>
+        <ol>
+          <li>
+            <span class="download-landing__topics-num">1</span>
+            <div>
+              <strong>פתיחה</strong>
+              <p>הזרימה הכללית של Weather V1, מקריינות עד וידאו ורטיקלי.</p>
+            </div>
+          </li>
+          <li>
+            <span class="download-landing__topics-num">2</span>
+            <div>
+              <strong>סטודיו</strong>
+              <p>המסך המרכזי שבו מעלים קריינות, מתמללים, מתכננים סצנות ומרנדרים.</p>
+            </div>
+          </li>
+          <li>
+            <span class="download-landing__topics-num">3</span>
+            <div>
+              <strong>קטלוג</strong>
+              <p>כ־200 סרטונים, כ־400 סגמנטים, תיאור ותגיות לכל קטע.</p>
+            </div>
+          </li>
+          <li>
+            <span class="download-landing__topics-num">4</span>
+            <div>
+              <strong>מצב נוכחי</strong>
+              <p>מה קיים היום, ומה אפשר להעביר בהמשך לתשתיות שלכם.</p>
+            </div>
+          </li>
+          <li>
+            <span class="download-landing__topics-num">5</span>
+            <div>
+              <strong>איך ממשיכים מכאן</strong>
+              <p>הצעדים שצריך לסגור יחד כדי להביא את המערכת לפעולה אצלכם.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <p class="download-landing__horizon">
+        אופציות להמשך, אם נרצה: לחבר את שכבות הגרפיקה הקיימות שלכם (לוגואים, כותרות ומיתוג) לתוך Weather V1, כך שהאפליקציה תייצר את הסרטון המוגמר.
+        <span class="download-landing__horizon-note">
+          <span class="download-landing__horizon-star" aria-hidden="true">*</span>
+          וגם אפשר לחבר את התהליך ל־Adobe Premiere אם זה מתאים יותר לזרימה שלכם.
+        </span>
+      </p>
+
+      <section class="download-landing__share" aria-label="פתיחה במחשב">
+        <p class="download-landing__share-title">צפייה במצגת המלאה</p>
+        <p class="download-landing__share-text">
+          החוויה המלאה עם המוקאפים נוחה יותר במסך רחב. העתיקו את הקישור או שלחו אותו לעצמכם, ופתחו במחשב.
+        </p>
+        <div class="download-landing__share-row">
+          <button
+            type="button"
+            class="download-landing__share-btn download-landing__share-btn--primary"
+            id="pitch-copy-page-url"
+          >
+            העתקת קישור
+          </button>
+          <a
+            class="download-landing__share-btn download-landing__share-btn--ghost"
+            id="pitch-open-email-link"
+            href="#"
+            rel="nofollow"
+          >
+            שליחה באימייל
+          </a>
+        </div>
+        <p class="download-landing__share-status" id="pitch-desktop-cta-status" aria-live="polite"></p>
+      </section>
+
+      <footer class="download-landing__footer">
+        <a href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
+          Builder · Bar Moshe
+        </a>
+      </footer>
+    </div>
   </main>
 
   <div class="scroll-progress" aria-hidden="true"><span id="progressFill"></span></div>
@@ -4751,11 +5663,6 @@
       {
         label: "התקנה ל־Windows",
         href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-Setup.exe",
-        primary: true
-      },
-      {
-        label: "התקנה ל־Mac",
-        href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-macOS.zip",
         primary: true
       }
     ];
@@ -5651,7 +6558,9 @@
     }
 
     function singlePanelSectionHtml(section, globalIdx, rollIdx) {
-      const heroDownloads = section.id === "intro" ? heroDownloadsBlock() : "";
+      // Downloads moved to the dedicated download landing page; the intro slide
+      // no longer carries an in-slide download block.
+      const heroDownloads = "";
       const visualAria =
         section.visual === "excalidrawDemo" ||
         section.visual === "catalogScreenshot" ||
@@ -5869,6 +6778,73 @@
         }
         ok("העתקה זמינה רק בדפדפן מעודכן, נסו «שליחה באימייל»");
       });
+    })();
+
+    /**
+     * Landing / pitch mode toggle.
+     *
+     * The page boots into a static download landing (desktop overlay; mobile
+     * inline page). Any non-empty URL hash means "show the pitch deck", which
+     * adds `is-pitch-active` to <html>+<body>, fades the landing out, unlocks
+     * the body scroll lock, and refreshes ScrollTrigger so the deck can be
+     * scrubbed. The brand mark and the "back to download" nav link clear the
+     * hash to return to the landing.
+     */
+    (function initLandingPitchToggle() {
+      const desktopMq = window.matchMedia("(min-width: 861px)");
+      const root = document.documentElement;
+      const body = document.body;
+
+      const isPitchHash = () => {
+        const h = location.hash;
+        return !!h && h !== "#" && h !== "#download-landing";
+      };
+
+      const setMode = (pitch) => {
+        root.classList.toggle("is-pitch-active", pitch);
+        body.classList.toggle("is-pitch-active", pitch);
+      };
+
+      const syncMode = () => {
+        const pitch = isPitchHash();
+        setMode(pitch);
+        if (pitch) {
+          requestAnimationFrame(() => {
+            if (window.ScrollTrigger && typeof window.ScrollTrigger.refresh === "function") {
+              window.ScrollTrigger.refresh();
+            }
+          });
+        } else if (desktopMq.matches) {
+          // Reset scroll so the deck starts from the first slide when reopened.
+          try { window.scrollTo({ top: 0, behavior: "instant" }); }
+          catch (_) { window.scrollTo(0, 0); }
+        }
+      };
+
+      document.addEventListener("click", (event) => {
+        const openTarget = event.target.closest && event.target.closest("[data-open-pitch]");
+        if (openTarget) {
+          event.preventDefault();
+          if (location.hash !== "#intro") {
+            location.hash = "intro";
+          } else {
+            // Already on #intro: ensure mode is in sync (e.g. after a back-button refresh).
+            syncMode();
+          }
+          return;
+        }
+        const backTarget = event.target.closest && event.target.closest("[data-back-to-landing]");
+        if (backTarget) {
+          event.preventDefault();
+          if (location.hash && location.hash !== "#") {
+            history.pushState(null, "", location.pathname + location.search);
+          }
+          syncMode();
+        }
+      });
+
+      window.addEventListener("hashchange", syncMode);
+      syncMode();
     })();
 
     const pitchStepUp = document.getElementById("pitch-step-up");
