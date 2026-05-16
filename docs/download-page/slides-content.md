@@ -77,7 +77,7 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
   - `docs/download-page/assets/segments-clips-catalog-screenshot.png`: grid of segments and clips with posters, search, filters, tags, sync status.
   - `docs/download-page/assets/catalog-segment-tag-modal.png`: modal for editing one segment's description and tags. Revealed by a button.
 - **`localFirstPitch`**: 2x2 grid of 4 cards (קטלוג / תמלול / תכנון סצנות / רינדור). Each card has a symbolic header icon and two stacked blocks: `כיום` (now) and either `אפשרות להמשך` (option going forward) or `מה צריך` (what's needed) depending on the card. CSS only, no image files. Internal slide id stays `local-first` to preserve the URL hash and the scroll registry; the visible kicker is `מצב נוכחי`.
-- **`closingRoadmap`**: Horizontal numbered roadmap with 5 nodes (1..5) connected by a thin accent line that draws right-to-left on scroll-in. Each node shows its `mobile_bullets` label below the number. No price, no chips, no fine print. CSS/SVG only.
+- **`closingRoadmap`**: Numbered roadmap of steps (one per `mobile_bullets` entry) connected by a thin accent line that draws right-to-left on scroll-in. Each node shows its `mobile_bullets` label below the number. No price, no chips, no fine print. CSS/SVG only.
 
 ---
 
@@ -240,6 +240,7 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 **bullets:**
 - להבין מה חשוב לדייק לפני שימוש אמיתי.
 - להחליט איפה נכון לשמור את הקטלוג בהמשך.
+- לעבור על הקטלוג הקיים: לבחור אילו סרטונים נשארים בו ולהוסיף סרטונים ממקורות נוספים.
 - לחבר את ה־API keys הרלוונטיים.
 - לבדוק את המערכת בסביבת העבודה שלכם.
 - לסגור יחד את היקף ההמשך בצורה פשוטה וברורה.
@@ -247,6 +248,7 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 **mobile_bullets:**
 - מה צריך לדייק
 - איפה יישב הקטלוג
+- מעבר ועדכון הקטלוג
 - חיבור API keys
 - בדיקה אצלכם
 - סגירת היקף ההמשך
@@ -254,7 +256,7 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 **mobile_summary:**
 > מכאן ממשיכים יחד: מה צריך לסגור, מה צריך לחבר, ואיך מביאים את Weather V1 למצב שעובד אצלכם בפועל.
 
-**graphics:** `closingRoadmap`, horizontal numbered roadmap of 5 nodes connected by a thin accent line. Each node shows the corresponding `mobile_bullets` label below the number. No price, no chips, no fine print.
+**graphics:** `closingRoadmap`, numbered roadmap with one node per `mobile_bullets` entry connected by a thin accent line. Each node shows the corresponding `mobile_bullets` label below the number. No price, no chips, no fine print.
 
 **closing_options:** *(rendered inline by the template, not editable from this file)*
 
