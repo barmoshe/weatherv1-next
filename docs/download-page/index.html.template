@@ -4271,7 +4271,7 @@
     </section>
 
     <p class="pitch-mobile-page__horizon">
-      אופציות להמשך, אם נרצה: אפשר לבנות את אותה זרימה כתוסף ל־Adobe Premiere, ובהמשך גם להוסיף שכבות גרפיות מעל הסרטון שנוצר (לוגואים, כותרות ומיתוג).
+      אופציות להמשך, אם נרצה: לחבר את Weather V1 לתהליך עבודה ב־Adobe Premiere, ולחבר את שכבות הגרפיקה הקיימות שלכם (לוגואים, כותרות ומיתוג) לתוך האפליקציה עצמה.
     </p>
 
     <section class="pitch-mobile-page__cta" aria-label="פתיחה במחשב">
@@ -5230,12 +5230,12 @@
               <p class="pitch-closing-options__eyebrow">אופציות להמשך, אם נרצה</p>
               <ul class="pitch-closing-options__list">
                 <li>
-                  <strong>תוסף ל־Adobe Premiere.</strong>
-                  <span>אפשר לבנות את אותה זרימה כתוסף ל־Adobe Premiere, שעובד מתוך תוכנת העריכה במקום כאפליקציה נפרדת.</span>
+                  <strong>שילוב עם Adobe Premiere.</strong>
+                  <span>אפשר לחבר את Weather V1 לתהליך עבודה ב־Adobe Premiere, כך שהמשך העבודה יקרה ישירות מתוך תוכנת העריכה.</span>
                 </li>
                 <li>
-                  <strong>שכבות גרפיות מעל הסרטון.</strong>
-                  <span>בהמשך אפשר להוסיף שכבות גרפיות מעל הסרטון שנוצר (לוגואים, כותרות ומיתוג), מעבר לבסיס הנוכחי.</span>
+                  <strong>שילוב שכבות הגרפיקה שלכם.</strong>
+                  <span>אפשר לחבר את שכבות הגרפיקה הקיימות שלכם (לוגואים, כותרות ומיתוג) לתוך Weather V1, כך שהאפליקציה תייצר את הסרטון המוגמר ולא רק את הבסיס.</span>
                 </li>
               </ul>
             </aside>`

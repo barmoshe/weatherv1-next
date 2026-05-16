@@ -258,12 +258,12 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 
 **closing_options:** *(rendered inline by the template, not editable from this file)*
 
-Below the bullets on desktop, a small dashed-border card titled `אופציות להמשך, אם נרצה` lists two optional future directions:
+Below the bullets on desktop, a small dashed-border card titled `אופציות להמשך, אם נרצה` lists two parallel "integrations" we could do later:
 
-1. **תוסף ל־Adobe Premiere.** אפשר לבנות את אותה זרימה כתוסף ל־Adobe Premiere, שעובד מתוך תוכנת העריכה במקום כאפליקציה נפרדת.
-2. **שכבות גרפיות מעל הסרטון.** בהמשך אפשר להוסיף שכבות גרפיות מעל הסרטון שנוצר (לוגואים, כותרות ומיתוג), מעבר לבסיס הנוכחי.
+1. **שילוב עם Adobe Premiere.** אפשר לחבר את Weather V1 לתהליך עבודה ב־Adobe Premiere, כך שהמשך העבודה יקרה ישירות מתוך תוכנת העריכה.
+2. **שילוב שכבות הגרפיקה שלכם.** אפשר לחבר את שכבות הגרפיקה הקיימות שלכם (לוגואים, כותרות ומיתוג) לתוך Weather V1, כך שהאפליקציה תייצר את הסרטון המוגמר ולא רק את הבסיס.
 
-These are phrased as open possibilities (`אם נרצה`, `אפשר`), not commitments. The mobile single-page overview surfaces the same two directions as a short paragraph between the topics list and the desktop CTA card. To change the wording, edit the `closingOptionsBlock` template literal inside `singlePanelSectionHtml()` and the `.pitch-mobile-page__horizon` paragraph inside the `<main class="pitch-mobile-page">` markup; both live in `docs/download-page/index.html.template`.
+Both are phrased as open possibilities (`אם נרצה`, `אפשר`), not commitments, and both follow the same "שילוב" framing: one integrates Weather V1 with an external editor, the other integrates V1's existing graphics package into the app. The mobile single-page overview surfaces the same two directions as a short paragraph between the topics list and the desktop CTA card. To change the wording, edit the `closingOptionsBlock` template literal inside `singlePanelSectionHtml()` and the `.pitch-mobile-page__horizon` paragraph inside the `<main class="pitch-mobile-page">` markup; both live in `docs/download-page/index.html.template`.
 
 **notes:** This slide merges what used to be two separate slides (a pricing slide and a final next-steps slide). It deliberately does NOT show a price; pricing lives in the verbal conversation. Do not add an amount, do not write `המחיר יוצג בשיחה`, do not use `התקנה ראשונית`. The `closing_options` block above is a separate, optional layer that names future-direction possibilities; it is not part of the committed scope.
 
