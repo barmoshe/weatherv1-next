@@ -11,29 +11,23 @@ import type {
 import { downloadJsonFile } from "@/client/lib/download-json-file";
 
 import type { CatalogHealth, DesktopStatus, DotVariant } from "./settings/settingsTypes";
-import { SettingsAiPanel } from "./settings/SettingsAiPanel";
+import { AdminTabPanel } from "./settings/AdminTabPanel";
+import { EditorTabPanel } from "./settings/EditorTabPanel";
 import { SettingsCatalogPanel } from "./settings/SettingsCatalogPanel";
-import { SettingsCloudPanel } from "./settings/SettingsCloudPanel";
-import { SettingsDesktopPanel } from "./settings/SettingsDesktopPanel";
-import { SettingsOverviewPanel } from "./settings/SettingsOverviewPanel";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type SettingsTabId = "overview" | "catalog" | "desktop" | "ai" | "cloud";
+type SettingsTabId = "editor" | "admin" | "catalog";
 
-const SETTINGS_TABS_DESKTOP: { id: SettingsTabId; label: string }[] = [
-  { id: "overview", label: "סקירה" },
-  { id: "catalog", label: "קטלוג קליפים" },
-  { id: "desktop", label: "דסקטופ וקבצים" },
-  { id: "ai", label: "AI ומודלים" },
-  { id: "cloud", label: "ענן (R2)" },
+const SETTINGS_TABS_DESKTOP: { id: SettingsTabId; label: string; locked?: boolean }[] = [
+  { id: "editor", label: "עורך" },
+  { id: "admin", label: "ניהול" },
 ];
 
 const SETTINGS_TABS_BROWSER: { id: SettingsTabId; label: string }[] = [
-  { id: "overview", label: "סקירה" },
   { id: "catalog", label: "קטלוג קליפים" },
 ];
 
@@ -44,7 +38,8 @@ const EMPTY_KEYS: DesktopStatus["keys"] = {
 };
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<SettingsTabId>("overview");
+  const [activeTab, setActiveTab] = useState<SettingsTabId>("editor");
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [health, setHealth] = useState<CatalogHealth | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
@@ -348,11 +343,26 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, []);
 
+  const checkForUpdates = useCallback(async () => {
+    if (!desktop) return;
+    try {
+      const next = await desktop.getUpdateState();
+      setUpdateState(next);
+    } catch {
+      // best-effort — the existing flow doesn't surface a UI error here.
+    }
+  }, []);
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      // Re-lock the Admin tab whenever the modal closes — per-modal-open
+      // gating, not per-session. Next open requires the password again.
+      setAdminUnlocked(false);
+      return;
+    }
     void loadHealth();
     void loadDesktopStatus();
-    setActiveTab("overview");
+    setActiveTab(desktop ? "editor" : "catalog");
   }, [isOpen, loadDesktopStatus, loadHealth]);
 
   useEffect(() => {
@@ -370,11 +380,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   useEffect(() => {
     if (!isOpen) return;
     if (!visibleTabs.some((t) => t.id === activeTab)) {
-      setActiveTab("overview");
+      setActiveTab(isDesktop ? "editor" : "catalog");
     }
-  }, [isOpen, activeTab, visibleTabs]);
+  }, [isOpen, activeTab, visibleTabs, isDesktop]);
 
-  const safeTab = visibleTabs.some((t) => t.id === activeTab) ? activeTab : "overview";
+  const fallbackTab: SettingsTabId = isDesktop ? "editor" : "catalog";
+  const safeTab = visibleTabs.some((t) => t.id === activeTab) ? activeTab : fallbackTab;
 
   if (!isOpen) return null;
 
@@ -453,208 +464,216 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </p>
           </div>
           <div className="settings-modal-tabstrip" role="tablist" aria-label="סעיפי הגדרות">
-            {visibleTabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                id={`settings-tab-${t.id}`}
-                aria-selected={safeTab === t.id}
-                aria-controls={`settings-panel-${t.id}`}
-                className={`settings-modal-tab ${safeTab === t.id ? "is-active" : undefined}`}
-                onClick={() => setActiveTab(t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
+            {visibleTabs.map((t) => {
+              const showLock = t.id === "admin" && !adminUnlocked;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  id={`settings-tab-${t.id}`}
+                  aria-selected={safeTab === t.id}
+                  aria-controls={`settings-panel-${t.id}`}
+                  className={`settings-modal-tab ${safeTab === t.id ? "is-active" : undefined}`}
+                  onClick={() => setActiveTab(t.id)}
+                >
+                  {t.label}
+                  {showLock ? (
+                    <span aria-hidden="true" style={{ marginInlineStart: "0.4em" }}>🔒</span>
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
           <div className="modal-body modal-body--settings-tabs">
-            <div
-              className="settings-modal-tabpanel"
-              role="tabpanel"
-              id="settings-panel-overview"
-              aria-labelledby="settings-tab-overview"
-              hidden={safeTab !== "overview"}
-            >
-              <SettingsOverviewPanel
-                healthLoading={healthLoading}
-                catalogKnown={catalogKnown}
-                claimed={claimed}
-                catalogDotVariant={catalogDotVariant}
-                catalogStatHint={catalogStatHint}
-                desktopLoading={desktopLoading}
-                isDesktop={isDesktop}
-                workspaceReady={workspaceReady}
-                workspaceDir={desktopStatus?.workspace.workspaceDir}
-                configuredKeysCount={configuredKeysCount}
-                r2Ready={r2Ready}
-                desktopR2={desktopStatus?.r2}
-              />
-            </div>
+            {isDesktop ? (
+              <>
+                <div
+                  className="settings-modal-tabpanel"
+                  role="tabpanel"
+                  id="settings-panel-editor"
+                  aria-labelledby="settings-tab-editor"
+                  hidden={safeTab !== "editor"}
+                >
+                  <EditorTabPanel
+                    healthLoading={healthLoading}
+                    health={health}
+                    claimed={claimed}
+                    missing={missing}
+                    catalogDotVariant={catalogDotVariant}
+                    catalogStatHint={catalogStatHint}
+                    desktopStatusKeys={desktopStatusKeys}
+                    openaiKey={openaiKey}
+                    saving={saving}
+                    onOpenaiKeyChange={(v) => {
+                      setOpenaiKey(v);
+                      setSaved(false);
+                    }}
+                    onClearOpenai={() => void clearKey("openai")}
+                    workspaceDir={desktopStatus?.workspace.workspaceDir}
+                    workspaceReady={workspaceReady}
+                    appInfo={appInfo}
+                    updateState={updateState}
+                    onCheckForUpdates={() => void checkForUpdates()}
+                    onSwitchToAdminTab={() => setActiveTab("admin")}
+                  />
+                </div>
 
-            <div
-              className="settings-modal-tabpanel"
-              role="tabpanel"
-              id="settings-panel-catalog"
-              aria-labelledby="settings-tab-catalog"
-              hidden={safeTab !== "catalog"}
-            >
-              <SettingsCatalogPanel
-                onRefreshHealth={loadHealth}
-                healthLoading={healthLoading}
-                healthError={healthError}
-                health={health}
-                claimed={claimed}
-                missing={missing}
-                ver={ver}
-                onDiskCount={onDiskCount}
-                catalogDotVariant={catalogDotVariant}
-              />
-              {!isDesktop ? (
+                <div
+                  className="settings-modal-tabpanel"
+                  role="tabpanel"
+                  id="settings-panel-admin"
+                  aria-labelledby="settings-tab-admin"
+                  hidden={safeTab !== "admin"}
+                >
+                  <AdminTabPanel
+                    unlocked={adminUnlocked}
+                    onUnlocked={() => setAdminUnlocked(true)}
+                    onLock={() => setAdminUnlocked(false)}
+                    catalog={{
+                      onRefreshHealth: loadHealth,
+                      healthLoading,
+                      healthError,
+                      health,
+                      claimed,
+                      missing,
+                      ver,
+                      onDiskCount,
+                      catalogDotVariant,
+                    }}
+                    desktop={{
+                      saved,
+                      onRefreshDesktopStatus: loadDesktopStatus,
+                      desktopLoading,
+                      saving,
+                      desktopError,
+                      desktopStatus,
+                      appInfo,
+                      updateState,
+                      workspaceReady,
+                      ffmpegReady,
+                      onPickWorkspace: pickWorkspace,
+                      workspaceDir,
+                      onWorkspaceDirChange: (v) => {
+                        setWorkspaceDir(v);
+                        setSaved(false);
+                      },
+                      ffmpegPath,
+                      ffprobePath,
+                      onFfmpegPathChange: (v) => {
+                        setFfmpegPath(v);
+                        setSaved(false);
+                      },
+                      onFfprobePathChange: (v) => {
+                        setFfprobePath(v);
+                        setSaved(false);
+                      },
+                      onResetWorkspaceToDefault: resetWorkspaceToDefault,
+                      onClearDerivedCache: clearDerivedCache,
+                      clearCacheBusy,
+                      onBeginUninstall: beginUninstall,
+                      uninstallBusy,
+                    }}
+                    ai={{
+                      desktopStatusKeys,
+                      saving,
+                      anthropicKey,
+                      openaiKey,
+                      geminiKey,
+                      onAnthropicKeyChange: (v) => {
+                        setAnthropicKey(v);
+                        setSaved(false);
+                      },
+                      onOpenaiKeyChange: (v) => {
+                        setOpenaiKey(v);
+                        setSaved(false);
+                      },
+                      onGeminiKeyChange: (v) => {
+                        setGeminiKey(v);
+                        setSaved(false);
+                      },
+                      onClearKey: (provider) => void clearKey(provider),
+                      llmProvider,
+                      onLlmProviderChange: (pref) => {
+                        setLlmProvider(pref);
+                        setSaved(false);
+                      },
+                    }}
+                    cloud={{
+                      appInfo,
+                      desktopStatus,
+                      saving,
+                      syncingR2,
+                      exportR2JobsLoading,
+                      r2Enabled,
+                      r2GatewayUrl,
+                      r2TenantId,
+                      r2BucketName,
+                      r2AppUsername,
+                      r2AppPassword,
+                      showR2Password,
+                      onR2GatewayUrlChange: (v) => {
+                        setR2GatewayUrl(v);
+                        setSaved(false);
+                      },
+                      onR2TenantIdChange: (v) => {
+                        setR2TenantId(v);
+                        setSaved(false);
+                      },
+                      onR2BucketNameChange: (v) => {
+                        setR2BucketName(v);
+                        setSaved(false);
+                      },
+                      onR2AppUsernameChange: (v) => {
+                        setR2AppUsername(v);
+                        setSaved(false);
+                      },
+                      onR2AppPasswordChange: (v) => {
+                        setR2AppPassword(v);
+                        setSaved(false);
+                      },
+                      onR2EnabledChange: (enabled) => {
+                        setR2Enabled(enabled);
+                        setSaved(false);
+                      },
+                      onShowR2PasswordToggle: () => setShowR2Password((v) => !v),
+                      onClearR2Key: () => void clearKey("r2"),
+                      onPullCatalogFromR2: pullCatalogFromR2,
+                      onPushCatalogToR2: (replace) => void pushCatalogToR2(replace),
+                      onExportJobsFromR2: exportJobsFromR2,
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div
+                className="settings-modal-tabpanel"
+                role="tabpanel"
+                id="settings-panel-catalog"
+                aria-labelledby="settings-tab-catalog"
+                hidden={safeTab !== "catalog"}
+              >
+                <SettingsCatalogPanel
+                  onRefreshHealth={loadHealth}
+                  healthLoading={healthLoading}
+                  healthError={healthError}
+                  health={health}
+                  claimed={claimed}
+                  missing={missing}
+                  ver={ver}
+                  onDiskCount={onDiskCount}
+                  catalogDotVariant={catalogDotVariant}
+                />
                 <section className="settings-section settings-section--browser-note">
                   <div className="catalog-card">
                     <span className="dot is-missing" />
                     <span>
-                      טאב דסקטופ, AI וענן מוצגים רק בעת הפעלה דרך אפליקציית WeatherV1 (Electron).
+                      טאב עורך וניהול מוצגים רק בעת הפעלה דרך אפליקציית WeatherV1 (Electron).
                     </span>
                   </div>
                 </section>
-              ) : null}
-            </div>
-
-            {isDesktop ? (
-              <div
-                className="settings-modal-tabpanel"
-                role="tabpanel"
-                id="settings-panel-desktop"
-                aria-labelledby="settings-tab-desktop"
-                hidden={safeTab !== "desktop"}
-              >
-                <SettingsDesktopPanel
-                  saved={saved}
-                  onRefreshDesktopStatus={loadDesktopStatus}
-                  desktopLoading={desktopLoading}
-                  saving={saving}
-                  desktopError={desktopError}
-                  desktopStatus={desktopStatus}
-                  appInfo={appInfo}
-                  updateState={updateState}
-                  workspaceReady={workspaceReady}
-                  ffmpegReady={ffmpegReady}
-                  onPickWorkspace={pickWorkspace}
-                  workspaceDir={workspaceDir}
-                  onWorkspaceDirChange={(v) => {
-                    setWorkspaceDir(v);
-                    setSaved(false);
-                  }}
-                  ffmpegPath={ffmpegPath}
-                  ffprobePath={ffprobePath}
-                  onFfmpegPathChange={(v) => {
-                    setFfmpegPath(v);
-                    setSaved(false);
-                  }}
-                  onFfprobePathChange={(v) => {
-                    setFfprobePath(v);
-                    setSaved(false);
-                  }}
-                  onResetWorkspaceToDefault={resetWorkspaceToDefault}
-                  onClearDerivedCache={clearDerivedCache}
-                  clearCacheBusy={clearCacheBusy}
-                  onBeginUninstall={beginUninstall}
-                  uninstallBusy={uninstallBusy}
-                />
               </div>
-            ) : null}
-
-            {isDesktop ? (
-              <div
-                className="settings-modal-tabpanel"
-                role="tabpanel"
-                id="settings-panel-ai"
-                aria-labelledby="settings-tab-ai"
-                hidden={safeTab !== "ai"}
-              >
-                <SettingsAiPanel
-                  desktopStatusKeys={desktopStatusKeys}
-                  saving={saving}
-                  anthropicKey={anthropicKey}
-                  openaiKey={openaiKey}
-                  geminiKey={geminiKey}
-                  onAnthropicKeyChange={(v) => {
-                    setAnthropicKey(v);
-                    setSaved(false);
-                  }}
-                  onOpenaiKeyChange={(v) => {
-                    setOpenaiKey(v);
-                    setSaved(false);
-                  }}
-                  onGeminiKeyChange={(v) => {
-                    setGeminiKey(v);
-                    setSaved(false);
-                  }}
-                  onClearKey={(provider) => void clearKey(provider)}
-                  llmProvider={llmProvider}
-                  onLlmProviderChange={(pref) => {
-                    setLlmProvider(pref);
-                    setSaved(false);
-                  }}
-                />
-              </div>
-            ) : null}
-
-            {isDesktop ? (
-              <div
-                className="settings-modal-tabpanel"
-                role="tabpanel"
-                id="settings-panel-cloud"
-                aria-labelledby="settings-tab-cloud"
-                hidden={safeTab !== "cloud"}
-              >
-                <SettingsCloudPanel
-                  appInfo={appInfo}
-                  desktopStatus={desktopStatus}
-                  saving={saving}
-                  syncingR2={syncingR2}
-                  exportR2JobsLoading={exportR2JobsLoading}
-                  r2Enabled={r2Enabled}
-                  r2GatewayUrl={r2GatewayUrl}
-                  r2TenantId={r2TenantId}
-                  r2BucketName={r2BucketName}
-                  r2AppUsername={r2AppUsername}
-                  r2AppPassword={r2AppPassword}
-                  showR2Password={showR2Password}
-                  onR2GatewayUrlChange={(v) => {
-                    setR2GatewayUrl(v);
-                    setSaved(false);
-                  }}
-                  onR2TenantIdChange={(v) => {
-                    setR2TenantId(v);
-                    setSaved(false);
-                  }}
-                  onR2BucketNameChange={(v) => {
-                    setR2BucketName(v);
-                    setSaved(false);
-                  }}
-                  onR2AppUsernameChange={(v) => {
-                    setR2AppUsername(v);
-                    setSaved(false);
-                  }}
-                  onR2AppPasswordChange={(v) => {
-                    setR2AppPassword(v);
-                    setSaved(false);
-                  }}
-                  onR2EnabledChange={(enabled) => {
-                    setR2Enabled(enabled);
-                    setSaved(false);
-                  }}
-                  onShowR2PasswordToggle={() => setShowR2Password((v) => !v)}
-                  onClearR2Key={() => void clearKey("r2")}
-                  onPullCatalogFromR2={pullCatalogFromR2}
-                  onPushCatalogToR2={(replace) => void pushCatalogToR2(replace)}
-                  onExportJobsFromR2={exportJobsFromR2}
-                />
-              </div>
-            ) : null}
+            )}
           </div>
           <footer className="modal-footer">
             {isDesktop ? (
