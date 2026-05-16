@@ -1054,7 +1054,7 @@
       }
     }
 
-    /* === Pitch: closing options (#next-steps copy column, below bullets) === */
+    /* === Pitch: closing options (#local-first copy column, below the lead) === */
     .pitch-closing-options {
       margin-block-start: 8px;
       padding: 14px 16px;
@@ -1137,10 +1137,6 @@
       #next-steps .panel-inner {
         gap: clamp(20px, 3vw, 48px);
         align-items: center;
-        /* Give the copy column (RTL: right side) more room so the long title
-           wraps on fewer lines and the closing-options box doesn't overflow
-           below the slide. */
-        grid-template-columns: minmax(0, 1.22fr) minmax(280px, 0.78fr);
       }
       #next-steps .panel-copy {
         align-self: center;
@@ -1151,8 +1147,8 @@
         align-self: center !important;
       }
     }
-    #next-steps .pitch-closing-options {
-      margin-block-start: 4px;
+    #local-first .pitch-closing-options {
+      margin-block-start: 12px;
     }
 
     /* === Pitch: closing journey (`#next-steps`) — vertical editorial spine === */
@@ -4758,7 +4754,7 @@
         ],
         visual: "localFirstPitch",
         transition: "ttb",
-        panelLayout: "split-visual-heavy",
+        panelLayout: "split-balanced",
         theme: { paper: "#f4f6fa", accent: "#475569" }
       },
       {
@@ -5603,7 +5599,7 @@
       const bulletsBlock = bulletsMarkup(section);
       const pitchProductLayout = isPitchProductSection(section);
       const closingOptionsBlock =
-        section.id === "next-steps"
+        section.id === "local-first"
           ? `<aside class="pitch-closing-options" aria-label="אופציות להמשך, אם נרצה">
               <p class="pitch-closing-options__eyebrow">אופציות להמשך, אם נרצה</p>
               <ul class="pitch-closing-options__list">
