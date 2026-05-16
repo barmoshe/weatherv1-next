@@ -3901,7 +3901,8 @@
     .download-landing__copy > *:nth-child(3) { animation-delay: 420ms; }
     .download-landing__copy > *:nth-child(4) { animation-delay: 580ms; }
     .download-landing__copy > *:nth-child(5) { animation-delay: 700ms; }
-    .download-landing__copy > *:nth-child(6) { animation-delay: 840ms; }
+    .download-landing__copy > *:nth-child(6) { animation-delay: 820ms; }
+    .download-landing__copy > *:nth-child(7) { animation-delay: 940ms; }
 
     .download-landing__mac-note {
       display: grid;
@@ -3947,6 +3948,28 @@
     .download-landing__mac-icon svg {
       width: 18px;
       height: 18px;
+      display: block;
+    }
+
+    /* Mobile "send-link-to-my-desktop" pattern.
+       The actual download button is hidden on touch devices (tapping it would
+       deliver a useless .exe on a phone); this card explains the platform
+       constraint and offers the two standard self-share actions. */
+    .download-landing__platform-card {
+      display: none;
+    }
+
+    .download-landing__platform-btn-icon {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      flex: 0 0 22px;
+    }
+
+    .download-landing__platform-btn-icon svg {
+      width: 16px;
+      height: 16px;
       display: block;
     }
 
@@ -4537,13 +4560,116 @@
         gap: 10px;
       }
 
+      /* Hide the Windows installer button on touch devices — tapping it would
+         download an .exe that cannot run on the phone. Replaced by the
+         platform card below, which surfaces the "send link to my desktop"
+         pattern (copy / email) as the primary mobile action. */
       .download-landing__download {
-        width: 100%;
+        display: none;
+      }
+
+      .download-landing__platform-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+        border: 2px solid var(--v1-ink);
+        border-radius: 18px;
+        background: linear-gradient(150deg, rgb(255 255 255 / 0.96), rgb(252 250 246 / 0.96));
+        box-shadow: 4px 4px 0 var(--v1-ink);
+        max-width: 100%;
+      }
+
+      .download-landing__platform-head {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .download-landing__platform-icon {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--v1-ink);
+        color: #fff;
+      }
+
+      .download-landing__platform-icon svg {
+        width: 22px;
+        height: 22px;
+      }
+
+      .download-landing__platform-text strong {
+        display: block;
+        font-size: 1rem;
+        font-weight: 950;
+        color: var(--v1-ink);
+        letter-spacing: -0.01em;
+      }
+
+      .download-landing__platform-text small {
+        display: block;
+        margin-top: 2px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--v1-muted);
+        line-height: 1.4;
+      }
+
+      .download-landing__platform-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .download-landing__platform-btn {
+        flex: 1 1 auto;
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
-        padding: 14px 18px;
-        box-shadow:
-          5px 5px 0 var(--v1-ink),
-          0 14px 30px rgb(249 84 62 / 0.3);
+        gap: 8px;
+        padding: 0 14px;
+        border: 2px solid var(--v1-ink);
+        border-radius: 12px;
+        font: inherit;
+        font-weight: 900;
+        font-size: 0.92rem;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 2px 2px 0 var(--v1-ink);
+        transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .download-landing__platform-btn--primary {
+        background: var(--v1-coral);
+        color: #fff;
+      }
+
+      .download-landing__platform-btn--ghost {
+        background: rgb(255 255 255 / 0.92);
+        color: var(--v1-ink);
+      }
+
+      .download-landing__platform-btn:hover,
+      .download-landing__platform-btn:focus-visible,
+      .download-landing__platform-btn:active {
+        transform: translateY(-1px);
+        box-shadow: 3px 3px 0 var(--v1-ink);
+        outline: none;
+      }
+
+      .download-landing__platform-status {
+        margin: 0;
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--v1-success);
+        min-height: 1.1em;
+        text-align: center;
       }
 
       /* Mobile CTA opens the collapsed pitch view (pitch-mobile-page). */
@@ -4930,6 +5056,29 @@
         font-weight: 700;
         text-align: center;
         color: color-mix(in srgb, var(--v1-ink, #1c1a18) 72%, var(--v1-coral, #f9543e));
+      }
+
+      /* Sits where the old share card used to live — points back to the
+         landing where the copy-link / email actions now live, so we don't
+         duplicate the IDs and the JS handlers across two elements. */
+      .pitch-mobile-page__cta-hint {
+        margin: 0;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px dashed rgb(0 0 0 / 0.18);
+        background: rgb(255 255 255 / 0.7);
+        font-size: 0.88rem;
+        font-weight: 700;
+        line-height: 1.5;
+        color: var(--v1-muted, #313131);
+      }
+
+      .pitch-mobile-page__cta-hint-link {
+        display: inline-block;
+        margin-inline-start: 6px;
+        font-weight: 950;
+        color: var(--v1-coral, #f9543e);
+        text-decoration: none;
       }
 
       .pitch-mobile-page__horizon {
@@ -5551,6 +5700,49 @@
             <span class="download-landing__cta-arrow" aria-hidden="true">←</span>
           </button>
         </div>
+        <section class="download-landing__platform-card" aria-label="התקנה ממחשב Windows">
+          <div class="download-landing__platform-head">
+            <span class="download-landing__platform-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 3.449 9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.851"/>
+              </svg>
+            </span>
+            <div class="download-landing__platform-text">
+              <strong>Weather V1 ל־Windows</strong>
+              <small>פתחו את הקישור הזה ממחשב Windows כדי להוריד ולהתקין.</small>
+            </div>
+          </div>
+          <div class="download-landing__platform-row">
+            <button
+              type="button"
+              class="download-landing__platform-btn download-landing__platform-btn--primary"
+              id="pitch-copy-page-url"
+            >
+              <span class="download-landing__platform-btn-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="11" height="11" rx="2"/>
+                  <path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+                </svg>
+              </span>
+              <span>העתקת קישור</span>
+            </button>
+            <a
+              class="download-landing__platform-btn download-landing__platform-btn--ghost"
+              id="pitch-open-email-link"
+              href="#"
+              rel="nofollow"
+            >
+              <span class="download-landing__platform-btn-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="5" width="18" height="14" rx="2"/>
+                  <path d="m3 7 9 6 9-6"/>
+                </svg>
+              </span>
+              <span>שליחה באימייל</span>
+            </a>
+          </div>
+          <p class="download-landing__platform-status" id="pitch-desktop-cta-status" aria-live="polite"></p>
+        </section>
         <div class="download-landing__mac-note" role="note">
           <span class="download-landing__mac-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -5659,29 +5851,10 @@
       </span>
     </p>
 
-    <section class="pitch-mobile-page__cta" aria-label="פתיחה במחשב">
-      <p class="pitch-mobile-page__cta-text">
-        החוויה המלאה עם המוקאפים נוחה יותר במסך רחב. העתיקו את הקישור או שלחו אותו לעצמכם, ופתחו במחשב.
-      </p>
-      <div class="pitch-mobile-page__cta-row">
-        <button
-          type="button"
-          class="pitch-mobile-page__btn pitch-mobile-page__btn--primary"
-          id="pitch-copy-page-url"
-        >
-          העתקת קישור
-        </button>
-        <a
-          class="pitch-mobile-page__btn"
-          id="pitch-open-email-link"
-          href="#"
-          rel="nofollow"
-        >
-          שליחה באימייל
-        </a>
-      </div>
-      <p class="pitch-mobile-page__status" id="pitch-desktop-cta-status" aria-live="polite"></p>
-    </section>
+    <p class="pitch-mobile-page__cta-hint">
+      רוצים את הקישור על המחשב? חזרו לדף ההורדה ושלחו אותו לעצמכם בלחיצה.
+      <a class="pitch-mobile-page__cta-hint-link" href="#" data-back-to-landing>חזרה לדף ההורדה ←</a>
+    </p>
 
     <footer class="pitch-mobile-page__footer">
       <a href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
