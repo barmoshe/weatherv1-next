@@ -25,8 +25,7 @@ The same product can run in two modes:
 2. [README.md](../README.md) — overview, quick start, high-level repo map.
 3. [AGENTS.md](../AGENTS.md) — project guardrails, especially modern Next.js behavior.
 4. [NOTEBOOKLM.md](NOTEBOOKLM.md) — pack the repo into Markdown for Google NotebookLM (`npm run notebooklm:export:chunks`).
-5. [PITCH_CONTENT_FOR_AGENTS.md](PITCH_CONTENT_FOR_AGENTS.md) — all copy and graphics text for the live download-page pitch (6 slides); edit in ChatGPT, sync to `docs/download-page/index.html.template`.
-6. The doc for your task:
+5. The doc for your task:
    - **R2 / Worker / Pulumi / catalog mirror:** [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md) and [infra/cloudflare/README.md](../infra/cloudflare/README.md)
    - **Desktop architecture:** [ELECTRON_DESKTOP_PLAN.md](ELECTRON_DESKTOP_PLAN.md)
    - **Desktop operational state:** [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md)
@@ -62,8 +61,9 @@ The same product can run in two modes:
 | Modify Electron behavior | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md) | `electron/`, `forge.config.cjs`, `src/shared/desktop.ts` |
 | Understand why Electron was designed this way | [ELECTRON_DESKTOP_PLAN.md](ELECTRON_DESKTOP_PLAN.md) | `electron/`, `src/server/runtime`, `src/proxy.ts` |
 | Change desktop UI flows (including catalog / segment modal) | [ELECTRON_UXUI_RESEARCH.md](ELECTRON_UXUI_RESEARCH.md) §5.6, §4.1 | `src/client/components/catalog/**`, `src/client/lib/desktop.ts`, `src/app/globals.css` |
-| Package or release installers | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md) | `.github/workflows/desktop*.yml`, `forge.config.cjs`, `build/` |
-| **Edit pitch / download-page presentation copy** | [PITCH_CONTENT_FOR_AGENTS.md](PITCH_CONTENT_FOR_AGENTS.md) | `docs/download-page/index.html.template` (`storySections`, visual builders) |
+| Package or release installers | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md), [RELEASE_CONVENTION.md](RELEASE_CONVENTION.md) | `.github/workflows/desktop*.yml`, `forge.config.cjs`, `build/` |
+| **Reason about Electron main/preload/renderer boundaries, IPC, security** | [ELECTRON_AGENT_GUIDE.md](ELECTRON_AGENT_GUIDE.md) | `electron/main.cjs`, `electron/preload.cjs`, `electron/server-manager.cjs`, `electron/config.cjs`, `forge.config.cjs` |
+| Edit pitch / download-page presentation copy | `docs/download-page/index.html.template` directly | `storySections` + visual builders inside the template |
 | Deploy the web/server version with Docker | [DESIGN_DEPLOYMENT.md](DESIGN_DEPLOYMENT.md) | `Dockerfile`, `docker-compose.yml`, `src/server/**` |
 | Understand historical monorepo assumptions | [HANDOFF_NEW_REPO.md](HANDOFF_NEW_REPO.md) | old sibling-path notes in `src/server/**` |
 

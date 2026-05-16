@@ -53,3 +53,8 @@ next-env.d.ts
 /runtime/jobs.json
 /runtime/uploads/
 /runtime/outputs/
+
+# Claude Code personal scratch / per-checkout working memory
+CLAUDE.local.md
+.claude/ISSUES.local.md
+.claude/settings.local.json
