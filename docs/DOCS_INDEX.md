@@ -44,6 +44,7 @@ Tasks that are planned but not yet implemented.
 | --- | --- | --- |
 | [FUTURE_TASK_EDITOR_AND_ADMIN_GATES.md](FUTURE_TASK_EDITOR_AND_ADMIN_GATES.md) | Planned | Editor login at app entry (`v1editor`) + Settings modal redesign into Editor/Admin tabs + shared Argon2id password layer (hashes via GitHub Secrets). One PR. |
 | [FUTURE_TASK_MANUAL_UPDATE_CHECK.md](FUTURE_TASK_MANUAL_UPDATE_CHECK.md) | Planned | Replace `autoUpdater` with a manual GitHub-release check + browser open. Independent of the gates task. |
+| [FUTURE_TASK_MINIMIZE_AI_INPUT_TOKENS.md](FUTURE_TASK_MINIMIZE_AI_INPUT_TOKENS.md) | Planned | Cut scene-planner + picker input tokens via Anthropic cache plumbing (1 h TTL, breakpoint relocation, user-payload cache split, launch warmer). Bit-identical outputs; full catalog preserved. |
 
 When a task ships, move its row to "Done" and link the merging PR.
 
