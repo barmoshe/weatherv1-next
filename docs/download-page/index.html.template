@@ -1782,6 +1782,14 @@
       gap: 11px;
     }
 
+    .pitch-app-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgb(0 0 0 / 0.08);
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--v1-ink);
+    }
+
     .pitch-app-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -5033,11 +5041,7 @@
         : "";
       return `<div class="pitch-app-shell" data-studio-phase="idle" data-highlight="idle">
           <div class="pitch-app-main">
-            <nav class="pitch-app-tabs" aria-hidden="true">
-              <span class="pitch-app-tab is-active">סטודיו</span>
-              <span class="pitch-app-tab">קטלוג</span>
-              <span class="pitch-app-tab">אנליטיקה</span>
-            </nav>
+            <div class="pitch-app-header" aria-hidden="true">Weather V1 Studio</div>
             <div class="pitch-job-row" aria-hidden="true">
               <span class="pitch-job-chip mixed-ltr" lang="en" dir="ltr">
                 <span class="pitch-job-chip-txt pitch-job-chip-idle">הדגמה אינטראקטיבית</span>
