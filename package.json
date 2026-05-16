@@ -12,6 +12,7 @@
     "prebuild": "node --env-file-if-exists=.env scripts/emit-auth-hashes.cjs",
     "build": "next build",
     "start": "next start",
+    "pretest": "node scripts/ensure-auth-hashes-stub.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "standalone:prep": "node scripts/prepare-standalone.cjs",

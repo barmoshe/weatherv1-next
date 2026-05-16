@@ -20,10 +20,12 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    # No gate-password env vars here on purpose. `npm test` does not
-    # invoke the prebuild hash-emit step — the auth-passwords vitest
-    # mints its own fixture hashes in beforeAll. Real secrets only
-    # flow through the release-building workflows (Desktop, Docker).
+    # No gate-password env vars here on purpose. The auth-passwords
+    # vitest mocks the generated module via vi.mock and mints fixture
+    # hashes in beforeAll; the `pretest` script
+    # (scripts/ensure-auth-hashes-stub.cjs) writes a non-clobbering stub
+    # so Vite's import-analysis can resolve the module path. Real
+    # secrets only flow through release workflows (Desktop, Docker).
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
