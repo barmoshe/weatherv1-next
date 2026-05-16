@@ -2996,6 +2996,33 @@
       unicode-bidi: isolate;
     }
 
+    /* === Animated pipeline strip (intro slide) === */
+    .pitch-pipeline-strip {
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+      padding: clamp(10px, 1.4vw, 18px);
+      border: 2px solid var(--v1-ink);
+      border-radius: 22px;
+      background: linear-gradient(150deg, rgb(255 255 255 / 0.98), rgb(252 236 232 / 0.42));
+      box-shadow:
+        4px 4px 0 var(--v1-ink),
+        0 16px 36px rgb(15 23 42 / 0.08);
+      direction: ltr;
+      unicode-bidi: isolate;
+      overflow: hidden;
+    }
+    .pitch-pipeline-strip svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pitch-pipeline-strip svg * {
+        animation: none !important;
+      }
+    }
+
     .pitch-intro-steps {
       list-style: none;
       margin: 0;
@@ -4436,7 +4463,7 @@
         mobileSummary:
           "קריינות תחזית, תמלול, פירוק לסצנות, רקע מהקטלוג, ובסיס לסרטון תחזית.",
         bullets: [],
-        visual: "introPipeline",
+        visual: "pipelineStrip",
         transition: "ttb",
         theme: { paper: "#ffffff", accent: "#f9543e" }
       },
@@ -5083,6 +5110,111 @@
       </div>`;
     }
 
+    /** Animated 5-node pipeline strip (קריינות → תמלול → תכנון → וידאו → MP4).
+     *  Adapted from docs/readme-assets/pipeline-strip.svg with the deck's editorial
+     *  palette: warm cream background, the same 5 step colors used by the static
+     *  icon row, and a terracotta accent for the traveling data packets. */
+    function pipelineStripHtml() {
+      const ariaLabel = "תהליך אנימציה: קריינות, תמלול, תכנון, התאמת וידאו, רינדור ל־MP4";
+      return `<div class="pitch-pipeline-strip" role="img" aria-label="${escapeHtml(ariaLabel)}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 160" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="psN1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f9543e"/><stop offset="100%" stop-color="#fb7256"/></linearGradient>
+            <linearGradient id="psN2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3d55b8"/><stop offset="100%" stop-color="#5a72d4"/></linearGradient>
+            <linearGradient id="psN3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1fa871"/><stop offset="100%" stop-color="#3fc491"/></linearGradient>
+            <linearGradient id="psN4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f2c231"/><stop offset="100%" stop-color="#f7d152"/></linearGradient>
+            <linearGradient id="psN5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c5cd6"/><stop offset="100%" stop-color="#9b7eea"/></linearGradient>
+            <filter id="psSoft"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <rect width="920" height="160" rx="16" fill="#fdf8f1"/>
+          <rect x="2" y="2" width="916" height="156" rx="14" fill="none" stroke="#e2d3b8" stroke-width="1" opacity="0.9">
+            <animate attributeName="stroke-opacity" values="0.55;1;0.55" dur="5s" repeatCount="indefinite"/>
+          </rect>
+          <g fill="none" stroke-linecap="round">
+            <path d="M124 80 H224" stroke="#d8c8aa" stroke-width="3"/>
+            <path d="M304 80 H404" stroke="#d8c8aa" stroke-width="3"/>
+            <path d="M484 80 H584" stroke="#d8c8aa" stroke-width="3"/>
+            <path d="M664 80 H764" stroke="#d8c8aa" stroke-width="3"/>
+            <path d="M124 80 H224" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
+              <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" repeatCount="indefinite"/>
+            </path>
+            <path d="M304 80 H404" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
+              <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.22s" repeatCount="indefinite"/>
+            </path>
+            <path d="M484 80 H584" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
+              <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.44s" repeatCount="indefinite"/>
+            </path>
+            <path d="M664 80 H764" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
+              <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.66s" repeatCount="indefinite"/>
+            </path>
+          </g>
+          <circle r="5" fill="#3d55b8" filter="url(#psSoft)">
+            <animateMotion dur="1.25s" repeatCount="indefinite" path="M124 80 H224"/>
+          </circle>
+          <circle r="5" fill="#1fa871" filter="url(#psSoft)">
+            <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.28s" path="M304 80 H404"/>
+          </circle>
+          <circle r="5" fill="#f2c231" filter="url(#psSoft)">
+            <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.56s" path="M484 80 H584"/>
+          </circle>
+          <circle r="5" fill="#7c5cd6" filter="url(#psSoft)">
+            <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.84s" path="M664 80 H764"/>
+          </circle>
+          <g transform="translate(28 38)">
+            <circle cx="56" cy="42" r="46" fill="none" stroke="#f9543e" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" repeatCount="indefinite"/>
+              <animate attributeName="r" values="42;50;42" dur="2.4s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="56" cy="42" r="40" fill="url(#psN1)" filter="url(#psSoft)">
+              <animate attributeName="r" values="38;41;38" dur="2.8s" repeatCount="indefinite"/>
+            </circle>
+            <text x="56" y="48" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="13" font-weight="800">קריינות</text>
+          </g>
+          <g transform="translate(208 38)">
+            <circle cx="56" cy="42" r="46" fill="none" stroke="#3d55b8" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" begin="0.4s" repeatCount="indefinite"/>
+              <animate attributeName="r" values="42;50;42" dur="2.4s" begin="0.4s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="56" cy="42" r="40" fill="url(#psN2)" filter="url(#psSoft)">
+              <animate attributeName="r" values="38;41;38" dur="2.8s" begin="0.35s" repeatCount="indefinite"/>
+            </circle>
+            <text x="56" y="48" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="13" font-weight="800">תמלול</text>
+          </g>
+          <g transform="translate(388 38)">
+            <circle cx="56" cy="42" r="46" fill="none" stroke="#1fa871" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
+              <animate attributeName="r" values="42;50;42" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="56" cy="42" r="40" fill="url(#psN3)" filter="url(#psSoft)">
+              <animate attributeName="r" values="38;41;38" dur="2.8s" begin="0.7s" repeatCount="indefinite"/>
+            </circle>
+            <text x="56" y="48" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="13" font-weight="800">תכנון</text>
+          </g>
+          <g transform="translate(568 38)">
+            <circle cx="56" cy="42" r="46" fill="none" stroke="#f2c231" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" begin="1.2s" repeatCount="indefinite"/>
+              <animate attributeName="r" values="42;50;42" dur="2.4s" begin="1.2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="56" cy="42" r="40" fill="url(#psN4)" filter="url(#psSoft)">
+              <animate attributeName="r" values="38;41;38" dur="2.8s" begin="1.05s" repeatCount="indefinite"/>
+            </circle>
+            <text x="56" y="48" text-anchor="middle" fill="#1a1f2e" font-family="system-ui,sans-serif" font-size="13" font-weight="800">וידאו</text>
+          </g>
+          <g transform="translate(748 38)">
+            <circle cx="56" cy="42" r="46" fill="none" stroke="#7c5cd6" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" begin="1.6s" repeatCount="indefinite"/>
+              <animate attributeName="r" values="42;50;42" dur="2.4s" begin="1.6s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="56" cy="42" r="40" fill="url(#psN5)" filter="url(#psSoft)">
+              <animate attributeName="r" values="38;41;38" dur="2.8s" begin="1.4s" repeatCount="indefinite"/>
+            </circle>
+            <text x="56" y="44" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="12" font-weight="800">MP4</text>
+            <text x="56" y="58" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="10" font-weight="700">9:16</text>
+          </g>
+        </svg>
+      </div>`;
+    }
+
     function heroDownloadsBlock() {
       return `
           <div class="hero-downloads" id="download-hero" aria-labelledby="hero-download-heading">
@@ -5097,6 +5229,9 @@
       }
       if (type === "introPipeline") {
         return introPipelineFlowHtml();
+      }
+      if (type === "pipelineStrip") {
+        return pipelineStripHtml();
       }
       if (type === "phone") {
         return `<div class="phone-frame"><div class="phone-screen"><span class="mixed-ltr" lang="en" dir="ltr">MP4<br>9:16</span><br><small>תחזית מוכנה</small></div></div>`;
@@ -5277,7 +5412,8 @@
       const visualAria =
         section.visual === "excalidrawDemo" ||
         section.visual === "catalogScreenshot" ||
-        section.visual === "introPipeline"
+        section.visual === "introPipeline" ||
+        section.visual === "pipelineStrip"
           ? ""
           : " aria-hidden=\"true\"";
       const copyClass = section.id === "intro" ? "panel-copy panel-copy--intro" : "panel-copy";
@@ -5286,9 +5422,13 @@
           ? `<h1>${escapeHtml(section.title)}</h1>`
           : `<h2>${escapeHtml(section.title)}</h2>`;
       const introPipelineBlock =
-        section.id === "intro" && section.visual === "introPipeline"
-          ? introPipelineFlowHtml()
-          : "";
+        section.id !== "intro"
+          ? ""
+          : section.visual === "pipelineStrip"
+            ? pipelineStripHtml()
+            : section.visual === "introPipeline"
+              ? introPipelineFlowHtml()
+              : "";
       const visualBlock =
         section.id === "intro" || section.id === "v1-next"
           ? ""
