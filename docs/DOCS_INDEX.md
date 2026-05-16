@@ -38,14 +38,12 @@ The same product can run in two modes:
 
 ## Queued tasks
 
-Tasks that are planned but not yet implemented. Land in this order — the first one unblocks the others.
+Tasks that are planned but not yet implemented.
 
-| # | Task doc | Status | Notes |
-| --- | --- | --- | --- |
-| **1 (first)** | [FUTURE_TASK_AUTH_PASSWORD_INFRA.md](FUTURE_TASK_AUTH_PASSWORD_INFRA.md) | Planned | Shared Argon2id verify for editor + admin gates. Hashes via GitHub Secrets + gitignored generated file. Foundation for tasks 2 and 3. |
-| 2 | [FUTURE_TASK_EDITOR_LOGIN_GATE.md](FUTURE_TASK_EDITOR_LOGIN_GATE.md) | Planned | App-entry login as `v1editor`. Depends on task 1. |
-| 3 | [FUTURE_TASK_SETTINGS_TWO_TABS.md](FUTURE_TASK_SETTINGS_TWO_TABS.md) | Planned | Collapse the 5-tab Settings modal into Editor + Admin (password-gated). Depends on task 1. |
-| Independent | [FUTURE_TASK_MANUAL_UPDATE_CHECK.md](FUTURE_TASK_MANUAL_UPDATE_CHECK.md) | Planned | Replace `autoUpdater` with a manual GitHub-release check + browser open. No dependency on the queue above. |
+| Task doc | Status | Notes |
+| --- | --- | --- |
+| [FUTURE_TASK_EDITOR_AND_ADMIN_GATES.md](FUTURE_TASK_EDITOR_AND_ADMIN_GATES.md) | Planned | Editor login at app entry (`v1editor`) + Settings modal redesign into Editor/Admin tabs + shared Argon2id password layer (hashes via GitHub Secrets). One PR. |
+| [FUTURE_TASK_MANUAL_UPDATE_CHECK.md](FUTURE_TASK_MANUAL_UPDATE_CHECK.md) | Planned | Replace `autoUpdater` with a manual GitHub-release check + browser open. Independent of the gates task. |
 
 When a task ships, move its row to "Done" and link the merging PR.
 

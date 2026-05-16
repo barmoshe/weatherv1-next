@@ -18,17 +18,8 @@ This repo runs **Next.js 16** with React 19. APIs, conventions, and file structu
 
 ## Queued tasks (next up)
 
-Settings UX is being simplified into two role-based tabs gated by a fixed password. Land the foundation first, then the two consumers can ship in either order.
-
-1. **First task — `docs/FUTURE_TASK_AUTH_PASSWORD_INFRA.md`** — shared Argon2id verify layer for both gates. Hashes flow from GitHub Secrets → gitignored generated file; no plaintext or hash in the repo. Blocks the next two tasks.
-2. `docs/FUTURE_TASK_EDITOR_LOGIN_GATE.md` — app-entry login as `v1editor`, session persisted via `safeStorage` (desktop) / `httpOnly` cookie (web).
-3. `docs/FUTURE_TASK_SETTINGS_TWO_TABS.md` — collapse the 5-tab Settings modal into Editor (friendly summary + single OpenAI key) and Admin (password-gated, re-locks on close, holds all the technical panels).
-
-When picking work, claim the next un-merged task in order. Do not skip ahead — both consumers import from the auth-infra module.
-
-## Manual update flow
-
-- `docs/FUTURE_TASK_MANUAL_UPDATE_CHECK.md` — replace `autoUpdater` with a manual GitHub-release check + browser open. Independent of the settings/auth queue above.
+- **`docs/FUTURE_TASK_EDITOR_AND_ADMIN_GATES.md`** — single task that ships the editor login (`v1editor` at app entry), the Settings modal redesign into two role-based tabs (Editor + Admin), and the shared Argon2id password layer with hashes wired through GitHub Secrets. Land as one PR.
+- `docs/FUTURE_TASK_MANUAL_UPDATE_CHECK.md` — replace `autoUpdater` with a manual GitHub-release check + browser open. Independent track.
 
 ## Commands
 
