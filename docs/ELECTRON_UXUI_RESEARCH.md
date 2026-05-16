@@ -1,6 +1,6 @@
 # Electron + UX/UI Research
 
-Research notes for the desktop port described in `ELECTRON_DESKTOP_PLAN.md`.
+Research notes for the desktop port. Architecture and current state live in [`ELECTRON.md`](ELECTRON.md); this doc covers desktop-shell UX/UI concerns only.
 Focus: how to build, style, and ship an Electron shell around the existing
 Next.js renderer without compromising security, performance, or native feel.
 
@@ -13,7 +13,7 @@ conventions.
 
 ## Implementation Map
 
-The runtime, auth, and asset-provider skeleton from `ELECTRON_DESKTOP_PLAN.md`
+The runtime, auth, and asset-provider skeleton documented in [`ELECTRON.md`](ELECTRON.md)
 has landed. Use this map to jump from a research recommendation to the file
 that already implements (or is the right place to extend) it. Everything
 below this section that says "we should…" should be read as "extend these
@@ -403,11 +403,11 @@ and resume on relaunch.
 
 **In-app editing:** users open a clip, view segments in the modal, and edit **descriptions** and **tag chips** per segment. Saves go through the existing catalog write path (desktop auth on mutating routes).
 
-**Bulk / agent workflows (outside the click path):** resegmenting long clips, generating segment posters, applying a closed tag vocabulary at scale, and mirroring `catalog.json` to R2 are documented operationally in **`docs/CATALOG_TAGGING_HANDOFF.md`** and **`docs/R2_PULUMI_HANDOFF.md`**. The UX doc does not duplicate those procedures; keep UI copy and layout consistent with “segment = one timed window + labels,” and avoid implying that every catalog fix happens in-modal.
+**Bulk / agent workflows (outside the click path):** resegmenting long clips, generating segment posters, applying a closed tag vocabulary at scale, and mirroring `catalog.json` to R2 are documented operationally in **`docs/archive/CATALOG_TAGGING_HANDOFF.md`** (historical) and **`docs/R2_PULUMI_HANDOFF.md`**. The UX doc does not duplicate those procedures; keep UI copy and layout consistent with “segment = one timed window + labels,” and avoid implying that every catalog fix happens in-modal.
 
-**Availability and materialize:** when clips are cloud-only, the UI may show “needs materialize” or download states; desktop packaging and ffmpeg gates are in **`docs/ELECTRON_DESKTOP_HANDOFF.md`**.
+**Availability and materialize:** when clips are cloud-only, the UI may show “needs materialize” or download states; desktop packaging and ffmpeg gates are in **`docs/ELECTRON.md`**.
 
-**Future enhancement (optional):** if we surface “segment span looks wrong vs duration” in-app, tie any warning to the same **`segment-block`** row and a non-blocking affordance (copy diagnostics / open handoff); implementation would align with `scripts/repair-long-single-segments.ts` and `docs/CATALOG_TAGGING_HANDOFF.md`.
+**Future enhancement (optional):** if we surface “segment span looks wrong vs duration” in-app, tie any warning to the same **`segment-block`** row and a non-blocking affordance (copy diagnostics / open handoff); implementation would align with `scripts/repair-long-single-segments.ts` and `docs/archive/CATALOG_TAGGING_HANDOFF.md`.
 
 ## 6. Performance
 

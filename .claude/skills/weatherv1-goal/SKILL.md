@@ -11,7 +11,7 @@ Use this skill to align on the active goal before changing code.
 
 1. Read `docs/PROJECT_GOAL.md`.
 2. Read `docs/DOCS_INDEX.md`.
-3. If this is desktop or release work, read `docs/ELECTRON_DESKTOP_HANDOFF.md` and `docs/RELEASE_CONVENTION.md`.
+3. If this is desktop or release work, read `docs/ELECTRON.md` and `docs/RELEASE_CONVENTION.md`.
 4. If this is cloud/server work, read `docs/DESIGN_DEPLOYMENT.md`.
 5. If this touches R2, the Worker, or Pulumi, read `docs/R2_PULUMI_HANDOFF.md` and `infra/cloudflare/README.md`.
 6. If this touches Next.js behavior, read the relevant guide under `node_modules/next/dist/docs/`.

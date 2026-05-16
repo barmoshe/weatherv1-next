@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Weather V1: מחולל תחזית לווידאו אנכי. קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים מהקטלוג ורינדור.">
+  <meta name="description" content="Weather V1: מחולל תחזית לווידאו ורטיקלי. קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים מהקטלוג ורינדור.">
   <title>Weather V1 · מצגת פתיחה</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -4402,13 +4402,13 @@
     try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (_) {}
   </script>
   <nav class="site-nav" aria-label="ניווט ראשי">
-    <a class="brand" href="#intro" aria-label="Weather V1 · מחולל תחזית לווידאו אנכי">
+    <a class="brand" href="#intro" aria-label="Weather V1 · מחולל תחזית לווידאו ורטיקלי">
       <span class="brand-mark">
         <img src="public/weather-v1-icon-512.png" alt="Weather V1" width="40" height="40" decoding="async">
       </span>
       <span class="brand-copy">
         <strong>Weather V1</strong>
-        <span>מחולל תחזית לווידאו אנכי</span>
+        <span>מחולל תחזית לווידאו ורטיקלי</span>
       </span>
     </a>
     <div class="nav-actions">
@@ -4419,7 +4419,7 @@
   <main class="pitch-mobile-page" aria-label="Weather V1">
     <header class="pitch-mobile-page__hero">
       <p class="pitch-mobile-page__kicker">Weather V1</p>
-      <h1 class="pitch-mobile-page__title">מקריינות תחזית לסרטון אנכי</h1>
+      <h1 class="pitch-mobile-page__title">מקריינות תחזית לסרטון ורטיקלי</h1>
       <p class="pitch-mobile-page__lead">
         Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו מהקטלוג, ומייצרת בסיס לסרטון תחזית.
       </p>
@@ -4432,7 +4432,7 @@
           <span class="pitch-mobile-page__list-num">1</span>
           <div>
             <strong>פתיחה</strong>
-            <p>הזרימה הכללית של Weather V1, מקריינות עד וידאו אנכי.</p>
+            <p>הזרימה הכללית של Weather V1, מקריינות עד וידאו ורטיקלי.</p>
           </div>
         </li>
         <li>
@@ -4555,7 +4555,7 @@
       {
         id: "intro",
         kicker: "Weather V1",
-        title: "מקריינות תחזית לסרטון אנכי",
+        title: "מקריינות תחזית לסרטון ורטיקלי",
         lead:
           "Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו מהקטלוג, ומייצרת בסיס לסרטון תחזית.",
         mobileSummary:
@@ -4977,7 +4977,7 @@
                 <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📱</span> צפייה בתוצאה</div>
                 <div class="pitch-device">
                   <div class="pitch-device-screen pitch-device-screen--preview pitch-output-placeholder">
-                    <span class="pitch-output-placeholder-txt">כאן תופיע תצוגה אנכית אחרי הרינדור</span>
+                    <span class="pitch-output-placeholder-txt">כאן תופיע תצוגה ורטיקלית אחרי הרינדור</span>
                   </div>
                   <div class="pitch-device-screen pitch-device-screen--preview pitch-output-ready">
                     <video class="pitch-device-video" poster="${escapeHtml(firstPosterSrc)}" width="180" height="320" muted playsinline loop autoplay preload="metadata" aria-hidden="true">

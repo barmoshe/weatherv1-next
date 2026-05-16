@@ -11,14 +11,14 @@ This repo runs **Next.js 16** with React 19. APIs, conventions, and file structu
 1. `docs/PROJECT_GOAL.md` — current product/engineering goal, "Done means" checklist, invariants.
 2. `docs/DOCS_INDEX.md` — task-to-doc router and code map.
 3. `AGENTS.md` — short operational map (safety rules, commit style, verification defaults).
-4. For Electron work: `docs/ELECTRON_AGENT_GUIDE.md` (Claude-facing mental model) + `docs/ELECTRON_DESKTOP_HANDOFF.md` (current state) + `docs/ELECTRON_DESKTOP_PLAN.md` (rationale).
-5. For R2/Worker/Pulumi: `docs/R2_PULUMI_HANDOFF.md` + `infra/cloudflare/README.md`.
+4. For Electron work: `docs/ELECTRON.md` (single reference — architecture, IPC, pitfalls, sharp edges, packaging, release path).
+5. For R2 / Worker / Pulumi: `docs/R2_PULUMI_HANDOFF.md` + `docs/CLOUDFLARE_INTEGRATION.md` + `infra/cloudflare/README.md`.
 6. For releases: `docs/RELEASE_CONVENTION.md` (or invoke the `weatherv1-release` skill).
 7. For new goal-driven sessions, invoke the `weatherv1-goal` skill (`/weatherv1-goal`).
 
-## Queued tasks
+## Queued and historical work
 
-Planned but un-shipped work lives in `docs/FUTURE_TASK_*.md`. Before starting substantial work, list them (`ls docs/FUTURE_TASK_*.md`) or read the "Queued tasks" table in `docs/DOCS_INDEX.md` for status and dependencies. Each file is self-contained (Goal / Research / Mermaid / Plan / Verification / Non-Goals).
+Planned but un-shipped tasks live in `docs/future/` (see `docs/future/README.md`). Completed or superseded docs live in `docs/archive/` — useful as reference, not authoritative for current work.
 
 ## Commands
 
@@ -66,7 +66,7 @@ audio MP3 → OpenAI Whisper transcript → scene planner → pick clips from a 
 
 Switching is driven by runtime detection in `src/server/runtime/` — most code in `src/server/**` and `src/app/**` should not care which runtime it is in.
 
-### Electron process model (read `docs/ELECTRON_AGENT_GUIDE.md` before editing `electron/`)
+### Electron process model (read `docs/ELECTRON.md` before editing `electron/`)
 
 Four processes:
 

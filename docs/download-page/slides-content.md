@@ -93,7 +93,7 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 
 **kicker:** Weather V1
 
-**title:** מקריינות תחזית לסרטון אנכי
+**title:** מקריינות תחזית לסרטון ורטיקלי
 
 **lead:**
 > Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו מהקטלוג, ומייצרת בסיס לסרטון תחזית.

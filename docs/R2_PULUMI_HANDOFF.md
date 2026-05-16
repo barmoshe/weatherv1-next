@@ -7,8 +7,8 @@
 | Repo-wide router (tasks, code map, **R2 table**) | [DOCS_INDEX.md](DOCS_INDEX.md) — section *Cloudflare R2 (optional cloud mirror)* |
 | Product goals + R2 invariants | [PROJECT_GOAL.md](PROJECT_GOAL.md) |
 | Docker / long-lived **app** host (separate concern from R2 infra) | [DESIGN_DEPLOYMENT.md](DESIGN_DEPLOYMENT.md) |
-| Desktop Settings + onboarding (gateway URL, Basic Auth) | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md) |
-| Bulk segment posters + catalog push to R2 from CLI | [CATALOG_TAGGING_HANDOFF.md](CATALOG_TAGGING_HANDOFF.md) |
+| Desktop Settings + onboarding (gateway URL, Basic Auth) | [ELECTRON.md](ELECTRON.md) |
+| Bulk segment posters + catalog push to R2 from CLI (historical) | [archive/CATALOG_TAGGING_HANDOFF.md](archive/CATALOG_TAGGING_HANDOFF.md) |
 | Pulumi keys and `pulumi` commands | [infra/cloudflare/README.md](../infra/cloudflare/README.md) |
 
 ### Object key layout (R2)
@@ -103,12 +103,10 @@ Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and 
 1. Smoke-test Electron settings with the deployed Worker URL, tenant `default`, bucket `weatherv1-media`, and the **Basic Auth** username/password from Pulumi (`appUsername` / `appPassword` — see [infra/cloudflare/README.md](../infra/cloudflare/README.md)).
 2. Smoke-test catalog pull and materialize/download flows against R2 from the desktop UI.
 3. Periodically rotate the Worker `appPassword` secret after operational use (`pulumi config set --secret appPassword` + `pulumi up`).
-4. Optionally rewrite remaining **Google Drive** sections in `docs/ELECTRON_DESKTOP_PLAN.md` to match the shipped R2 design (summary + R2 section already point agents to the right place).
 
 ## Known Risks
 
 - `tenantKey()` depends on runtime config, so avoid module-level constants that call it before env is loaded.
 - `parseCatalog()` now returns remote-only rows; render and preview paths must materialize or gracefully reject cloud-only assets before touching ffmpeg.
-- `docs/ELECTRON_DESKTOP_PLAN.md` still contains historical **Google Drive** sections; the summary now points at R2 as current. Prefer `R2_PULUMI_HANDOFF.md` for sync behavior.
 - Pulumi Worker binding enum strings and `WorkersScriptSubdomain` were accepted by Cloudflare during deploy.
 - Segment poster sync currently runs after local imports and catalog segment edits when the source video exists locally. Remote-only assets must be materialized before poster generation.

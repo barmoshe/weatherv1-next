@@ -14,7 +14,7 @@ Use this file as the short operational map for AI agents. Keep broad product con
 2. Read `docs/DOCS_INDEX.md` to choose the right specialist doc.
 3. Inspect the code paths named by that doc before making changes.
 4. For Next.js behavior, read the matching file under `node_modules/next/dist/docs/` before editing.
-5. For Electron work, read `docs/ELECTRON_AGENT_GUIDE.md` for the main/preload/renderer mental model and the routine pitfalls.
+5. For Electron work, read `docs/ELECTRON.md` for the main/preload/renderer mental model, routine pitfalls, file map, sharp edges, and release path.
 
 ## Setup Commands
 
@@ -69,7 +69,7 @@ npm run electron:make
 - Do not store API keys in renderer `localStorage`.
 - Do not mix generated runtime artifacts into release commits unless the user explicitly asks for fixture updates.
 - Do not invent new CSS class names for renderer components without consulting `docs/CSS_CONVENTIONS.md`. The styling source of truth is `src/app/globals.css`; new BEM `__`-style names without matching CSS render unstyled.
-- Do not reintroduce legacy IPC. New IPC channels must use `ipcMain.handle` + `ipcRenderer.invoke`. Background: `docs/ELECTRON_AGENT_GUIDE.md`.
+- Do not reintroduce legacy IPC. New IPC channels must use `ipcMain.handle` + `ipcRenderer.invoke`. Background: `docs/ELECTRON.md`.
 - Do not expose `ipcRenderer` itself via `contextBridge`. Add one narrow wrapper per channel under `window.desktop` (`electron/preload.cjs`).
 - Do not call `shell.openExternal(url)` on a renderer-provided URL without scheme + host validation. Limit to `https:` against a known allowlist.
 - Do not substitute `localhost` for `127.0.0.1` in child-server config. `electron/config.cjs:24` binds IPv4 loopback explicitly; macOS may otherwise resolve `localhost` to `::1`.
