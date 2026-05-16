@@ -756,7 +756,7 @@
     .pitch-catalog-screenshot img {
       width: 100%;
       height: auto;
-      max-height: min(72vh, 640px);
+      max-height: min(76vh, 680px);
       object-fit: contain;
       object-position: top center;
       border-radius: 14px;
@@ -769,7 +769,7 @@
 
     @media (min-width: 861px) {
       .pitch-catalog-screenshot img {
-        max-height: min(78vh, 720px);
+        max-height: min(82vh, 760px);
       }
     }
 
@@ -777,38 +777,58 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
       min-height: 0;
     }
 
     .pitch-catalog-tag-modal-open {
-      align-self: start;
+      align-self: center;
       appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       border: 1px solid color-mix(in srgb, var(--panel-accent, #3d55b8) 55%, rgb(0 0 0 / 0.12));
-      border-radius: 12px;
-      padding: 10px 16px;
+      border-radius: 999px;
+      padding: 9px 18px;
       font: inherit;
       font-size: clamp(0.82rem, 2.1vw, 0.92rem);
-      font-weight: 650;
+      font-weight: 700;
       cursor: pointer;
       background: linear-gradient(
         165deg,
-        color-mix(in srgb, var(--panel-accent, #3d55b8) 12%, rgb(255 255 255 / 0.98)),
+        color-mix(in srgb, var(--panel-accent, #3d55b8) 14%, rgb(255 255 255 / 0.98)),
         rgb(255 255 255 / 0.94)
       );
       color: rgb(28 32 38);
-      box-shadow: 0 1px 0 rgb(255 255 255 / 0.75) inset;
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 0.75) inset,
+        0 6px 14px rgb(15 23 42 / 0.08);
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
     }
 
-    .pitch-catalog-tag-modal-open:hover,
-    .pitch-catalog-tag-modal-open:focus-visible {
+    /* RTL-aware glyph (downward chevron) that hints "this opens a modal". */
+    .pitch-catalog-tag-modal-open::after {
+      content: "\2304"; /* ⌄ down chevron */
+      font-size: 1.1em;
+      line-height: 1;
+      color: color-mix(in srgb, var(--panel-accent, #3d55b8) 70%, rgb(0 0 0 / 0.45));
+    }
+
+    .pitch-catalog-tag-modal-open:hover {
+      transform: translateY(-1px);
       border-color: color-mix(in srgb, var(--panel-accent, #3d55b8) 72%, rgb(0 0 0 / 0.1));
-      outline: none;
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 0.75) inset,
+        0 10px 20px rgb(15 23 42 / 0.12);
     }
 
     .pitch-catalog-tag-modal-open:focus-visible {
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--panel-accent, #3d55b8) 32%, rgb(255 255 255 / 0.01));
+      outline: none;
+      border-color: color-mix(in srgb, var(--panel-accent, #3d55b8) 72%, rgb(0 0 0 / 0.1));
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 0.75) inset,
+        0 0 0 3px color-mix(in srgb, var(--panel-accent, #3d55b8) 32%, rgb(255 255 255 / 0.01));
     }
 
     dialog.pitch-catalog-tag-modal {
@@ -2919,25 +2939,34 @@
     }
 
     .pitch-intro-flow {
-      width: min(100%, 100%);
+      width: 100%;
+      min-width: 0;
       margin: 0;
-      padding: clamp(18px, 2.8vw, 26px);
+      /* Extra inline padding so pill shadows (2px offset) never graze the
+         container border and create the visual "broken corner" artifact. */
+      padding: clamp(20px, 2.8vw, 28px) clamp(24px, 3.2vw, 32px);
       border: 2px solid var(--v1-ink);
-      border-radius: 22px;
+      border-radius: 18px;
       background:
         linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(252 236 232 / 0.35));
-      box-shadow: var(--shadow);
+      /* Softer stacked shadow instead of the 8px solid offset — keeps the
+         brutalist feel at the corners without the "discontinuous edge" look
+         the solid offset produces against the rounded container corner. */
+      box-shadow:
+        4px 4px 0 var(--v1-ink),
+        0 12px 28px rgb(15 23 42 / 0.08);
     }
 
     .pitch-intro-flow__track {
       list-style: none;
       margin: 0;
       padding: 0;
+      min-width: 0;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 6px 4px;
+      gap: 10px 6px;
       direction: rtl;
     }
 
@@ -2953,6 +2982,8 @@
       font-size: clamp(0.7rem, 1vw, 0.88rem);
       line-height: 1.25;
       text-align: center;
+      /* Belt-and-braces: pill cannot exceed its track even on narrow viewports. */
+      max-width: 100%;
     }
 
     .pitch-intro-flow__arrow {
@@ -4140,9 +4171,9 @@
         kicker: "קטלוג",
         title: "הקטלוג — מחסן חכם לחומרי הווידאו של V1",
         lead:
-          "הקטלוג הוא לא רק תיקייה של קבצים, אלא <strong>מאגר מסודר וחכם</strong> של סרטונים וסגמנטים קצרים. לכל קטע אפשר להוסיף תיאור ותגיות — ידנית או בעזרת AI — כדי להסביר מה רואים בו, איזו אווירה יש לו, ולאיזה סוג סצנה בתחזית הוא יכול להתאים. כשמגיעה סצנה מהתמלול, המערכת יכולה לבחור רקעים לפי המשמעות של הקריינות והסגמנט, ולא לפי שם קובץ אקראי. ככל שהתיוג והתיאור טובים יותר, כך הבחירה האוטומטית יכולה להיות מדויקת יותר.",
+          "הקטלוג הוא <strong>מאגר מסודר וחכם</strong> של סרטונים וסגמנטים קצרים. תיאור ותגיות לכל קטע מאפשרים למערכת לבחור רקעים <strong>לפי משמעות הקריינות</strong>, ולא לפי שם קובץ אקראי.",
         mobileSummary:
-          "מחסן חכם לסגמנטים עם תיאור ותגיות — בחירת רקעים לפי משמעות הסצנה, לא לפי שם קובץ.",
+          "מחסן חכם לסגמנטים עם תיאור ותגיות — בחירת רקעים <strong>לפי משמעות הסצנה</strong>, לא לפי שם קובץ.",
         bullets: [
           "רשת קליפים וסגמנטים — חיפוש, סינון, פוסטרים וסטטוס במבט אחד.",
           "תיאור ותגיות לכל קטע — מה רואים, איזו אווירה, ולאיזו סצנה בתחזית הוא מתאים.",
@@ -4297,6 +4328,15 @@
         '"': "&quot;",
         "'": "&#39;"
       }[ch]));
+    }
+
+    // Lead/summary copy supports a small inline-emphasis allowlist:
+    // <strong>, <em>, and <br>. Everything else is escaped, so authors can
+    // bold a phrase without opening the door to arbitrary HTML.
+    function escapeLeadHtml(value) {
+      return escapeHtml(value)
+        .replace(/&lt;(\/?)(strong|em)&gt;/g, "<$1$2>")
+        .replace(/&lt;br\s*\/?&gt;/g, "<br>");
     }
 
     /** Sync: docs/fixtures/samples/forecast_fixture_demo_complete.plan.json + jobs.merge.json (fixture_demo_complete). */
@@ -4818,8 +4858,8 @@
     }
 
     function leadBlocksHtml(section, pitchProductLayout) {
-      const ms = hasMobileSummary(section) ? escapeHtml(section.mobileSummary.trim()) : "";
-      const leadEsc = escapeHtml(section.lead);
+      const ms = hasMobileSummary(section) ? escapeLeadHtml(section.mobileSummary.trim()) : "";
+      const leadEsc = escapeLeadHtml(section.lead);
       if (pitchProductLayout) {
         if (ms) {
           return `<div class="pitch-lead-well"><p class="lead lead-desktop-only">${leadEsc}</p><p class="lead panel-mobile-summary">${ms}</p></div>`;
