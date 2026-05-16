@@ -40,6 +40,7 @@ The same product can run in two modes:
 | Topic | Where to read |
 | --- | --- |
 | Goals, live status, Basic Auth migration, file list | [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md) |
+| Cloudflare + Pulumi + MCP improvement plan (worker hardening, ESC, MCP server) | [CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md) |
 | Pulumi config, `pulumi up`, Worker secrets | [infra/cloudflare/README.md](../infra/cloudflare/README.md) |
 | Sync client, materialize, push/pull, conflict handling | `src/server/sync/r2/` ([service.ts](../src/server/sync/r2/service.ts) is the orchestration hub) |
 | HTTP API for the app | `src/app/api/sync/r2/*` |
