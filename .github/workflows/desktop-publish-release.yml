@@ -1,9 +1,10 @@
-# Publishes installers after "Desktop" completes. This file must live on the
-# default branch — workflow_run only fires when a matching workflow exists on
-# default (see GitHub docs: "Events that trigger workflows" → workflow_run).
-# Cross-run artifact download requires github-token + run-id (actions/download-artifact v4 README).
-# Tag identity: github.event.workflow_run.head_branch is the tag for tag-triggered runs
-# (community + SO); we also upload release-ref from Desktop for a canonical name.
+# Publishes the Windows installer after "Desktop" completes. This file must
+# live on the default branch — workflow_run only fires when a matching
+# workflow exists on default (see GitHub docs: "Events that trigger
+# workflows" → workflow_run). Cross-run artifact download requires
+# github-token + run-id (actions/download-artifact v4 README). Tag identity:
+# github.event.workflow_run.head_branch is the tag for tag-triggered runs;
+# we also upload release-ref from Desktop for a canonical name.
 name: Desktop publish release
 
 on:
@@ -14,7 +15,7 @@ on:
         required: true
         type: string
       run_id:
-        description: "Desktop workflow run ID that uploaded desktop-macos-latest and desktop-windows-latest"
+        description: "Desktop workflow run ID that uploaded desktop-windows-latest"
         required: true
         type: string
   workflow_run:
@@ -48,14 +49,6 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: desktop-macos-latest
-          path: mac
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          run-id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
-
-      - uses: actions/download-artifact@v4
-        with:
           name: desktop-windows-latest
           path: win
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -68,13 +61,6 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          MAC_ZIP="$(find mac -type f -name '*.zip' ! -path '*/node_modules/*' | head -n 1)"
-          if [[ -z "$MAC_ZIP" ]]; then
-            echo "No macOS .zip in desktop-macos-latest for run ${DESKTOP_RUN_ID}"
-            find mac -type f 2>/dev/null | head -80 || true
-            exit 1
-          fi
-          cp "$MAC_ZIP" dist/WeatherV1-macOS.zip
           WIN_EXE="$(find win -type f -name 'WeatherV1-Setup.exe' ! -path '*/node_modules/*' | head -n 1)"
           if [[ -z "$WIN_EXE" ]]; then
             WIN_EXE="$(find win -type f -path '*/squirrel.windows/*/*.exe' ! -path '*/node_modules/*' | head -n 1)"
@@ -122,5 +108,4 @@ jobs:
           generate_release_notes: false
           fail_on_unmatched_files: true
           files: |
-            dist/WeatherV1-macOS.zip
             dist/WeatherV1-Setup.exe

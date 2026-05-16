@@ -4752,11 +4752,6 @@
         label: "התקנה ל־Windows",
         href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-Setup.exe",
         primary: true
-      },
-      {
-        label: "התקנה ל־Mac",
-        href: "https://github.com/__REPO__/releases/latest/download/WeatherV1-macOS.zip",
-        primary: true
       }
     ];
 

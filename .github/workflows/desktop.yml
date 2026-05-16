@@ -23,12 +23,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Force an x64 macOS build so the public ZIP opens on Intel Macs;
-          # Apple Silicon can run it via Rosetta. This avoids long macos-13
-          # Intel runner queues while still targeting Intel binaries.
-          - os: macos-latest
-            arch: x64
-            artifact: desktop-macos-latest
           - os: windows-latest
             arch: x64
             artifact: desktop-windows-latest
@@ -68,7 +62,7 @@ jobs:
       # github.event.workflow_run.head_branch as the tag for tag-triggered runs;
       # this file avoids edge cases where head_branch is empty).
       - name: Record tag for release workflow
-        if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(matrix.os, 'macos-') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: mkdir -p .release && printf '%s\n' "${{ github.ref_name }}" > .release/tag
 
       # Short retention: tag-triggered artifacts are consumed by
@@ -76,7 +70,7 @@ jobs:
       # Release); non-tag artifacts are only useful for CI debugging. Keeping
       # them around fills the account-wide Actions storage quota.
       - uses: actions/upload-artifact@v6
-        if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(matrix.os, 'macos-') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         with:
           name: release-ref
           path: .release/tag
