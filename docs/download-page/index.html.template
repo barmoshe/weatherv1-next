@@ -307,6 +307,64 @@
       );
     }
 
+    .pitch-export-wrap {
+      position: relative;
+    }
+
+    .pitch-export-menu {
+      position: absolute;
+      inset-inline-end: calc(100% + 10px);
+      bottom: 0;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px;
+      min-width: 180px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 12px;
+      background: rgb(255 255 255 / 0.98);
+      box-shadow: 3px 3px 0 var(--v1-ink);
+      z-index: 49;
+    }
+
+    .pitch-export-menu[data-open="true"] {
+      display: flex;
+    }
+
+    .pitch-export-menu button {
+      width: 100%;
+      height: auto;
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-align: start;
+      display: block;
+      direction: rtl;
+    }
+
+    .pitch-export-progress {
+      position: fixed;
+      inset-inline-end: max(14px, env(safe-area-inset-inline-end, 0px));
+      bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px), 8px) + 12.5rem);
+      z-index: 50;
+      padding: 8px 14px;
+      border: 2px solid var(--v1-ink);
+      border-radius: 10px;
+      background: var(--v1-yellow);
+      box-shadow: 3px 3px 0 var(--v1-ink);
+      font-weight: 800;
+      font-size: 0.85rem;
+      direction: rtl;
+      display: none;
+    }
+
+    .pitch-export-progress[data-active="true"] {
+      display: block;
+    }
+
     .story-shell {
       min-height: var(--story-slide-h);
       overflow: hidden;
@@ -4654,6 +4712,18 @@
   </main>
 
   <div class="pitch-step-nav" role="group" aria-label="ניווט בין שקופיות">
+    <div class="pitch-export-wrap">
+      <button type="button" id="pitch-export-trigger" aria-label="ייצוא שקופיות" aria-haspopup="true" aria-expanded="false" aria-controls="pitch-export-menu">
+        <svg class="pitch-step-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/>
+        </svg>
+      </button>
+      <div class="pitch-export-menu" id="pitch-export-menu" role="menu" data-open="false">
+        <button type="button" role="menuitem" data-export-format="zip">PNG (קובץ זיפ)</button>
+        <button type="button" role="menuitem" data-export-format="files">PNG (קבצים נפרדים)</button>
+        <button type="button" role="menuitem" data-export-format="pdf">PDF</button>
+      </div>
+    </div>
     <button type="button" id="pitch-step-up" aria-label="שקופית קודמת">
       <svg class="pitch-step-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M17 15.5 12 9.25 7 15.5"/>
@@ -4665,6 +4735,8 @@
       </svg>
     </button>
   </div>
+
+  <div class="pitch-export-progress" id="pitch-export-progress" role="status" aria-live="polite" data-active="false"></div>
 
   <a class="builder-credit" href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
     <span>Builder</span>
@@ -6028,6 +6100,192 @@
       refreshPitchStepNavUi();
     }
 
+    const PITCH_EXPORT_CDN = {
+      modernScreenshot: "https://unpkg.com/modern-screenshot@4.7.0/dist/index.js",
+      jszip: "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
+      jspdf: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+    };
+    const pitchExportLoaded = {};
+    function loadPitchExportScript(key) {
+      if (pitchExportLoaded[key]) return pitchExportLoaded[key];
+      pitchExportLoaded[key] = new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = PITCH_EXPORT_CDN[key];
+        s.async = true;
+        s.crossOrigin = "anonymous";
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error("Failed to load " + key));
+        document.head.appendChild(s);
+      });
+      return pitchExportLoaded[key];
+    }
+
+    function setPitchExportProgress(text) {
+      const el = document.getElementById("pitch-export-progress");
+      if (!el) return;
+      if (!text) {
+        el.dataset.active = "false";
+        el.textContent = "";
+      } else {
+        el.dataset.active = "true";
+        el.textContent = text;
+      }
+    }
+
+    function setPitchExportBusy(busy) {
+      const trigger = document.getElementById("pitch-export-trigger");
+      const menu = document.getElementById("pitch-export-menu");
+      if (trigger) trigger.disabled = !!busy;
+      if (pitchStepUp) pitchStepUp.disabled = !!busy;
+      if (pitchStepDown) pitchStepDown.disabled = !!busy;
+      if (busy && menu) {
+        menu.dataset.open = "false";
+        if (trigger) trigger.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    async function captureSlideNode(node) {
+      const scale = window.devicePixelRatio > 1 ? 2 : 1.5;
+      return window.modernScreenshot.domToCanvas(node, {
+        backgroundColor: "#ffffff",
+        scale,
+        font: false,
+        timeout: 2500,
+        filter: (n) => !(n && n.tagName === "VIDEO"),
+      });
+    }
+
+    function canvasToBlob(canvas, type) {
+      return new Promise(resolve => canvas.toBlob(b => resolve(b), type || "image/png"));
+    }
+
+    function downloadBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function runPitchExport(format) {
+      if (!document.querySelectorAll("#storyRoll .story-panel").length) return;
+      setPitchExportBusy(true);
+      try {
+        await loadPitchExportScript("modernScreenshot");
+        if (format === "zip") await loadPitchExportScript("jszip");
+        if (format === "pdf") await loadPitchExportScript("jspdf");
+
+        const panels = Array.from(document.querySelectorAll("#storyRoll .story-panel"));
+        const total = panels.length;
+        const captures = [];
+        for (let i = 0; i < total; i++) {
+          setPitchExportProgress("מייצא " + (i + 1) + "/" + total + "…");
+          const canvas = await captureSlideNode(panels[i]);
+          const blob = await canvasToBlob(canvas, "image/png");
+          const label = (panels[i].id || panels[i].dataset.id || ("panel-" + (i + 1)))
+            .replace(/[^a-z0-9_-]+/gi, "-");
+          captures.push({
+            blob,
+            width: canvas.width,
+            height: canvas.height,
+            label,
+            dataURL: format === "pdf" ? canvas.toDataURL("image/jpeg", 0.92) : null,
+          });
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+
+        setPitchExportProgress("מכין הורדה…");
+        const stamp = new Date().toISOString().slice(0, 10);
+        const pad = n => String(n).padStart(2, "0");
+
+        if (format === "zip") {
+          const zip = new window.JSZip();
+          captures.forEach((c, i) => {
+            zip.file("slide-" + pad(i + 1) + "-" + c.label + ".png", c.blob);
+          });
+          const out = await zip.generateAsync({ type: "blob" });
+          downloadBlob(out, "weather-v1-pitch-deck-" + stamp + ".zip");
+        } else if (format === "files") {
+          for (let i = 0; i < captures.length; i++) {
+            const c = captures[i];
+            downloadBlob(c.blob, "slide-" + pad(i + 1) + "-" + c.label + ".png");
+            await new Promise(r => setTimeout(r, 180));
+          }
+        } else if (format === "pdf") {
+          const { jsPDF } = window.jspdf;
+          const first = captures[0];
+          const pdf = new jsPDF({
+            orientation: first.width >= first.height ? "l" : "p",
+            unit: "px",
+            format: [first.width, first.height],
+            hotfixes: ["px_scaling"],
+          });
+          captures.forEach((c, i) => {
+            if (i > 0) {
+              pdf.addPage([c.width, c.height], c.width >= c.height ? "l" : "p");
+            }
+            pdf.addImage(c.dataURL, "JPEG", 0, 0, c.width, c.height);
+          });
+          downloadBlob(pdf.output("blob"), "weather-v1-pitch-deck-" + stamp + ".pdf");
+        }
+      } catch (err) {
+        console.error("[pitch-export]", err);
+        setPitchExportProgress("הייצוא נכשל");
+        setTimeout(() => setPitchExportProgress(""), 2500);
+        setPitchExportBusy(false);
+        return;
+      }
+      setPitchExportProgress("");
+      setPitchExportBusy(false);
+    }
+
+    let pitchExportInitialized = false;
+    function initPitchExport() {
+      if (pitchExportInitialized) return;
+      const trigger = document.getElementById("pitch-export-trigger");
+      const menu = document.getElementById("pitch-export-menu");
+      if (!trigger || !menu) return;
+      pitchExportInitialized = true;
+
+      const closeMenu = () => {
+        menu.dataset.open = "false";
+        trigger.setAttribute("aria-expanded", "false");
+      };
+      const openMenu = () => {
+        menu.dataset.open = "true";
+        trigger.setAttribute("aria-expanded", "true");
+        const first = menu.querySelector("button");
+        if (first) first.focus();
+      };
+      trigger.addEventListener("click", e => {
+        e.stopPropagation();
+        if (menu.dataset.open === "true") closeMenu();
+        else openMenu();
+      });
+      menu.addEventListener("click", e => {
+        const btn = e.target.closest("button[data-export-format]");
+        if (!btn) return;
+        const format = btn.dataset.exportFormat;
+        closeMenu();
+        runPitchExport(format);
+      });
+      document.addEventListener("click", e => {
+        if (menu.dataset.open !== "true") return;
+        if (e.target.closest(".pitch-export-wrap")) return;
+        closeMenu();
+      });
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape" && menu.dataset.open === "true") {
+          closeMenu();
+          trigger.focus();
+        }
+      });
+    }
+
     /** Studio wizard: four explicit phases, click + keyboard; no GSAP/RAF tour. */
     const STUDIO_PHASES = ["upload", "transcript", "planning", "render"];
     const STUDIO_HIGHLIGHT_FOR_PHASE = {
@@ -6572,6 +6830,7 @@
     initScrollStory();
 
     initPitchStepNav();
+    initPitchExport();
 
     initSlideOverflowAffordance();
 
