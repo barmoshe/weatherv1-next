@@ -108,7 +108,10 @@ jobs:
         # downloads/windows/latest-stable/WeatherV1-Setup.exe on the stable check.
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # R2-only token, scoped to Workers R2 Storage:Edit on weatherv1-media.
+          # Distinct from CLOUDFLARE_API_TOKEN (Pages-deploy scope) so each
+          # secret's blast radius matches its purpose.
+          apiToken: ${{ secrets.CLOUDFLARE_R2_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: |
             r2 object put \
