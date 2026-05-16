@@ -4536,7 +4536,7 @@
         ],
         visual: "closingJourney",
         transition: "ttb",
-        panelLayout: "stack-visual-top",
+        panelLayout: "split-balanced",
         theme: { paper: "#faf6f1", accent: "#c2410c" }
       }
     ];
@@ -5589,10 +5589,11 @@
       if (!steps.length) return;
       const idx = Math.min(steps.length - 1, Math.max(0, targetIdx));
       const step = steps[idx];
-      const behavior = reduceMotion ? "auto" : "smooth";
 
       if (!isHorizontalStoryDesktop()) {
-        step.el.scrollIntoView({ block: "center", inline: "nearest", behavior });
+        // Smooth scroll is blocked by ScrollTrigger / the body-as-scroller setup,
+        // so use 'auto' to guarantee the move lands. Same as the horizontal path below.
+        step.el.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
         syncPitchStepHash(step);
         updatePitchStepNavButtons(idx, steps.length);
         return;
@@ -5630,6 +5631,29 @@
       if (!steps.length) return;
       const cur = getActivePitchStepIndex(steps);
       goToPitchStepIndex(cur + delta);
+    }
+
+    /** Navigate the deck to a step by element id. Accepts ids of `.story-panel`,
+     *  `.story-subslide`, or any descendant of a panel — descendants resolve to
+     *  their owning step. Returns true when a step is found and navigated to. */
+    function goToPitchStepById(id) {
+      if (!id) return false;
+      const target = document.getElementById(id);
+      if (!target) return false;
+      const steps = collectPitchSteps();
+      if (!steps.length) return false;
+      let idx = steps.findIndex(s => s.el === target);
+      if (idx < 0) {
+        const ownerSub = target.closest(".story-subslide");
+        if (ownerSub) idx = steps.findIndex(s => s.el === ownerSub);
+      }
+      if (idx < 0) {
+        const ownerPanel = target.closest(".story-panel");
+        if (ownerPanel) idx = steps.findIndex(s => s.panel === ownerPanel);
+      }
+      if (idx < 0) return false;
+      goToPitchStepIndex(idx);
+      return true;
     }
 
     function onPitchStepKeydown(ev) {
@@ -6158,35 +6182,60 @@
       update();
     }
 
-    document.querySelectorAll('a[href^="#"]').forEach(link => {
-      link.addEventListener("click", event => {
-        const href = link.getAttribute("href");
-        const targetId = href && href.startsWith("#") ? decodeURIComponent(href.slice(1)) : "";
-        if (!href || href === "#" || !targetId) return;
-        const targetElement = document.getElementById(targetId);
-        if (!targetElement) return;
-        event.preventDefault();
-        const anchorPanel = targetElement.closest(".story-panel");
-        if (mainScrollTrigger && document.body.classList.contains("is-scrollstory") && !document.body.classList.contains("pitch-vertical") && anchorPanel?.classList.contains("story-panel")) {
-          const vst = anchorPanel.querySelector(":scope > .story-vstack");
-          if (targetElement.classList.contains("story-subslide") && vst) {
-            vst.scrollTo({ top: targetElement.offsetTop, behavior: "auto" });
+    /** Hash-based navigation: clicks, hashchange, and initial-load all go through
+     *  `goToPitchStepById` so the deck's own scroll/state-machine drives the move. */
+    function initHashNavigation() {
+      const decodeId = h => {
+        if (!h || h === "#") return "";
+        try { return decodeURIComponent(h.startsWith("#") ? h.slice(1) : h); }
+        catch (_) { return h.startsWith("#") ? h.slice(1) : h; }
+      };
+
+      document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener("click", event => {
+          const id = decodeId(link.getAttribute("href"));
+          if (!id) return;
+          const target = document.getElementById(id);
+          if (!target) return;
+          event.preventDefault();
+          // Push to history so back/forward works; the hashchange listener handles the rest.
+          if (location.hash !== "#" + id) {
+            history.pushState(null, "", "#" + id);
+            // pushState doesn't fire hashchange, so dispatch the navigation directly.
           }
-          const rollPanels = gsap.utils.toArray("#storyRoll > .story-panel");
-          const denom = Math.max(1, rollPanels.length - 1);
-          const rollIdx = Number(anchorPanel.dataset.rollIndex ?? anchorPanel.dataset.index ?? 0);
-          const progress = denom ? rollIdx / denom : 0;
-          const top = mainScrollTrigger.start + (mainScrollTrigger.end - mainScrollTrigger.start) * progress;
-          scrollTo({ top, behavior: "auto" });
-          return;
-        }
-        targetElement.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start", inline: "start" });
+          if (!goToPitchStepById(id)) {
+            target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start", inline: "start" });
+          }
+        });
       });
-    });
+
+      window.addEventListener("hashchange", () => {
+        const id = decodeId(location.hash);
+        if (!id) return;
+        if (goToPitchStepById(id)) return;
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      });
+
+      const initialId = decodeId(location.hash);
+      if (!initialId) return;
+      // Wait for layout + ScrollTrigger to settle before navigating, otherwise the
+      // initial measurement races the pinned scroll and we land on the wrong slide.
+      const fire = () => {
+        // Two rAFs after load gives initScrollStory + initPitchStepNav time to run.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          goToPitchStepById(initialId);
+        }));
+      };
+      if (document.readyState === "complete") fire();
+      else window.addEventListener("load", fire, { once: true });
+    }
 
     initScrollStory();
 
     initPitchStepNav();
+
+    initHashNavigation();
 
     syncStoryViewportWidthCss();
     window.addEventListener("resize", () => {
