@@ -1067,6 +1067,27 @@
       color: rgb(28 34 40 / 1);
     }
 
+    .pitch-closing-options__note {
+      margin: 10px 0 0;
+      padding-block-start: 8px;
+      padding-inline-start: 14px;
+      position: relative;
+      font-size: clamp(0.62rem, 1.3vw, 0.7rem);
+      font-weight: 700;
+      line-height: 1.45;
+      color: color-mix(in srgb, rgb(48 56 64 / 1) 70%, transparent);
+      border-block-start: 1px dashed color-mix(in srgb, var(--panel-accent, #0d9488) 35%, rgb(0 0 0 / 0.15));
+    }
+
+    .pitch-closing-options__star {
+      position: absolute;
+      inset-inline-start: 0;
+      top: 8px;
+      font-size: 1.05em;
+      font-weight: 900;
+      color: var(--panel-accent, #0d9488);
+    }
+
     /* === Pitch: closing roadmap (`#next-steps`) === */
     .pitch-closing-roadmap {
       position: relative;
@@ -3684,6 +3705,28 @@
         color: color-mix(in srgb, var(--v1-ink, #1c1a18) 86%, transparent);
       }
 
+      .pitch-mobile-page__horizon-note {
+        display: block;
+        margin-block-start: 10px;
+        padding-block-start: 8px;
+        padding-inline-start: 14px;
+        position: relative;
+        border-block-start: 1px dashed color-mix(in srgb, var(--v1-coral, #f9543e) 35%, rgb(0 0 0 / 0.15));
+        font-size: 0.76rem;
+        font-weight: 600;
+        line-height: 1.45;
+        color: color-mix(in srgb, var(--v1-ink, #1c1a18) 68%, transparent);
+      }
+
+      .pitch-mobile-page__horizon-star {
+        position: absolute;
+        inset-inline-start: 0;
+        top: 8px;
+        font-size: 1.05em;
+        font-weight: 900;
+        color: var(--v1-coral, #f9543e);
+      }
+
       .pitch-mobile-page__footer {
         margin-top: 4px;
         text-align: center;
@@ -4271,7 +4314,11 @@
     </section>
 
     <p class="pitch-mobile-page__horizon">
-      אופציות להמשך, אם נרצה: לחבר את Weather V1 לתהליך עבודה ב־Adobe Premiere, ולחבר את שכבות הגרפיקה הקיימות שלכם (לוגואים, כותרות ומיתוג) לתוך האפליקציה עצמה.
+      אופציות להמשך, אם נרצה: לחבר את שכבות הגרפיקה הקיימות שלכם (לוגואים, כותרות ומיתוג) לתוך Weather V1, כך שהאפליקציה תייצר את הסרטון המוגמר.
+      <span class="pitch-mobile-page__horizon-note">
+        <span class="pitch-mobile-page__horizon-star" aria-hidden="true">*</span>
+        וגם אפשר לחבר את התהליך ל־Adobe Premiere אם זה מתאים יותר לזרימה שלכם.
+      </span>
     </p>
 
     <section class="pitch-mobile-page__cta" aria-label="פתיחה במחשב">
@@ -5230,14 +5277,14 @@
               <p class="pitch-closing-options__eyebrow">אופציות להמשך, אם נרצה</p>
               <ul class="pitch-closing-options__list">
                 <li>
-                  <strong>שילוב עם Adobe Premiere.</strong>
-                  <span>אפשר לחבר את Weather V1 לתהליך עבודה ב־Adobe Premiere, כך שהמשך העבודה יקרה ישירות מתוך תוכנת העריכה.</span>
-                </li>
-                <li>
                   <strong>שילוב שכבות הגרפיקה שלכם.</strong>
                   <span>אפשר לחבר את שכבות הגרפיקה הקיימות שלכם (לוגואים, כותרות ומיתוג) לתוך Weather V1, כך שהאפליקציה תייצר את הסרטון המוגמר ולא רק את הבסיס.</span>
                 </li>
               </ul>
+              <p class="pitch-closing-options__note">
+                <span class="pitch-closing-options__star" aria-hidden="true">*</span>
+                וגם אפשר לחבר את התהליך ל־Adobe Premiere אם זה מתאים יותר לזרימה שלכם.
+              </p>
             </aside>`
           : "";
       const studioWizardToolbar =
