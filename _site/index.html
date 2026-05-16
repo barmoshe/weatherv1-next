@@ -5177,14 +5177,14 @@
         icon: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'
       },
       {
-        en: "Video Match",
-        he: "התאמת וידאו",
+        en: "Render",
+        he: "רינדור",
         color: "#f2c231",
         icon: '<rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="2" y1="8" x2="7" y2="8"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="2" y1="16" x2="7" y2="16"/><line x1="17" y1="8" x2="22" y2="8"/><line x1="17" y1="12" x2="22" y2="12"/><line x1="17" y1="16" x2="22" y2="16"/>'
       },
       {
-        en: "Render",
-        he: "רינדור",
+        en: "Final Video",
+        he: "וידאו סופי",
         color: "#7c5cd6",
         icon: '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>'
       }
@@ -5202,7 +5202,7 @@
     }
 
     function introPipelineFlowHtml() {
-      const ariaLabel = "תהליך: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור";
+      const ariaLabel = "תהליך: קריינות, תמלול, תכנון סצנות, רינדור, וידאו סופי";
       const stepsHtml = PIPELINE_STEPS.map(pipelineStepLi).join("");
       return `<div class="pitch-intro-flow" role="img" aria-label="${escapeHtml(ariaLabel)}">
         <ol class="pitch-intro-steps">${stepsHtml}</ol>
@@ -5214,7 +5214,7 @@
      *  an SVG wire band underneath with dashed terracotta stripes and colored
      *  data packets flowing right-to-left between the steps. */
     function pipelineStripHtml() {
-      const ariaLabel = "תהליך אנימציה: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור";
+      const ariaLabel = "תהליך אנימציה: קריינות, תמלול, תכנון סצנות, רינדור, וידאו סופי";
       const stepsHtml = PIPELINE_STEPS.map(pipelineStepLi).join("");
       const wires = `
         <span class="pitch-intro-flow__wires" aria-hidden="true">
@@ -5240,17 +5240,9 @@
                 <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.66s" repeatCount="indefinite"/>
               </path>
             </g>
-            <circle r="4" fill="#3d55b8" filter="url(#psSoft)">
-              <animateMotion dur="1.25s" repeatCount="indefinite" path="M860 6 H750"/>
-            </circle>
-            <circle r="4" fill="#1fa871" filter="url(#psSoft)">
-              <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.28s" path="M630 6 H520"/>
-            </circle>
-            <circle r="4" fill="#f2c231" filter="url(#psSoft)">
-              <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.56s" path="M400 6 H290"/>
-            </circle>
-            <circle r="4" fill="#7c5cd6" filter="url(#psSoft)">
-              <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.84s" path="M170 6 H60"/>
+            <circle r="4" fill="#f9543e" filter="url(#psSoft)">
+              <animate attributeName="fill" values="#f9543e;#3d55b8;#1fa871;#f2c231" keyTimes="0;0.25;0.5;0.75" dur="4.4s" calcMode="discrete" repeatCount="indefinite"/>
+              <animateMotion dur="4.4s" repeatCount="indefinite" path="M860 6 H750 M630 6 H520 M400 6 H290 M170 6 H60"/>
             </circle>
           </svg>
         </span>`;
