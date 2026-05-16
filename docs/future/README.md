@@ -10,3 +10,5 @@ Planned but un-shipped docs. Each is self-contained (Goal / Plan / Verification)
 | [STATIC_HOSTING.md](STATIC_HOSTING.md) | Move the pitch-deck site from GitHub Pages to Cloudflare Pages via Pulumi + `wrangler-action`. |
 | [CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md) | Worker hardening (structured logs, rate limit, version stamp), Pulumi cleanup, MCP producer Worker. |
 | [RELEASE_ASSET_STORAGE.md](RELEASE_ASSET_STORAGE.md) | Free-only research task: where to host desktop installers (latest-only) without paying Actions overage. |
+| [WINDOWS_INSTALLER_R2_TASK.md](WINDOWS_INSTALLER_R2_TASK.md) | Goal + decisions: move public Windows installer download to R2 via the existing Worker; drop GitHub Release asset; macOS local-build only. |
+| [WINDOWS_INSTALLER_R2_PLAN.md](WINDOWS_INSTALLER_R2_PLAN.md) | Implementation plan for the task above — file-level edits, code sketches, verification. |
