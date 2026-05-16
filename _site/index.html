@@ -4116,6 +4116,31 @@
       letter-spacing: -0.005em;
     }
 
+    .download-landing__download-arrow {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      flex: 0 0 26px;
+      margin-inline-start: 6px;
+      border-radius: 8px;
+      background: rgb(255 255 255 / 0.14);
+      transition: transform 220ms ease, background 220ms ease;
+    }
+
+    .download-landing__download-arrow svg {
+      width: 14px;
+      height: 14px;
+      color: #fff;
+      display: block;
+    }
+
+    .download-landing__download:hover .download-landing__download-arrow,
+    .download-landing__download:focus-visible .download-landing__download-arrow {
+      transform: translateY(2px);
+      background: rgb(255 255 255 / 0.26);
+    }
+
     .download-landing__cta {
       display: inline-flex;
       align-items: center;
@@ -5505,15 +5530,20 @@
         <div class="download-landing__actions">
           <a class="download-landing__download" href="https://github.com/__REPO__/releases/latest/download/WeatherV1-Setup.exe" download>
             <span class="download-landing__download-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 4v11"/>
-                <path d="m7 11 5 5 5-5"/>
-                <path d="M5 20h14"/>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 3.449 9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.851"/>
               </svg>
             </span>
             <span class="download-landing__download-text">
               <small>התקנה ל־Windows</small>
               <strong>הורדה והתקנה</strong>
+            </span>
+            <span class="download-landing__download-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v11"/>
+                <path d="m7 11 5 5 5-5"/>
+                <path d="M5 20h14"/>
+              </svg>
             </span>
           </a>
           <button type="button" class="download-landing__cta" data-open-pitch>
