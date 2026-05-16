@@ -2987,7 +2987,7 @@
       width: 100%;
       min-width: 0;
       margin: 0;
-      padding: clamp(16px, 2.2vw, 24px) clamp(18px, 2.6vw, 28px);
+      padding: clamp(20px, 2.6vw, 32px) clamp(18px, 2.6vw, 32px);
       border: 2px solid var(--v1-ink);
       border-radius: 22px;
       background:
@@ -2997,72 +2997,103 @@
         0 16px 36px rgb(15 23 42 / 0.08);
       direction: rtl;
       unicode-bidi: isolate;
+    }
+
+    .pitch-intro-steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
       display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: clamp(8px, 1.6vw, 20px);
+      position: relative;
+    }
+
+    .pitch-intro-steps::before {
+      content: "";
+      position: absolute;
+      top: clamp(24px, 2.8vw, 36px);
+      right: 6%;
+      left: 6%;
+      height: 1px;
+      background: color-mix(in srgb, var(--v1-ink) 18%, transparent);
+      z-index: 0;
+    }
+
+    .pitch-intro-step {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .pitch-intro-step__icon {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: clamp(120px, 18vh, 220px);
+      width: clamp(48px, 5.4vw, 72px);
+      height: clamp(48px, 5.4vw, 72px);
+      border-radius: 999px;
+      border: 2px solid color-mix(in srgb, var(--step-color) 60%, transparent);
+      background: color-mix(in srgb, var(--step-color) 12%, #ffffff);
+      color: var(--step-color);
+      box-shadow: 0 6px 14px color-mix(in srgb, var(--step-color) 18%, transparent);
     }
 
-    .pitch-intro-flow .mermaid {
-      margin: 0;
-      width: 100%;
-      direction: ltr;
-      font-family: inherit;
-      text-align: center;
-      color: var(--v1-ink);
+    .pitch-intro-step__icon svg {
+      width: 52%;
+      height: 52%;
     }
 
-    .pitch-intro-flow .mermaid:not([data-mermaid-rendered])::before {
-      content: "טוען תרשים…";
-      display: block;
-      font-family: inherit;
-      direction: rtl;
-      color: color-mix(in srgb, var(--v1-ink) 55%, transparent);
+    .pitch-intro-step__label {
       font-weight: 800;
-      font-size: 0.85rem;
+      font-size: clamp(0.78rem, 0.95vw, 1rem);
+      color: var(--v1-ink);
+      line-height: 1.2;
     }
 
-    .pitch-intro-flow .mermaid svg {
-      max-width: 100%;
-      height: auto;
-      display: inline-block;
-    }
-
-    .pitch-intro-flow .mermaid .node rect,
-    .pitch-intro-flow .mermaid .node circle,
-    .pitch-intro-flow .mermaid .node ellipse,
-    .pitch-intro-flow .mermaid .node polygon,
-    .pitch-intro-flow .mermaid .node path {
-      stroke: var(--v1-ink) !important;
-      stroke-width: 2px !important;
-      fill: #fff7f4 !important;
-    }
-
-    .pitch-intro-flow .mermaid .node .label,
-    .pitch-intro-flow .mermaid .nodeLabel,
-    .pitch-intro-flow .mermaid foreignObject div {
-      font-family: inherit !important;
-      font-weight: 900 !important;
-      color: var(--v1-ink) !important;
-      direction: rtl !important;
-    }
-
-    .pitch-intro-flow .mermaid .edgePath path,
-    .pitch-intro-flow .mermaid .flowchart-link {
-      stroke: var(--panel-accent, #f9543e) !important;
-      stroke-width: 2.4px !important;
-    }
-
-    .pitch-intro-flow .mermaid marker path,
-    .pitch-intro-flow .mermaid .marker {
-      fill: var(--panel-accent, #f9543e) !important;
-      stroke: var(--panel-accent, #f9543e) !important;
+    .pitch-intro-step__sublabel {
+      font-weight: 500;
+      font-size: clamp(0.68rem, 0.82vw, 0.85rem);
+      color: color-mix(in srgb, var(--v1-ink) 55%, transparent);
+      line-height: 1.2;
     }
 
     @media (max-height: 720px) and (min-width: 861px) {
       .pitch-intro-flow {
-        padding: 12px 16px;
-        min-height: 110px;
+        padding: 14px 20px;
+      }
+      .pitch-intro-step__icon {
+        width: 48px;
+        height: 48px;
+      }
+      .pitch-intro-step {
+        gap: 6px;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .pitch-intro-steps {
+        gap: 6px;
+      }
+      .pitch-intro-steps::before {
+        top: 22px;
+      }
+      .pitch-intro-step__icon {
+        width: 44px;
+        height: 44px;
+      }
+      .pitch-intro-step__label {
+        font-size: 0.72rem;
+      }
+      .pitch-intro-step__sublabel {
+        font-size: 0.62rem;
       }
     }
 
@@ -4384,42 +4415,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script type="module">
-    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "base",
-      securityLevel: "strict",
-      fontFamily: "'Plus Jakarta Sans','Heebo',system-ui,sans-serif",
-      themeVariables: {
-        primaryColor: "#fff7f4",
-        primaryTextColor: "#1c1a18",
-        primaryBorderColor: "#1c1a18",
-        secondaryColor: "#fff",
-        tertiaryColor: "#fff",
-        lineColor: "#f9543e",
-        edgeLabelBackground: "#ffffff",
-        nodeBorder: "#1c1a18",
-        fontSize: "15px"
-      },
-      flowchart: {
-        htmlLabels: true,
-        curve: "basis",
-        padding: 14,
-        useMaxWidth: true
-      }
-    });
-    window.__renderPitchMermaid = async () => {
-      try {
-        const nodes = document.querySelectorAll(".pitch-intro-flow .mermaid:not([data-mermaid-rendered])");
-        if (!nodes.length) return;
-        nodes.forEach(n => n.setAttribute("data-mermaid-rendered", "true"));
-        await mermaid.run({ nodes });
-      } catch (err) {
-        console.warn("[pitch] mermaid render failed", err);
-      }
-    };
-  </script>
   <script>
     const downloadLinks = [
       {
@@ -5045,17 +5040,52 @@
 
     function introPipelineFlowHtml() {
       const ariaLabel = "תהליך: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור";
-      const diagram = [
-        "flowchart RL",
-        "    A([קריינות]) --> B([תמלול])",
-        "    B --> C([תכנון סצנות])",
-        "    C --> D([התאמת וידאו])",
-        "    D --> E([רינדור])",
-        "    classDef step fill:#fff7f4,stroke:#1c1a18,stroke-width:2px,color:#1c1a18,font-weight:800;",
-        "    class A,B,C,D,E step;"
-      ].join("\n");
+      const steps = [
+        {
+          en: "Narration",
+          he: "קריינות",
+          color: "#f9543e",
+          icon: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>'
+        },
+        {
+          en: "Transcription",
+          he: "תמלול",
+          color: "#3d55b8",
+          icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/>'
+        },
+        {
+          en: "Scene Planning",
+          he: "תכנון סצנות",
+          color: "#1fa871",
+          icon: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'
+        },
+        {
+          en: "Video Match",
+          he: "התאמת וידאו",
+          color: "#f2c231",
+          icon: '<rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="2" y1="8" x2="7" y2="8"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="2" y1="16" x2="7" y2="16"/><line x1="17" y1="8" x2="22" y2="8"/><line x1="17" y1="12" x2="22" y2="12"/><line x1="17" y1="16" x2="22" y2="16"/>'
+        },
+        {
+          en: "Render",
+          he: "רינדור",
+          color: "#7c5cd6",
+          icon: '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>'
+        }
+      ];
+      const stepsHtml = steps
+        .map(
+          step => `
+            <li class="pitch-intro-step" style="--step-color:${step.color}">
+              <span class="pitch-intro-step__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${step.icon}</svg>
+              </span>
+              <span class="pitch-intro-step__label" lang="en" dir="ltr">${escapeHtml(step.en)}</span>
+              <span class="pitch-intro-step__sublabel">${escapeHtml(step.he)}</span>
+            </li>`
+        )
+        .join("");
       return `<div class="pitch-intro-flow" role="img" aria-label="${escapeHtml(ariaLabel)}">
-        <pre class="mermaid">${escapeHtml(diagram)}</pre>
+        <ol class="pitch-intro-steps">${stepsHtml}</ol>
       </div>`;
     }
 
@@ -5392,21 +5422,6 @@
     }
 
     trackRoll.innerHTML = buildStoryRollHtml(storySections);
-
-    if (typeof window.__renderPitchMermaid === "function") {
-      window.__renderPitchMermaid();
-    } else {
-      let mermaidWaitTries = 0;
-      const mermaidWait = window.setInterval(() => {
-        mermaidWaitTries += 1;
-        if (typeof window.__renderPitchMermaid === "function") {
-          window.clearInterval(mermaidWait);
-          window.__renderPitchMermaid();
-        } else if (mermaidWaitTries > 40) {
-          window.clearInterval(mermaidWait);
-        }
-      }, 100);
-    }
 
     (function initCatalogTagModal() {
       const catalogPanel = document.getElementById("catalog");
