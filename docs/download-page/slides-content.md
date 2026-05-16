@@ -1,19 +1,19 @@
-# WeatherV1 Pitch Deck — Editable Content (for ChatGPT)
+# WeatherV1 Pitch Deck - Editable Content (for ChatGPT)
 
 ## How to use this file (read this first)
 
-This is the editable source for the **WeatherV1 pitch deck** — 6 slides, Hebrew (RTL), rendered as a scroll-driven single-page presentation.
+This is the editable source for the **WeatherV1 pitch deck**: 5 slides, Hebrew (RTL), rendered as a scroll-driven single-page presentation.
 
 Your job: edit only the **content fields** of each slide and return the **whole file** as markdown, structurally unchanged. Only the values inside the labeled fields should change.
 
 ### Editable fields per slide
 
-- `kicker` — short label / chip above the title
-- `title` — slide heading
-- `lead` — opening paragraph
-- `bullets` — desktop bullet list (may be empty for visual-only slides)
-- `mobile_bullets` — shorter mobile bullets (may be empty)
-- `mobile_summary` — single-paragraph mobile summary
+- `kicker`: short label / chip above the title
+- `title`: slide heading
+- `lead`: opening paragraph
+- `bullets`: desktop bullet list (may be empty for visual-only slides)
+- `mobile_bullets`: shorter mobile bullets (may be empty)
+- `mobile_summary`: single-paragraph mobile summary
 
 ### Do NOT edit these system fields
 
@@ -23,17 +23,19 @@ Your job: edit only the **content fields** of each slide and return the **whole 
 
 - All copy stays in **Hebrew** (RTL).
 - These names/terms stay in **English** as-is: `Weather V1`, `OpenAI`, `Claude`, `Whisper`, `Windows`, `Mac`, `API`, `API key`.
-- The only HTML allowed inside copy is `<strong>...</strong>` (used for emphasis inside `lead`). No other tags, no `<br>`, no inline styles, no markdown bold (`**...**`) inside the copy — use the `<strong>` tag.
-- Hebrew abbreviation punctuation uses `״` (gershayim), e.g. `מע״מ`, `רו״ח`. The current source mixes `מע״מ` and `מע״ם` (a typo) — standardize to `מע״מ` and mention the fix at the top of your reply.
+- The only HTML allowed inside copy is `<strong>...</strong>` (used for emphasis). No other tags, no `<br>`, no inline styles, no markdown bold (`**...**`) inside the copy: use the `<strong>` tag.
+- **Do not use the em-dash character (U+2014) anywhere in the copy.** Use `:` (definitional pause), `,` (soft pause), `.` (strong pause), or `·` (middle dot) instead.
+- **Direct voice.** Use `אצלכם`, `שלכם`, `מה נכון לכם`, `בסביבת העבודה שלכם`. Avoid `אצל V1`, `מה V1 צריכים`, `המערכת אצל V1`.
+- **No price, no amount, no currency** anywhere in any slide.
 
 ### Length guides (soft)
 
-- `kicker`: 1–3 words.
-- `title`: ≤ 12 words, one line.
-- `lead`: 1–3 sentences.
-- `bullets`: ≤ 18 words each, 3–6 bullets.
-- `mobile_bullets`: shorter than `bullets`, 3–4 items.
-- `mobile_summary`: ≤ 2 sentences. A mobile reader will never see the visual — make sure this paragraph still conveys what the slide is about on its own.
+- `kicker`: 1-3 words.
+- `title`: up to 12 words, one line.
+- `lead`: 1-3 sentences.
+- `bullets`: up to 18 words each, 3-6 bullets.
+- `mobile_bullets`: shorter than `bullets`, 3-5 items.
+- `mobile_summary`: up to 2 sentences. A mobile reader will never see the visual: make sure this paragraph still conveys what the slide is about on its own.
 
 ### Responsive note
 
@@ -41,7 +43,7 @@ Desktop shows `bullets` + the visual mockup. Mobile (<860px) shows `mobile_summa
 
 ### Tone
 
-Plain-language, transparent, no marketing fluff. The audience is the client commissioning WeatherV1 (familiar with weather broadcasting workflows), not the general public.
+Plain-language, transparent, no marketing fluff. The audience is the manager of V1, the person commissioning the work. Talk TO them, not ABOUT them.
 
 ### Output format
 
@@ -51,10 +53,10 @@ Return the **entire file** as markdown, structurally identical to what you recei
 
 ## Deck context
 
-- **Product:** WeatherV1 — a desktop app that turns a forecast voice file into a vertical forecast video by transcribing the narration, breaking it into scenes, and matching footage from a managed catalog.
-- **Audience:** the client commissioning WeatherV1.
-- **Goal of the deck:** explain what was built, why the app is local-first today, the price proposal, and the next steps to first install.
-- **Slide order is intentional:** intro → studio (what they use day-to-day) → catalog (the knowledge layer behind it) → why local-first → pricing → next steps.
+- **Product:** WeatherV1, a desktop app that turns a forecast voice file into a vertical forecast video by transcribing the narration, breaking it into scenes, and matching footage from a managed catalog.
+- **Audience:** the manager of V1, the person commissioning WeatherV1.
+- **Goal of the deck:** explain what was built, what exists today, and how the work continues from here, in a simple, practical, non-technical way.
+- **Slide order is intentional:** intro -> studio (the main work surface) -> catalog (the knowledge layer behind it) -> current state and options -> how we continue from here.
 
 ---
 
@@ -62,36 +64,31 @@ Return the **entire file** as markdown, structurally identical to what you recei
 
 What's on-screen next to each slide's copy. Use this to keep copy consistent with what the viewer is also looking at.
 
-- **`introPipeline`** — CSS/SVG horizontal flow diagram: **Narration → Transcription → Scene Planning → Video Match → Render**. No image files. No copy inside the diagram.
-- **`studioDashboard`** — Interactive mockup of the Studio tab in the actual app:
+- **`introPipeline`**: CSS/SVG curved-path flow diagram with 5 nodes (**Narration -> Transcription -> Scene Planning -> Video Match -> Render**) and a one-time `stroke-dashoffset` line draw on scroll-in. Symbolic glyphs (microphone, transcript lines, scene cards, film strip, vertical phone) at each node. No image files. No copy inside the diagram.
+- **`studioDashboard`**: Interactive mockup of the Studio tab in the actual app:
   - Top tab strip: Studio / Active / History / Catalog / Analytics.
   - Audio drop zone with status indicators.
   - 4-cell bento grid: **Transcript / Render / Scene Planning / Output Preview**.
   - Clicking a bullet in the copy column highlights a different phase of the mockup. No autoplay.
-  - Fixture: `PITCH_STUDIO_DEMO` — a sample weather forecast (center / north / coast), inline in the template.
+  - Fixture: `PITCH_STUDIO_DEMO`, a sample weather forecast (center / north / coast), inline in the template.
   - Posters live under `docs/download-page/assets/posters/` (IB001-s0, IB002-s0, IB003-s0, ...).
   - Sample video: `docs/download-page/assets/mock-video-example.mp4` (used in the Output Preview cell).
-- **`catalogScreenshot`** — Two real screenshots of the Catalog UI:
-  - `docs/download-page/assets/segments-clips-catalog-screenshot.png` — grid of segments and clips with posters, search, filters, tags, sync status.
-  - `docs/download-page/assets/catalog-segment-tag-modal.png` — modal for editing one segment's description and tags. Revealed by a button.
-- **`localFirstPitch`** — Two-column comparison table. Columns: **נושא / כיום / אופציה להמשך** (Subject / Now / Option going forward). Two rows: rendering, catalog storage. No image files.
-- **`pricingHero`** — Styled pricing card:
-  - Eyebrow: `הצעה ראשונית · להמחשה במצגת`
-  - Big amount: **4,000 ₪**
-  - Fine print: `דמו מצגת — לא חוזה`
-  - Two chips: `עד התקנה ראשונה אצלכם`, `כולל AI וטוקנים בפיתוח`
-- **`none`** — Text-only slide, no visual mockup.
+- **`catalogScreenshot`**: Two real screenshots of the Catalog UI:
+  - `docs/download-page/assets/segments-clips-catalog-screenshot.png`: grid of segments and clips with posters, search, filters, tags, sync status.
+  - `docs/download-page/assets/catalog-segment-tag-modal.png`: modal for editing one segment's description and tags. Revealed by a button.
+- **`localFirstPitch`**: 2x2 grid of 4 cards (קטלוג / תמלול / תכנון סצנות / רינדור). Each card has a symbolic header icon and two stacked blocks: `כיום` (now) and either `אפשרות להמשך` (option going forward) or `מה צריך` (what's needed) depending on the card. CSS only, no image files. Internal slide id stays `local-first` to preserve the URL hash and the scroll registry; the visible kicker is `מצב נוכחי`.
+- **`closingRoadmap`**: Horizontal numbered roadmap with 5 nodes (1..5) connected by a thin accent line that draws right-to-left on scroll-in. Each node shows its `mobile_bullets` label below the number. No price, no chips, no fine print. CSS/SVG only.
 
 ---
 
 ## Slides
 
-### Slide 1 — intro
+### Slide 1 - intro
 
 - **id:** `intro`  *(do not edit)*
 - **visual:** `introPipeline`  *(do not edit)*
 - **transition:** `ttb`  *(do not edit)*
-- **panelLayout:** *(default — none)*
+- **panelLayout:** *(default, none)*
 - **theme:** paper `#ffffff`, accent `#f9543e`  *(do not edit)*
 
 **kicker:** Weather V1
@@ -101,20 +98,20 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 **lead:**
 > Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו מהקטלוג, ומייצרת בסיס לסרטון תחזית.
 
-**bullets:** *(none — visual-only slide)*
+**bullets:** *(none, visual-only slide)*
 
-**mobile_bullets:** *(none — uses mobile_summary only)*
+**mobile_bullets:** *(none, uses mobile_summary only)*
 
 **mobile_summary:**
 > קריינות תחזית, תמלול, פירוק לסצנות, רקע מהקטלוג, ובסיס לסרטון תחזית.
 
-**graphics:** `introPipeline` — horizontal flow diagram of five steps (Narration → Transcription → Scene Planning → Video Match → Render). Symbolic; no Hebrew text inside the diagram.
+**graphics:** `introPipeline`, curved-path SVG diagram of five steps (Narration -> Transcription -> Scene Planning -> Video Match -> Render). Symbolic; no Hebrew text inside the diagram.
 
-**notes:** Opening slide. One-line elevator pitch. Bullets intentionally empty — the visual carries the structure.
+**notes:** Opening slide. One-line elevator pitch. Bullets intentionally empty: the visual carries the structure.
 
 ---
 
-### Slide 2 — studio
+### Slide 2 - studio
 
 - **id:** `studio`  *(do not edit)*
 - **visual:** `studioDashboard`  *(do not edit)*
@@ -124,33 +121,33 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 
 **kicker:** סטודיו
 
-**title:** טאב הסטודיו — איפה נבנית התחזית
+**title:** המקום שבו נבנה הסרטון בפועל
 
 **lead:**
-> בסטודיו מתקדמים שלב־אחר־שלב: העלאת קריינות, תמלול לטקסט, תכנון סצנות והחלטות על קטעים מהקטלוג, ואז רינדור לקובץ וידאו בסיס אנכי. בחרו בשורת השלבים במוקאפ כדי לראות איך המסך מתמלא — בלי הפעלה אוטומטית.
+> הסטודיו הוא מסך העבודה המרכזי של האפליקציה: מעלים קריינות, המערכת מתמללת אותה באמצעות OpenAI, מודל ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, ואז מתבצע רינדור על המחשב והורדה של הסרטון.
 
 **bullets:**
-- העלאה — מתחילים מקובץ קריינות אחד.
-- תמלול — הקריינות הופכת לטקסט שאפשר לעבוד איתו.
-- תכנון והחלטות — המערכת מחלקת לסצנות ומתאימה קטעים מהקטלוג לפי ההקשר.
-- רינדור והורדה — מתקבל בסיס לסרטון תחזית אנכי (קריינות, רקע ערוך, מוזיקה), לפני מיתוג גרפי מלא.
+- העלאת קריינות: מתחילים מקובץ תחזית אחד.
+- תמלול: המערכת הופכת את הקריינות לטקסט.
+- תכנון AI: חלוקה לסצנות ובחירת סגמנטים מהקטלוג.
+- רינדור והורדה: יצירת בסיס לסרטון תחזית והורדה שלו.
 
 **mobile_bullets:**
-- העלאת קריינות.
-- תמלול לטקסט.
-- תכנון סצנות והתאמות מהקטלוג.
-- רינדור והורדת בסיס אנכי.
+- העלאת קריינות
+- תמלול לטקסט
+- תכנון סצנות
+- רינדור והורדה
 
 **mobile_summary:**
-> מסלול אחד: קריינות, תמלול, סצנות והתאמות מהקטלוג, ורינדור. גללו למוקאפ ובחרו שלב מהרשימה.
+> הסטודיו הוא המקום שבו נבנה הסרטון בפועל: מקריינות לתמלול, מתכנון סצנות לבחירת סגמנטים, ואז רינדור והורדה.
 
-**graphics:** `studioDashboard` — interactive mockup of the Studio tab. Tab strip on top, audio drop zone, 4-cell bento (Transcript / Render / Scene Planning / Output Preview). Each bullet is clickable and highlights its matching phase in the mockup; phase 4 shows an iPhone-frame preview on the left with transcript + scene plan on the right.
+**graphics:** `studioDashboard`, interactive mockup of the Studio tab. Tab strip on top, audio drop zone, 4-cell bento (Transcript / Render / Scene Planning / Output Preview). Each bullet is clickable and highlights its matching phase in the mockup; phase 4 shows an iPhone-frame preview on the left with transcript + scene plan on the right.
 
-**notes:** Bullets here are an **interactive index** to the mockup, not just decoration — bullet #1 maps to phase 1 (upload), #2 to phase 2 (transcription), #3 to planning, #4 to render. Keep order and meaning aligned with the phases. If you change the bullet count or reorder, the mapping breaks.
+**notes:** Bullets here are an **interactive index** to the mockup, not just decoration. Bullet #1 maps to phase 1 (upload), #2 to phase 2 (transcription), #3 to planning, #4 to render. Keep order and meaning aligned with the phases. If you change the bullet count or reorder, the mapping breaks.
 
 ---
 
-### Slide 3 — catalog
+### Slide 3 - catalog
 
 - **id:** `catalog`  *(do not edit)*
 - **visual:** `catalogScreenshot`  *(do not edit)*
@@ -160,137 +157,112 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 
 **kicker:** קטלוג
 
-**title:** הקטלוג — מחסן חכם לחומרי הווידאו של V1
+**title:** הקטלוג: המקום שבו מסדרים את חומרי הווידאו
 
 **lead:**
-> הקטלוג הוא לא רק תיקייה של קבצים, אלא <strong>מאגר מסודר וחכם</strong> של סרטונים וסגמנטים קצרים. לכל קטע אפשר להוסיף תיאור ותגיות — ידנית או בעזרת AI — כדי להסביר מה רואים בו, איזו אווירה יש לו, ולאיזה סוג סצנה בתחזית הוא יכול להתאים. כשמגיעה סצנה מהתמלול, המערכת יכולה לבחור רקעים לפי המשמעות של הקריינות והסגמנט, ולא לפי שם קובץ אקראי. ככל שהתיוג והתיאור טובים יותר, כך הבחירה האוטומטית יכולה להיות מדויקת יותר.
+> הקטלוג מרכז את חומרי הווידאו בצורה מסודרת. כיום יש בו כ־200 סרטונים, שלאחר חלוקה לסגמנטים הופכים לכ־400 קטעים קצרים שהמערכת יכולה לבחור מהם בזמן יצירת הסרטון.
 
 **bullets:**
-- רשת קליפים וסגמנטים — חיפוש, סינון, פוסטרים וסטטוס במבט אחד.
-- תיאור ותגיות לכל קטע — מה רואים, איזו אווירה, ולאיזו סצנה בתחזית הוא מתאים.
-- תיוג ידני או בעזרת AI — כדי להפוך חומרי וידאו לשכבת ידע שימושית.
-- מהקטלוג נבחרים רקעים לסצנות לפי משמעות הקריינות, לא לפי שם קובץ אקראי.
+- כל סרטון בקטלוג מחולק לסגמנטים קצרים.
+- לכל סרטון יש תיאור כללי ותגיות שמסבירות מה הוא מכיל.
+- לכל סגמנט יש תיאור ותגיות משלו: מה רואים בו, איזו אווירה יש בו, ולאיזו סצנה הוא יכול להתאים.
+- התיאורים והתגיות עוזרים למודל ה־AI להבין את חומרי הווידאו ולבחור קטע מתאים לכל סצנה.
+- הבחירה נעשית לפי משמעות הסצנה, לא לפי שם קובץ אקראי.
 
 **mobile_bullets:**
-- סגמנטים קצרים עם פוסטר, תיאור ותגיות.
-- חיפוש וסינון של חומרי V1 במקום אחד.
-- תיוג ידני או בעזרת AI.
-- בחירת רקעים לפי משמעות הקריינות.
+- כ־200 סרטונים בקטלוג
+- כ־400 סגמנטים אחרי חלוקה
+- תיאור ותגיות לכל סרטון
+- תיאור ותגיות לכל סגמנט
 
 **mobile_summary:**
-> מחסן חכם לסגמנטים עם תיאור ותגיות — בחירת רקעים לפי משמעות הסצנה, לא לפי שם קובץ.
+> הקטלוג מסדר את חומרי הווידאו: כ־200 סרטונים שמחולקים לכ־400 סגמנטים. לכל סרטון ולכל סגמנט יש תיאור ותגיות, כדי שהמערכת תוכל לבחור קטעים לפי מה שרואים בהם ולפי ההקשר של התחזית.
 
-**graphics:** `catalogScreenshot` — two screenshots of the real Catalog UI: (1) grid of segments and clips with posters / search / filters / tags / sync status; (2) modal for editing a single segment's description and tags, shown on click.
+**graphics:** `catalogScreenshot`, two screenshots of the real Catalog UI: (1) grid of segments and clips with posters / search / filters / tags / sync status; (2) modal for editing a single segment's description and tags, shown on click.
 
-**notes:** The `<strong>...</strong>` inside `lead` is intentional — it emphasizes the "smart repository" framing. Keep it (or move it to a different phrase if you re-write that sentence), but no other HTML.
+**notes:** The lead deliberately leads with concrete numbers (~200 videos / ~400 segments) since they make the catalog tangible. No `<strong>` tags in the current copy.
 
 ---
 
-### Slide 4 — local-first
+### Slide 4 - current state / options
 
-- **id:** `local-first`  *(do not edit)*
-- **visual:** `localFirstPitch`  *(do not edit)*
+- **id:** `local-first`  *(do not edit, internal id kept to preserve URL hash and scroll registry)*
+- **visual:** `localFirstPitch`  *(do not edit, the renderer key is reused for the 4-card grid)*
 - **transition:** `ttb`  *(do not edit)*
 - **panelLayout:** `split-visual-heavy`  *(do not edit)*
 - **theme:** paper `#f4f6fa`, accent `#475569`  *(do not edit)*
 
-**kicker:** מקומית
+**kicker:** מצב נוכחי
 
-**title:** למה האפליקציה מקומית כרגע
+**title:** מה קיים היום ומה אפשר לשנות בהמשך
 
 **lead:**
-> כרגע Weather V1 היא אפליקציה שמתקינים על מחשב. הסיבה היא שהעבודה עם קבצי המדיה והרינדור מתבצעים לוקלית, והקטלוג צריך להיות זמין לאפליקציה בצורה יציבה ומהירה. בשלב הנוכחי זה הפתרון הכי פשוט להתחיל לעבוד: האפליקציה מותקנת על מחשב, הרינדור קורה על אותו מחשב, והקטלוג יכול להישמר מקומית או לעבור בהמשך לאחסון שלכם.
+> כיום Weather V1 עובדת בצורה מקומית לשלב העבודה הנוכחי: הרינדור קורה על המחשב, הקטלוג נשמר בענן פרטי לצורכי פיתוח, והתמלול ותכנון הסצנות משתמשים ב־API keys של OpenAI / Claude. בהמשך אפשר להעביר חלקים מהמערכת לתשתיות שלכם, לפי מה שנכון לכם.
 
-**bullets:** *(none — the visual is a comparison table that carries the content)*
+**bullets:** *(none, the 4-card visual carries the desktop content)*
 
-**mobile_bullets:** *(none — uses mobile_summary only)*
+**mobile_bullets:**
+- רינדור מקומי על המחשב
+- קטלוג בענן פרטי לצורכי פיתוח
+- OpenAI לתמלול
+- Claude / OpenAI לתכנון סצנות
+- אפשרות להעביר חלקים לתשתיות שלכם
 
 **mobile_summary:**
-> מקומית כי רינדור ומדיה על המחשב שלכם והקטלוג צריך להיות זמין בצורה יציבה. מרחוק בעתיד — ענן שמרנדר ומאחסן מרחוק. בטבלה: רינדור מול אחסון קטלוג.
+> כיום Weather V1 עובדת בצורה מקומית לשלב העבודה הנוכחי: הרינדור קורה על המחשב, הקטלוג נמצא בענן פרטי לצורכי פיתוח, והתמלול ותכנון הסצנות משתמשים ב־API keys. בהמשך אפשר להעביר חלקים מהמערכת לתשתיות שלכם לפי הצורך.
 
-**graphics:** `localFirstPitch` — comparison table with columns **נושא / כיום / אופציה להמשך**. Rows: rendering (now: runs on the install machine; option: cloud rendering if you want to work from phone / remote) and catalog storage (now: private cloud for dev & testing; option: local with you, or your own cloud).
+**graphics:** `localFirstPitch`, 2x2 grid of 4 cards. Card content (rendered inside `localFirstPitchHtml()` in the template; not editable from this file):
 
-**notes:** The mobile_summary explicitly references the table because mobile readers won't see it. Keep that reference (or replace it with the same information in prose) so mobile readers still get the comparison.
+- **Card 1 - קטלוג**: כיום: `הקטלוג שמור בענן פרטי שלי לצורכי פיתוח ובדיקות.` / אפשרות להמשך: `להעביר את הקטלוג למחשב, שרת או ענן שלכם, כדי שהחומרים יהיו אצלכם.`
+- **Card 2 - תמלול**: כיום: `התמלול מתבצע באמצעות OpenAI.` / מה צריך: `OpenAI API key לצורך תמלול הקריינות.`
+- **Card 3 - תכנון סצנות**: כיום: `קבלת ההחלטות ותכנון הסצנות מתבצעים בעזרת Claude או OpenAI.` / מה צריך: `API key מתאים לפי המודל שבו בוחרים להשתמש.`
+- **Card 4 - רינדור**: כיום: `הרינדור מתבצע מקומית על המחשב שבו האפליקציה מותקנת.` / אפשרות להמשך: `אם רוצים עבודה מרחוק, מכמה מחשבים או מטלפון, צריך פתרון ענן מתקדם יותר.`
+
+**notes:** This slide replaced an older "local-first" comparison-table framing. The visible kicker is now `מצב נוכחי`, not `מקומית`. The internal slide id stays `local-first` so the `#local-first` URL hash and CSS selectors continue to work.
 
 ---
 
-### Slide 5 — pricing
+### Slide 5 - how we continue
 
-- **id:** `pricing`  *(do not edit)*
-- **visual:** `pricingHero`  *(do not edit)*
+- **id:** `next-steps`  *(do not edit)*
+- **visual:** `closingRoadmap`  *(do not edit)*
 - **transition:** `ttb`  *(do not edit)*
 - **panelLayout:** `split-copy-heavy`  *(do not edit)*
 - **theme:** paper `#f4fcf8`, accent `#0d9488`  *(do not edit)*
 
-**kicker:** הצעת מחיר
+**kicker:** המשך
 
-**title:** עלות והמשך עבודה
-
-**lead:**
-> מחיר ראשוני ושקוף, עם מקום לעדכון אם ההיקף משתנה.
-
-**bullets:**
-- הצעת מחיר ראשונית: 4,000 ₪ לפני מע״מ / אם צריך — ניסוח סופי מול רואה חשבון כשנדרש
-- המחיר כולל את מה שכבר נעשה ואת המשך העבודה עד להתקנה ראשונית אצלכם במחשבי העבודה הרלוונטיים
-- לא רק שעות פיתוח — גם שימוש בכלי AI ובטוקנים תוך כדי העבודה
-- אם בהמשך העבודה תצמח מעבר למוסכמות — נדבר ונעדכן מחיר בהתאם
-- מה נבנה בפועל (לפי הריפו והקומיטים האחרונים): אפליקציית דסקטופ עם סטודיו, קטלוג, תכנון סצנות ותמלול מקריינות, רינדור בסיסי לאנכי, הגדרות וסנכרון לענן — ודף ההורדות הזה במצגת.
-
-**mobile_bullets:**
-- 4,000 ₪ לפני מע״ם (ניסוח סופי מול רו״ח כשנדרש).
-- כולל המשך עבודה עד להתקנה אצלכם + שימוש ב־AI וטוקנים בפיתוח.
-- היקף שגדל מעבר למוסכמות — עדכון מחיר בהסכמה.
-
-**mobile_summary:**
-> הצעה ראשונית שקופה: 4,000 ₪ לפני מע״ם לפי הצורך — עד להתקנה ראשונית אצלכם.
-
-**graphics:** `pricingHero` — styled card next to the copy: eyebrow `הצעה ראשונית · להמחשה במצגת`, big amount **4,000 ₪**, fine print `דמו מצגת — לא חוזה`, two chips (`עד התקנה ראשונה אצלכם`, `כולל AI וטוקנים בפיתוח`).
-
-**notes:** The source has `מע״ם` (with final mem) in `mobile_bullets` and `mobile_summary` here — that's a typo, the desktop `bullets` correctly use `מע״מ`. Per the language rule at the top of this file, please standardize to `מע״מ` in your edit. The price number `4,000` is also rendered visually in the card art; if you change the number in copy, the card itself needs the same change separately (not editable from this file).
-
----
-
-### Slide 6 — v1-next
-
-- **id:** `v1-next`  *(do not edit)*
-- **visual:** `none`  *(do not edit — text-only slide)*
-- **transition:** `ttb`  *(do not edit)*
-- **panelLayout:** *(default — none)*
-- **theme:** paper `#faf8f5`, accent `#78716c`  *(do not edit)*
-
-**kicker:** סיכום והמשך
-
-**title:** מה צריך כדי להתקדם להתקנה ראשונית
+**title:** איך ממשיכים מכאן
 
 **lead:**
-> כמה החלטות פשוטות וחיבורים בסיסיים — ואפשר להתחיל לעבוד באמת על תחזיות.
+> אחרי שראינו מה קיים היום, השלב הבא הוא לסגור יחד כמה דברים קטנים כדי להביא את Weather V1 למצב שעובד אצלכם בפועל.
 
 **bullets:**
-- אישור כיוון העבודה
-- החלטה לגבי אחסון הקטלוג — מקומי או בענן שלכם
-- התקנה ראשונית במחשבי העבודה הרלוונטיים
-- חיבור OpenAI API key לתמלול ולפי הצורך גם לתכנון
-- חיבור Claude API key רק אם בוחרים להשתמש ב־Claude לתכנון הסצנות
-- סבב התאמות לפי פידבק אחרי שימוש אמיתי
+- להבין מה חשוב לדייק לפני שימוש אמיתי.
+- להחליט איפה נכון לשמור את הקטלוג בהמשך.
+- לחבר את ה־API keys הרלוונטיים.
+- לבדוק את המערכת בסביבת העבודה שלכם.
+- לסגור יחד את היקף ההמשך בצורה פשוטה וברורה.
 
 **mobile_bullets:**
-- אישור כיוון והתקנה ראשונית במחשבי העבודה.
-- אחסון קטלוג — מקומי או בענן שלכם.
-- חיבור מפתחות API (OpenAI לתמלול/תכנון; Claude רק אם בוחרים).
-- סבב התאמות אחרי שימוש אמיתי.
+- מה צריך לדייק
+- איפה יישב הקטלוג
+- חיבור API keys
+- בדיקה אצלכם
+- סגירת היקף ההמשך
 
 **mobile_summary:**
-> החלטות קצרות וחיבורים בסיסיים — ומתחילים להריץ תחזיות באופן מעשי.
+> שקופית סיום פשוטה: מה צריך לסגור, מה צריך לחבר, ואיך מביאים את Weather V1 למצב שעובד אצלכם בפועל.
 
-**graphics:** none — text-only slide, by design.
+**graphics:** `closingRoadmap`, horizontal numbered roadmap of 5 nodes connected by a thin accent line. Each node shows the corresponding `mobile_bullets` label below the number. No price, no chips, no fine print.
 
-**notes:** Closing call-to-action. Keep the bullets concrete and action-oriented (each one is something the client decides or does). Do not collapse the OpenAI and Claude bullets into one — they're listed separately because Claude is **opt-in** and OpenAI is required.
+**notes:** This slide merges what used to be two separate slides (a pricing slide and a final next-steps slide). It deliberately does NOT show a price; pricing lives in the verbal conversation. Do not add an amount, do not write `המחיר יוצג בשיחה`, do not use `התקנה ראשונית`.
 
 ---
 
 ## Paste-back map (for the human syncing edits)
 
-When the edited markdown comes back from ChatGPT, copy each field into the corresponding key in the `storySections` array inside `docs/download-page/index.html.template` (lines ~4099–4226).
+When the edited markdown comes back from ChatGPT, copy each field into the corresponding key in the `storySections` array inside `docs/download-page/index.html.template`.
 
 | Markdown label   | JS key in `storySections`          | Type                        |
 |------------------|------------------------------------|-----------------------------|
@@ -301,9 +273,9 @@ When the edited markdown comes back from ChatGPT, copy each field into the corre
 | `mobile_bullets` | `mobileBullets`                    | string[] (preserve order)   |
 | `mobile_summary` | `mobileSummary`                    | string                      |
 
-System fields (`id`, `visual`, `transition`, `panelLayout`, `theme`) should already match — only the six content fields above are editable from this file. After sync, rebuild / refresh the page and visually confirm:
+System fields (`id`, `visual`, `transition`, `panelLayout`, `theme`) should already match: only the six content fields above are editable from this file. After sync, rebuild / refresh the page and visually confirm:
 
-1. All 6 slides render in order: intro → studio → catalog → local-first → pricing → v1-next.
-2. Desktop view shows new `bullets` next to each visual.
-3. Mobile view (resize browser < 860px) shows new `mobile_summary` + `mobile_bullets` and hides visuals.
-4. Slide 3 (catalog) still renders bold text where the `<strong>` tag is.
+1. All 5 slides render in order: intro -> studio -> catalog -> current state -> closing (next-steps).
+2. Desktop view shows new `bullets` next to each visual (slide 4 has no desktop bullets; the 4-card grid carries the content).
+3. Mobile view (resize browser <860px) shows new `mobile_summary` + `mobile_bullets` and hides visuals.
+4. No em-dash (U+2014) anywhere in visible copy. No price, no `₪`, no `מע״מ`, no `התקנה ראשונית`, no `המחיר יוצג בשיחה`, no `אצל V1`.
