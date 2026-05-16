@@ -16,10 +16,9 @@ This repo runs **Next.js 16** with React 19. APIs, conventions, and file structu
 6. For releases: `docs/RELEASE_CONVENTION.md` (or invoke the `weatherv1-release` skill).
 7. For new goal-driven sessions, invoke the `weatherv1-goal` skill (`/weatherv1-goal`).
 
-## Queued tasks (next up)
+## Queued tasks
 
-- **`docs/FUTURE_TASK_EDITOR_AND_ADMIN_GATES.md`** — single task that ships the editor login (`v1editor` at app entry), the Settings modal redesign into two role-based tabs (Editor + Admin), and the shared Argon2id password layer with hashes wired through GitHub Secrets. Land as one PR.
-- `docs/FUTURE_TASK_MANUAL_UPDATE_CHECK.md` — replace `autoUpdater` with a manual GitHub-release check + browser open. Independent track.
+Planned but un-shipped work lives in `docs/FUTURE_TASK_*.md`. Before starting substantial work, list them (`ls docs/FUTURE_TASK_*.md`) or read the "Queued tasks" table in `docs/DOCS_INDEX.md` for status and dependencies. Each file is self-contained (Goal / Research / Mermaid / Plan / Verification / Non-Goals).
 
 ## Commands
 
