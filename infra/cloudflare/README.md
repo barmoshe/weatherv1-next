@@ -27,6 +27,17 @@ The Worker enforces HTTP Basic Auth against `WEATHERV1_APP_USERNAME` /
 sends them as `Authorization: Basic base64(user:pass)`; comparison is
 constant-time via `crypto.subtle.timingSafeEqual`.
 
+**Public `/downloads/*` route.** The Worker also exposes an unauthenticated
+`GET`/`HEAD` `/downloads/*` route that serves R2 objects under the
+`downloads/` key prefix, with strict path whitelisting (`[A-Za-z0-9._/-]+`,
+no `..`, no `//`, ≤256 chars). Used today by the public download page for
+`downloads/windows/latest/WeatherV1-Setup.exe` and the per-tag
+`downloads/windows/<tag>/WeatherV1-Setup.exe`. Mutable `latest/` and
+`latest-stable/` pointers get a 5-minute cache; immutable per-version keys
+get a 1-year `immutable` cache. Temp credentials minted by
+`/v1/r2/temporary-credentials` are scoped to `tenants/<id>/` only, so they
+can never read or overwrite anything under `downloads/`.
+
 To migrate from a previous deploy that used a single `appToken`:
 
 ```bash

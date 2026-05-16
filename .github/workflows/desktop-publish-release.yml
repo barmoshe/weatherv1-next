@@ -5,7 +5,7 @@
 # github-token + run-id (actions/download-artifact v4 README). Tag identity:
 # github.event.workflow_run.head_branch is the tag for tag-triggered runs;
 # we also upload release-ref from Desktop for a canonical name.
-name: Desktop publish release
+name: Desktop publish to R2
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ on:
 
 jobs:
   publish:
-    name: Attach installers to GitHub Release
+    name: Upload Windows installer to R2
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'workflow_dispatch' ||
@@ -34,7 +34,6 @@ jobs:
         (startsWith(github.event.workflow_run.head_branch, 'v') && !contains(github.event.workflow_run.head_branch, '/'))))
     permissions:
       actions: read
-      contents: write
     steps:
       - name: Download tag ref (optional)
         id: tagref
@@ -99,13 +98,24 @@ jobs:
           echo "Resolved tag: $TAG"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - uses: softprops/action-gh-release@v2
+      - name: Upload installer to R2
+        env:
+          TAG: ${{ steps.reltag.outputs.tag }}
+          R2_BUCKET: weatherv1-media
+        # TODO(latest-stable): once we adopt a stable-vs-prerelease tag convention
+        # (e.g. SemVer prerelease suffix: vX.Y.Z stable, vX.Y.Z-beta.N prerelease),
+        # gate a third `wrangler r2 object put` to
+        # downloads/windows/latest-stable/WeatherV1-Setup.exe on the stable check.
+        uses: cloudflare/wrangler-action@v3
         with:
-          tag_name: ${{ steps.reltag.outputs.tag }}
-          draft: false
-          prerelease: false
-          make_latest: true
-          generate_release_notes: false
-          fail_on_unmatched_files: true
-          files: |
-            dist/WeatherV1-Setup.exe
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: |
+            r2 object put \
+              ${R2_BUCKET}/downloads/windows/${TAG}/WeatherV1-Setup.exe \
+              --file=dist/WeatherV1-Setup.exe \
+              --content-type=application/octet-stream
+            r2 object put \
+              ${R2_BUCKET}/downloads/windows/latest/WeatherV1-Setup.exe \
+              --file=dist/WeatherV1-Setup.exe \
+              --content-type=application/octet-stream

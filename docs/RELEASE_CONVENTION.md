@@ -23,17 +23,26 @@ description: Build and publish WeatherV1 desktop releases. Use when creating a
 
 ## Release Outputs
 
-Every public desktop release must publish these stable asset names:
+Every public desktop release uploads **only the Windows installer** to
+Cloudflare R2 via the `weatherv1-r2-gateway` Worker:
 
-- `WeatherV1-macOS.zip`
-- `WeatherV1-Setup.exe`
+- `WeatherV1-Setup.exe` — Windows only, CI-built.
 
-The public download links are:
+No asset is attached to the GitHub Release. The tag exists; the auto-generated
+Release page carries source archives only.
+
+Public download URLs (served by the Worker's public `/downloads/*` route):
 
 ```text
-https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-macOS.zip
-https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-Setup.exe
+https://<worker-host>/downloads/windows/latest/WeatherV1-Setup.exe
+https://<worker-host>/downloads/windows/<tag>/WeatherV1-Setup.exe
 ```
+
+`<worker-host>` is the deployed Worker host (today: `*.workers.dev`; later: a
+custom domain). The `latest/` pointer is overwritten on every successful tagged
+build with a 5-minute cache; the versioned key is immutable with a 1-year cache.
+
+macOS is **not** built in CI. See "Building the macOS installer locally" below.
 
 ## Source Of Truth
 
@@ -86,48 +95,55 @@ After pushing the tag:
 
 1. Watch `Desktop` for the new tag.
 2. Confirm the tag run uploads:
-   - `desktop-macos-latest`
    - `desktop-windows-latest`
    - `release-ref`
-3. Watch `Desktop publish release`.
+3. Watch `Desktop publish to R2`.
 4. Confirm the publish job succeeds.
-5. Open the release page for the tag and confirm the two installer assets are
-   present.
-6. Check both latest links with redirects:
+5. Verify the Worker URLs serve the new installer:
 
    ```bash
-   curl -I -L --max-redirs 2 "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-macOS.zip"
-   curl -I -L --max-redirs 2 "https://github.com/barmoshe/weatherv1-next/releases/latest/download/WeatherV1-Setup.exe"
+   curl -I "https://<worker-host>/downloads/windows/latest/WeatherV1-Setup.exe"
+   curl -I "https://<worker-host>/downloads/windows/v0.1.x/WeatherV1-Setup.exe"
    ```
 
-The `Location` header must point at the new tag, for example:
+   Both must return `200`, `content-type: application/octet-stream`, and
+   `content-disposition: attachment; filename="WeatherV1-Setup.exe"`.
 
-```text
-https://github.com/barmoshe/weatherv1-next/releases/download/v0.1.x/WeatherV1-macOS.zip
-```
+## Building the macOS installer locally
+
+CI does not build macOS. To produce a notarized `WeatherV1-<ver>.zip` on a Mac:
+
+1. Install Xcode Command Line Tools.
+2. Export the signing/notarization env vars:
+   `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`,
+   `OSX_SIGN_IDENTITY`. Without these, `electron-forge make` still produces an
+   *unsigned* zip but Gatekeeper will block it.
+3. `npm run electron:make`.
+4. Artifact: `out/make/zip/darwin/x64/WeatherV1-<ver>.zip`.
+
+This zip is for ad-hoc distribution. There is no automation that uploads it to
+R2 — the maintainer ships it directly to whoever asks.
 
 ## Failure Playbook
 
-### Release Has Only Source Archives
+### Worker `/downloads/...` Returns 404
 
-Cause: the release exists, but installer assets were never attached.
+Cause: the Windows installer was never written to R2 for this tag.
 
 Fix:
 
-1. Confirm the `Desktop` tag run succeeded and has artifacts.
-2. Re-run `Desktop publish release`, or use its manual `workflow_dispatch`
+1. Confirm the `Desktop` tag run succeeded and has `desktop-windows-latest`.
+2. Re-run `Desktop publish to R2`, or use its manual `workflow_dispatch`
    inputs with:
    - `tag`: `v0.1.x`
    - `run_id`: the successful `Desktop` run ID
 
-### `/releases/latest/download/...` Returns 404
+### Worker `/downloads/...` Returns 401
 
-Check:
-
-- The latest release is not a draft.
-- The latest release is not a pre-release.
-- Asset names exactly match `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe`.
-- `Desktop publish release` used `make_latest: true`.
+Cause: the Worker isn't deployed yet, or the `/downloads/*` route was deployed
+behind Basic Auth by mistake. Run `pulumi -C infra/cloudflare up` and verify
+`infra/cloudflare/worker/r2-gateway.js` contains the public `/downloads/*`
+branch *before* `checkBasicAuth(...)`.
 
 ### macOS Says The App Is Not Supported
 
@@ -171,8 +187,10 @@ A release is complete only when all are true:
 
 - The tag exists locally and on origin.
 - `Desktop` tag workflow succeeded.
-- `Desktop publish release` succeeded.
-- GitHub Release page shows both installer assets.
-- Latest download URLs redirect to the new tag.
+- `Desktop publish to R2` succeeded.
+- `https://<worker-host>/downloads/windows/latest/WeatherV1-Setup.exe`
+  returns `200` with the expected headers.
+- `https://<worker-host>/downloads/windows/<tag>/WeatherV1-Setup.exe` also
+  returns `200` (immutable per-version pointer).
 - Local git status is checked and unrelated dirty files are reported.
 

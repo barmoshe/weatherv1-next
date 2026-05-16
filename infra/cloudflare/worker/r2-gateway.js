@@ -71,6 +71,60 @@ export default {
       return json({ ok: true, bucket: env.R2_BUCKET_NAME, tenantId: env.DEFAULT_TENANT_ID }, cors);
     }
 
+    // Public installer downloads. Served unauthenticated from R2 under the
+    // `downloads/` key prefix. Strict path whitelist prevents traversal; temp
+    // creds minted by /v1/r2/temporary-credentials scope to `tenants/...` only,
+    // so they can never read or overwrite anything under `downloads/`.
+    if (
+      (request.method === "GET" || request.method === "HEAD") &&
+      url.pathname.startsWith("/downloads/")
+    ) {
+      const rawKey = decodeURIComponent(url.pathname.slice("/".length));
+      if (
+        rawKey.length > 256 ||
+        rawKey.includes("..") ||
+        rawKey.includes("//") ||
+        !/^[A-Za-z0-9._/-]+$/.test(rawKey)
+      ) {
+        return json({ success: false, error: "bad request" }, cors, 400);
+      }
+
+      const range = request.headers.get("range") || undefined;
+      const object =
+        request.method === "HEAD"
+          ? await env.WEATHERV1_MEDIA.head(rawKey)
+          : await env.WEATHERV1_MEDIA.get(rawKey, range ? { range } : undefined);
+      if (!object) return json({ success: false, error: "not found" }, cors, 404);
+
+      const filename = rawKey.split("/").pop() || "download.bin";
+      const isMutablePointer =
+        rawKey.includes("/latest/") || rawKey.includes("/latest-stable/");
+      const headers = {
+        ...cors,
+        "content-type": "application/octet-stream",
+        "content-disposition": `attachment; filename="${filename}"`,
+        etag: object.httpEtag,
+        "accept-ranges": "bytes",
+        "cache-control": isMutablePointer
+          ? "public, max-age=300"
+          : "public, max-age=31536000, immutable",
+      };
+      if (object.size !== undefined) headers["content-length"] = String(object.size);
+      if (object.uploaded) headers["last-modified"] = new Date(object.uploaded).toUTCString();
+
+      if (request.method === "HEAD") {
+        return new Response(null, { status: 200, headers });
+      }
+      const status = range && object.range ? 206 : 200;
+      if (status === 206 && object.range) {
+        const start = object.range.offset ?? 0;
+        const length = object.range.length ?? 0;
+        const end = start + length - 1;
+        headers["content-range"] = `bytes ${start}-${end}/${object.size}`;
+      }
+      return new Response(object.body, { status, headers });
+    }
+
     const auth = checkBasicAuth(request, env);
     if (!auth.ok) {
       return json({ success: false, error: auth.error }, cors, auth.status);
