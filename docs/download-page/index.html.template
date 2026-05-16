@@ -465,6 +465,7 @@
     .panel-copy {
       min-width: 0;
       min-height: 0;
+      overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior: contain;
       display: grid;
@@ -1056,11 +1057,12 @@
 
     /* === Pitch: closing options (#local-first copy column, below the lead) === */
     .pitch-closing-options {
+      --closing-accent: var(--v1-coral);
       margin-block-start: 8px;
       padding: 14px 16px;
       border-radius: 14px;
-      border: 1px dashed color-mix(in srgb, var(--panel-accent, #0d9488) 55%, rgb(0 0 0 / 0.15));
-      background: color-mix(in srgb, var(--panel-accent, #0d9488) 4%, rgb(255 255 255 / 0.94));
+      border: 1px dashed color-mix(in srgb, var(--closing-accent) 70%, rgb(0 0 0 / 0.15));
+      background: color-mix(in srgb, var(--closing-accent) 8%, rgb(255 255 255 / 0.94));
       direction: rtl;
       unicode-bidi: isolate;
     }
@@ -1070,7 +1072,7 @@
       font-size: 0.66rem;
       font-weight: 880;
       letter-spacing: 0.04em;
-      color: color-mix(in srgb, var(--panel-accent, #0d9488) 75%, rgb(20 26 34));
+      color: var(--closing-accent);
     }
 
     .pitch-closing-options__list {
@@ -1099,7 +1101,7 @@
       top: -0.05em;
       font-size: 1.2em;
       font-weight: 900;
-      color: var(--panel-accent, #0d9488);
+      color: var(--closing-accent);
     }
 
     .pitch-closing-options__list strong {
@@ -1116,7 +1118,7 @@
       font-weight: 700;
       line-height: 1.45;
       color: color-mix(in srgb, rgb(48 56 64 / 1) 70%, transparent);
-      border-block-start: 1px dashed color-mix(in srgb, var(--panel-accent, #0d9488) 35%, rgb(0 0 0 / 0.15));
+      border-block-start: 1px dashed color-mix(in srgb, var(--closing-accent) 45%, rgb(0 0 0 / 0.15));
     }
 
     .pitch-closing-options__star {
@@ -1125,7 +1127,7 @@
       top: 8px;
       font-size: 1.05em;
       font-weight: 900;
-      color: var(--panel-accent, #0d9488);
+      color: var(--closing-accent);
     }
 
     /* === #next-steps alignment overrides ===
@@ -3039,13 +3041,14 @@
     }
 
     #intro h1 {
-      max-width: none;
-      font-size: clamp(2.5rem, 0.55rem + 4.8vw, 5.25rem);
+      max-width: 100%;
+      font-size: clamp(2rem, 0.4rem + 4vw, 4.5rem);
       line-height: 1.05;
       letter-spacing: -0.03em;
       font-weight: 950;
-      white-space: nowrap;
-      text-wrap: nowrap;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      hyphens: auto;
     }
 
     #intro .lead {
