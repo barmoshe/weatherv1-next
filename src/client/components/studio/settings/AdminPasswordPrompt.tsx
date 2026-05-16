@@ -45,13 +45,16 @@ export function AdminPasswordPrompt({ onUnlocked }: AdminPasswordPromptProps) {
         כניסה לטאב הניהול דורשת סיסמת מנהל. הסיסמה תידרש שוב בכל פתיחה של חלון
         ההגדרות.
       </p>
-      <form
-        className="login-card__form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void handleSubmit();
-        }}
-      >
+      {/*
+        Intentionally NOT a <form>: this component is rendered inside
+        the SettingsModal's outer <form>. Nested forms are illegal
+        HTML — the browser flattens them, so a type="submit" button
+        here would bubble up and trigger saveDesktopSettings (which
+        writes settings, R2-syncs, and restarts the child server).
+        Instead we use type="button" + an Enter-key handler on the
+        input so the UX stays form-like without the side effect.
+      */}
+      <div className="login-card__form">
         <label className="login-field">
           <span className="login-field__label">סיסמת מנהל</span>
           <div className="login-field__password">
@@ -63,6 +66,13 @@ export function AdminPasswordPrompt({ onUnlocked }: AdminPasswordPromptProps) {
               onChange={(event) => {
                 setPassword(event.target.value);
                 setError(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  void handleSubmit();
+                }
               }}
               placeholder="••••••••"
               disabled={submitting}
@@ -88,13 +98,14 @@ export function AdminPasswordPrompt({ onUnlocked }: AdminPasswordPromptProps) {
         )}
 
         <button
-          type="submit"
+          type="button"
           className="btn btn--primary login-card__submit"
           disabled={submitting || !password}
+          onClick={() => void handleSubmit()}
         >
           {submitting ? "מאמת…" : "פתח"}
         </button>
-      </form>
+      </div>
     </div>
   );
 }

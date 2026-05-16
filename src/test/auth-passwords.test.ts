@@ -1,19 +1,8 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import argon2 from "argon2";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 const KNOWN_EDITOR = "editor-known-pw";
 const KNOWN_ADMIN = "admin-known-pw";
-
-const GENERATED_PATH = path.join(
-  __dirname,
-  "..",
-  "server",
-  "runtime",
-  "auth-passwords.generated.ts",
-);
 
 const ARGON2_OPTS = {
   type: argon2.argon2id,
@@ -22,22 +11,28 @@ const ARGON2_OPTS = {
   parallelism: 1,
 } as const;
 
-// The generated file is gitignored and normally emitted by the prebuild
-// step. For tests we mint our own hashes from known plaintext and write
-// the file directly so the module under test can import it. We leave the
-// file in place afterwards — subsequent test runs and `npm run build`
-// will simply overwrite it.
-beforeAll(async () => {
-  const editorHash = await argon2.hash(KNOWN_EDITOR, ARGON2_OPTS);
-  const adminHash = await argon2.hash(KNOWN_ADMIN, ARGON2_OPTS);
-  const body =
-    "// Test-fixture hashes written by src/test/auth-passwords.test.ts.\n" +
-    `export const EDITOR_HASH = ${JSON.stringify(editorHash)};\n` +
-    `export const ADMIN_HASH = ${JSON.stringify(adminHash)};\n`;
-  fs.writeFileSync(GENERATED_PATH, body, "utf8");
-});
+// Use vi.mock so this test does NOT overwrite the gitignored
+// auth-passwords.generated.ts on disk. Writing to that file from
+// tests clobbers the real hashes minted by `npm run prebuild` from
+// your .env, leaving editor/admin login broken until the next build.
+let editorHash = "";
+let adminHash = "";
+
+vi.mock("@/server/runtime/auth-passwords.generated", () => ({
+  get EDITOR_HASH() {
+    return editorHash;
+  },
+  get ADMIN_HASH() {
+    return adminHash;
+  },
+}));
 
 describe("auth-passwords verify", () => {
+  beforeAll(async () => {
+    editorHash = await argon2.hash(KNOWN_EDITOR, ARGON2_OPTS);
+    adminHash = await argon2.hash(KNOWN_ADMIN, ARGON2_OPTS);
+  });
+
   it("accepts the correct editor username and password", async () => {
     const { verifyEditorLogin } = await import(
       "@/server/runtime/auth-passwords"

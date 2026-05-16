@@ -1,19 +1,8 @@
 // @vitest-environment node
-import fs from "node:fs";
-import path from "node:path";
-
 import argon2 from "argon2";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 const KNOWN_PASSWORD = "editor-route-known-pw";
-
-const GENERATED_PATH = path.join(
-  __dirname,
-  "..",
-  "server",
-  "runtime",
-  "auth-passwords.generated.ts",
-);
 
 const ARGON2_OPTS = {
   type: argon2.argon2id,
@@ -22,17 +11,23 @@ const ARGON2_OPTS = {
   parallelism: 1,
 } as const;
 
-// Same fixture-write pattern as src/test/auth-passwords.test.ts —
-// emit the gitignored generated module so the route under test can
-// import it through the real verify wrapper.
+// vi.mock instead of disk write — keeps the real prebuild-minted
+// hashes in src/server/runtime/auth-passwords.generated.ts untouched
+// across test runs.
+let editorHash = "";
+const adminHash = "unused-admin-hash-only-shape-matters";
+
+vi.mock("@/server/runtime/auth-passwords.generated", () => ({
+  get EDITOR_HASH() {
+    return editorHash;
+  },
+  get ADMIN_HASH() {
+    return adminHash;
+  },
+}));
+
 beforeAll(async () => {
-  const editorHash = await argon2.hash(KNOWN_PASSWORD, ARGON2_OPTS);
-  const adminHash = await argon2.hash("unused-admin-pw", ARGON2_OPTS);
-  const body =
-    "// Test-fixture hashes written by src/test/editor-login-route.test.ts.\n" +
-    `export const EDITOR_HASH = ${JSON.stringify(editorHash)};\n` +
-    `export const ADMIN_HASH = ${JSON.stringify(adminHash)};\n`;
-  fs.writeFileSync(GENERATED_PATH, body, "utf8");
+  editorHash = await argon2.hash(KNOWN_PASSWORD, ARGON2_OPTS);
 });
 
 function buildRequest(body: unknown): Request {

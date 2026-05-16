@@ -104,10 +104,11 @@ export function EditorTabPanel({
           <StatusDot variant={openaiOk ? "ok" : "danger"} />
         </header>
         <p className="settings-hint" style={{ marginInlineStart: 0 }}>
-          מפתח OpenAI נדרש לתמלול קולי. שאר המפתחות והעדפות נמצאים בטאב הניהול.
+          מפתח OpenAI מפעיל את המערכת — תמלול, בחירת הקליפים וזיהוי תמונה.
+          שאר המפתחות והעדפות נמצאים בטאב הניהול.
         </p>
         <SecretField
-          label="מפתח OpenAI (תמלול קולי)"
+          label="מפתח OpenAI"
           value={openaiKey}
           configured={openaiOk}
           placeholder={openaiOk ? "מפתח שמור במחסנית המפתחות" : "sk-…"}
