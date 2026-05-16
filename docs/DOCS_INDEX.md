@@ -25,7 +25,8 @@ The same product can run in two modes:
 2. [README.md](../README.md) — overview, quick start, high-level repo map.
 3. [AGENTS.md](../AGENTS.md) — project guardrails, especially modern Next.js behavior.
 4. [NOTEBOOKLM.md](NOTEBOOKLM.md) — pack the repo into Markdown for Google NotebookLM (`npm run notebooklm:export:chunks`).
-5. The doc for your task:
+5. **Queued tasks** — see [Queued tasks](#queued-tasks) below before starting a new substantial change.
+6. The doc for your task:
    - **R2 / Worker / Pulumi / catalog mirror:** [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md) and [infra/cloudflare/README.md](../infra/cloudflare/README.md)
    - **Desktop architecture:** [ELECTRON_DESKTOP_PLAN.md](ELECTRON_DESKTOP_PLAN.md)
    - **Desktop operational state:** [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md)
@@ -34,6 +35,19 @@ The same product can run in two modes:
    - **LLM + transcription providers:** [PROVIDERS.md](PROVIDERS.md)
    - **Server deploy (Docker / long-lived Node):** [DESIGN_DEPLOYMENT.md](DESIGN_DEPLOYMENT.md)
    - **Repo extraction history:** [HANDOFF_NEW_REPO.md](HANDOFF_NEW_REPO.md)
+
+## Queued tasks
+
+Tasks that are planned but not yet implemented. Land in this order — the first one unblocks the others.
+
+| # | Task doc | Status | Notes |
+| --- | --- | --- | --- |
+| **1 (first)** | [FUTURE_TASK_AUTH_PASSWORD_INFRA.md](FUTURE_TASK_AUTH_PASSWORD_INFRA.md) | Planned | Shared Argon2id verify for editor + admin gates. Hashes via GitHub Secrets + gitignored generated file. Foundation for tasks 2 and 3. |
+| 2 | [FUTURE_TASK_EDITOR_LOGIN_GATE.md](FUTURE_TASK_EDITOR_LOGIN_GATE.md) | Planned | App-entry login as `v1editor`. Depends on task 1. |
+| 3 | [FUTURE_TASK_SETTINGS_TWO_TABS.md](FUTURE_TASK_SETTINGS_TWO_TABS.md) | Planned | Collapse the 5-tab Settings modal into Editor + Admin (password-gated). Depends on task 1. |
+| Independent | [FUTURE_TASK_MANUAL_UPDATE_CHECK.md](FUTURE_TASK_MANUAL_UPDATE_CHECK.md) | Planned | Replace `autoUpdater` with a manual GitHub-release check + browser open. No dependency on the queue above. |
+
+When a task ships, move its row to "Done" and link the merging PR.
 
 ## Cloudflare (R2 + Worker + MCP)
 
