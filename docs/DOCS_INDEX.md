@@ -61,6 +61,7 @@ When a task ships, move its row to "Done" and link the merging PR.
 | Desktop login + Settings fields for gateway URL / tenant / bucket / Basic Auth | [ELECTRON_DESKTOP_HANDOFF.md](ELECTRON_DESKTOP_HANDOFF.md) (`SettingsModal`, `StorageOnboardingGate`) |
 | CLI poster + catalog push after bulk tagging | [CATALOG_TAGGING_HANDOFF.md](CATALOG_TAGGING_HANDOFF.md) (“How the R2 mirror was done from the CLI”) |
 | Long clip stuck at one segment (wrong `start_sec`/`end_sec` span) | [CATALOG_TAGGING_HANDOFF.md](CATALOG_TAGGING_HANDOFF.md) — `scripts/repair-long-single-segments.ts` |
+| **Cloudflare Pages** (pitch-deck / download site at `weatherv1-download.pages.dev`) | [STATIC_HOSTING_HANDOFF.md](STATIC_HOSTING_HANDOFF.md) |
 
 **Mental model:** `readCatalog()` / `writeCatalog()` are always local. The Worker mints **short-lived** S3-compatible credentials; the app does not store permanent R2 API keys. Remote-only rows show in the UI; preview/render **materialize** to disk before ffmpeg runs.
 

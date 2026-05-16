@@ -103,8 +103,23 @@ if (zoneId && routePattern) {
   });
 }
 
+// Cloudflare Pages: download / pitch-deck site.
+// If you change `pagesProjectName`, also update `--project-name=` in
+// .github/workflows/pitch-deck.yml — the workflow can't read Pulumi outputs.
+const pagesProjectNameConfig = config.get("pagesProjectName") ?? "weatherv1-download";
+const pagesProductionBranch = config.get("pagesProductionBranch") ?? "main";
+
+const pitchDeckPages = new cloudflare.PagesProject("pitch-deck", {
+  accountId,
+  name: pagesProjectNameConfig,
+  productionBranch: pagesProductionBranch,
+  // No `source` block: direct-upload via wrangler-action in CI.
+});
+
 export const r2BucketName = bucket.name;
 export const r2TenantPrefix = pulumi.interpolate`tenants/${tenantId}/`;
 export const workerScriptName = script.scriptName;
 export const workerRoute = routePattern
   ?? (workersDevSubdomain ? `https://${workerName}.${workersDevSubdomain}.workers.dev` : undefined);
+export const pagesProjectName = pitchDeckPages.name;
+export const pagesDefaultUrl = pulumi.interpolate`https://${pitchDeckPages.name}.pages.dev`;

@@ -6,7 +6,7 @@ config:
   weatherv1-cloudflare:workerName: weatherv1-r2-gateway
   weatherv1-cloudflare:allowedOrigin: '*'
   cloudflare:apiToken:
-    secure: v1:ibVMfrB/aQqVtiGW:TPPCjLe80WmQDlzW54WZeFNlN5dZG58BKeGFTayW+FcoI5KXB+OrqBuY2GmOSno8zvA3w1GYm6X6IOnk0RVoSbUvRe8y
+    secure: v1:iRIN8X2tmfP0brL1:7Q/v2Rnhlg0lfF5bRzM0IuDv+J0Ngw9fwXx7uSlw2VRR7s3v8x9XmoaPAubMDrQFKB62A7jpOHpRnm1aq2k+/E2W6cII
   weatherv1-cloudflare:cloudflareApiToken:
     secure: v1:2aa7wGgRTQP+RC17:QByHQ4mdRNxyOQOisYbTMJQiEFcKuu+m1MxYPCyP89SE+va0WZpWpMtFERshkjkRx1FtdvqeagiFUKGDkxLryH56wk37
   weatherv1-cloudflare:r2ParentAccessKeyId:

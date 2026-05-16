@@ -1,0 +1,48 @@
+name: Pitch Deck
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/download-page/**"
+      - "public/weather-v1-icon-512.png"
+      - ".github/workflows/pitch-deck.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: pitch-deck-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: cloudflare-pages
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Render pitch deck
+        run: |
+          set -euo pipefail
+          mkdir -p _site/public _site/download-page/assets
+          sed "s|__REPO__|${{ github.repository }}|g" \
+            docs/download-page/index.html.template > _site/index.html
+          cp public/weather-v1-icon-512.png _site/public/weather-v1-icon-512.png
+          if compgen -G "docs/download-page/assets/*" > /dev/null; then
+            cp -R docs/download-page/assets/. _site/download-page/assets/
+          fi
+
+      # The --project-name value MUST match `pagesProjectName` in
+      # infra/cloudflare/Pulumi.dev.yaml (default: weatherv1-download).
+      # If you change one, change both.
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy _site --project-name=weatherv1-download --branch=main
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

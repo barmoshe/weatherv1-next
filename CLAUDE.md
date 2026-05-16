@@ -140,7 +140,7 @@ Required: `OPENAI_API_KEY` (Whisper + GPT picker). Optional: `GEMINI_API_KEY` (v
 
 - `.github/workflows/desktop.yml` — runs `electron-forge make --arch=x64` on macOS and Windows for `v*` tags; uploads `desktop-macos-latest`, `desktop-windows-latest`, and a tiny `release-ref` artifact carrying the tag name.
 - `.github/workflows/desktop-publish-release.yml` — `workflow_run`-triggered; downloads artifacts from the matching Desktop run and attaches **`WeatherV1-macOS.zip`** and **`WeatherV1-Setup.exe`** to the GitHub Release. Stable latest URLs only work when the latest release is non-draft, non-prerelease, with those exact asset names.
-- `.github/workflows/pages.yml` — publishes the download page from `docs/download-page/index.html.template`.
+- `.github/workflows/pitch-deck.yml` — deploys the download/pitch-deck page (`docs/download-page/`) to Cloudflare Pages (`weatherv1-download.pages.dev`) via `cloudflare/wrangler-action`.
 - `.github/workflows/ci.yml` — standard CI.
 
 For a release, prefer the `weatherv1-release` skill, which drives preflight → version bump → tag/push → workflow watch → asset verification end-to-end.
