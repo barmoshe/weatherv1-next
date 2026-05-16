@@ -1128,6 +1128,29 @@
       color: var(--panel-accent, #0d9488);
     }
 
+    /* === #next-steps alignment overrides ===
+       Vertically center both columns within the available slide height; tighten
+       the inter-column gap so the title and the journey read as one composition
+       rather than two distant blocks. `safe center` falls back to start when
+       content overflows so the title doesn't get masked off the top. */
+    @media (min-width: 861px) {
+      #next-steps .panel-inner {
+        gap: clamp(20px, 3vw, 48px);
+        align-items: center;
+      }
+      #next-steps .panel-copy {
+        align-self: center;
+        align-content: safe center;
+        gap: 14px;
+      }
+      #next-steps .panel-visual {
+        align-self: center !important;
+      }
+    }
+    #next-steps .pitch-closing-options {
+      margin-block-start: 4px;
+    }
+
     /* === Pitch: closing journey (`#next-steps`) — vertical editorial spine === */
     .pitch-closing-journey {
       width: min(100%, 56rem);
@@ -1135,7 +1158,7 @@
       direction: rtl;
       unicode-bidi: isolate;
       color: var(--panel-accent, #c2410c);
-      padding-block: clamp(12px, 1.6vw, 22px);
+      padding-block: 0;
     }
 
     .pitch-closing-journey__list {
@@ -1144,7 +1167,7 @@
       padding: 0;
       display: grid;
       grid-auto-flow: row;
-      gap: clamp(18px, 2.2vw, 28px);
+      gap: clamp(14px, 1.6vw, 22px);
     }
 
     .pitch-closing-journey__step {
