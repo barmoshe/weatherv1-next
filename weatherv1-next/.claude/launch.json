@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "download-page",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "download-page:dev"],
+      "port": 8080
+    }
+  ]
+}

@@ -2851,6 +2851,15 @@
       justify-self: stretch;
     }
 
+    /* The offset + soft drop shadows extend to the physical right and below.
+       The parent .panel-copy uses overflow:auto, which clips them. Reserve
+       physical right + bottom space so the shadows render fully. */
+    #intro .pitch-intro-flow {
+      width: calc(100% - 8px);
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
     #intro .panel-copy--intro .kicker {
       text-transform: none;
       letter-spacing: 0.02em;
