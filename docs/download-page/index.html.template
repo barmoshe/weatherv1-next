@@ -473,6 +473,46 @@
       align-content: start;
     }
 
+    /* === Hide scrollbar chrome on deck-level scrollers ===
+       Per Adrian Roselli + W3C ACT 0ssw9k: when chrome is hidden, the scrollable
+       region must stay keyboard-reachable (handled via tabindex="0" set by JS on
+       overflowing copies) and a visual affordance must signal hidden content
+       (fade mask below, applied only when overflow is actually detected).
+       Demoed mock UIs (.pitch-app-shell, .pitch-catalog-*, etc.) keep their
+       native scrollbars on purpose — they're part of the product illusion. */
+    .panel-copy,
+    .story-vstack,
+    .story-subslide,
+    #studio.story-panel {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .panel-copy::-webkit-scrollbar,
+    .story-vstack::-webkit-scrollbar,
+    .story-subslide::-webkit-scrollbar,
+    #studio.story-panel::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+    }
+    /* Fade affordance — appears only when JS detects real overflow. */
+    .panel-copy[data-overflow="true"] {
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent 100%);
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .panel-copy[data-overflow="true"] {
+        mask-image: none;
+        -webkit-mask-image: none;
+      }
+    }
+    /* Tabindex from JS removes the native focus ring; restore a subtle one for keyboard users. */
+    .panel-copy:focus-visible {
+      outline: 2px solid var(--panel-accent, currentColor);
+      outline-offset: -4px;
+      border-radius: 8px;
+    }
+
     .kicker {
       display: inline-block;
       max-width: 100%;
@@ -2996,29 +3036,64 @@
       unicode-bidi: isolate;
     }
 
-    /* === Animated pipeline strip (intro slide) === */
-    .pitch-pipeline-strip {
-      width: 100%;
-      min-width: 0;
-      margin: 0;
-      padding: clamp(10px, 1.4vw, 18px);
-      border: 2px solid var(--v1-ink);
-      border-radius: 22px;
-      background: linear-gradient(150deg, rgb(255 255 255 / 0.98), rgb(252 236 232 / 0.42));
-      box-shadow:
-        4px 4px 0 var(--v1-ink),
-        0 16px 36px rgb(15 23 42 / 0.08);
+    /* === Animated variant of pitch-intro-flow (intro slide) === */
+    .pitch-intro-flow--animated {
+      position: relative;
+    }
+    .pitch-intro-flow--animated .pitch-intro-steps::before {
+      display: none;
+    }
+    .pitch-intro-flow__wires {
+      position: absolute;
+      top: clamp(24px, 2.8vw, 36px);
+      left: 6%;
+      right: 6%;
+      height: 12px;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 0;
+      display: block;
       direction: ltr;
       unicode-bidi: isolate;
-      overflow: hidden;
     }
-    .pitch-pipeline-strip svg {
-      display: block;
+    .pitch-intro-flow__wires svg {
       width: 100%;
-      height: auto;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    .pitch-intro-flow--animated .pitch-intro-step__icon {
+      position: relative;
+      animation: pipelineIconBreathe 2.8s ease-in-out infinite;
+      animation-delay: var(--pulse-delay, 0s);
+      will-change: transform;
+    }
+    .pitch-intro-flow--animated .pitch-intro-step__icon::before {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 999px;
+      border: 2px solid var(--step-color);
+      opacity: 0;
+      animation: pipelineIconPulse 2.4s ease-out infinite;
+      animation-delay: var(--pulse-delay, 0s);
+      pointer-events: none;
+    }
+    @keyframes pipelineIconBreathe {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.04); }
+    }
+    @keyframes pipelineIconPulse {
+      0%   { transform: scale(0.92); opacity: 0; }
+      40%  { opacity: 0.55; }
+      100% { transform: scale(1.22); opacity: 0; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .pitch-pipeline-strip svg * {
+      .pitch-intro-flow--animated .pitch-intro-step__icon,
+      .pitch-intro-flow--animated .pitch-intro-step__icon::before {
+        animation: none !important;
+      }
+      .pitch-intro-flow__wires svg * {
         animation: none !important;
       }
     }
@@ -5059,159 +5134,105 @@
       return `${primaryHtml}${secondaryHtml}`;
     }
 
-    function introPipelineFlowHtml() {
-      const ariaLabel = "תהליך: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור";
-      const steps = [
-        {
-          en: "Narration",
-          he: "קריינות",
-          color: "#f9543e",
-          icon: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>'
-        },
-        {
-          en: "Transcription",
-          he: "תמלול",
-          color: "#3d55b8",
-          icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/>'
-        },
-        {
-          en: "Scene Planning",
-          he: "תכנון סצנות",
-          color: "#1fa871",
-          icon: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'
-        },
-        {
-          en: "Video Match",
-          he: "התאמת וידאו",
-          color: "#f2c231",
-          icon: '<rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="2" y1="8" x2="7" y2="8"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="2" y1="16" x2="7" y2="16"/><line x1="17" y1="8" x2="22" y2="8"/><line x1="17" y1="12" x2="22" y2="12"/><line x1="17" y1="16" x2="22" y2="16"/>'
-        },
-        {
-          en: "Render",
-          he: "רינדור",
-          color: "#7c5cd6",
-          icon: '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>'
-        }
-      ];
-      const stepsHtml = steps
-        .map(
-          step => `
-            <li class="pitch-intro-step" style="--step-color:${step.color}">
+    const PIPELINE_STEPS = [
+      {
+        en: "Narration",
+        he: "קריינות",
+        color: "#f9543e",
+        icon: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>'
+      },
+      {
+        en: "Transcription",
+        he: "תמלול",
+        color: "#3d55b8",
+        icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/>'
+      },
+      {
+        en: "Scene Planning",
+        he: "תכנון סצנות",
+        color: "#1fa871",
+        icon: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'
+      },
+      {
+        en: "Video Match",
+        he: "התאמת וידאו",
+        color: "#f2c231",
+        icon: '<rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="2" y1="8" x2="7" y2="8"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="2" y1="16" x2="7" y2="16"/><line x1="17" y1="8" x2="22" y2="8"/><line x1="17" y1="12" x2="22" y2="12"/><line x1="17" y1="16" x2="22" y2="16"/>'
+      },
+      {
+        en: "Render",
+        he: "רינדור",
+        color: "#7c5cd6",
+        icon: '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>'
+      }
+    ];
+
+    function pipelineStepLi(step, i) {
+      return `
+            <li class="pitch-intro-step" style="--step-color:${step.color};--pulse-delay:${(i * 0.35).toFixed(2)}s">
               <span class="pitch-intro-step__icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${step.icon}</svg>
               </span>
               <span class="pitch-intro-step__label" lang="en" dir="ltr">${escapeHtml(step.en)}</span>
               <span class="pitch-intro-step__sublabel">${escapeHtml(step.he)}</span>
-            </li>`
-        )
-        .join("");
+            </li>`;
+    }
+
+    function introPipelineFlowHtml() {
+      const ariaLabel = "תהליך: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור";
+      const stepsHtml = PIPELINE_STEPS.map(pipelineStepLi).join("");
       return `<div class="pitch-intro-flow" role="img" aria-label="${escapeHtml(ariaLabel)}">
         <ol class="pitch-intro-steps">${stepsHtml}</ol>
       </div>`;
     }
 
-    /** Animated 5-node pipeline strip (קריינות → תמלול → תכנון → וידאו → MP4).
-     *  Adapted from docs/readme-assets/pipeline-strip.svg with the deck's editorial
-     *  palette: warm cream background, the same 5 step colors used by the static
-     *  icon row, and a terracotta accent for the traveling data packets. */
+    /** Animated variant of the intro pipeline: reuses the old icon-in-circle row
+     *  (RTL, EN + HE labels, line-icons) and adds pulse rings on each icon plus
+     *  an SVG wire band underneath with dashed terracotta stripes and colored
+     *  data packets flowing right-to-left between the steps. */
     function pipelineStripHtml() {
-      const ariaLabel = "תהליך אנימציה: קריינות, תמלול, תכנון, התאמת וידאו, רינדור ל־MP4";
-      return `<div class="pitch-pipeline-strip" role="img" aria-label="${escapeHtml(ariaLabel)}">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 160" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <linearGradient id="psN1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f9543e"/><stop offset="100%" stop-color="#fb7256"/></linearGradient>
-            <linearGradient id="psN2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3d55b8"/><stop offset="100%" stop-color="#5a72d4"/></linearGradient>
-            <linearGradient id="psN3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1fa871"/><stop offset="100%" stop-color="#3fc491"/></linearGradient>
-            <linearGradient id="psN4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f2c231"/><stop offset="100%" stop-color="#f7d152"/></linearGradient>
-            <linearGradient id="psN5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c5cd6"/><stop offset="100%" stop-color="#9b7eea"/></linearGradient>
-            <filter id="psSoft"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          </defs>
-          <rect width="920" height="160" rx="16" fill="#fdf8f1"/>
-          <rect x="2" y="2" width="916" height="156" rx="14" fill="none" stroke="#e2d3b8" stroke-width="1" opacity="0.9">
-            <animate attributeName="stroke-opacity" values="0.55;1;0.55" dur="5s" repeatCount="indefinite"/>
-          </rect>
-          <g fill="none" stroke-linecap="round">
-            <path d="M124 80 H224" stroke="#d8c8aa" stroke-width="3"/>
-            <path d="M304 80 H404" stroke="#d8c8aa" stroke-width="3"/>
-            <path d="M484 80 H584" stroke="#d8c8aa" stroke-width="3"/>
-            <path d="M664 80 H764" stroke="#d8c8aa" stroke-width="3"/>
-            <path d="M124 80 H224" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
-              <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" repeatCount="indefinite"/>
-            </path>
-            <path d="M304 80 H404" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
-              <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.22s" repeatCount="indefinite"/>
-            </path>
-            <path d="M484 80 H584" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
-              <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.44s" repeatCount="indefinite"/>
-            </path>
-            <path d="M664 80 H764" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
-              <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.66s" repeatCount="indefinite"/>
-            </path>
-          </g>
-          <circle r="5" fill="#3d55b8" filter="url(#psSoft)">
-            <animateMotion dur="1.25s" repeatCount="indefinite" path="M124 80 H224"/>
-          </circle>
-          <circle r="5" fill="#1fa871" filter="url(#psSoft)">
-            <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.28s" path="M304 80 H404"/>
-          </circle>
-          <circle r="5" fill="#f2c231" filter="url(#psSoft)">
-            <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.56s" path="M484 80 H584"/>
-          </circle>
-          <circle r="5" fill="#7c5cd6" filter="url(#psSoft)">
-            <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.84s" path="M664 80 H764"/>
-          </circle>
-          <g transform="translate(28 38)">
-            <circle cx="56" cy="42" r="46" fill="none" stroke="#f9543e" stroke-width="2" opacity="0">
-              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" repeatCount="indefinite"/>
-              <animate attributeName="r" values="42;50;42" dur="2.4s" repeatCount="indefinite"/>
+      const ariaLabel = "תהליך אנימציה: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור";
+      const stepsHtml = PIPELINE_STEPS.map(pipelineStepLi).join("");
+      const wires = `
+        <span class="pitch-intro-flow__wires" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 12" preserveAspectRatio="none">
+            <defs>
+              <filter id="psSoft"><feGaussianBlur stdDeviation="1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <g fill="none" stroke-linecap="round">
+              <path d="M820 6 H660" stroke="#d8c8aa" stroke-width="3"/>
+              <path d="M635 6 H475" stroke="#d8c8aa" stroke-width="3"/>
+              <path d="M445 6 H285" stroke="#d8c8aa" stroke-width="3"/>
+              <path d="M260 6 H100" stroke="#d8c8aa" stroke-width="3"/>
+              <path d="M820 6 H660" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
+                <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" repeatCount="indefinite"/>
+              </path>
+              <path d="M635 6 H475" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
+                <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.22s" repeatCount="indefinite"/>
+              </path>
+              <path d="M445 6 H285" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
+                <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.44s" repeatCount="indefinite"/>
+              </path>
+              <path d="M260 6 H100" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6 14" opacity="0.6">
+                <animate attributeName="stroke-dashoffset" values="0;-80" dur="1s" begin="0.66s" repeatCount="indefinite"/>
+              </path>
+            </g>
+            <circle r="4" fill="#3d55b8" filter="url(#psSoft)">
+              <animateMotion dur="1.25s" repeatCount="indefinite" path="M820 6 H660"/>
             </circle>
-            <circle cx="56" cy="42" r="40" fill="url(#psN1)" filter="url(#psSoft)">
-              <animate attributeName="r" values="38;41;38" dur="2.8s" repeatCount="indefinite"/>
+            <circle r="4" fill="#1fa871" filter="url(#psSoft)">
+              <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.28s" path="M635 6 H475"/>
             </circle>
-            <text x="56" y="48" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="13" font-weight="800">קריינות</text>
-          </g>
-          <g transform="translate(208 38)">
-            <circle cx="56" cy="42" r="46" fill="none" stroke="#3d55b8" stroke-width="2" opacity="0">
-              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" begin="0.4s" repeatCount="indefinite"/>
-              <animate attributeName="r" values="42;50;42" dur="2.4s" begin="0.4s" repeatCount="indefinite"/>
+            <circle r="4" fill="#f2c231" filter="url(#psSoft)">
+              <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.56s" path="M445 6 H285"/>
             </circle>
-            <circle cx="56" cy="42" r="40" fill="url(#psN2)" filter="url(#psSoft)">
-              <animate attributeName="r" values="38;41;38" dur="2.8s" begin="0.35s" repeatCount="indefinite"/>
+            <circle r="4" fill="#7c5cd6" filter="url(#psSoft)">
+              <animateMotion dur="1.25s" repeatCount="indefinite" begin="0.84s" path="M260 6 H100"/>
             </circle>
-            <text x="56" y="48" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="13" font-weight="800">תמלול</text>
-          </g>
-          <g transform="translate(388 38)">
-            <circle cx="56" cy="42" r="46" fill="none" stroke="#1fa871" stroke-width="2" opacity="0">
-              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
-              <animate attributeName="r" values="42;50;42" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="56" cy="42" r="40" fill="url(#psN3)" filter="url(#psSoft)">
-              <animate attributeName="r" values="38;41;38" dur="2.8s" begin="0.7s" repeatCount="indefinite"/>
-            </circle>
-            <text x="56" y="48" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="13" font-weight="800">תכנון</text>
-          </g>
-          <g transform="translate(568 38)">
-            <circle cx="56" cy="42" r="46" fill="none" stroke="#f2c231" stroke-width="2" opacity="0">
-              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" begin="1.2s" repeatCount="indefinite"/>
-              <animate attributeName="r" values="42;50;42" dur="2.4s" begin="1.2s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="56" cy="42" r="40" fill="url(#psN4)" filter="url(#psSoft)">
-              <animate attributeName="r" values="38;41;38" dur="2.8s" begin="1.05s" repeatCount="indefinite"/>
-            </circle>
-            <text x="56" y="48" text-anchor="middle" fill="#1a1f2e" font-family="system-ui,sans-serif" font-size="13" font-weight="800">וידאו</text>
-          </g>
-          <g transform="translate(748 38)">
-            <circle cx="56" cy="42" r="46" fill="none" stroke="#7c5cd6" stroke-width="2" opacity="0">
-              <animate attributeName="opacity" values="0;0.55;0" dur="2.4s" begin="1.6s" repeatCount="indefinite"/>
-              <animate attributeName="r" values="42;50;42" dur="2.4s" begin="1.6s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="56" cy="42" r="40" fill="url(#psN5)" filter="url(#psSoft)">
-              <animate attributeName="r" values="38;41;38" dur="2.8s" begin="1.4s" repeatCount="indefinite"/>
-            </circle>
-            <text x="56" y="44" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="12" font-weight="800">MP4</text>
-            <text x="56" y="58" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="10" font-weight="700">9:16</text>
-          </g>
-        </svg>
+          </svg>
+        </span>`;
+      return `<div class="pitch-intro-flow pitch-intro-flow--animated" role="img" aria-label="${escapeHtml(ariaLabel)}">
+        <ol class="pitch-intro-steps">${wires}${stepsHtml}</ol>
       </div>`;
     }
 
@@ -5816,6 +5837,35 @@
       updatePitchStepNavButtons(idx, steps.length);
     }
 
+    /** Toggle data-overflow + tabindex on slide-level scrollers based on whether
+     *  content actually overflows. Pairs with the scrollbar-hide CSS so the fade
+     *  affordance and keyboard reachability only kick in when needed. */
+    function initSlideOverflowAffordance() {
+      const targets = document.querySelectorAll(".panel-copy, .story-subslide, .story-vstack");
+      if (!targets.length) return;
+      const sync = el => {
+        const overflows = el.scrollHeight - el.clientHeight > 4;
+        if (overflows) {
+          el.setAttribute("data-overflow", "true");
+          if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "0");
+        } else {
+          el.removeAttribute("data-overflow");
+          // Only remove tabindex we added — leave any author-set tabindex alone.
+          if (el.getAttribute("tabindex") === "0" && !el.dataset.tabindexAuthor) {
+            el.removeAttribute("tabindex");
+          }
+        }
+      };
+      targets.forEach(sync);
+      if (typeof ResizeObserver === "function") {
+        const ro = new ResizeObserver(entries => {
+          entries.forEach(e => sync(e.target));
+        });
+        targets.forEach(t => ro.observe(t));
+      }
+      window.addEventListener("resize", () => targets.forEach(sync), { passive: true });
+    }
+
     let pitchStepNavInitialized = false;
     function initPitchStepNav() {
       if (pitchStepNavInitialized) return;
@@ -6374,6 +6424,8 @@
     initScrollStory();
 
     initPitchStepNav();
+
+    initSlideOverflowAffordance();
 
     initHashNavigation();
 
