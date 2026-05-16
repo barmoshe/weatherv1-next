@@ -4536,7 +4536,7 @@
         ],
         visual: "closingJourney",
         transition: "ttb",
-        panelLayout: "stack-visual-top",
+        panelLayout: "split-balanced",
         theme: { paper: "#faf6f1", accent: "#c2410c" }
       }
     ];
