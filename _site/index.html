@@ -1197,9 +1197,10 @@
       #next-steps .panel-inner {
         gap: clamp(20px, 3vw, 48px);
         align-items: center;
-        /* RTL: first column renders visually on the right, second on the left.
-           Keep the left (visual) column narrower than the right (copy) column. */
-        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+        /* RTL: first column renders on the right, second on the left.
+           Visual column hosts a 2x3 journey grid, so it needs more width
+           than the previous 1.35/0.65 split allowed. */
+        grid-template-columns: minmax(0, 0.85fr) minmax(420px, 1.15fr);
       }
       #next-steps .panel-copy {
         align-self: center;
@@ -1229,19 +1230,26 @@
       margin: 0;
       padding: 0;
       display: grid;
-      grid-auto-flow: row;
-      gap: clamp(8px, 1vw, 14px);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(3, auto);
+      grid-auto-flow: column;
+      column-gap: clamp(20px, 2.6vw, 44px);
+      row-gap: clamp(10px, 1.2vw, 18px);
     }
 
     .pitch-closing-journey__step {
       display: grid;
-      grid-template-columns: clamp(48px, 5.4vw, 68px) 1fr;
-      column-gap: clamp(14px, 1.8vw, 22px);
+      grid-template-columns: clamp(40px, 4.4vw, 56px) 1fr;
+      column-gap: clamp(12px, 1.4vw, 18px);
       align-items: center;
       padding-bottom: clamp(8px, 1.1vw, 14px);
       border-bottom: 1px solid color-mix(in srgb, var(--panel-accent, #c2410c) 22%, transparent);
     }
 
+    /* 2x3 column-flow grid: per-column tails are :nth-child(3) (right
+       column bottom in RTL) and :nth-child(6) (left column bottom). */
+    .pitch-closing-journey__step:nth-child(3),
+    .pitch-closing-journey__step:nth-child(6),
     .pitch-closing-journey__step:last-child {
       border-bottom: none;
       padding-bottom: 0;
@@ -1249,7 +1257,7 @@
 
     .pitch-closing-journey__num {
       display: inline-block;
-      font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+      font-size: clamp(1.4rem, 2.1vw, 1.95rem);
       font-weight: 800;
       line-height: 1;
       color: var(--panel-accent, #c2410c);
@@ -1299,9 +1307,23 @@
     }
 
     @media (max-width: 720px) {
+      .pitch-closing-journey__list {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        grid-auto-flow: row;
+      }
       .pitch-closing-journey__step {
         grid-template-columns: clamp(56px, 14vw, 80px) 1fr;
         column-gap: clamp(12px, 3vw, 18px);
+      }
+      .pitch-closing-journey__step:nth-child(3),
+      .pitch-closing-journey__step:nth-child(6) {
+        border-bottom: 1px solid color-mix(in srgb, var(--panel-accent, #c2410c) 22%, transparent);
+        padding-bottom: clamp(8px, 3vw, 14px);
+      }
+      .pitch-closing-journey__step:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
       }
       .pitch-closing-journey__num {
         font-size: clamp(2rem, 8vw, 2.6rem);
@@ -3614,14 +3636,15 @@
       display: inline-flex;
       align-items: center;
       gap: .25rem;
-      padding: .22rem .5rem;
+      padding: clamp(0.2rem, 0.18rem + 0.1vw, 0.26rem)
+               clamp(0.45rem, 0.4rem + 0.25vw, 0.58rem);
       border: 1.5px solid var(--v1-ink);
       border-radius: 999px;
       background: rgb(255 255 255 / .72);
       color: var(--v1-ink);
       box-shadow: 1.5px 1.5px 0 var(--v1-ink);
       text-decoration: none;
-      font-size: .68rem;
+      font-size: clamp(0.62rem, 0.55rem + 0.18vw, 0.74rem);
       font-weight: 850;
       letter-spacing: .01em;
       line-height: 1;
@@ -3641,7 +3664,7 @@
     }
 
     .builder-credit span:first-child {
-      font-size: .58rem;
+      font-size: clamp(0.52rem, 0.48rem + 0.12vw, 0.6rem);
       font-weight: 700;
       letter-spacing: .08em;
       text-transform: uppercase;
@@ -4377,7 +4400,6 @@
       body:not(.is-pitch-active) .pitch-step-nav,
       body:not(.is-pitch-active) .scroll-progress,
       body:not(.is-pitch-active) .scroll-hint,
-      body:not(.is-pitch-active) .builder-credit,
       body:not(.is-pitch-active) .pitch-export-progress {
         opacity: 0;
         visibility: hidden;
@@ -4776,8 +4798,7 @@
       .story-shell,
       .pitch-step-nav,
       .scroll-progress,
-      .scroll-hint,
-      .builder-credit {
+      .scroll-hint {
         display: none !important;
       }
 
@@ -5453,15 +5474,20 @@
         bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + var(--pitch-mobile-step-dock) + 8px);
         z-index: 51;
         margin: 0;
-        max-width: min(16.5rem, calc(100vw - 120px));
-        padding: 0.35rem 0.7rem;
-        font-size: 0.64rem;
+        max-width: min(17rem, calc(100vw - 104px));
+        padding: clamp(0.32rem, 0.28rem + 0.4vw, 0.4rem)
+                 clamp(0.6rem, 0.5rem + 0.7vw, 0.78rem);
+        font-size: clamp(0.6rem, 0.52rem + 0.5vw, 0.7rem);
         box-shadow: 2px 2px 0 var(--v1-ink);
         -webkit-tap-highlight-color: rgb(249 84 62 / 0.15);
       }
 
+      body:not(.is-pitch-active) .builder-credit {
+        bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 10px);
+      }
+
       .builder-credit span:first-child {
-        font-size: 0.54rem;
+        font-size: clamp(0.5rem, 0.46rem + 0.3vw, 0.58rem);
       }
     }
 
