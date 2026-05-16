@@ -3904,22 +3904,50 @@
     .download-landing__copy > *:nth-child(6) { animation-delay: 840ms; }
 
     .download-landing__mac-note {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      align-items: center;
+      gap: 12px;
       margin: 0;
-      padding: 8px 12px;
-      border-radius: 12px;
-      background: rgb(255 255 255 / 0.55);
-      border: 1px dashed rgb(0 0 0 / 0.18);
-      font-size: 0.84rem;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgb(241 245 249 / 0.92), rgb(248 250 252 / 0.82));
+      border: 1.5px solid rgb(15 23 42 / 0.14);
+      box-shadow: 2px 2px 0 rgb(15 23 42 / 0.08);
+      font-size: 0.86rem;
       font-weight: 700;
       color: var(--v1-muted);
       line-height: 1.45;
-      align-self: start;
-      max-width: 30rem;
+      align-self: stretch;
+      max-width: 34rem;
+      transition: background 200ms ease, border-color 200ms ease, transform 200ms ease;
+    }
+
+    .download-landing__mac-note:hover {
+      background: linear-gradient(135deg, rgb(241 245 249 / 1), rgb(255 255 255 / 0.95));
+      border-color: rgb(15 23 42 / 0.24);
+      transform: translateY(-1px);
     }
 
     .download-landing__mac-note strong {
       font-weight: 950;
       color: var(--v1-ink);
+    }
+
+    .download-landing__mac-icon {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--v1-ink);
+      color: #fff;
+    }
+
+    .download-landing__mac-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
     }
 
     @keyframes dl-rise {
@@ -4140,6 +4168,37 @@
       color: var(--v1-muted);
       font-size: 0.82rem;
       font-weight: 800;
+      cursor: default;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: dl-chip-in 480ms cubic-bezier(.16,.84,.36,1) forwards;
+      transition:
+        border-color 200ms ease,
+        background 200ms ease,
+        color 200ms ease,
+        transform 200ms ease,
+        box-shadow 200ms ease;
+    }
+
+    .download-landing__chips li:nth-child(1) { animation-delay: 980ms; }
+    .download-landing__chips li:nth-child(2) { animation-delay: 1040ms; }
+    .download-landing__chips li:nth-child(3) { animation-delay: 1100ms; }
+    .download-landing__chips li:nth-child(4) { animation-delay: 1160ms; }
+    .download-landing__chips li:nth-child(5) { animation-delay: 1220ms; }
+    .download-landing__chips li:nth-child(6) { animation-delay: 1280ms; }
+
+    @keyframes dl-chip-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .download-landing__chips li:hover,
+    .download-landing__chips li:focus-visible {
+      transform: translateY(-1px);
+      border-color: var(--v1-coral);
+      color: var(--v1-ink);
+      background: rgb(255 255 255 / 0.95);
+      box-shadow: 0 4px 10px rgb(249 84 62 / 0.18);
+      outline: none;
     }
 
     .download-landing__visual {
@@ -4580,14 +4639,24 @@
       body.is-pitch-active .pitch-mobile-page {
         display: flex;
         flex-direction: column;
-        gap: clamp(20px, 4.5vw, 28px);
-        max-width: min(540px, 100%);
-        margin-inline: auto;
-        padding: max(20px, env(safe-area-inset-top, 0px)) clamp(18px, 5vw, 24px) calc(40px + env(safe-area-inset-bottom, 0px));
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0 0 calc(40px + env(safe-area-inset-bottom, 0px));
         direction: rtl;
         unicode-bidi: isolate;
         color: var(--v1-ink, #1c1a18);
         animation: pitch-mobile-page-in 360ms cubic-bezier(.16,.84,.36,1) both;
+      }
+
+      .pitch-mobile-page__inner {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(20px, 4.5vw, 28px);
+        max-width: min(540px, 100%);
+        margin-inline: auto;
+        padding: clamp(18px, 4.5vw, 26px) clamp(18px, 5vw, 24px) 0;
+        width: 100%;
       }
 
       @keyframes pitch-mobile-page-in {
@@ -4601,26 +4670,47 @@
         }
       }
 
+      .pitch-mobile-page__topbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        padding:
+          calc(12px + env(safe-area-inset-top, 0px))
+          clamp(16px, 5vw, 22px)
+          12px;
+        background: rgb(255 255 255 / 0.88);
+        backdrop-filter: blur(12px) saturate(1.1);
+        -webkit-backdrop-filter: blur(12px) saturate(1.1);
+        border-block-end: 1px solid rgb(0 0 0 / 0.08);
+        box-shadow: 0 4px 14px rgb(15 23 42 / 0.04);
+      }
+
       .pitch-mobile-page__back {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        align-self: flex-start;
-        padding: 10px 14px;
+        gap: 6px;
+        padding: 9px 13px;
         border: 1.5px solid var(--v1-ink, #1c1a18);
         border-radius: 12px;
-        background: rgb(255 255 255 / 0.92);
+        background: rgb(255 255 255 / 0.96);
         color: var(--v1-ink, #1c1a18);
         font-weight: 900;
-        font-size: 0.86rem;
+        font-size: 0.84rem;
         text-decoration: none;
         box-shadow: 2px 2px 0 var(--v1-ink, #1c1a18);
         transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .pitch-mobile-page__back:hover,
-      .pitch-mobile-page__back:focus-visible {
-        transform: translateY(-2px);
+      .pitch-mobile-page__back:focus-visible,
+      .pitch-mobile-page__back:active {
+        transform: translateY(-1px);
         background: var(--v1-yellow, #f2c231);
         box-shadow: 3px 3px 0 var(--v1-ink, #1c1a18);
         outline: none;
@@ -4634,6 +4724,41 @@
       .pitch-mobile-page__back:hover .pitch-mobile-page__back-arrow,
       .pitch-mobile-page__back:focus-visible .pitch-mobile-page__back-arrow {
         transform: translateX(4px);
+      }
+
+      .pitch-mobile-page__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--v1-ink, #1c1a18);
+        font-weight: 900;
+        font-size: 0.92rem;
+        letter-spacing: -0.01em;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .pitch-mobile-page__brand-mark {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: var(--v1-paper, #fff);
+        border: 1.5px solid var(--v1-ink, #1c1a18);
+        box-shadow: 2px 2px 0 rgb(0 0 0 / 0.12);
+        overflow: hidden;
+      }
+
+      .pitch-mobile-page__brand-mark img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .pitch-mobile-page__brand-text {
+        font-family: Heebo, system-ui, sans-serif;
       }
 
       .pitch-mobile-page__hero {
@@ -5396,7 +5521,14 @@
             <span class="download-landing__cta-arrow" aria-hidden="true">←</span>
           </button>
         </div>
-        <p class="download-landing__mac-note"><strong>למשתמשי Mac:</strong> צרו איתי קשר ישירות לבניית גרסה.</p>
+        <div class="download-landing__mac-note" role="note">
+          <span class="download-landing__mac-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16.365 1.43c0 1.14-.434 2.21-1.22 3.01-.81.82-2.13 1.46-3.23 1.37-.13-1.1.4-2.21 1.13-2.95.81-.84 2.18-1.47 3.32-1.43zM20.5 17.4c-.56 1.23-.83 1.78-1.55 2.86-1 1.51-2.4 3.39-4.14 3.4-1.55.02-1.95-1.01-4.06-1-2.11.01-2.55 1.02-4.1 1-1.74-.01-3.06-1.7-4.06-3.21C-.04 15.94-.34 11.06 1.46 8.46c1.28-1.84 3.31-2.92 5.22-2.92 1.95 0 3.17 1.07 4.78 1.07 1.56 0 2.51-1.07 4.77-1.07 1.71 0 3.52.93 4.81 2.54-4.23 2.32-3.54 8.36.46 9.32z"/>
+            </svg>
+          </span>
+          <span><strong>למשתמשי Mac:</strong> צרו איתי קשר ישירות לבניית גרסה.</span>
+        </div>
         <ul class="download-landing__chips" aria-label="הצצה למה שיש בפנים">
           <li>קריינות → תמלול</li>
           <li>תכנון סצנות AI</li>
@@ -5426,11 +5558,20 @@
   </main>
 
   <main class="pitch-mobile-page" id="pitch-mobile" aria-label="מצגת Weather V1 (גרסה ניידת)">
-    <a class="pitch-mobile-page__back" href="#" data-back-to-landing>
-      <span class="pitch-mobile-page__back-arrow" aria-hidden="true">→</span>
-      <span>חזרה לדף ההורדה</span>
-    </a>
+    <header class="pitch-mobile-page__topbar">
+      <a class="pitch-mobile-page__back" href="#" data-back-to-landing>
+        <span class="pitch-mobile-page__back-arrow" aria-hidden="true">→</span>
+        <span>חזרה</span>
+      </a>
+      <a class="pitch-mobile-page__brand" href="#" data-back-to-landing aria-label="חזרה לדף ההורדה">
+        <span class="pitch-mobile-page__brand-mark" aria-hidden="true">
+          <img src="public/weather-v1-icon-512.png" alt="" width="28" height="28" decoding="async">
+        </span>
+        <span class="pitch-mobile-page__brand-text">Weather V1</span>
+      </a>
+    </header>
 
+    <div class="pitch-mobile-page__inner">
     <header class="pitch-mobile-page__hero">
       <p class="pitch-mobile-page__kicker">המצגת · גרסה ניידת</p>
       <h1 class="pitch-mobile-page__title">סקירה מהירה למובייל</h1>
@@ -5517,6 +5658,7 @@
         Builder · Bar Moshe
       </a>
     </footer>
+    </div>
   </main>
 
   <div class="scroll-progress" aria-hidden="true"><span id="progressFill"></span></div>
