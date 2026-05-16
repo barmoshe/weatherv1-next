@@ -16,6 +16,10 @@ This repo runs **Next.js 16** with React 19. APIs, conventions, and file structu
 6. For releases: `docs/RELEASE_CONVENTION.md` (or invoke the `weatherv1-release` skill).
 7. For new goal-driven sessions, invoke the `weatherv1-goal` skill (`/weatherv1-goal`).
 
+## Queued tasks
+
+Planned but un-shipped work lives in `docs/FUTURE_TASK_*.md`. Before starting substantial work, list them (`ls docs/FUTURE_TASK_*.md`) or read the "Queued tasks" table in `docs/DOCS_INDEX.md` for status and dependencies. Each file is self-contained (Goal / Research / Mermaid / Plan / Verification / Non-Goals).
+
 ## Commands
 
 ```bash
