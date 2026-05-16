@@ -58,3 +58,72 @@ npm run typecheck
 npm run preview
 npm run up
 ```
+
+## `Pulumi.dev.yaml` and committed secrets
+
+`Pulumi.dev.yaml` is checked into the repo with **encrypted** values for
+every `--secret` key. This is the [documented Pulumi pattern](https://www.pulumi.com/docs/iac/concepts/secrets/):
+each stack has its own salt (`encryptionsalt` at the top of the file)
+and the per-key `secure: <ciphertext>` blocks are useless without it.
+Pulumi Cloud (or the operator's local passphrase) holds the decryption
+key.
+
+Practical implications:
+
+- Committing the file is safe; **do not** commit a `.pulumi/` directory
+  or any plaintext `.env` values.
+- Rotating a secret means re-running `pulumi config set --secret <key>
+  <new-value>` and committing the resulting `Pulumi.<stack>.yaml` diff.
+- The `cloudflare:apiToken` entry is the **provider's** auth token, not
+  the Worker's runtime token — see the section below.
+
+## `cloudflare:apiToken` vs `cloudflareApiToken`
+
+`Pulumi.dev.yaml` carries two superficially similar tokens. They do
+different things:
+
+| Key | Used by | Purpose |
+| --- | --- | --- |
+| `cloudflare:apiToken` | The Pulumi **Cloudflare provider** itself | Mutates Cloudflare resources during `pulumi up` (creates R2 buckets, deploys Workers, etc.) |
+| `weatherv1-cloudflare:cloudflareApiToken` | The **Worker** at request time | Calls `POST /accounts/<id>/r2/temp-access-credentials` to mint short-lived R2 creds for the desktop app |
+
+They can be the same physical Cloudflare API token, but it is safer to
+issue two tokens with the minimum scopes each needs:
+
+- **Provider token:** Account R2:Edit, Workers Scripts:Edit, Workers
+  Routes:Edit on the target account.
+- **Worker runtime token:** Account R2:Edit (specifically the
+  `r2/temp-access-credentials` permission) on the bucket only.
+
+Rotation: rotate independently. The provider token has blast radius
+(`pulumi up` privileges); the runtime token only mints scoped R2 creds.
+
+## Promoting `dev` → `prod`
+
+A template config lives at [`Pulumi.prod.yaml.example`](Pulumi.prod.yaml.example).
+Pulumi does **not** load this file as a stack until it is renamed.
+
+```bash
+# 1. Copy the template and fill in REPLACE_ME values
+cp infra/cloudflare/Pulumi.prod.yaml.example infra/cloudflare/Pulumi.prod.yaml
+# (edit the file to replace REPLACE_ME placeholders for non-secret keys)
+
+# 2. Initialize the stack
+pulumi --cwd infra/cloudflare stack init prod
+pulumi --cwd infra/cloudflare stack select prod
+
+# 3. Set every --secret value via the CLI so Pulumi encrypts each one
+#    under the new stack's salt. DO NOT paste plaintext secrets into the
+#    YAML file.
+pulumi --cwd infra/cloudflare config set --secret appPassword <new-pw>
+pulumi --cwd infra/cloudflare config set --secret cloudflareApiToken <token>
+pulumi --cwd infra/cloudflare config set --secret r2ParentAccessKeyId <id>
+pulumi --cwd infra/cloudflare config set --secret cloudflare:apiToken <provider-token>
+
+# 4. Preview and apply
+pulumi --cwd infra/cloudflare preview
+pulumi --cwd infra/cloudflare up
+```
+
+Use a distinct `bucketName` and `workerName` from the `dev` stack so the
+two stacks never share resources.

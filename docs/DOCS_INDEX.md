@@ -35,11 +35,13 @@ The same product can run in two modes:
    - **Server deploy (Docker / long-lived Node):** [DESIGN_DEPLOYMENT.md](DESIGN_DEPLOYMENT.md)
    - **Repo extraction history:** [HANDOFF_NEW_REPO.md](HANDOFF_NEW_REPO.md)
 
-## Cloudflare R2 (optional cloud mirror)
+## Cloudflare (R2 + Worker + MCP)
 
 | Topic | Where to read |
 | --- | --- |
+| **Start here — single router for everything Cloudflare** | [CLOUDFLARE_INTEGRATION.md](CLOUDFLARE_INTEGRATION.md) |
 | Goals, live status, Basic Auth migration, file list | [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md) |
+| Cloudflare + Pulumi + MCP improvement plan (worker hardening, ESC, MCP server) | [CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md) |
 | Pulumi config, `pulumi up`, Worker secrets | [infra/cloudflare/README.md](../infra/cloudflare/README.md) |
 | Sync client, materialize, push/pull, conflict handling | `src/server/sync/r2/` ([service.ts](../src/server/sync/r2/service.ts) is the orchestration hub) |
 | HTTP API for the app | `src/app/api/sync/r2/*` |
