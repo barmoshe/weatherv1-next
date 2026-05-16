@@ -1,8 +1,27 @@
 "use client";
 
+import { desktop } from "@/client/lib/desktop";
+
 interface MastheadProps {
   onNewJob: () => void;
   onOpenSettings: () => void;
+}
+
+async function handleSignOut() {
+  try {
+    await fetch("/api/auth/sign-out", { method: "POST" });
+  } catch {
+    // Best-effort: even if the request fails the reload will re-show
+    // the gate, which probes /api/auth/me and falls back to login.
+  }
+  if (desktop?.clearEditorSession) {
+    try {
+      await desktop.clearEditorSession();
+    } catch {
+      // ignore
+    }
+  }
+  window.location.reload();
 }
 
 export function Masthead({ onNewJob, onOpenSettings }: MastheadProps) {
@@ -39,6 +58,31 @@ export function Masthead({ onNewJob, onOpenSettings }: MastheadProps) {
         <span className="builder-credit__sep" aria-hidden="true">·</span>
         <strong className="builder-credit__name">Bar Moshe</strong>
       </a>
+      <button
+        className="settings-btn"
+        type="button"
+        onClick={() => void handleSignOut()}
+        aria-label="יציאה"
+        title="יציאה"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span className="settings-label">יציאה</span>
+      </button>
       <button
         className="settings-btn"
         type="button"

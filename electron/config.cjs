@@ -183,6 +183,8 @@ function buildChildEnv(args) {
   const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
   const r2AppPassword = decryptSecret(settings.keys.r2AppPassword, { safeStorage: args.safeStorage });
 
+  const editorSessionToken = loadEditorSessionToken({ safeStorage: args.safeStorage });
+
   const env = {
     ...process.env,
     DESKTOP_MODE: "1",
@@ -191,6 +193,15 @@ function buildChildEnv(args) {
     HOST: FIXED_HOST,
     NODE_ENV: process.env.NODE_ENV || "production",
   };
+
+  // Seed the child server's in-memory editor-token set with the
+  // persisted token so a quit+relaunch keeps the editor signed in.
+  // Empty string when no persisted token exists (first launch / after
+  // sign-out); the child treats absence as "no seed" and waits for a
+  // fresh login to mint one.
+  if (editorSessionToken) {
+    env.WEATHER_EDITOR_SESSION_TOKEN = editorSessionToken;
+  }
 
   // Packaged: explicit user workspace, else app-managed cache under userData.
   // Unpackaged dev: explicit user workspace, else in-repo `runtime/workspace`
@@ -273,6 +284,45 @@ function generateSessionToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
+// Editor session token — persisted across launches so the editor stays
+// signed in until they hit "Sign out". Stored alongside settings.json
+// in userData/. Same encryption scheme as API keys (safeStorage when
+// available, plaintext fallback for headless-Linux).
+const EDITOR_SESSION_FILE = "editorSessionToken.json";
+
+function editorSessionPath() {
+  return path.join(getUserDataDir(), EDITOR_SESSION_FILE);
+}
+
+function loadEditorSessionToken(opts) {
+  const p = editorSessionPath();
+  if (!fs.existsSync(p)) return null;
+  try {
+    const stored = JSON.parse(fs.readFileSync(p, "utf8"));
+    const token = decryptSecret(stored, opts);
+    if (typeof token === "string" && token.length === 64) return token;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveEditorSessionToken(token, opts) {
+  if (typeof token !== "string" || token.length !== 64) {
+    throw new Error("saveEditorSessionToken: expected 64-hex token");
+  }
+  fs.mkdirSync(getUserDataDir(), { recursive: true });
+  const stored = encryptSecret(token, opts);
+  const tmp = `${editorSessionPath()}.tmp.${process.pid}`;
+  fs.writeFileSync(tmp, JSON.stringify(stored), "utf8");
+  fs.renameSync(tmp, editorSessionPath());
+}
+
+function clearEditorSessionToken() {
+  const p = editorSessionPath();
+  if (fs.existsSync(p)) fs.unlinkSync(p);
+}
+
 module.exports = {
   DEFAULT_PORT,
   FALLBACK_PORTS,
@@ -288,4 +338,7 @@ module.exports = {
   decryptSecret,
   buildChildEnv,
   generateSessionToken,
+  loadEditorSessionToken,
+  saveEditorSessionToken,
+  clearEditorSessionToken,
 };

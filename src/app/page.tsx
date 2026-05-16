@@ -14,6 +14,7 @@ import { TabNav } from "@/client/components/TabNav";
 import { StudioPanel } from "@/client/components/studio/StudioPanel";
 import { SettingsModal } from "@/client/components/studio/SettingsModal";
 import { StorageOnboardingGate } from "@/client/components/storage/StorageOnboardingGate";
+import { EditorLoginGate } from "@/client/components/auth/EditorLoginGate";
 import { DesktopR2BootstrapOverlay } from "@/client/components/storage/DesktopR2BootstrapOverlay";
 import { ActivePanel } from "@/client/components/jobs/ActivePanel";
 import { HistoryPanel } from "@/client/components/jobs/HistoryPanel";
@@ -177,7 +178,9 @@ export default function Home() {
   return (
     <QueryClientProvider client={qc}>
       <Suspense>
-        <AppInner />
+        <EditorLoginGate>
+          <AppInner />
+        </EditorLoginGate>
       </Suspense>
     </QueryClientProvider>
   );

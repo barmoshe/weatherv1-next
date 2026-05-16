@@ -354,6 +354,29 @@ async function restartChildWithCurrentSettings() {
   }
 }
 
+ipcMain.handle("desktop:setEditorSession", async (_e, payload) => {
+  const token = payload && typeof payload.token === "string" ? payload.token : null;
+  if (!token || token.length !== 64) {
+    return { success: false, error: "Invalid token" };
+  }
+  cfg.saveEditorSessionToken(token, { safeStorage });
+  // Restart the child server so the new token gets injected into the
+  // child's env and seeds its in-memory editor-token set.
+  await restartChildWithCurrentSettings();
+  return { success: true };
+});
+
+ipcMain.handle("desktop:getEditorSession", async () => {
+  const token = cfg.loadEditorSessionToken({ safeStorage });
+  return { token: token || null };
+});
+
+ipcMain.handle("desktop:clearEditorSession", async () => {
+  cfg.clearEditorSessionToken();
+  await restartChildWithCurrentSettings();
+  return { success: true };
+});
+
 ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   const patch = {};
   if (update && typeof update.workspaceDir === "string") {
