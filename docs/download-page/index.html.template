@@ -2913,7 +2913,7 @@
       width: 100%;
       min-width: 0;
       margin: 0;
-      padding: clamp(14px, 2vw, 22px) clamp(16px, 2.4vw, 24px);
+      padding: clamp(16px, 2.2vw, 24px) clamp(18px, 2.6vw, 28px);
       border: 2px solid var(--v1-ink);
       border-radius: 22px;
       background:
@@ -2921,72 +2921,74 @@
       box-shadow:
         4px 4px 0 var(--v1-ink),
         0 16px 36px rgb(15 23 42 / 0.08);
-      color: var(--panel-accent, #f9543e);
       direction: rtl;
       unicode-bidi: isolate;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: clamp(120px, 18vh, 220px);
     }
 
-    .pitch-intro-flow__svg {
-      display: block;
+    .pitch-intro-flow .mermaid {
+      margin: 0;
       width: 100%;
-      height: auto;
-      aspect-ratio: 800 / 220;
-      overflow: visible;
-    }
-
-    .pitch-intro-flow__line {
-      stroke-dasharray: 1600;
-      stroke-dashoffset: 0;
-    }
-
-    .pitch-intro-flow__node-halo {
-      fill: rgb(255 255 255 / 1);
-      stroke: var(--v1-ink);
-      stroke-width: 2;
-    }
-
-    .pitch-intro-flow__glyph {
-      color: var(--panel-accent, #f9543e);
-    }
-
-    .pitch-intro-flow__label {
+      direction: ltr;
       font-family: inherit;
-      font-weight: 900;
-      font-size: 14px;
-      fill: var(--v1-ink);
+      text-align: center;
+      color: var(--v1-ink);
+    }
+
+    .pitch-intro-flow .mermaid:not([data-mermaid-rendered])::before {
+      content: "טוען תרשים…";
+      display: block;
+      font-family: inherit;
       direction: rtl;
+      color: color-mix(in srgb, var(--v1-ink) 55%, transparent);
+      font-weight: 800;
+      font-size: 0.85rem;
     }
 
-    @media (prefers-reduced-motion: no-preference) {
-      .pitch-intro-flow__line {
-        animation: pitch-intro-flow-draw 1.3s ease-out 0.1s both;
-      }
-      .pitch-intro-flow__node {
-        opacity: 0;
-        transform: translateY(6px);
-        animation: pitch-intro-flow-node 0.5s ease-out both;
-        transform-box: fill-box;
-        transform-origin: center;
-      }
-      .pitch-intro-flow__node[data-step="1"] { animation-delay: 0.25s; }
-      .pitch-intro-flow__node[data-step="2"] { animation-delay: 0.40s; }
-      .pitch-intro-flow__node[data-step="3"] { animation-delay: 0.55s; }
-      .pitch-intro-flow__node[data-step="4"] { animation-delay: 0.70s; }
-      .pitch-intro-flow__node[data-step="5"] { animation-delay: 0.85s; }
+    .pitch-intro-flow .mermaid svg {
+      max-width: 100%;
+      height: auto;
+      display: inline-block;
     }
 
-    @keyframes pitch-intro-flow-draw {
-      from { stroke-dashoffset: 1600; }
-      to { stroke-dashoffset: 0; }
+    .pitch-intro-flow .mermaid .node rect,
+    .pitch-intro-flow .mermaid .node circle,
+    .pitch-intro-flow .mermaid .node ellipse,
+    .pitch-intro-flow .mermaid .node polygon,
+    .pitch-intro-flow .mermaid .node path {
+      stroke: var(--v1-ink) !important;
+      stroke-width: 2px !important;
+      fill: #fff7f4 !important;
     }
 
-    @keyframes pitch-intro-flow-node {
-      to { opacity: 1; transform: translateY(0); }
+    .pitch-intro-flow .mermaid .node .label,
+    .pitch-intro-flow .mermaid .nodeLabel,
+    .pitch-intro-flow .mermaid foreignObject div {
+      font-family: inherit !important;
+      font-weight: 900 !important;
+      color: var(--v1-ink) !important;
+      direction: rtl !important;
+    }
+
+    .pitch-intro-flow .mermaid .edgePath path,
+    .pitch-intro-flow .mermaid .flowchart-link {
+      stroke: var(--panel-accent, #f9543e) !important;
+      stroke-width: 2.4px !important;
+    }
+
+    .pitch-intro-flow .mermaid marker path,
+    .pitch-intro-flow .mermaid .marker {
+      fill: var(--panel-accent, #f9543e) !important;
+      stroke: var(--panel-accent, #f9543e) !important;
     }
 
     @media (max-height: 720px) and (min-width: 861px) {
       .pitch-intro-flow {
-        padding: 10px 14px;
+        padding: 12px 16px;
+        min-height: 110px;
       }
     }
 
@@ -2994,9 +2996,6 @@
       #intro .panel-inner {
         grid-template-columns: 1fr;
         max-width: min(47rem, 92vw);
-      }
-      .pitch-intro-flow__label {
-        font-size: 16px;
       }
     }
 
@@ -3361,6 +3360,11 @@
       }
     }
 
+    /* Desktop: the mobile single-page overview stays hidden. */
+    .pitch-mobile-page {
+      display: none;
+    }
+
     @media (max-width: 860px) {
       :root {
         /* Single-row nav: frees vertical space vs old stacked bar (~140px+). */
@@ -3442,77 +3446,189 @@
         display: none;
       }
 
-      /* Slim referral strip — same URL, best viewed on large screen */
-      .pitch-mobile-desktop-cta {
-        box-sizing: border-box;
-        position: fixed;
-        z-index: 51;
-        inset-inline: max(10px, env(safe-area-inset-inline-start, 0px)) max(10px, env(safe-area-inset-inline-end, 0px));
-        top: calc(max(8px, env(safe-area-inset-top, 0px)) + var(--nav-height) + 6px);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 8px 10px;
-        border-radius: 14px;
-        border: 2px solid var(--v1-ink);
-        background: rgb(255 255 255 / 0.94);
-        box-shadow: 0 10px 28px rgb(15 23 42 / 0.08), 3px 3px 0 rgb(0 0 0 / 0.08);
-        direction: rtl;
-        unicode-bidi: isolate;
+      /* Mobile gets a clean single-page overview instead of the scrolling deck. */
+      .site-nav,
+      .story-shell,
+      .pitch-step-nav,
+      .scroll-progress,
+      .scroll-hint,
+      .builder-credit {
+        display: none !important;
       }
 
-      .pitch-mobile-desktop-cta__text {
+      body {
+        padding-bottom: 0;
+        background: var(--v1-paper, #faf8f5);
+      }
+
+      .pitch-mobile-page {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(20px, 4.5vw, 28px);
+        max-width: min(540px, 100%);
+        margin-inline: auto;
+        padding: max(20px, env(safe-area-inset-top, 0px)) clamp(18px, 5vw, 24px) calc(40px + env(safe-area-inset-bottom, 0px));
+        direction: rtl;
+        unicode-bidi: isolate;
+        color: var(--v1-ink, #1c1a18);
+      }
+
+      .pitch-mobile-page__hero {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-top: 4px;
+      }
+
+      .pitch-mobile-page__kicker {
         margin: 0;
-        font-size: 0.72rem;
-        font-weight: 800;
-        line-height: 1.35;
-        color: var(--v1-ink);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        color: var(--v1-coral, #f9543e);
+      }
+
+      .pitch-mobile-page__title {
+        margin: 0;
+        font-size: clamp(1.45rem, 6vw, 1.85rem);
+        font-weight: 950;
+        line-height: 1.18;
+        letter-spacing: -0.01em;
+        color: var(--v1-ink, #1c1a18);
         text-wrap: balance;
       }
 
-      .pitch-mobile-desktop-cta__row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
+      .pitch-mobile-page__lead {
+        margin: 0;
+        font-size: clamp(0.95rem, 3.6vw, 1.05rem);
+        font-weight: 700;
+        line-height: 1.5;
+        color: color-mix(in srgb, var(--v1-ink, #1c1a18) 88%, transparent);
       }
 
-      .pitch-mobile-desktop-cta__btn {
-        flex: 1 1 auto;
-        min-height: 44px;
-        padding: 0 14px;
+      .pitch-mobile-page__h2 {
+        margin: 0 0 12px;
+        font-size: 0.95rem;
+        font-weight: 900;
+        color: var(--v1-ink, #1c1a18);
+      }
+
+      .pitch-mobile-page__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .pitch-mobile-page__list li {
+        display: grid;
+        grid-template-columns: 32px 1fr;
+        gap: 12px;
+        align-items: start;
+        padding: 14px 14px;
+        border-radius: 14px;
+        border: 1px solid rgb(0 0 0 / 0.08);
+        background: rgb(255 255 255 / 0.96);
+      }
+
+      .pitch-mobile-page__list-num {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: var(--v1-coral, #f9543e);
+        color: #fff;
+        font-weight: 900;
+        font-size: 0.9rem;
+      }
+
+      .pitch-mobile-page__list li strong {
+        display: block;
+        font-size: 0.98rem;
+        font-weight: 900;
+        line-height: 1.25;
+        margin-bottom: 3px;
+      }
+
+      .pitch-mobile-page__list li p {
+        margin: 0;
+        font-size: 0.86rem;
+        font-weight: 600;
+        line-height: 1.42;
+        color: color-mix(in srgb, var(--v1-ink, #1c1a18) 78%, transparent);
+      }
+
+      .pitch-mobile-page__cta {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 18px;
+        border-radius: 18px;
+        border: 2px solid var(--v1-ink, #1c1a18);
+        background: linear-gradient(150deg, rgb(255 247 244 / 0.95), rgb(255 255 255 / 0.95));
+        box-shadow: 3px 3px 0 var(--v1-ink, #1c1a18);
+      }
+
+      .pitch-mobile-page__cta-text {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 800;
+        line-height: 1.4;
+        color: var(--v1-ink, #1c1a18);
+      }
+
+      .pitch-mobile-page__cta-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .pitch-mobile-page__btn {
+        min-height: 48px;
+        padding: 0 18px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
-        border: 2px solid var(--v1-ink);
-        font-size: 0.74rem;
+        border-radius: 14px;
+        border: 2px solid var(--v1-ink, #1c1a18);
+        font-size: 0.95rem;
         font-weight: 900;
         text-decoration: none;
         cursor: pointer;
-        background: rgb(255 255 255 / 0.96);
-        color: var(--v1-ink);
-        box-shadow: 2px 2px 0 rgb(0 0 0 / 0.1);
+        background: rgb(255 255 255 / 0.98);
+        color: var(--v1-ink, #1c1a18);
+        box-shadow: 2px 2px 0 rgb(0 0 0 / 0.12);
         -webkit-tap-highlight-color: rgb(249 84 62 / 0.18);
       }
 
-      .pitch-mobile-desktop-cta__btn--primary {
+      .pitch-mobile-page__btn--primary {
         background: var(--v1-coral, #f9543e);
         color: #fff;
-        border-color: rgb(0 0 0 / 0.12);
+        border-color: rgb(0 0 0 / 0.14);
       }
 
-      .pitch-mobile-desktop-cta__btn--ghost {
-        flex: 0 1 auto;
-        min-width: min(100%, 8.5rem);
-      }
-
-      .pitch-mobile-desktop-cta__status {
+      .pitch-mobile-page__status {
         margin: 0;
         min-height: 1.1em;
-        font-size: 0.68rem;
-        font-weight: 750;
-        color: color-mix(in srgb, var(--v1-ink) 72%, var(--v1-coral, #f9543e));
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-align: center;
+        color: color-mix(in srgb, var(--v1-ink, #1c1a18) 72%, var(--v1-coral, #f9543e));
+      }
+
+      .pitch-mobile-page__footer {
+        margin-top: 4px;
+        text-align: center;
+      }
+
+      .pitch-mobile-page__footer a {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: color-mix(in srgb, var(--v1-ink, #1c1a18) 60%, transparent);
+        text-decoration: none;
       }
 
       .lead-desktop-only {
@@ -4039,32 +4155,86 @@
     </div>
   </nav>
 
-  <aside
-    class="pitch-mobile-desktop-cta"
-    aria-label="צפייה במצגת המלאה במחשב"
-  >
-    <p class="pitch-mobile-desktop-cta__text">
-      המצגת המלאה עם המוקאפים והאנימציות נוחה יותר במסך רחב. אפשר להעתיק את הקישור ולפתוח אותו מהמחשב.
-    </p>
-    <div class="pitch-mobile-desktop-cta__row">
-      <button
-        type="button"
-        class="pitch-mobile-desktop-cta__btn pitch-mobile-desktop-cta__btn--primary"
-        id="pitch-copy-page-url"
-      >
-        העתקת קישור
-      </button>
-      <a
-        class="pitch-mobile-desktop-cta__btn pitch-mobile-desktop-cta__btn--ghost"
-        id="pitch-open-email-link"
-        href="#"
-        rel="nofollow"
-      >
-        שליחה באימייל
+  <main class="pitch-mobile-page" aria-label="Weather V1">
+    <header class="pitch-mobile-page__hero">
+      <p class="pitch-mobile-page__kicker">Weather V1</p>
+      <h1 class="pitch-mobile-page__title">מקריינות תחזית לסרטון אנכי</h1>
+      <p class="pitch-mobile-page__lead">
+        Weather V1 מקבלת קריינות תחזית, מתמללת אותה, מפרקת אותה לסצנות, מתאימה וידאו מהקטלוג, ומייצרת בסיס לסרטון תחזית.
+      </p>
+    </header>
+
+    <section class="pitch-mobile-page__topics" aria-label="מה במצגת">
+      <h2 class="pitch-mobile-page__h2">מה תראו במצגת</h2>
+      <ol class="pitch-mobile-page__list">
+        <li>
+          <span class="pitch-mobile-page__list-num">1</span>
+          <div>
+            <strong>פתיחה</strong>
+            <p>הזרימה הכללית של Weather V1, מקריינות עד וידאו אנכי.</p>
+          </div>
+        </li>
+        <li>
+          <span class="pitch-mobile-page__list-num">2</span>
+          <div>
+            <strong>סטודיו</strong>
+            <p>המסך המרכזי שבו מעלים קריינות, מתמללים, מתכננים סצנות ומרנדרים.</p>
+          </div>
+        </li>
+        <li>
+          <span class="pitch-mobile-page__list-num">3</span>
+          <div>
+            <strong>קטלוג</strong>
+            <p>כ־200 סרטונים, כ־400 סגמנטים, תיאור ותגיות לכל קטע.</p>
+          </div>
+        </li>
+        <li>
+          <span class="pitch-mobile-page__list-num">4</span>
+          <div>
+            <strong>מצב נוכחי</strong>
+            <p>מה קיים היום, ומה אפשר להעביר בהמשך לתשתיות שלכם.</p>
+          </div>
+        </li>
+        <li>
+          <span class="pitch-mobile-page__list-num">5</span>
+          <div>
+            <strong>איך ממשיכים מכאן</strong>
+            <p>הצעדים שצריך לסגור יחד כדי להביא את המערכת לפעולה אצלכם.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="pitch-mobile-page__cta" aria-label="פתיחה במחשב">
+      <p class="pitch-mobile-page__cta-text">
+        החוויה המלאה עם המוקאפים נוחה יותר במסך רחב. העתיקו את הקישור או שלחו אותו לעצמכם, ופתחו במחשב.
+      </p>
+      <div class="pitch-mobile-page__cta-row">
+        <button
+          type="button"
+          class="pitch-mobile-page__btn pitch-mobile-page__btn--primary"
+          id="pitch-copy-page-url"
+        >
+          העתקת קישור
+        </button>
+        <a
+          class="pitch-mobile-page__btn pitch-mobile-page__btn--ghost"
+          id="pitch-open-email-link"
+          href="#"
+          rel="nofollow"
+        >
+          שליחה באימייל
+        </a>
+      </div>
+      <p class="pitch-mobile-page__status" id="pitch-desktop-cta-status" aria-live="polite"></p>
+    </section>
+
+    <footer class="pitch-mobile-page__footer">
+      <a href="https://barmoshe.github.io/bar-portfolio/" target="_blank" rel="noreferrer">
+        Builder · Bar Moshe
       </a>
-    </div>
-    <p class="pitch-mobile-desktop-cta__status" id="pitch-desktop-cta-status" aria-live="polite"></p>
-  </aside>
+    </footer>
+  </main>
 
   <div class="scroll-progress" aria-hidden="true"><span id="progressFill"></span></div>
   <div class="scroll-hint" aria-hidden="true">גללו להמשך</div>
@@ -4098,6 +4268,42 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "base",
+      securityLevel: "strict",
+      fontFamily: "'Plus Jakarta Sans','Heebo',system-ui,sans-serif",
+      themeVariables: {
+        primaryColor: "#fff7f4",
+        primaryTextColor: "#1c1a18",
+        primaryBorderColor: "#1c1a18",
+        secondaryColor: "#fff",
+        tertiaryColor: "#fff",
+        lineColor: "#f9543e",
+        edgeLabelBackground: "#ffffff",
+        nodeBorder: "#1c1a18",
+        fontSize: "15px"
+      },
+      flowchart: {
+        htmlLabels: true,
+        curve: "basis",
+        padding: 14,
+        useMaxWidth: true
+      }
+    });
+    window.__renderPitchMermaid = async () => {
+      try {
+        const nodes = document.querySelectorAll(".pitch-intro-flow .mermaid:not([data-mermaid-rendered])");
+        if (!nodes.length) return;
+        nodes.forEach(n => n.setAttribute("data-mermaid-rendered", "true"));
+        await mermaid.run({ nodes });
+      } catch (err) {
+        console.warn("[pitch] mermaid render failed", err);
+      }
+    };
+  </script>
   <script>
     const downloadLinks = [
       {
@@ -4205,7 +4411,7 @@
         lead:
           "אחרי שראינו מה קיים היום, השלב הבא הוא לסגור יחד כמה דברים קטנים כדי להביא את Weather V1 למצב שעובד אצלכם בפועל.",
         mobileSummary:
-          "שקופית סיום פשוטה: מה צריך לסגור, מה צריך לחבר, ואיך מביאים את Weather V1 למצב שעובד אצלכם בפועל.",
+          "מכאן ממשיכים יחד: מה צריך לסגור, מה צריך לחבר, ואיך מביאים את Weather V1 למצב שעובד אצלכם בפועל.",
         bullets: [
           "להבין מה חשוב לדייק לפני שימוש אמיתי.",
           "להחליט איפה נכון לשמור את הקטלוג בהמשך.",
@@ -4722,62 +4928,18 @@
     }
 
     function introPipelineFlowHtml() {
-      const steps = [
-        { label: "קריינות", x: 760 },
-        { label: "תמלול", x: 600 },
-        { label: "תכנון סצנות", x: 440 },
-        { label: "התאמת וידאו", x: 280 },
-        { label: "רינדור", x: 120 }
-      ];
-      const glyphs = {
-        0: `<circle cx="0" cy="-2" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/>
-            <rect x="-3" y="6" width="6" height="3.4" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/>
-            <line x1="-7" y1="-2" x2="-11" y2="-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <line x1="7" y1="-2" x2="11" y2="-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
-        1: `<rect x="-12" y="-9" width="24" height="18" rx="2.4" fill="none" stroke="currentColor" stroke-width="2.2"/>
-            <line x1="-8" y1="-4" x2="8" y2="-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <line x1="-8" y1="0" x2="8" y2="0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <line x1="-8" y1="4" x2="3" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
-        2: `<rect x="-13" y="-7" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>
-            <rect x="-5" y="-9" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>
-            <rect x="3" y="-11" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>`,
-        3: `<rect x="-13" y="-8" width="26" height="16" rx="1.8" fill="none" stroke="currentColor" stroke-width="2.2"/>
-            <line x1="-13" y1="-3" x2="13" y2="-3" stroke="currentColor" stroke-width="1.6"/>
-            <line x1="-13" y1="3" x2="13" y2="3" stroke="currentColor" stroke-width="1.6"/>
-            <line x1="-9" y1="-8" x2="-9" y2="8" stroke="currentColor" stroke-width="1.6"/>
-            <line x1="-3" y1="-8" x2="-3" y2="8" stroke="currentColor" stroke-width="1.6"/>
-            <line x1="3" y1="-8" x2="3" y2="8" stroke="currentColor" stroke-width="1.6"/>
-            <line x1="9" y1="-8" x2="9" y2="8" stroke="currentColor" stroke-width="1.6"/>`,
-        4: `<rect x="-7" y="-12" width="14" height="22" rx="2.6" fill="none" stroke="currentColor" stroke-width="2.4"/>
-            <line x1="-3" y1="-9" x2="3" y2="-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <circle cx="0" cy="6" r="1.8" fill="currentColor"/>`
-      };
-      const yFor = idx => (idx % 2 === 0 ? 70 : 110);
-      const segs = steps
-        .map((s, idx) => `${idx === 0 ? "M" : "Q"} ${idx === 0 ? `${s.x} ${yFor(idx)}` : `${(steps[idx - 1].x + s.x) / 2} ${idx % 2 === 0 ? 40 : 140}, ${s.x} ${yFor(idx)}`}`)
-        .join(" ");
-      const nodes = steps
-        .map(
-          (s, idx) => `
-          <g class="pitch-intro-flow__node" data-step="${idx + 1}" transform="translate(${s.x} ${yFor(idx)})">
-            <circle class="pitch-intro-flow__node-halo" r="22"/>
-            <g class="pitch-intro-flow__glyph">${glyphs[idx]}</g>
-            <text class="pitch-intro-flow__label" y="40" text-anchor="middle">${escapeHtml(s.label)}</text>
-          </g>`
-        )
-        .join("");
       const ariaLabel = "תהליך: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור";
+      const diagram = [
+        "flowchart RL",
+        "    A([קריינות]) --> B([תמלול])",
+        "    B --> C([תכנון סצנות])",
+        "    C --> D([התאמת וידאו])",
+        "    D --> E([רינדור])",
+        "    classDef step fill:#fff7f4,stroke:#1c1a18,stroke-width:2px,color:#1c1a18,font-weight:800;",
+        "    class A,B,C,D,E step;"
+      ].join("\n");
       return `<div class="pitch-intro-flow" role="img" aria-label="${escapeHtml(ariaLabel)}">
-        <svg class="pitch-intro-flow__svg" viewBox="0 0 800 220" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <defs>
-            <linearGradient id="pitchIntroFlowLineGrad" x1="100%" y1="0%" x2="0%" y2="0%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="1"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0.45"/>
-            </linearGradient>
-          </defs>
-          <path class="pitch-intro-flow__line" d="${segs}" fill="none" stroke="url(#pitchIntroFlowLineGrad)" stroke-width="3" stroke-linecap="round"/>
-          ${nodes}
-        </svg>
+        <pre class="mermaid">${escapeHtml(diagram)}</pre>
       </div>`;
     }
 
@@ -5104,6 +5266,21 @@
     }
 
     trackRoll.innerHTML = buildStoryRollHtml(storySections);
+
+    if (typeof window.__renderPitchMermaid === "function") {
+      window.__renderPitchMermaid();
+    } else {
+      let mermaidWaitTries = 0;
+      const mermaidWait = window.setInterval(() => {
+        mermaidWaitTries += 1;
+        if (typeof window.__renderPitchMermaid === "function") {
+          window.clearInterval(mermaidWait);
+          window.__renderPitchMermaid();
+        } else if (mermaidWaitTries > 40) {
+          window.clearInterval(mermaidWait);
+        }
+      }, 100);
+    }
 
     (function initCatalogTagModal() {
       const catalogPanel = document.getElementById("catalog");

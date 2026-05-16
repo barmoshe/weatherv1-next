@@ -252,7 +252,7 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 - סגירת היקף ההמשך
 
 **mobile_summary:**
-> שקופית סיום פשוטה: מה צריך לסגור, מה צריך לחבר, ואיך מביאים את Weather V1 למצב שעובד אצלכם בפועל.
+> מכאן ממשיכים יחד: מה צריך לסגור, מה צריך לחבר, ואיך מביאים את Weather V1 למצב שעובד אצלכם בפועל.
 
 **graphics:** `closingRoadmap`, horizontal numbered roadmap of 5 nodes connected by a thin accent line. Each node shows the corresponding `mobile_bullets` label below the number. No price, no chips, no fine print.
 
