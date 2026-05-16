@@ -256,7 +256,16 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 
 **graphics:** `closingRoadmap`, horizontal numbered roadmap of 5 nodes connected by a thin accent line. Each node shows the corresponding `mobile_bullets` label below the number. No price, no chips, no fine print.
 
-**notes:** This slide merges what used to be two separate slides (a pricing slide and a final next-steps slide). It deliberately does NOT show a price; pricing lives in the verbal conversation. Do not add an amount, do not write `המחיר יוצג בשיחה`, do not use `התקנה ראשונית`.
+**closing_options:** *(rendered inline by the template, not editable from this file)*
+
+Below the bullets on desktop, a small dashed-border card titled `אופציות להמשך, אם נרצה` lists two optional future directions:
+
+1. **תוסף ל־Adobe Premiere.** אפשר לבנות את אותה זרימה כתוסף ל־Adobe Premiere, שעובד מתוך תוכנת העריכה במקום כאפליקציה נפרדת.
+2. **שכבות גרפיות מעל הסרטון.** בהמשך אפשר להוסיף שכבות גרפיות מעל הסרטון שנוצר (לוגואים, כותרות ומיתוג), מעבר לבסיס הנוכחי.
+
+These are phrased as open possibilities (`אם נרצה`, `אפשר`), not commitments. The mobile single-page overview surfaces the same two directions as a short paragraph between the topics list and the desktop CTA card. To change the wording, edit the `closingOptionsBlock` template literal inside `singlePanelSectionHtml()` and the `.pitch-mobile-page__horizon` paragraph inside the `<main class="pitch-mobile-page">` markup; both live in `docs/download-page/index.html.template`.
+
+**notes:** This slide merges what used to be two separate slides (a pricing slide and a final next-steps slide). It deliberately does NOT show a price; pricing lives in the verbal conversation. Do not add an amount, do not write `המחיר יוצג בשיחה`, do not use `התקנה ראשונית`. The `closing_options` block above is a separate, optional layer that names future-direction possibilities; it is not part of the committed scope.
 
 ---
 

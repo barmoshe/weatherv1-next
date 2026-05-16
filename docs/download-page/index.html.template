@@ -1014,6 +1014,59 @@
       }
     }
 
+    /* === Pitch: closing options (#next-steps copy column, below bullets) === */
+    .pitch-closing-options {
+      margin-block-start: 8px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px dashed color-mix(in srgb, var(--panel-accent, #0d9488) 55%, rgb(0 0 0 / 0.15));
+      background: color-mix(in srgb, var(--panel-accent, #0d9488) 4%, rgb(255 255 255 / 0.94));
+      direction: rtl;
+      unicode-bidi: isolate;
+    }
+
+    .pitch-closing-options__eyebrow {
+      margin: 0 0 8px;
+      font-size: 0.66rem;
+      font-weight: 880;
+      letter-spacing: 0.04em;
+      color: color-mix(in srgb, var(--panel-accent, #0d9488) 75%, rgb(20 26 34));
+    }
+
+    .pitch-closing-options__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .pitch-closing-options__list li {
+      display: grid;
+      gap: 2px;
+      padding-inline-start: 14px;
+      position: relative;
+      font-size: clamp(0.7rem, 1.5vw, 0.78rem);
+      font-weight: 700;
+      line-height: 1.45;
+      color: rgb(48 56 64 / 1);
+    }
+
+    .pitch-closing-options__list li::before {
+      content: "·";
+      position: absolute;
+      inset-inline-start: 0;
+      top: -0.05em;
+      font-size: 1.2em;
+      font-weight: 900;
+      color: var(--panel-accent, #0d9488);
+    }
+
+    .pitch-closing-options__list strong {
+      font-weight: 900;
+      color: rgb(28 34 40 / 1);
+    }
+
     /* === Pitch: closing roadmap (`#next-steps`) === */
     .pitch-closing-roadmap {
       position: relative;
@@ -3619,6 +3672,18 @@
         color: color-mix(in srgb, var(--v1-ink, #1c1a18) 72%, var(--v1-coral, #f9543e));
       }
 
+      .pitch-mobile-page__horizon {
+        margin: 0;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px dashed color-mix(in srgb, var(--v1-coral, #f9543e) 45%, rgb(0 0 0 / 0.18));
+        background: color-mix(in srgb, var(--v1-coral, #f9543e) 4%, rgb(255 255 255 / 0.96));
+        font-size: 0.88rem;
+        font-weight: 700;
+        line-height: 1.5;
+        color: color-mix(in srgb, var(--v1-ink, #1c1a18) 86%, transparent);
+      }
+
       .pitch-mobile-page__footer {
         margin-top: 4px;
         text-align: center;
@@ -4204,6 +4269,10 @@
         </li>
       </ol>
     </section>
+
+    <p class="pitch-mobile-page__horizon">
+      אופציות להמשך, אם נרצה: אפשר לבנות את אותה זרימה כתוסף ל־Adobe Premiere, ובהמשך גם להוסיף שכבות גרפיות מעל הסרטון שנוצר (לוגואים, כותרות ומיתוג).
+    </p>
 
     <section class="pitch-mobile-page__cta" aria-label="פתיחה במחשב">
       <p class="pitch-mobile-page__cta-text">
@@ -5155,11 +5224,21 @@
           : `<div class="panel-visual"${visualAria}>${visualMarkup(section.visual, section)}</div>`;
       const bulletsBlock = bulletsMarkup(section);
       const pitchProductLayout = isPitchProductSection(section);
-      const pricingPullquoteBlock =
-        section.id === "pricing"
-          ? `<blockquote class="pitch-pricing-quote"><p>${escapeHtml(
-              "נבנתה אפליקציה שמחברת בין קריינות תחזית, תמלול, תכנון סצנות, קטלוג וידאו ורינדור בסיסי לסרטון אנכי."
-            )}</p></blockquote>`
+      const closingOptionsBlock =
+        section.id === "next-steps"
+          ? `<aside class="pitch-closing-options" aria-label="אופציות להמשך, אם נרצה">
+              <p class="pitch-closing-options__eyebrow">אופציות להמשך, אם נרצה</p>
+              <ul class="pitch-closing-options__list">
+                <li>
+                  <strong>תוסף ל־Adobe Premiere.</strong>
+                  <span>אפשר לבנות את אותה זרימה כתוסף ל־Adobe Premiere, שעובד מתוך תוכנת העריכה במקום כאפליקציה נפרדת.</span>
+                </li>
+                <li>
+                  <strong>שכבות גרפיות מעל הסרטון.</strong>
+                  <span>בהמשך אפשר להוסיף שכבות גרפיות מעל הסרטון שנוצר (לוגואים, כותרות ומיתוג), מעבר לבסיס הנוכחי.</span>
+                </li>
+              </ul>
+            </aside>`
           : "";
       const studioWizardToolbar =
         section.id === "studio"
@@ -5188,7 +5267,7 @@
             ${introPipelineBlock}
             ${leadBlock}
             ${bulletsBlock}
-            ${pricingPullquoteBlock}
+            ${closingOptionsBlock}
             ${studioWizardToolbar}
             ${heroDownloads}
           </div>
