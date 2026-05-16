@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Weather V1 — מחולל תחזית לווידאו אנכי: קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים מהקטלוג ורינדור.">
-  <title>Weather V1 — מצגת פתיחה</title>
+  <meta name="description" content="Weather V1: מחולל תחזית לווידאו אנכי. קריינות, תמלול, תוכנית סצנות, התאמת סגמנטים מהקטלוג ורינדור.">
+  <title>Weather V1 · מצגת פתיחה</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -921,237 +921,208 @@
       border: 1px solid rgb(0 0 0 / 0.08);
     }
 
-    #v1-next .pitch-lead-well {
-      background: linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(247 243 236 / 0.88));
-    }
-
-    /* סיכום והמשך — רשימה אחת ככרטיסי־גריד עם מספור כמו בשאר המצגת */
-    #v1-next .panel-inner {
-      width: min(1180px, 100%);
-      max-width: min(56rem, 100%);
-      margin-inline: auto;
-      /* No .panel-visual on this slide — default two-column grid leaves a dead column in RTL. */
-      grid-template-columns: 1fr;
-    }
-
-    #v1-next .panel-copy {
-      justify-items: stretch;
-      width: 100%;
-    }
-
-    #v1-next .bullets {
-      grid-template-columns: 1fr;
-      align-content: start;
-      gap: 11px;
-    }
-
-    @media (min-width: 640px) {
-      #v1-next .bullets {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (min-width: 1040px) {
-      #v1-next .bullets {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    #pricing .pitch-pricing-quote {
-      margin: 12px 0 0;
-      padding: 12px 13px 13px;
-      border-radius: 14px;
-      border: 1px solid rgb(0 0 0 / 0.07);
-      border-inline-start: 4px solid color-mix(in srgb, var(--panel-accent, #0d9488) 55%, rgb(20 60 50));
-      background: linear-gradient(
-        145deg,
-        color-mix(in srgb, var(--panel-accent, #0d9488) 5%, rgb(255 255 255 / 0.97)),
-        rgb(255 255 255 / 0.92)
-      );
-      box-shadow: 0 1px 0 rgb(255 255 255 / 0.65) inset;
-    }
-
-    #pricing .pitch-pricing-quote p {
-      margin: 0;
-      font-size: clamp(0.66rem, 1.9vw, 0.74rem);
-      font-weight: 780;
-      line-height: 1.52;
-      color: rgb(42 48 54 / 1);
-    }
-
-    /* —— Pitch: pricing hero (`#pricing`) —— */
-    .pitch-pricing-hero {
-      width: min(100%, 400px);
+    /* === Pitch: current-state 4-card grid (`#local-first`) === */
+    .pitch-current-state {
+      width: min(100%, 760px);
       margin-inline: auto;
       direction: rtl;
       unicode-bidi: isolate;
+      color: var(--panel-accent, #475569);
     }
 
-    .pitch-pricing-hero__card {
-      padding: 20px 18px 18px;
-      border-radius: 22px;
+    .pitch-current-state__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(12px, 1.8vw, 18px);
+    }
+
+    .pitch-current-state__card {
+      position: relative;
+      display: grid;
+      gap: 10px;
+      padding-block: clamp(14px, 1.6vw, 18px);
+      padding-inline: clamp(14px, 1.6vw, 18px);
+      border-radius: 16px;
       border: 1px solid rgb(0 0 0 / 0.09);
       background: linear-gradient(
         168deg,
-        rgb(255 255 255 / 0.97),
-        color-mix(in srgb, var(--panel-accent, #0d9488) 7%, rgb(248 253 250))
+        rgb(255 255 255 / 0.98),
+        color-mix(in srgb, var(--panel-accent, #475569) 5%, rgb(247 249 252))
       );
       box-shadow:
-        0 22px 44px rgb(15 23 42 / 0.06),
+        0 8px 20px rgb(15 23 42 / 0.04),
         0 0 0 1px rgb(255 255 255 / 0.55) inset;
-      display: grid;
-      gap: 10px;
-      justify-items: center;
-      text-align: center;
-    }
-
-    .pitch-pricing-hero__eyebrow {
-      font-size: 0.58rem;
-      font-weight: 820;
-      letter-spacing: 0.02em;
-      color: rgb(82 88 96 / 1);
-    }
-
-    .pitch-pricing-hero__amount {
-      font-size: clamp(2rem, 6vw, 2.65rem);
-      font-weight: 950;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.03em;
-      line-height: 1;
-      color: rgb(28 34 40 / 1);
-    }
-
-    .pitch-pricing-hero__currency {
-      font-size: 0.55em;
-      font-weight: 900;
-      margin-inline-start: 0.12em;
-    }
-
-    .pitch-pricing-hero__vat {
-      font-size: 0.72rem;
-      font-weight: 850;
-      color: rgb(72 78 86 / 1);
-    }
-
-    .pitch-pricing-hero__fineprint {
-      margin: 0;
-      font-size: 0.54rem;
-      font-weight: 780;
-      color: rgb(118 122 132 / 1);
-    }
-
-    .pitch-pricing-hero__chips {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      padding-top: 4px;
-      width: 100%;
-    }
-
-    .pitch-pricing-hero__chip {
-      padding: 6px 11px;
-      border-radius: 999px;
-      font-size: 0.58rem;
-      font-weight: 820;
-      background: rgb(255 255 255 / 0.9);
-      border: 1px solid rgb(0 0 0 / 0.07);
-      color: rgb(56 62 70 / 1);
-    }
-
-    /* —— Pitch: local-first compare table (`#local-first`) —— */
-    .pitch-local-first-visual {
-      position: relative;
-      isolation: isolate;
-      width: min(100%, 720px);
-      margin-inline: auto;
-      border-radius: 22px;
-      border: 1px solid rgb(0 0 0 / 0.09);
-      overflow: hidden;
-      direction: rtl;
-      unicode-bidi: isolate;
-      padding: 16px 12px 18px;
-      background: rgb(255 255 255 / 0.55);
-      box-shadow:
-        0 22px 44px rgb(15 23 42 / 0.06),
-        0 0 0 1px rgb(255 255 255 / 0.55) inset;
-    }
-
-    .pitch-local-first-visual__bg {
-      position: absolute;
-      inset: -12%;
-      pointer-events: none;
-      background:
-        radial-gradient(ellipse 78% 50% at 18% 20%, color-mix(in srgb, var(--panel-accent, #475569) 18%, transparent), transparent 58%),
-        radial-gradient(ellipse 72% 48% at 88% 88%, color-mix(in srgb, var(--panel-accent, #475569) 12%, transparent), transparent 55%),
-        linear-gradient(168deg, rgb(255 255 255 / 0.96), rgb(242 245 250 / 0.82));
-    }
-
-    .pitch-local-first-compare-wrap {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      border-radius: 14px;
-      border: 1px solid rgb(0 0 0 / 0.08);
-      background: linear-gradient(180deg, rgb(255 255 255 / 0.97), rgb(248 250 252 / 0.94));
-      box-shadow: 0 1px 0 rgb(255 255 255 / 0.7) inset;
-    }
-
-    table.pitch-local-first-compare {
-      width: 100%;
-      min-width: min(100%, 520px);
-      border-collapse: collapse;
-      font-size: clamp(0.66rem, 1.65vw, 0.78rem);
-      font-weight: 760;
-      line-height: 1.45;
       color: rgb(38 42 48 / 1);
     }
 
-    .pitch-local-first-compare thead th {
-      text-align: start;
-      padding: 11px 12px;
-      font-weight: 880;
-      color: rgb(28 32 38 / 1);
-      background: color-mix(in srgb, var(--panel-accent, #475569) 11%, rgb(255 255 255 / 0.98));
-      border-bottom: 1px solid rgb(0 0 0 / 0.1);
+    .pitch-current-state__icon {
+      width: 32px;
+      height: 32px;
+      color: var(--panel-accent, #475569);
     }
 
-    .pitch-local-first-compare thead th:not(:last-child) {
-      border-inline-end: 1px solid rgb(0 0 0 / 0.07);
+    .pitch-current-state__icon svg {
+      display: block;
+      width: 100%;
+      height: 100%;
     }
 
-    .pitch-local-first-compare tbody th[scope="row"] {
-      text-align: start;
-      vertical-align: top;
-      width: 17%;
-      min-width: 5.5rem;
-      padding: 11px 12px;
+    .pitch-current-state__title {
+      margin: 0;
+      font-size: clamp(0.92rem, 1.9vw, 1.05rem);
       font-weight: 900;
-      color: rgb(28 32 38 / 1);
-      background: color-mix(in srgb, var(--panel-accent, #475569) 5%, rgb(255 255 255 / 0.96));
-      border-bottom: 1px solid rgb(0 0 0 / 0.07);
-      border-inline-end: 1px solid rgb(0 0 0 / 0.06);
+      letter-spacing: -0.01em;
+      color: color-mix(in srgb, var(--panel-accent, #475569) 80%, rgb(20 26 34));
     }
 
-    .pitch-local-first-compare tbody td {
-      text-align: start;
-      vertical-align: top;
-      padding: 11px 12px;
-      font-weight: 740;
-      color: rgb(52 58 68 / 1);
-      border-bottom: 1px solid rgb(0 0 0 / 0.06);
-      border-inline-end: 1px solid rgb(0 0 0 / 0.05);
+    .pitch-current-state__block {
+      display: grid;
+      gap: 4px;
     }
 
-    .pitch-local-first-compare tbody td:last-child {
-      border-inline-end: none;
+    .pitch-current-state__label {
+      font-size: 0.62rem;
+      font-weight: 880;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: color-mix(in srgb, var(--panel-accent, #475569) 65%, rgb(60 70 80));
     }
 
-    .pitch-local-first-compare tbody tr:last-child th,
-    .pitch-local-first-compare tbody tr:last-child td {
-      border-bottom: none;
+    .pitch-current-state__text {
+      margin: 0;
+      font-size: clamp(0.7rem, 1.6vw, 0.8rem);
+      font-weight: 720;
+      line-height: 1.5;
+      color: rgb(40 48 58 / 1);
+    }
+
+    .pitch-current-state__divider {
+      height: 1px;
+      background: color-mix(in srgb, var(--panel-accent, #475569) 18%, transparent);
+      border-radius: 999px;
+    }
+
+    @media (max-width: 1100px) and (min-width: 861px) {
+      .pitch-current-state__grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .pitch-current-state__grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* === Pitch: closing roadmap (`#next-steps`) === */
+    .pitch-closing-roadmap {
+      position: relative;
+      width: min(100%, 640px);
+      margin-inline: auto;
+      direction: rtl;
+      unicode-bidi: isolate;
+      color: var(--panel-accent, #0d9488);
+      padding-block: clamp(18px, 2vw, 26px);
+    }
+
+    .pitch-closing-roadmap__line {
+      position: absolute;
+      inset-inline: clamp(28px, 4vw, 42px);
+      top: 50%;
+      transform: translateY(-50%);
+      width: calc(100% - 2 * clamp(28px, 4vw, 42px));
+      height: 40px;
+      pointer-events: none;
+      stroke-dasharray: 1200;
+      stroke-dashoffset: 0;
+    }
+
+    .pitch-closing-roadmap__nodes {
+      position: relative;
+      z-index: 1;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+      align-items: start;
+    }
+
+    .pitch-closing-roadmap__node {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .pitch-closing-roadmap__num {
+      display: grid;
+      place-items: center;
+      width: clamp(34px, 4.4vw, 42px);
+      height: clamp(34px, 4.4vw, 42px);
+      border-radius: 999px;
+      background: var(--panel-accent, #0d9488);
+      color: rgb(255 255 255 / 1);
+      font-weight: 900;
+      font-size: clamp(0.85rem, 1.6vw, 1rem);
+      font-variant-numeric: tabular-nums;
+      box-shadow:
+        0 6px 14px color-mix(in srgb, var(--panel-accent, #0d9488) 35%, transparent),
+        0 0 0 4px rgb(255 255 255 / 0.85);
+    }
+
+    .pitch-closing-roadmap__label {
+      margin: 0;
+      font-size: clamp(0.66rem, 1.4vw, 0.76rem);
+      font-weight: 800;
+      line-height: 1.35;
+      color: rgb(38 46 56 / 1);
+      max-width: 11ch;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .pitch-closing-roadmap__line {
+        animation: pitch-closing-roadmap-draw 1.1s ease-out 0.15s both;
+      }
+      .pitch-closing-roadmap__node {
+        opacity: 0;
+        transform: translateY(8px);
+        animation: pitch-closing-roadmap-node 0.45s ease-out both;
+      }
+      .pitch-closing-roadmap__node[data-step="1"] { animation-delay: 0.25s; }
+      .pitch-closing-roadmap__node[data-step="2"] { animation-delay: 0.40s; }
+      .pitch-closing-roadmap__node[data-step="3"] { animation-delay: 0.55s; }
+      .pitch-closing-roadmap__node[data-step="4"] { animation-delay: 0.70s; }
+      .pitch-closing-roadmap__node[data-step="5"] { animation-delay: 0.85s; }
+    }
+
+    @keyframes pitch-closing-roadmap-draw {
+      from { stroke-dashoffset: 1200; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes pitch-closing-roadmap-node {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1100px) {
+      .pitch-closing-roadmap__nodes {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .pitch-closing-roadmap__line {
+        display: none;
+      }
+      .pitch-closing-roadmap__node {
+        grid-template-columns: auto 1fr;
+        justify-items: start;
+        gap: 12px;
+      }
+      .pitch-closing-roadmap__label {
+        max-width: none;
+        text-align: start;
+      }
     }
 
     /* —— Shared app chrome (catalog can reuse .pitch-app-shell + toolbar/tabs) —— */
@@ -2942,69 +2913,80 @@
       width: 100%;
       min-width: 0;
       margin: 0;
-      /* Extra inline padding so pill shadows (2px offset) never graze the
-         container border and create the visual "broken corner" artifact. */
-      padding: clamp(20px, 2.8vw, 28px) clamp(24px, 3.2vw, 32px);
+      padding: clamp(14px, 2vw, 22px) clamp(16px, 2.4vw, 24px);
       border: 2px solid var(--v1-ink);
-      border-radius: 18px;
+      border-radius: 22px;
       background:
-        linear-gradient(145deg, rgb(255 255 255 / 0.98), rgb(252 236 232 / 0.35));
-      /* Softer stacked shadow instead of the 8px solid offset — keeps the
-         brutalist feel at the corners without the "discontinuous edge" look
-         the solid offset produces against the rounded container corner. */
+        linear-gradient(150deg, rgb(255 255 255 / 0.98), rgb(252 236 232 / 0.42));
       box-shadow:
         4px 4px 0 var(--v1-ink),
-        0 12px 28px rgb(15 23 42 / 0.08);
+        0 16px 36px rgb(15 23 42 / 0.08);
+      color: var(--panel-accent, #f9543e);
+      direction: rtl;
+      unicode-bidi: isolate;
     }
 
-    .pitch-intro-flow__track {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      min-width: 0;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 10px 6px;
+    .pitch-intro-flow__svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 800 / 220;
+      overflow: visible;
+    }
+
+    .pitch-intro-flow__line {
+      stroke-dasharray: 1600;
+      stroke-dashoffset: 0;
+    }
+
+    .pitch-intro-flow__node-halo {
+      fill: rgb(255 255 255 / 1);
+      stroke: var(--v1-ink);
+      stroke-width: 2;
+    }
+
+    .pitch-intro-flow__glyph {
+      color: var(--panel-accent, #f9543e);
+    }
+
+    .pitch-intro-flow__label {
+      font-family: inherit;
+      font-weight: 900;
+      font-size: 14px;
+      fill: var(--v1-ink);
       direction: rtl;
     }
 
-    .pitch-intro-flow__step {
-      display: inline-block;
-      margin: 0;
-      padding: clamp(8px, 1.2vw, 11px) clamp(11px, 1.6vw, 15px);
-      border: 2px solid var(--v1-ink);
-      border-radius: 999px;
-      background: var(--v1-paper);
-      box-shadow: 2px 2px 0 var(--v1-ink);
-      font-weight: 900;
-      font-size: clamp(0.7rem, 1vw, 0.88rem);
-      line-height: 1.25;
-      text-align: center;
-      /* Belt-and-braces: pill cannot exceed its track even on narrow viewports. */
-      max-width: 100%;
+    @media (prefers-reduced-motion: no-preference) {
+      .pitch-intro-flow__line {
+        animation: pitch-intro-flow-draw 1.3s ease-out 0.1s both;
+      }
+      .pitch-intro-flow__node {
+        opacity: 0;
+        transform: translateY(6px);
+        animation: pitch-intro-flow-node 0.5s ease-out both;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .pitch-intro-flow__node[data-step="1"] { animation-delay: 0.25s; }
+      .pitch-intro-flow__node[data-step="2"] { animation-delay: 0.40s; }
+      .pitch-intro-flow__node[data-step="3"] { animation-delay: 0.55s; }
+      .pitch-intro-flow__node[data-step="4"] { animation-delay: 0.70s; }
+      .pitch-intro-flow__node[data-step="5"] { animation-delay: 0.85s; }
     }
 
-    .pitch-intro-flow__arrow {
-      flex-shrink: 0;
-      color: var(--v1-muted);
-      font-weight: 900;
-      font-size: clamp(0.85rem, 1.2vw, 1rem);
-      line-height: 1;
-      direction: ltr;
-      unicode-bidi: isolate;
-      user-select: none;
+    @keyframes pitch-intro-flow-draw {
+      from { stroke-dashoffset: 1600; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes pitch-intro-flow-node {
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @media (max-height: 720px) and (min-width: 861px) {
       .pitch-intro-flow {
-        padding: 14px 16px;
-      }
-
-      .pitch-intro-flow__step {
-        font-size: clamp(0.65rem, 0.9vw, 0.78rem);
-        padding: 7px 10px;
+        padding: 10px 14px;
       }
     }
 
@@ -3012,6 +2994,9 @@
       #intro .panel-inner {
         grid-template-columns: 1fr;
         max-width: min(47rem, 92vw);
+      }
+      .pitch-intro-flow__label {
+        font-size: 16px;
       }
     }
 
@@ -4144,22 +4129,22 @@
       {
         id: "studio",
         kicker: "סטודיו",
-        title: "טאב הסטודיו — איפה נבנית התחזית",
+        title: "המקום שבו נבנה הסרטון בפועל",
         lead:
-          "בסטודיו מתקדמים שלב־אחר־שלב: העלאת קריינות, תמלול לטקסט, תכנון סצנות והחלטות על קטעים מהקטלוג, ואז רינדור לקובץ וידאו בסיס אנכי. בחרו בשורת השלבים במוקאפ כדי לראות איך המסך מתמלא — בלי הפעלה אוטומטית.",
+          "הסטודיו הוא מסך העבודה המרכזי של האפליקציה: מעלים קריינות, המערכת מתמללת אותה באמצעות OpenAI, מודל ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, ואז מתבצע רינדור על המחשב והורדה של הסרטון.",
         mobileSummary:
-          "מסלול אחד: קריינות, תמלול, סצנות והתאמות מהקטלוג, ורינדור. גללו למוקאפ ובחרו שלב מהרשימה.",
+          "הסטודיו הוא המקום שבו נבנה הסרטון בפועל: מקריינות לתמלול, מתכנון סצנות לבחירת סגמנטים, ואז רינדור והורדה.",
         bullets: [
-          "העלאה — מתחילים מקובץ קריינות אחד.",
-          "תמלול — הקריינות הופכת לטקסט שאפשר לעבוד איתו.",
-          "תכנון והחלטות — המערכת מחלקת לסצנות ומתאימה קטעים מהקטלוג לפי ההקשר.",
-          "רינדור והורדה — מתקבל בסיס לסרטון תחזית אנכי (קריינות, רקע ערוך, מוזיקה), לפני מיתוג גרפי מלא."
+          "העלאת קריינות: מתחילים מקובץ תחזית אחד.",
+          "תמלול: המערכת הופכת את הקריינות לטקסט.",
+          "תכנון AI: חלוקה לסצנות ובחירת סגמנטים מהקטלוג.",
+          "רינדור והורדה: יצירת בסיס לסרטון תחזית והורדה שלו."
         ],
         mobileBullets: [
-          "העלאת קריינות.",
-          "תמלול לטקסט.",
-          "תכנון סצנות והתאמות מהקטלוג.",
-          "רינדור והורדת בסיס אנכי."
+          "העלאת קריינות",
+          "תמלול לטקסט",
+          "תכנון סצנות",
+          "רינדור והורדה"
         ],
         visual: "studioDashboard",
         transition: "ttb",
@@ -4169,22 +4154,23 @@
       {
         id: "catalog",
         kicker: "קטלוג",
-        title: "הקטלוג — מחסן חכם לחומרי הווידאו של V1",
+        title: "הקטלוג: המקום שבו מסדרים את חומרי הווידאו",
         lead:
-          "הקטלוג הוא <strong>מאגר מסודר וחכם</strong> של סרטונים וסגמנטים קצרים. תיאור ותגיות לכל קטע מאפשרים למערכת לבחור רקעים <strong>לפי משמעות הקריינות</strong>, ולא לפי שם קובץ אקראי.",
+          "הקטלוג מרכז את חומרי הווידאו בצורה מסודרת. כיום יש בו כ־200 סרטונים, שלאחר חלוקה לסגמנטים הופכים לכ־400 קטעים קצרים שהמערכת יכולה לבחור מהם בזמן יצירת הסרטון.",
         mobileSummary:
-          "מחסן חכם לסגמנטים עם תיאור ותגיות — בחירת רקעים <strong>לפי משמעות הסצנה</strong>, לא לפי שם קובץ.",
+          "הקטלוג מסדר את חומרי הווידאו: כ־200 סרטונים שמחולקים לכ־400 סגמנטים. לכל סרטון ולכל סגמנט יש תיאור ותגיות, כדי שהמערכת תוכל לבחור קטעים לפי מה שרואים בהם ולפי ההקשר של התחזית.",
         bullets: [
-          "רשת קליפים וסגמנטים — חיפוש, סינון, פוסטרים וסטטוס במבט אחד.",
-          "תיאור ותגיות לכל קטע — מה רואים, איזו אווירה, ולאיזו סצנה בתחזית הוא מתאים.",
-          "תיוג ידני או בעזרת AI — כדי להפוך חומרי וידאו לשכבת ידע שימושית.",
-          "מהקטלוג נבחרים רקעים לסצנות לפי משמעות הקריינות, לא לפי שם קובץ אקראי."
+          "כל סרטון בקטלוג מחולק לסגמנטים קצרים.",
+          "לכל סרטון יש תיאור כללי ותגיות שמסבירות מה הוא מכיל.",
+          "לכל סגמנט יש תיאור ותגיות משלו: מה רואים בו, איזו אווירה יש בו, ולאיזו סצנה הוא יכול להתאים.",
+          "התיאורים והתגיות עוזרים למודל ה־AI להבין את חומרי הווידאו ולבחור קטע מתאים לכל סצנה.",
+          "הבחירה נעשית לפי משמעות הסצנה, לא לפי שם קובץ אקראי."
         ],
         mobileBullets: [
-          "סגמנטים קצרים עם פוסטר, תיאור ותגיות.",
-          "חיפוש וסינון של חומרי V1 במקום אחד.",
-          "תיוג ידני או בעזרת AI.",
-          "בחירת רקעים לפי משמעות הקריינות."
+          "כ־200 סרטונים בקטלוג",
+          "כ־400 סגמנטים אחרי חלוקה",
+          "תיאור ותגיות לכל סרטון",
+          "תיאור ותגיות לכל סגמנט"
         ],
         visual: "catalogScreenshot",
         transition: "ttb",
@@ -4193,67 +4179,51 @@
       },
       {
         id: "local-first",
-        kicker: "מקומית",
-        title: "למה האפליקציה מקומית כרגע",
+        kicker: "מצב נוכחי",
+        title: "מה קיים היום ומה אפשר לשנות בהמשך",
         lead:
-          "כרגע Weather V1 היא אפליקציה שמתקינים על מחשב. הסיבה היא שהעבודה עם קבצי המדיה והרינדור מתבצעים לוקלית, והקטלוג צריך להיות זמין לאפליקציה בצורה יציבה ומהירה. בשלב הנוכחי זה הפתרון הכי פשוט להתחיל לעבוד: האפליקציה מותקנת על מחשב, הרינדור קורה על אותו מחשב, והקטלוג יכול להישמר מקומית או לעבור בהמשך לאחסון שלכם.",
+          "כיום Weather V1 עובדת בצורה מקומית לשלב העבודה הנוכחי: הרינדור קורה על המחשב, הקטלוג נשמר בענן פרטי לצורכי פיתוח, והתמלול ותכנון הסצנות משתמשים ב־API keys של OpenAI / Claude. בהמשך אפשר להעביר חלקים מהמערכת לתשתיות שלכם, לפי מה שנכון לכם.",
         mobileSummary:
-          "מקומית כי רינדור ומדיה על המחשב שלכם והקטלוג צריך להיות זמין בצורה יציבה. מרחוק בעתיד — ענן שמרנדר ומאחסן מרחוק. בטבלה: רינדור מול אחסון קטלוג.",
+          "כיום Weather V1 עובדת בצורה מקומית לשלב העבודה הנוכחי: הרינדור קורה על המחשב, הקטלוג נמצא בענן פרטי לצורכי פיתוח, והתמלול ותכנון הסצנות משתמשים ב־API keys. בהמשך אפשר להעביר חלקים מהמערכת לתשתיות שלכם לפי הצורך.",
         bullets: [],
+        mobileBullets: [
+          "רינדור מקומי על המחשב",
+          "קטלוג בענן פרטי לצורכי פיתוח",
+          "OpenAI לתמלול",
+          "Claude / OpenAI לתכנון סצנות",
+          "אפשרות להעביר חלקים לתשתיות שלכם"
+        ],
         visual: "localFirstPitch",
         transition: "ttb",
         panelLayout: "split-visual-heavy",
         theme: { paper: "#f4f6fa", accent: "#475569" }
       },
       {
-        id: "pricing",
-        kicker: "הצעת מחיר",
-        title: "עלות והמשך עבודה",
+        id: "next-steps",
+        kicker: "המשך",
+        title: "איך ממשיכים מכאן",
         lead:
-          "מחיר ראשוני ושקוף, עם מקום לעדכון אם ההיקף משתנה.",
+          "אחרי שראינו מה קיים היום, השלב הבא הוא לסגור יחד כמה דברים קטנים כדי להביא את Weather V1 למצב שעובד אצלכם בפועל.",
         mobileSummary:
-          "הצעה ראשונית שקופה: 4,000 ₪ לפני מע״ם לפי הצורך — עד להתקנה ראשונית אצלכם.",
+          "שקופית סיום פשוטה: מה צריך לסגור, מה צריך לחבר, ואיך מביאים את Weather V1 למצב שעובד אצלכם בפועל.",
         bullets: [
-          "הצעת מחיר ראשונית: 4,000 ₪ לפני מע״מ / אם צריך — ניסוח סופי מול רואה חשבון כשנדרש",
-          "המחיר כולל את מה שכבר נעשה ואת המשך העבודה עד להתקנה ראשונית אצלכם במחשבי העבודה הרלוונטיים",
-          "לא רק שעות פיתוח — גם שימוש בכלי AI ובטוקנים תוך כדי העבודה",
-          "אם בהמשך העבודה תצמח מעבר למוסכמות — נדבר ונעדכן מחיר בהתאם",
-          "מה נבנה בפועל (לפי הריפו והקומיטים האחרונים): אפליקציית דסקטופ עם סטודיו, קטלוג, תכנון סצנות ותמלול מקריינות, רינדור בסיסי לאנכי, הגדרות וסנכרון לענן — ודף ההורדות הזה במצגת."
+          "להבין מה חשוב לדייק לפני שימוש אמיתי.",
+          "להחליט איפה נכון לשמור את הקטלוג בהמשך.",
+          "לחבר את ה־API keys הרלוונטיים.",
+          "לבדוק את המערכת בסביבת העבודה שלכם.",
+          "לסגור יחד את היקף ההמשך בצורה פשוטה וברורה."
         ],
         mobileBullets: [
-          "4,000 ₪ לפני מע״ם (ניסוח סופי מול רו״ח כשנדרש).",
-          "כולל המשך עבודה עד להתקנה אצלכם + שימוש ב־AI וטוקנים בפיתוח.",
-          "היקף שגדל מעבר למוסכמות — עדכון מחיר בהסכמה."
+          "מה צריך לדייק",
+          "איפה יישב הקטלוג",
+          "חיבור API keys",
+          "בדיקה אצלכם",
+          "סגירת היקף ההמשך"
         ],
-        visual: "pricingHero",
+        visual: "closingRoadmap",
         transition: "ttb",
         panelLayout: "split-copy-heavy",
         theme: { paper: "#f4fcf8", accent: "#0d9488" }
-      },
-      {
-        id: "v1-next",
-        kicker: "סיכום והמשך",
-        title: "מה צריך כדי להתקדם להתקנה ראשונית",
-        lead:
-          "כמה החלטות פשוטות וחיבורים בסיסיים — ואפשר להתחיל לעבוד באמת על תחזיות.",
-        mobileSummary: "החלטות קצרות וחיבורים בסיסיים — ומתחילים להריץ תחזיות באופן מעשי.",
-        mobileBullets: [
-          "אישור כיוון והתקנה ראשונית במחשבי העבודה.",
-          "אחסון קטלוג — מקומי או בענן שלכם.",
-          "חיבור מפתחות API (OpenAI לתמלול/תכנון; Claude רק אם בוחרים).",
-          "סבב התאמות אחרי שימוש אמיתי."
-        ],
-        bullets: [
-          "אישור כיוון העבודה",
-          "החלטה לגבי אחסון הקטלוג — מקומי או בענן שלכם",
-          "התקנה ראשונית במחשבי העבודה הרלוונטיים",
-          "חיבור OpenAI API key לתמלול ולפי הצורך גם לתכנון",
-          "חיבור Claude API key רק אם בוחרים להשתמש ב־Claude לתכנון הסצנות",
-          "סבב התאמות לפי פידבק אחרי שימוש אמיתי"
-        ],
-        visual: "none",
-        transition: "ttb",
-        theme: { paper: "#faf8f5", accent: "#78716c" }
       }
     ];
 
@@ -4558,7 +4528,7 @@
                 <div class="pitch-timeline-lanes pitch-timeline-skel">${timelineSkelHtml}</div>
                 <div class="pitch-timeline-lanes pitch-timeline-filled">${timelineHtml}</div>
                 <div class="pitch-planning-callouts" aria-hidden="true">
-                  <p class="pitch-planning-callout-p">המערכת לא רק מתמללת — היא מנסה להבין את מבנה התחזית, לזהות מעברים ונושאים, ולחבר לכל סצנה קטע מתאים מהקטלוג.</p>
+                  <p class="pitch-planning-callout-p">המערכת לא רק מתמללת. היא מנסה להבין את מבנה התחזית, לזהות מעברים ונושאים, ולחבר לכל סצנה קטע מתאים מהקטלוג.</p>
                   <p class="pitch-planning-callout-p pitch-planning-callout-p--tags">התיוגים הופכים את הקטלוג לשכבת ידע: מה מופיע בכל קטע, איזו אווירה יש בו, ולאיזה סוג סצנה הוא יכול להתאים.</p>
                 </div>
               </section>
@@ -4577,7 +4547,7 @@
                     <span class="pitch-device-play" aria-hidden="true">▶</span>
                   </div>
                 </div>
-                <div class="pitch-output-footnote pitch-when-render" aria-hidden="true">בשלב הזה זה בסיס לסרטון תחזית — לא חבילה גרפית מלאה (לוגואים, כותרות ושכבות מיתוג מלאות).</div>
+                <div class="pitch-output-footnote pitch-when-render" aria-hidden="true">בשלב הזה זה בסיס לסרטון תחזית, לא חבילה גרפית מלאה (לוגואים, כותרות ושכבות מיתוג מלאות).</div>
                 <div class="pitch-output-actions pitch-when-render" role="presentation">
                   <span class="pitch-output-btn pitch-output-btn--primary">צפייה</span>
                   <span class="pitch-output-btn pitch-output-btn--ghost mixed-ltr" lang="en" dir="ltr">הורדה</span>
@@ -4627,53 +4597,98 @@
     }
 
     function localFirstPitchHtml() {
-      const r1 =
-        "הרינדור מתבצע על המחשב שבו האפליקציה מותקנת";
-      const r2 =
-        "אם רוצים לעבוד מהטלפון או מרחוק, צריך פתרון ענן שבו הרינדור מתבצע מרחוק";
-      const c1 = "כרגע הקטלוג נמצא בענן פרטי לצורך פיתוח ובדיקות";
-      const c2 = "להמשך צריך לבחור: שמירה מקומית אצלכם או אחסון בענן שלכם";
-      return `<div class="pitch-local-first-visual pitch-local-first-visual--table" dir="rtl" aria-hidden="true">
-      <div class="pitch-local-first-visual__bg" aria-hidden="true"></div>
-      <div class="pitch-local-first-compare-wrap">
-        <table class="pitch-local-first-compare" role="table" aria-label="כרגע מול אפשרות להמשך">
-          <thead>
-            <tr>
-              <th scope="col">נושא</th>
-              <th scope="col">כרגע</th>
-              <th scope="col">אפשרות להמשך</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">רינדור</th>
-              <td>${escapeHtml(r1)}</td>
-              <td>${escapeHtml(r2)}</td>
-            </tr>
-            <tr>
-              <th scope="row">אחסון הקטלוג</th>
-              <td>${escapeHtml(c1)}</td>
-              <td>${escapeHtml(c2)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>`;
+      const cards = [
+        {
+          key: "catalog",
+          title: "קטלוג",
+          icon: `<rect x="-12" y="-9" width="24" height="18" rx="2.4" fill="none" stroke="currentColor" stroke-width="2"/>
+                 <line x1="-12" y1="-3" x2="12" y2="-3" stroke="currentColor" stroke-width="1.6"/>
+                 <line x1="-4" y1="-9" x2="-4" y2="9" stroke="currentColor" stroke-width="1.6"/>
+                 <line x1="4" y1="-9" x2="4" y2="9" stroke="currentColor" stroke-width="1.6"/>`,
+          now: "הקטלוג שמור בענן פרטי שלי לצורכי פיתוח ובדיקות.",
+          nextLabel: "אפשרות להמשך",
+          next: "להעביר את הקטלוג למחשב, שרת או ענן שלכם, כדי שהחומרים יהיו אצלכם."
+        },
+        {
+          key: "transcription",
+          title: "תמלול",
+          icon: `<path d="M -13 0 Q -10 -8 -7 0 T -1 0 T 5 0 T 11 0 T 13 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                 <path d="M -13 6 Q -10 -2 -7 6 T -1 6 T 5 6 T 11 6 T 13 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>`,
+          now: "התמלול מתבצע באמצעות OpenAI.",
+          nextLabel: "מה צריך",
+          next: "OpenAI API key לצורך תמלול הקריינות."
+        },
+        {
+          key: "planning",
+          title: "תכנון סצנות",
+          icon: `<rect x="-13" y="-7" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>
+                 <rect x="-5" y="-9" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>
+                 <rect x="3" y="-11" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>`,
+          now: "קבלת ההחלטות ותכנון הסצנות מתבצעים בעזרת Claude או OpenAI.",
+          nextLabel: "מה צריך",
+          next: "API key מתאים לפי המודל שבו בוחרים להשתמש."
+        },
+        {
+          key: "render",
+          title: "רינדור",
+          icon: `<rect x="-7" y="-12" width="14" height="22" rx="2.6" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                 <line x1="-3" y1="-9" x2="3" y2="-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                 <polygon points="-2,-1 4,3 -2,7" fill="currentColor"/>`,
+          now: "הרינדור מתבצע מקומית על המחשב שבו האפליקציה מותקנת.",
+          nextLabel: "אפשרות להמשך",
+          next: "אם רוצים עבודה מרחוק, מכמה מחשבים או מטלפון, צריך פתרון ענן מתקדם יותר."
+        }
+      ];
+      const cardsHtml = cards
+        .map(
+          c => `
+          <article class="pitch-current-state__card" data-card="${escapeHtml(c.key)}">
+            <div class="pitch-current-state__icon" aria-hidden="true">
+              <svg viewBox="-18 -18 36 36" width="32" height="32"><g>${c.icon}</g></svg>
+            </div>
+            <h3 class="pitch-current-state__title">${escapeHtml(c.title)}</h3>
+            <div class="pitch-current-state__block">
+              <div class="pitch-current-state__label">כיום</div>
+              <p class="pitch-current-state__text">${escapeHtml(c.now)}</p>
+            </div>
+            <div class="pitch-current-state__divider" aria-hidden="true"></div>
+            <div class="pitch-current-state__block">
+              <div class="pitch-current-state__label">${escapeHtml(c.nextLabel)}</div>
+              <p class="pitch-current-state__text">${escapeHtml(c.next)}</p>
+            </div>
+          </article>`
+        )
+        .join("");
+      return `<div class="pitch-current-state" dir="rtl" aria-label="מה קיים היום ומה אפשר לשנות בהמשך">
+        <div class="pitch-current-state__grid">${cardsHtml}</div>
+      </div>`;
     }
 
-    function pricingHeroHtml() {
-      return `<div class="pitch-pricing-hero" dir="rtl" aria-hidden="true">
-      <div class="pitch-pricing-hero__card">
-        <div class="pitch-pricing-hero__eyebrow">הצעה ראשונית · להמחשה במצגת</div>
-        <div class="pitch-pricing-hero__amount">4,000<span class="pitch-pricing-hero__currency">₪</span></div>
-        <div class="pitch-pricing-hero__vat">לפני מע״מ · אם צריך</div>
-        <p class="pitch-pricing-hero__fineprint">דמו מצגת — לא חוזה</p>
-        <div class="pitch-pricing-hero__chips">
-          <span class="pitch-pricing-hero__chip">עד התקנה ראשונה אצלכם</span>
-          <span class="pitch-pricing-hero__chip">כולל AI וטוקנים בפיתוח</span>
-        </div>
-      </div>
-    </div>`;
+    function closingRoadmapHtml(section) {
+      const labels = (section && Array.isArray(section.mobileBullets) && section.mobileBullets.length >= 5)
+        ? section.mobileBullets.slice(0, 5)
+        : ["מה צריך לדייק", "איפה יישב הקטלוג", "חיבור API keys", "בדיקה אצלכם", "סגירת היקף ההמשך"];
+      const nodes = labels
+        .map(
+          (label, idx) => `
+          <li class="pitch-closing-roadmap__node" data-step="${idx + 1}">
+            <span class="pitch-closing-roadmap__num" aria-hidden="true">${idx + 1}</span>
+            <p class="pitch-closing-roadmap__label">${escapeHtml(label)}</p>
+          </li>`
+        )
+        .join("");
+      return `<div class="pitch-closing-roadmap" dir="rtl" aria-label="חמישה צעדים להמשך">
+        <svg class="pitch-closing-roadmap__line" viewBox="0 0 600 40" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="pitchClosingRoadmapGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="1"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0.4"/>
+            </linearGradient>
+          </defs>
+          <path d="M 580 20 L 20 20" fill="none" stroke="url(#pitchClosingRoadmapGrad)" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+        <ol class="pitch-closing-roadmap__nodes">${nodes}</ol>
+      </div>`;
     }
 
     function downloadLinksMarkup(links) {
@@ -4707,19 +4722,62 @@
     }
 
     function introPipelineFlowHtml() {
-      const steps = ["קריינות", "תמלול", "תכנון סצנות", "התאמת וידאו", "רינדור"];
-      const track = steps
-        .map((label, idx) => {
-          const step = `<span class="pitch-intro-flow__step">${escapeHtml(label)}</span>`;
-          const arrow =
-            idx < steps.length - 1
-              ? `<span class="pitch-intro-flow__arrow" aria-hidden="true">←</span>`
-              : "";
-          return step + arrow;
-        })
+      const steps = [
+        { label: "קריינות", x: 760 },
+        { label: "תמלול", x: 600 },
+        { label: "תכנון סצנות", x: 440 },
+        { label: "התאמת וידאו", x: 280 },
+        { label: "רינדור", x: 120 }
+      ];
+      const glyphs = {
+        0: `<circle cx="0" cy="-2" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/>
+            <rect x="-3" y="6" width="6" height="3.4" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/>
+            <line x1="-7" y1="-2" x2="-11" y2="-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="7" y1="-2" x2="11" y2="-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+        1: `<rect x="-12" y="-9" width="24" height="18" rx="2.4" fill="none" stroke="currentColor" stroke-width="2.2"/>
+            <line x1="-8" y1="-4" x2="8" y2="-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="-8" y1="0" x2="8" y2="0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="-8" y1="4" x2="3" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+        2: `<rect x="-13" y="-7" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <rect x="-5" y="-9" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <rect x="3" y="-11" width="11" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/>`,
+        3: `<rect x="-13" y="-8" width="26" height="16" rx="1.8" fill="none" stroke="currentColor" stroke-width="2.2"/>
+            <line x1="-13" y1="-3" x2="13" y2="-3" stroke="currentColor" stroke-width="1.6"/>
+            <line x1="-13" y1="3" x2="13" y2="3" stroke="currentColor" stroke-width="1.6"/>
+            <line x1="-9" y1="-8" x2="-9" y2="8" stroke="currentColor" stroke-width="1.6"/>
+            <line x1="-3" y1="-8" x2="-3" y2="8" stroke="currentColor" stroke-width="1.6"/>
+            <line x1="3" y1="-8" x2="3" y2="8" stroke="currentColor" stroke-width="1.6"/>
+            <line x1="9" y1="-8" x2="9" y2="8" stroke="currentColor" stroke-width="1.6"/>`,
+        4: `<rect x="-7" y="-12" width="14" height="22" rx="2.6" fill="none" stroke="currentColor" stroke-width="2.4"/>
+            <line x1="-3" y1="-9" x2="3" y2="-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="0" cy="6" r="1.8" fill="currentColor"/>`
+      };
+      const yFor = idx => (idx % 2 === 0 ? 70 : 110);
+      const segs = steps
+        .map((s, idx) => `${idx === 0 ? "M" : "Q"} ${idx === 0 ? `${s.x} ${yFor(idx)}` : `${(steps[idx - 1].x + s.x) / 2} ${idx % 2 === 0 ? 40 : 140}, ${s.x} ${yFor(idx)}`}`)
+        .join(" ");
+      const nodes = steps
+        .map(
+          (s, idx) => `
+          <g class="pitch-intro-flow__node" data-step="${idx + 1}" transform="translate(${s.x} ${yFor(idx)})">
+            <circle class="pitch-intro-flow__node-halo" r="22"/>
+            <g class="pitch-intro-flow__glyph">${glyphs[idx]}</g>
+            <text class="pitch-intro-flow__label" y="40" text-anchor="middle">${escapeHtml(s.label)}</text>
+          </g>`
+        )
         .join("");
-      return `<div class="pitch-intro-flow pitch-intro-flow--inline" role="img" aria-label="תהליך: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור">
-        <div class="pitch-intro-flow__track">${track}</div>
+      const ariaLabel = "תהליך: קריינות, תמלול, תכנון סצנות, התאמת וידאו, רינדור";
+      return `<div class="pitch-intro-flow" role="img" aria-label="${escapeHtml(ariaLabel)}">
+        <svg class="pitch-intro-flow__svg" viewBox="0 0 800 220" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <defs>
+            <linearGradient id="pitchIntroFlowLineGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="1"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0.45"/>
+            </linearGradient>
+          </defs>
+          <path class="pitch-intro-flow__line" d="${segs}" fill="none" stroke="url(#pitchIntroFlowLineGrad)" stroke-width="3" stroke-linecap="round"/>
+          ${nodes}
+        </svg>
       </div>`;
     }
 
@@ -4750,8 +4808,8 @@
       if (type === "catalogScreenshot") {
         return catalogScreenshotHtml();
       }
-      if (type === "pricingHero") {
-        return pricingHeroHtml();
+      if (type === "closingRoadmap") {
+        return closingRoadmapHtml(section);
       }
       if (type === "mess") {
         return `<div class="visual-board">
@@ -4944,7 +5002,7 @@
       const studioWizardToolbar =
         section.id === "studio"
           ? `<div class="pitch-studio-wiz-controls-wrap" role="note" aria-labelledby="pitch-studio-wiz-legend">
-            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ — ללא הפעלה אוטומטית. בשלב הרביעי: אמולטור אייפון משמאל, לידו תמלול ותוכנית סצנות.</p>
+            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ, ללא הפעלה אוטומטית. בשלב הרביעי: אמולטור אייפון משמאל, לידו תמלול ותוכנית סצנות.</p>
           </div>`
           : "";
       const pitchLayoutAttr = pitchProductLayout ? ` data-pitch-layout="product-app"` : "";
@@ -5090,7 +5148,7 @@
 
       const setMailtoHref = () => {
         if (!mailEl) return;
-        const subj = encodeURIComponent("Weather V1 — מצגת");
+        const subj = encodeURIComponent("Weather V1 · מצגת");
         const body = encodeURIComponent(`קישור למצגת המלאה במחשב:\n\n${pageUrl()}\n`);
         mailEl.setAttribute("href", `mailto:?subject=${subj}&body=${body}`);
       };
@@ -5109,12 +5167,12 @@
         };
 
         if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-          navigator.clipboard.writeText(url).then(() => ok("הקישור הועתק — פתחו במחשב")).catch(() =>
-            ok("העתקה נכשלה — נסו «שליחה באימייל»")
+          navigator.clipboard.writeText(url).then(() => ok("הקישור הועתק, פתחו במחשב")).catch(() =>
+            ok("העתקה נכשלה, נסו «שליחה באימייל»")
           );
           return;
         }
-        ok("העתקה זמינה רק בדפדפן מעודכן — נסו «שליחה באימייל»");
+        ok("העתקה זמינה רק בדפדפן מעודכן, נסו «שליחה באימייל»");
       });
     })();
 
