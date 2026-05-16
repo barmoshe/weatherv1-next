@@ -3062,8 +3062,11 @@
 
     #intro .hero-downloads {
       margin-top: clamp(12px, 2.2vw, 22px);
-      max-width: none;
-      width: 100%;
+      width: 50%;
+      max-width: 50%;
+      min-width: min(360px, 100%);
+      justify-self: center;
+      margin-inline: auto;
       padding: clamp(16px, 2.5vw, 20px) clamp(18px, 2.8vw, 22px);
       border: 2px solid var(--v1-ink);
       border-radius: 22px;
