@@ -53,6 +53,25 @@ macOS is **not** built in CI. See "Building the macOS installer locally" below.
 - Packager config: `forge.config.cjs`
 - Packaged Next spawn logic: `electron/server-manager.cjs`
 
+## Required GitHub Secrets
+
+A release tag run consumes these secrets via `.github/workflows/desktop.yml`
+and `.github/workflows/desktop-publish-release.yml`. Every consumer and the
+rotation procedure for each is documented in
+[`../infra/cloudflare/README.md`](../infra/cloudflare/README.md#secrets-ownership--rotation).
+
+| Secret | Used by | Required for |
+| --- | --- | --- |
+| `WIN_CERTIFICATE_BASE64` | `desktop.yml` decode step | Code-signing the Windows installer |
+| `WIN_CERT_PASSWORD` | `desktop.yml` → `forge.config.cjs` | Paired with the cert above |
+| `EDITOR_PASSWORD`, `ADMIN_PASSWORD` | `desktop.yml` → `scripts/emit-auth-hashes.cjs` | Argon2id hashing at prebuild — build fails loud if unset |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | `desktop-publish-release.yml` | Uploading `WeatherV1-Setup.exe` to R2 |
+| `GITHUB_TOKEN` | Auto-injected | Cross-run artifact download in the publish workflow |
+
+A tag build with any of `WIN_CERTIFICATE_BASE64`, `WIN_CERT_PASSWORD`,
+`EDITOR_PASSWORD`, or `ADMIN_PASSWORD` unset fails loud at the guard step in
+`desktop.yml`. Non-tag builds skip code-signing and skip the guard.
+
 ## Preflight Checklist
 
 1. Confirm the working tree:

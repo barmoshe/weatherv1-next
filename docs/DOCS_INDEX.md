@@ -33,6 +33,7 @@ A local-first weather-video production app: narration → Whisper transcript →
 | Swap LLM / transcription providers | [PROVIDERS.md](PROVIDERS.md) | `src/server/providers/` |
 | Pack the repo into Markdown for NotebookLM briefings | [NOTEBOOKLM.md](NOTEBOOKLM.md) | `npm run notebooklm:export:chunks` |
 | Edit the pitch-deck / download-page copy | `docs/download-page/index.html.template` directly | `storySections` + visual builders inside the template |
+| Rotate or add a project secret | [`../infra/cloudflare/README.md`](../infra/cloudflare/README.md#secrets-ownership--rotation) (live inventory + rotation), [`archive/SECRETS_MANAGEMENT_AUDIT.md`](archive/SECRETS_MANAGEMENT_AUDIT.md) (umbrella plan) | `.github/workflows/`, `infra/cloudflare/Pulumi.dev.yaml` |
 
 ## Queued and historical work
 

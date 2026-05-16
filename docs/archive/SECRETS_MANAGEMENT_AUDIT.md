@@ -1,7 +1,11 @@
-# Future Task: Secrets-Management Audit & GitHub-Secrets Migration
+# Archived: Secrets-Management Audit & GitHub-Secrets Migration
 
-**Status:** planned. Touches every credential the project handles — build-time,
-CI, Pulumi, and runtime. Implementation is phased so each phase ships
+> **All phases shipped.** See [`../../infra/cloudflare/README.md`](../../infra/cloudflare/README.md#secrets-ownership--rotation)
+> for the live secret inventory and rotation playbook. This file is kept
+> for the design rationale behind the current model.
+
+**Status:** archived. Touched every credential the project handles —
+build-time, CI, Pulumi, and runtime. Shipped phased so each phase landed
 independently.
 
 **Related:**
@@ -169,8 +173,8 @@ functions consume it.
 ```bash
 gh secret set EDITOR_PASSWORD     --app actions
 gh secret set ADMIN_PASSWORD      --app actions
-gh secret set CI_EDITOR_PASSWORD  --app actions   # any throwaway value
-gh secret set CI_ADMIN_PASSWORD   --app actions   # any throwaway value
+gh secret set CI_EDITOR_PASSWORD  --app actions
+gh secret set CI_ADMIN_PASSWORD   --app actions
 ```
 
 **Verification:**
@@ -222,7 +226,7 @@ Optional but unblocks "infrastructure changes via PR".
 **GitHub Secrets to add:**
 
 ```bash
-gh secret set PULUMI_CONFIG_PASSPHRASE --app actions  # the existing dev-stack passphrase
+gh secret set PULUMI_CONFIG_PASSPHRASE --app actions
 ```
 
 **Verification:** open a docs-only PR that touches `infra/cloudflare/README.md`

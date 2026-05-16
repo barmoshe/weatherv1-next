@@ -88,6 +88,24 @@ Practical implications:
 - The `cloudflare:apiToken` entry is the **provider's** auth token, not
   the Worker's runtime token — see the section below.
 
+### Passphrase in CI
+
+`.github/workflows/infra.yml` runs `pulumi preview` on PRs that touch
+`infra/cloudflare/**` and `pulumi up --yes` on the same paths when they
+land on `main`. Both modes need the passphrase to decrypt the `secure:`
+values in `Pulumi.dev.yaml`; the workflow reads it from
+`secrets.PULUMI_CONFIG_PASSPHRASE` and exports it as
+`PULUMI_CONFIG_PASSPHRASE` at the job env level (the standard Pulumi
+env-var name).
+
+Operator-local `pulumi up` still works the same way and uses the
+operator's local passphrase. The CI workflow is additive.
+
+Rotation: `pulumi --cwd infra/cloudflare stack change-secrets-provider
+passphrase` re-encrypts every `secure:` value under a new salt. Update
+the GitHub Secret with the new value and commit the resulting
+`Pulumi.<stack>.yaml` diff.
+
 ## `cloudflare:apiToken` vs `cloudflareApiToken`
 
 `Pulumi.dev.yaml` carries two superficially similar tokens. They do
@@ -138,3 +156,85 @@ pulumi --cwd infra/cloudflare up
 
 Use a distinct `bucketName` and `workerName` from the `dev` stack so the
 two stacks never share resources.
+
+## Secrets ownership & rotation
+
+Canonical inventory of every secret the project touches. Three categories:
+**CI/build-time** (GitHub Actions Secrets), **infrastructure** (Pulumi-encrypted
+YAML), and **runtime user** (Electron `safeStorage`, never in repo).
+
+### Inventory
+
+| Secret | Store | Consumer | Blast radius |
+| --- | --- | --- | --- |
+| `WIN_CERTIFICATE_BASE64` | GitHub Secrets | `.github/workflows/desktop.yml` decode step → `WIN_CERT_FILE` → `forge.config.cjs` | Lets an attacker sign installers as WeatherV1 |
+| `WIN_CERT_PASSWORD` | GitHub Secrets | `.github/workflows/desktop.yml` → `forge.config.cjs` | Paired with the cert above |
+| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`, `OSX_SIGN_IDENTITY` | GitHub Secrets | Defined for future use; not currently exported into any workflow (macOS is local-build per [`docs/RELEASE_CONVENTION.md`](../../docs/RELEASE_CONVENTION.md)). Local builds export from a shell `.env`. | Notarization identity; revocable in Apple Developer portal |
+| `MAC_CERTIFICATE_BASE64`, `MAC_CERTIFICATE_PASSWORD`, `KEYCHAIN_PASSWORD` | Not set anywhere today | Referenced only in `forge.config.cjs` header comments; reserved for future macOS-in-CI revival | n/a until wired |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | GitHub Secrets | `.github/workflows/pitch-deck.yml` and `.github/workflows/desktop-publish-release.yml` (R2 `object put` via `cloudflare/wrangler-action`) | Cloudflare account-scoped: Pages deploy + R2 write |
+| `EDITOR_PASSWORD`, `ADMIN_PASSWORD` | GitHub Secrets | `.github/workflows/desktop.yml` env → `scripts/emit-auth-hashes.cjs` (Argon2id at prebuild) → gitignored `auth-passwords.generated.ts` | App-level gate credentials baked into the installer |
+| `GITHUB_TOKEN` | Auto-injected per run | All workflows | Repo-scoped; nothing to rotate |
+| `PULUMI_CONFIG_PASSPHRASE` | GitHub Secrets (see [`docs/archive/SECRETS_MANAGEMENT_AUDIT.md`](../../docs/archive/SECRETS_MANAGEMENT_AUDIT.md)) | `.github/workflows/infra.yml` | Decrypts every `secure:` value in `Pulumi.dev.yaml` — full Worker/R2 credential exposure |
+| `cloudflare:apiToken` | `Pulumi.dev.yaml` (encrypted) | Pulumi Cloudflare provider during `pulumi up` | Mutates Cloudflare resources |
+| `weatherv1-cloudflare:cloudflareApiToken` | `Pulumi.dev.yaml` (encrypted) | Worker runtime — mints temp R2 creds | Scoped to `r2/temp-access-credentials` |
+| `weatherv1-cloudflare:r2ParentAccessKeyId` | `Pulumi.dev.yaml` (encrypted) | Worker runtime — parent R2 key | R2 read/write parent |
+| `weatherv1-cloudflare:appPassword` | `Pulumi.dev.yaml` (encrypted) | Worker runtime — Basic-Auth for the desktop app | Lets an attacker mint temp R2 creds via the gateway |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` | Electron `safeStorage` (per-user) | `electron/main.cjs` → child env via `electron/config.cjs` | Per-user; out of scope for repo-level rotation |
+| `R2_APP_USERNAME`, `R2_APP_PASSWORD` | Electron `safeStorage` (per-user) | `electron/config.cjs` | Per-user; out of scope for repo-level rotation |
+| Per-launch desktop session token | Main-process memory, ephemeral | `electron/main.cjs`, `src/proxy.ts`, `src/server/runtime/auth.ts` | Process-lifetime only |
+
+Owner of every repo-level secret above: the WeatherV1 maintainer.
+
+### Rotation procedures
+
+**Anything in GitHub Secrets:**
+
+```bash
+gh secret set <NAME>
+```
+
+`gh` prompts for the new value. Re-run the relevant workflow afterwards
+to pick it up. Do not paste a `# comment` after the command — interactive
+zsh treats `#` as a literal argument unless `setopt interactive_comments`
+is set, and `gh secret set` will reject the extra words.
+
+**`WIN_CERTIFICATE_BASE64` (+ password):**
+
+```bash
+base64 -i path/to/new-cert.pfx | gh secret set WIN_CERTIFICATE_BASE64
+gh secret set WIN_CERT_PASSWORD
+```
+
+**`EDITOR_PASSWORD` / `ADMIN_PASSWORD`:** rotation is `gh secret set <NAME>` followed by a fresh tag build. The Argon2id hash is re-minted on every build; nothing to clean up in the source tree.
+
+**Apple signing secrets:** rotate the app-specific password at <https://appleid.apple.com> → Sign-In and Security → App-Specific Passwords. Update the GitHub Secret. `APPLE_TEAM_ID` and `APPLE_ID` rarely change.
+
+**Cloudflare tokens** (`CLOUDFLARE_API_TOKEN`, `cloudflare:apiToken`, `weatherv1-cloudflare:cloudflareApiToken`): issue replacement tokens at <https://dash.cloudflare.com/profile/api-tokens>. For Pulumi-stored tokens, re-encrypt and apply:
+
+```bash
+pulumi --cwd infra/cloudflare config set --secret cloudflareApiToken <new-token>
+git commit -am "chore(infra): rotate cloudflareApiToken"
+pulumi --cwd infra/cloudflare up
+```
+
+**`weatherv1-cloudflare:appPassword`:** rotate via Pulumi the same way, then redistribute to end users out-of-band (it is the Worker gateway Basic-Auth secret).
+
+**`r2ParentAccessKeyId` (+ paired secret):** in Cloudflare dashboard → R2 → "Manage R2 API Tokens", issue a new parent key, update the Pulumi secret, `pulumi up`, then revoke the old key.
+
+**`PULUMI_CONFIG_PASSPHRASE`:**
+
+```bash
+pulumi --cwd infra/cloudflare stack change-secrets-provider passphrase
+# Pulumi prompts for the OLD passphrase, then the NEW one. Every `secure:`
+# value in Pulumi.<stack>.yaml gets re-encrypted under the new salt.
+git commit -am "chore(infra): rotate Pulumi passphrase"
+gh secret set PULUMI_CONFIG_PASSPHRASE
+```
+
+**Runtime user secrets** (Electron `safeStorage`-stored API keys, R2 Basic-Auth): out of scope — the end user rotates them from inside the Settings UI. The repo holds no copy.
+
+### Where the Pulumi passphrase lives
+
+Operator-local today: held by the repo maintainer in a password manager. The decryption passphrase is **not** committed and **not** stored in Pulumi Cloud.
+
+If the operator's copy is lost, every `secure:` value in `Pulumi.dev.yaml` becomes unrecoverable. Recovery means rotating each secret at the source (issue new Cloudflare tokens, redistribute `appPassword` to users) and re-encrypting under a new passphrase.

@@ -116,65 +116,17 @@ flowchart TD
 
 ## Implementation Plan
 
-### Phase 1 — Shared password infrastructure
+### Phase 1 — Shared password infrastructure (shipped)
 
-1. **Add dependency.** `npm install argon2`. Confirm it builds inside
-   Electron Forge (native module — `@electron-forge/plugin-auto-unpack-natives`
-   is already in `forge.config.cjs`).
-2. **`scripts/hash-password.cjs`** *(optional helper)* — prompts for a
-   password (no echo), prints the Argon2id hash to stdout. **Not part of
-   the rotation flow** anymore — kept only for offline verification /
-   debugging (e.g. "does this plaintext hash to that stored value?").
-3. **`scripts/emit-auth-hashes.cjs`** — reads `EDITOR_PASSWORD` and
-   `ADMIN_PASSWORD` (plaintext) from `process.env`, then for each calls
-   `argon2.hash(value, { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 })`
-   and writes `src/server/runtime/auth-passwords.generated.ts` with
-   `export const EDITOR_HASH = "..."; export const ADMIN_HASH = "...";`.
-   - In production builds (`NODE_ENV=production` or `CI=true`) hard-fail
-     if either env var is missing or empty.
-   - In local dev, if both are missing fall back to a banner hash for a
-     known dev password (`devdev`) and print a loud warning.
-   - Must never `console.log` / `echo` the plaintext or the resulting
-     hash. GitHub only masks the secret itself, not derived values.
-4. **`src/server/runtime/auth-passwords.ts`** — wraps the generated file.
-   - `verifyEditorLogin(username, password)` — `crypto.timingSafeEqual`
-     against `"v1editor"`, then `argon2.verify(EDITOR_HASH, password)`.
-   - `verifyAdminPassword(password)` — `argon2.verify(ADMIN_HASH, password)`.
-5. **Wire build pipeline.**
-   - `package.json`: add `"prebuild": "node scripts/emit-auth-hashes.cjs"`.
-   - `.gitignore`: add `src/server/runtime/auth-passwords.generated.ts`.
-   - `.env.example`: document `EDITOR_PASSWORD` and `ADMIN_PASSWORD`
-     (plaintext, populated only in the gitignored local `.env`). Note
-     that the hashing happens automatically in the prebuild step.
-6. **GitHub Secrets (plaintext).**
-   - Repo Settings → Secrets and variables → Actions → add two
-     **Repository Secrets**:
-     - `EDITOR_PASSWORD` — plaintext editor password.
-     - `ADMIN_PASSWORD` — plaintext admin password.
-   - Or via CLI:
-     ```bash
-     gh secret set EDITOR_PASSWORD --app actions
-     gh secret set ADMIN_PASSWORD  --app actions
-     ```
-   - `.github/workflows/desktop.yml` — extend the `env:` block (currently
-     at `desktop.yml:28-35`, sibling of `WIN_CERT_PASSWORD`):
-     ```yaml
-     EDITOR_PASSWORD: ${{ secrets.EDITOR_PASSWORD }}
-     ADMIN_PASSWORD:  ${{ secrets.ADMIN_PASSWORD }}
-     ```
-     These are consumed by the `prebuild` script invoked by
-     `npm run build` inside both the "Package unsigned desktop app" and
-     "Make release artifacts" steps.
-   - `.github/workflows/ci.yml` — pass deliberately non-production
-     **test-only** secrets so the gate tests can run end-to-end without
-     leaking the real passwords:
-     ```yaml
-     EDITOR_PASSWORD: ${{ secrets.CI_EDITOR_PASSWORD }}
-     ADMIN_PASSWORD:  ${{ secrets.CI_ADMIN_PASSWORD }}
-     ```
-   - **Rotation flow**: GitHub UI → update secret value → re-run the
-     Desktop workflow → new installer ships with the new hash. No local
-     hashing, no commit, no code change.
+Build-time Argon2id pipeline (script, prebuild hook, verify functions,
+gitignored generated file, workflow `env:` plumbing). Covered end-to-end
+in [`../archive/SECRETS_MANAGEMENT_AUDIT.md`](../archive/SECRETS_MANAGEMENT_AUDIT.md)
+(Phase 1) and the live rotation playbook in
+[`../../infra/cloudflare/README.md`](../../infra/cloudflare/README.md#secrets-ownership--rotation).
+The current code lives at `scripts/emit-auth-hashes.cjs`,
+`src/server/runtime/auth-passwords.ts`, and
+`src/server/runtime/auth-passwords.generated.ts` (gitignored). This doc
+covers only the remaining UI / IPC / route work below.
 
 ### Phase 2 — Editor login (app entry)
 

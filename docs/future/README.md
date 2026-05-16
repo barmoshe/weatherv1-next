@@ -12,4 +12,3 @@ Planned but un-shipped docs. Each is self-contained (Goal / Plan / Verification)
 | [RELEASE_ASSET_STORAGE.md](RELEASE_ASSET_STORAGE.md) | Free-only research task: where to host desktop installers (latest-only) without paying Actions overage. |
 | [WINDOWS_INSTALLER_R2_TASK.md](WINDOWS_INSTALLER_R2_TASK.md) | Goal + decisions: move public Windows installer download to R2 via the existing Worker; drop GitHub Release asset; macOS local-build only. |
 | [WINDOWS_INSTALLER_R2_PLAN.md](WINDOWS_INSTALLER_R2_PLAN.md) | Implementation plan for the task above — file-level edits, code sketches, verification. |
-| [SECRETS_MANAGEMENT_AUDIT.md](SECRETS_MANAGEMENT_AUDIT.md) | Full audit of every project secret (CI / Pulumi / runtime) + phased migration to GitHub Secrets. Covers EDITOR/ADMIN build-time hash pipeline, Windows-cert decode gap, Pulumi passphrase for CI `pulumi up`. |

@@ -18,12 +18,11 @@
 //     can flip them on with secrets while local dev never accidentally tries
 //     to notarize (which would block on missing Apple credentials).
 //
-// Required release-CI secrets (macOS): MAC_CERTIFICATE_BASE64,
-//   MAC_CERTIFICATE_PASSWORD, KEYCHAIN_PASSWORD, APPLE_ID,
-//   APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID, OSX_SIGN_IDENTITY (optional if
-//   the imported keychain has a single Developer ID Application identity).
-// Required release-CI secrets (Windows): WIN_CERTIFICATE_BASE64,
-//   WIN_CERT_PASSWORD. The workflow decodes this to WIN_CERT_FILE for Forge.
+// Required GitHub Secrets for a tag release: see docs/RELEASE_CONVENTION.md
+//   ("Required GitHub Secrets") and infra/cloudflare/README.md
+//   ("Secrets ownership & rotation"). WIN_CERT_FILE specifically is set
+//   by the desktop.yml decode step from WIN_CERTIFICATE_BASE64 — not a
+//   secret on its own.
 
 "use strict";
 
