@@ -6,7 +6,7 @@
 import type { LlmCallUsage } from "@/shared/usage";
 
 /** Bump when table below changes; stamped on JobRecord.usage_summary. */
-export const PRICING_REVISION = "weatherv1-2026-02-estimate-v1";
+export const PRICING_REVISION = "weatherv1-2026-05-estimate-v2";
 
 const MTok = 1_000_000;
 
@@ -27,15 +27,18 @@ const TRANSCRIPTION_RATE_PER_MINUTE: Record<string, number> = {
   "gpt-4o-mini-transcribe": envNum("OPENAI_TRANSCRIBE_GPT4O_MINI_USD_PER_MINUTE", 0.003),
 };
 
-type LlmRateRow = { inPerMtok: number; outPerMtok: number };
+type LlmRateRow = { inPerMtok: number; outPerMtok: number; cachedInPerMtok?: number };
 
 function openAiRates(model: string): LlmRateRow {
   const m = model.toLowerCase();
   const gpt4oIn = envNum("OPENAI_GPT4O_INPUT_PER_MTOK_USD", 2.5);
   const gpt4oOut = envNum("OPENAI_GPT4O_OUTPUT_PER_MTOK_USD", 10);
-  if (m.includes("gpt-4o")) return { inPerMtok: gpt4oIn, outPerMtok: gpt4oOut };
-  if (m.includes("gpt-5")) return { inPerMtok: 5, outPerMtok: 25 };
-  return { inPerMtok: gpt4oIn, outPerMtok: gpt4oOut };
+  // OpenAI prefix-cache hits bill at ~50% of the regular input rate on gpt-4o
+  // (https://openai.com/api/pricing/). Override per-deployment via env.
+  const gpt4oCachedIn = envNum("OPENAI_GPT4O_CACHED_INPUT_PER_MTOK_USD", gpt4oIn * 0.5);
+  if (m.includes("gpt-4o")) return { inPerMtok: gpt4oIn, outPerMtok: gpt4oOut, cachedInPerMtok: gpt4oCachedIn };
+  if (m.includes("gpt-5")) return { inPerMtok: 5, outPerMtok: 25, cachedInPerMtok: 2.5 };
+  return { inPerMtok: gpt4oIn, outPerMtok: gpt4oOut, cachedInPerMtok: gpt4oCachedIn };
 }
 
 function anthropicRates(model: string): LlmRateRow {
@@ -55,7 +58,16 @@ function anthropicRates(model: string): LlmRateRow {
 export function estimateLlmCostUsd(usage: LlmCallUsage): number {
   const row =
     usage.provider === "openai" ? openAiRates(usage.model) : anthropicRates(usage.model);
-  return (usage.input_tokens / MTok) * row.inPerMtok + (usage.output_tokens / MTok) * row.outPerMtok;
+  // OpenAI's `cached_input_tokens` are *included* in `input_tokens`. Split the
+  // bucket so the cached portion gets the discounted rate.
+  const cached = Math.min(usage.cached_input_tokens ?? 0, usage.input_tokens);
+  const uncachedIn = usage.input_tokens - cached;
+  const cachedRate = row.cachedInPerMtok ?? row.inPerMtok;
+  return (
+    (uncachedIn / MTok) * row.inPerMtok +
+    (cached / MTok) * cachedRate +
+    (usage.output_tokens / MTok) * row.outPerMtok
+  );
 }
 
 export function estimateTranscriptionCostUsd(billedAudioSeconds: number, transcriptionModel: string): number {

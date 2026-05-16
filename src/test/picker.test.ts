@@ -209,4 +209,49 @@ describe("picker", () => {
     expect(result.picker_status.last_retry_reason).toBe("exhausted_llm_attempts_empty_timeline");
     expect(result.picker_usages).toHaveLength(3);
   });
+
+  it("keeps systemPrompt byte-identical across retries (prefix-cache friendly)", async () => {
+    const { mockCompleteJson } = await mocks();
+    mockCompleteJson
+      .mockResolvedValueOnce(mockPickTimeline([]))
+      .mockResolvedValueOnce(mockPickTimeline([]))
+      .mockResolvedValueOnce(
+        mockPickTimeline([
+          { scene_idx: 0, segment_id: "IB001-s0", audio_start: 0, audio_end: 12, reason: "ok" },
+        ]),
+      );
+
+    await pickSegmentsDetailed("תחזית", [video()], 12, {
+      maxLlmAttempts: 3,
+      scenes: [scenePatch],
+    });
+
+    expect(mockCompleteJson).toHaveBeenCalledTimes(3);
+    const sys1 = mockCompleteJson.mock.calls[0][0].systemPrompt;
+    const sys2 = mockCompleteJson.mock.calls[1][0].systemPrompt;
+    const sys3 = mockCompleteJson.mock.calls[2][0].systemPrompt;
+    expect(sys2).toBe(sys1);
+    expect(sys3).toBe(sys1);
+    // Retry-mode notes belong in the user payload, not the system prompt.
+    expect(sys1).not.toMatch(/RETRY MODE/);
+  });
+
+  it("filters avoidSegmentIds out of the catalog sent to the picker", async () => {
+    const { mockCompleteJson } = await mocks();
+    mockCompleteJson.mockResolvedValueOnce(
+      mockPickTimeline([
+        { scene_idx: 0, segment_id: "IB001-s0", audio_start: 0, audio_end: 12, reason: "ok" },
+      ]),
+    );
+
+    await pickSegmentsDetailed("תחזית", [video()], 12, {
+      scenes: [scenePatch],
+      avoidSegmentIds: new Set(["IB001-s0"]),
+    });
+
+    expect(mockCompleteJson).toHaveBeenCalledTimes(1);
+    const userPayload = JSON.parse(mockCompleteJson.mock.calls[0][0].userPayload);
+    expect(userPayload.catalog).toEqual([]);
+    expect(userPayload.avoid_segment_ids).toEqual(["IB001-s0"]);
+  });
 });

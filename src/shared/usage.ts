@@ -10,6 +10,12 @@ export interface LlmCallUsage {
   output_tokens: number;
   cache_read_input_tokens?: number;
   cache_creation_input_tokens?: number;
+  /**
+   * OpenAI Chat Completions reports `usage.prompt_tokens_details.cached_tokens`
+   * when a prefix cache hit occurs. These tokens are *also* included in
+   * `input_tokens`; the cost estimator bills them at the cached rate.
+   */
+  cached_input_tokens?: number;
 }
 
 export interface CompleteJsonResult<T> {
@@ -26,6 +32,8 @@ export const JobUsageSummarySchema = z.object({
   pricing_revision: z.string(),
   input_tokens: z.number(),
   output_tokens: z.number(),
+  /** Subset of `input_tokens` served from the provider's prefix cache. */
+  cached_input_tokens: z.number().optional(),
   llm_cost_usd_estimate: z.number(),
   transcription_billed_audio_sec: z.number().optional(),
   transcription_model: z.string().optional(),
@@ -42,6 +50,7 @@ export const UsageCallRecordSchema: z.ZodType<UsageCallRecord> = z.object({
   output_tokens: z.number(),
   cache_read_input_tokens: z.number().optional(),
   cache_creation_input_tokens: z.number().optional(),
+  cached_input_tokens: z.number().optional(),
 });
 
 function num(v: unknown): number {
@@ -57,12 +66,19 @@ export function usageFromOpenAiChat(
   if (!usage || typeof usage !== "object") {
     return { provider, model, input_tokens: 0, output_tokens: 0 };
   }
-  return {
+  const details = (usage as { prompt_tokens_details?: unknown }).prompt_tokens_details;
+  const cached =
+    details && typeof details === "object"
+      ? num((details as { cached_tokens?: unknown }).cached_tokens)
+      : 0;
+  const out: LlmCallUsage = {
     provider,
     model,
     input_tokens: num(usage.prompt_tokens),
     output_tokens: num(usage.completion_tokens),
   };
+  if (cached > 0) out.cached_input_tokens = cached;
+  return out;
 }
 
 /** Map Anthropic Messages `usage` onto LlmCallUsage (snake_case or camelCase from SDK). */
@@ -109,7 +125,9 @@ export function sumLlmUsage(a: LlmCallUsage, b: LlmCallUsage): LlmCallUsage {
   };
   const cr = (a.cache_read_input_tokens ?? 0) + (b.cache_read_input_tokens ?? 0);
   const cc = (a.cache_creation_input_tokens ?? 0) + (b.cache_creation_input_tokens ?? 0);
+  const ci = (a.cached_input_tokens ?? 0) + (b.cached_input_tokens ?? 0);
   if (cr > 0) out.cache_read_input_tokens = cr;
   if (cc > 0) out.cache_creation_input_tokens = cc;
+  if (ci > 0) out.cached_input_tokens = ci;
   return out;
 }

@@ -12,10 +12,12 @@ function recomputeSummary(
 ): JobUsageSummary {
   let input_tokens = 0;
   let output_tokens = 0;
+  let cached_input_tokens = 0;
   let llm_cost_usd_estimate = 0;
   for (const c of calls) {
     input_tokens += c.input_tokens;
     output_tokens += c.output_tokens;
+    cached_input_tokens += c.cached_input_tokens ?? 0;
     llm_cost_usd_estimate += estimateLlmCostUsd(c);
   }
 
@@ -32,6 +34,7 @@ function recomputeSummary(
     pricing_revision: PRICING_REVISION,
     input_tokens,
     output_tokens,
+    ...(cached_input_tokens > 0 ? { cached_input_tokens } : {}),
     llm_cost_usd_estimate,
     transcription_billed_audio_sec: transcription?.billed_audio_sec,
     transcription_model: transcription?.model,

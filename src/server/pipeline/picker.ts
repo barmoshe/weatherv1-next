@@ -412,19 +412,32 @@ async function invokePickerLlmOnce(args: {
   } =
     args;
 
-  let systemPrompt = customPrompt?.trim() ? customPrompt.trim() : SCENE_AWARE_SYSTEM_PROMPT;
-  if (attempt >= 2) systemPrompt += "\n\n" + PICKER_FALLBACK_PROMPT;
-  if (avoidSegmentIds?.size) {
-    systemPrompt +=
-      "\n\nADDITIONAL: do not pick any segment_id in this already-used list: " + [...avoidSegmentIds].sort().join(", ");
-  }
+  // Keep the system prompt byte-identical across retries so OpenAI's automatic
+  // prefix cache (≥1024 tokens) and Anthropic's explicit cache_control both hit.
+  // Dynamic per-attempt content goes in the user payload tail, not here.
+  const systemPrompt = customPrompt?.trim() ? customPrompt.trim() : SCENE_AWARE_SYSTEM_PROMPT;
 
+  // Drop already-rejected rows from the catalog itself — the model would never
+  // pick them, and serializing them is pure waste. The instruction below acts
+  // as a belt-and-suspenders safeguard.
+  const effectiveCatalog =
+    avoidSegmentIds && avoidSegmentIds.size > 0
+      ? catalog.filter((row) => !avoidSegmentIds.has(row.segment_id))
+      : catalog;
+
+  // User payload order: static-leaning fields first (cacheable), dynamic last.
   const payload: Record<string, unknown> = {
     picking_note: PICKER_CLIP_DIVERSITY_NOTE,
     duration_sec: durationSec,
     scenes: scenesForPicker(scenes),
-    catalog,
+    catalog: effectiveCatalog,
   };
+  if (avoidSegmentIds && avoidSegmentIds.size > 0) {
+    payload.avoid_segment_ids = [...avoidSegmentIds].sort();
+  }
+  if (attempt >= 2) {
+    payload.retry_mode_notes = PICKER_FALLBACK_PROMPT;
+  }
   if (retryFeedback && Object.keys(retryFeedback).length > 0) {
     payload.retry_feedback = retryFeedback;
   }
@@ -433,13 +446,14 @@ async function invokePickerLlmOnce(args: {
   const baseStatus = (): Omit<PickerRunStatus, "state" | "usable_picks"> => ({
     provider: provider.id,
     model: provider.model,
-    catalog_rows: catalog.length,
+    catalog_rows: effectiveCatalog.length,
     scenes_requested: scenes.length,
     payload_bytes: Buffer.byteLength(userPayload, "utf8"),
   });
 
-  const useCache =
-    !customPrompt && !(avoidSegmentIds && avoidSegmentIds.size > 0) && attempt === 1 && !retryFeedback;
+  // System prompt is now stable across attempts — always enable caching when
+  // the caller didn't override the system prompt.
+  const useCache = !customPrompt;
 
   try {
     const { data, usage } = await provider.completeJson({
@@ -533,9 +547,9 @@ export async function pickSegmentsDetailed(
   const accruedPickerUsages: UsageCallRecord[] = [];
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    if (attempt > 1) {
-      shuffleCatalogRows(catalog);
-    }
+    // Intentionally do NOT reshuffle between attempts: keeping catalog row
+    // order stable lets OpenAI's automatic prefix cache hit on attempts 2+
+    // (the retry feedback at the payload tail is the new signal, not row order).
 
     const invokeResult = await invokePickerLlmOnce({
       provider,
