@@ -18,7 +18,7 @@ This repo runs **Next.js 16** with React 19. APIs, conventions, and file structu
 
 ## Queued and historical work
 
-Planned but un-shipped tasks live in `docs/future/` (see `docs/future/README.md`). Completed or superseded docs live in `docs/archive/` — useful as reference, not authoritative for current work.
+**Active docs** live at the root of `docs/` and are the current source of truth. Completed or superseded work lives in `docs/archive/` — useful as historical reference or to understand prior approaches, but not authoritative for current work. Planned but un-shipped features live in `docs/future/` — these are valid roadmap items, not the active spec. See `docs/archive/README.md` and `docs/future/README.md` for inventories.
 
 ## Commands
 
