@@ -1291,6 +1291,7 @@
       .pitch-closing-journey__step[data-step="3"] { animation-delay: 0.26s; }
       .pitch-closing-journey__step[data-step="4"] { animation-delay: 0.34s; }
       .pitch-closing-journey__step[data-step="5"] { animation-delay: 0.42s; }
+      .pitch-closing-journey__step[data-step="6"] { animation-delay: 0.50s; }
     }
 
     @keyframes pitch-closing-journey-step {
@@ -5763,6 +5764,7 @@
         bullets: [
           "להבין מה חשוב לדייק לפני שימוש אמיתי.",
           "להחליט איפה נכון לשמור את הקטלוג בהמשך.",
+          "לעבור על הקטלוג הקיים: לבחור אילו סרטונים נשארים בו ולהוסיף סרטונים ממקורות נוספים.",
           "לחבר את ה־API keys הרלוונטיים.",
           "לבדוק את המערכת בסביבת העבודה שלכם.",
           "לסגור יחד את היקף ההמשך בצורה פשוטה וברורה."
@@ -5770,6 +5772,7 @@
         mobileBullets: [
           "מה צריך לדייק",
           "איפה יישב הקטלוג",
+          "מעבר ועדכון הקטלוג",
           "חיבור API keys",
           "בדיקה אצלכם",
           "סגירת היקף ההמשך"
@@ -6219,10 +6222,10 @@
 
     function closingJourneyHtml(section) {
       const shortLabels = (section && Array.isArray(section.mobileBullets) && section.mobileBullets.length >= 5)
-        ? section.mobileBullets.slice(0, 5)
+        ? section.mobileBullets
         : ["מה צריך לדייק", "איפה יישב הקטלוג", "חיבור API keys", "בדיקה אצלכם", "סגירת היקף ההמשך"];
-      const longLines = (section && Array.isArray(section.bullets) && section.bullets.length >= 5)
-        ? section.bullets.slice(0, 5)
+      const longLines = (section && Array.isArray(section.bullets) && section.bullets.length >= shortLabels.length)
+        ? section.bullets.slice(0, shortLabels.length)
         : shortLabels;
       const rows = shortLabels
         .map(
@@ -6236,7 +6239,8 @@
           </li>`
         )
         .join("");
-      return `<div class="pitch-closing-journey" dir="rtl" aria-label="חמישה צעדים להמשך">
+      const ariaLabel = `${shortLabels.length} צעדים להמשך`;
+      return `<div class="pitch-closing-journey" dir="rtl" aria-label="${escapeHtml(ariaLabel)}">
         <ol class="pitch-closing-journey__list">${rows}</ol>
       </div>`;
     }
@@ -6807,6 +6811,12 @@
 
       const syncMode = () => {
         const pitch = isPitchHash();
+        if (!pitch && desktopMq.matches) {
+          // Snap scrollY to 0 BEFORE re-applying the body overflow lock so
+          // the deck reopens cleanly from the first slide.
+          try { window.scrollTo({ top: 0, behavior: "instant" }); }
+          catch (_) { window.scrollTo(0, 0); }
+        }
         setMode(pitch);
         if (pitch) {
           requestAnimationFrame(() => {
@@ -6814,10 +6824,6 @@
               window.ScrollTrigger.refresh();
             }
           });
-        } else if (desktopMq.matches) {
-          // Reset scroll so the deck starts from the first slide when reopened.
-          try { window.scrollTo({ top: 0, behavior: "instant" }); }
-          catch (_) { window.scrollTo(0, 0); }
         }
       };
 
