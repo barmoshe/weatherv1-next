@@ -15,9 +15,11 @@ gates land together in one task:
      workspace + FFmpeg paths, all three AI keys + provider radio, R2
      cloud, clear cache, uninstall).
 
-Both gates share one fixed-per-build password mechanism (Argon2id), with
-hashes flowing from GitHub Secrets at build time. No plaintext or hash is
-committed to the repo.
+Both gates share one fixed-per-build password mechanism (Argon2id). The
+**plaintext passwords** are stored as GitHub Secrets; the build pipeline
+hashes them on the fly into a gitignored generated file. Nothing
+(plaintext or hash) is ever committed to the repo, and password rotation
+happens entirely from the GitHub Secrets UI — no local Node round-trip.
 
 ## Research Summary
 
@@ -57,8 +59,19 @@ committed to the repo.
 - **Electron `safeStorage`** (DPAPI on Windows, Keychain on macOS) is for
   *runtime user secrets* like the editor session token — not for
   build-time baked secrets.
-- **GitHub Secrets** are masked in CI logs and never persisted to the
-  repo, making them the right canonical source for production hashes.
+- **GitHub Secrets** are encrypted at rest with libsodium sealed boxes,
+  decrypted only into the per-job runner env, masked in logs, and never
+  persisted to the repo — making them the right canonical source for
+  the production passwords.
+- **Plaintext-in-secrets is safe** when CI immediately transforms the
+  value (hash, sign, etc.) and never persists or echoes it. Same shape
+  as `WIN_CERT_PASSWORD` already wired in `.github/workflows/desktop.yml:34`.
+  The prebuild step must avoid `echo`/`console.log` of either the
+  plaintext or the resulting hash — GitHub auto-masks known secrets but
+  not values *derived* from them.
+- **node-argon2** runs on the standard `ubuntu/macos/windows-latest`
+  runners — same native module the runtime uses, so hashes minted in CI
+  verify byte-for-byte at runtime.
 
 Useful sources:
 
@@ -66,6 +79,7 @@ Useful sources:
 - https://owasp.org/www-project-cheat-sheets/cheatsheets/Password_Storage_Cheat_Sheet.html
 - https://github.com/ranisalt/node-argon2
 - https://docs.github.com/en/actions/security-guides/encrypted-secrets
+- https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-secrets
 
 ## Proposed Behavior
 
@@ -89,11 +103,12 @@ flowchart TD
   Settings --> Close["onClose → adminUnlocked = false"]
 
   subgraph "Build-time hash pipeline"
-    Secrets["GitHub Secrets<br/>EDITOR_PASSWORD_HASH<br/>ADMIN_PASSWORD_HASH"] --> CI["desktop.yml / ci.yml env"]
-    Env[".env (gitignored)"] --> LocalBuild["npm run dev / build"]
+    Secrets["GitHub Secrets (plaintext)<br/>EDITOR_PASSWORD<br/>ADMIN_PASSWORD"] --> CI["desktop.yml / ci.yml env"]
+    Env[".env (gitignored, plaintext)"] --> LocalBuild["npm run dev / build"]
     CI --> Prebuild["scripts/emit-auth-hashes.cjs"]
     LocalBuild --> Prebuild
-    Prebuild --> Gen["auth-passwords.generated.ts (gitignored)"]
+    Prebuild --> Hash["argon2.hash() at build time"]
+    Hash --> Gen["auth-passwords.generated.ts (gitignored)"]
     Gen --> VerifyEditor
     Gen --> VerifyAdmin
   end
@@ -106,14 +121,21 @@ flowchart TD
 1. **Add dependency.** `npm install argon2`. Confirm it builds inside
    Electron Forge (native module — `@electron-forge/plugin-auto-unpack-natives`
    is already in `forge.config.cjs`).
-2. **`scripts/hash-password.cjs`** — prompts for a password (no echo),
-   prints the Argon2id hash to stdout. Used once per password rotation
-   by the maintainer.
-3. **`scripts/emit-auth-hashes.cjs`** — reads `EDITOR_PASSWORD_HASH` and
-   `ADMIN_PASSWORD_HASH` from `process.env`; in production builds errors
-   if either is missing; in dev/test falls back to a banner hash with a
-   warning. Writes `src/server/runtime/auth-passwords.generated.ts` with
+2. **`scripts/hash-password.cjs`** *(optional helper)* — prompts for a
+   password (no echo), prints the Argon2id hash to stdout. **Not part of
+   the rotation flow** anymore — kept only for offline verification /
+   debugging (e.g. "does this plaintext hash to that stored value?").
+3. **`scripts/emit-auth-hashes.cjs`** — reads `EDITOR_PASSWORD` and
+   `ADMIN_PASSWORD` (plaintext) from `process.env`, then for each calls
+   `argon2.hash(value, { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 })`
+   and writes `src/server/runtime/auth-passwords.generated.ts` with
    `export const EDITOR_HASH = "..."; export const ADMIN_HASH = "...";`.
+   - In production builds (`NODE_ENV=production` or `CI=true`) hard-fail
+     if either env var is missing or empty.
+   - In local dev, if both are missing fall back to a banner hash for a
+     known dev password (`devdev`) and print a loud warning.
+   - Must never `console.log` / `echo` the plaintext or the resulting
+     hash. GitHub only masks the secret itself, not derived values.
 4. **`src/server/runtime/auth-passwords.ts`** — wraps the generated file.
    - `verifyEditorLogin(username, password)` — `crypto.timingSafeEqual`
      against `"v1editor"`, then `argon2.verify(EDITOR_HASH, password)`.
@@ -121,16 +143,38 @@ flowchart TD
 5. **Wire build pipeline.**
    - `package.json`: add `"prebuild": "node scripts/emit-auth-hashes.cjs"`.
    - `.gitignore`: add `src/server/runtime/auth-passwords.generated.ts`.
-   - `.env.example`: document both env vars and point to
-     `scripts/hash-password.cjs`.
-6. **GitHub Secrets.**
-   - Repo settings → add `EDITOR_PASSWORD_HASH` and `ADMIN_PASSWORD_HASH`
-     as Repository Secrets.
-   - `.github/workflows/desktop.yml`: pass them to `electron-forge make`
-     via `env:`.
-   - `.github/workflows/ci.yml`: pass *test-only* hash secrets
-     (`CI_EDITOR_PASSWORD_HASH`, `CI_ADMIN_PASSWORD_HASH`) so CI can
-     exercise the gates without leaking production.
+   - `.env.example`: document `EDITOR_PASSWORD` and `ADMIN_PASSWORD`
+     (plaintext, populated only in the gitignored local `.env`). Note
+     that the hashing happens automatically in the prebuild step.
+6. **GitHub Secrets (plaintext).**
+   - Repo Settings → Secrets and variables → Actions → add two
+     **Repository Secrets**:
+     - `EDITOR_PASSWORD` — plaintext editor password.
+     - `ADMIN_PASSWORD` — plaintext admin password.
+   - Or via CLI:
+     ```bash
+     gh secret set EDITOR_PASSWORD --app actions
+     gh secret set ADMIN_PASSWORD  --app actions
+     ```
+   - `.github/workflows/desktop.yml` — extend the `env:` block (currently
+     at `desktop.yml:28-35`, sibling of `WIN_CERT_PASSWORD`):
+     ```yaml
+     EDITOR_PASSWORD: ${{ secrets.EDITOR_PASSWORD }}
+     ADMIN_PASSWORD:  ${{ secrets.ADMIN_PASSWORD }}
+     ```
+     These are consumed by the `prebuild` script invoked by
+     `npm run build` inside both the "Package unsigned desktop app" and
+     "Make release artifacts" steps.
+   - `.github/workflows/ci.yml` — pass deliberately non-production
+     **test-only** secrets so the gate tests can run end-to-end without
+     leaking the real passwords:
+     ```yaml
+     EDITOR_PASSWORD: ${{ secrets.CI_EDITOR_PASSWORD }}
+     ADMIN_PASSWORD:  ${{ secrets.CI_ADMIN_PASSWORD }}
+     ```
+   - **Rotation flow**: GitHub UI → update secret value → re-run the
+     Desktop workflow → new installer ships with the new hash. No local
+     hashing, no commit, no code change.
 
 ### Phase 2 — Editor login (app entry)
 
@@ -223,13 +267,14 @@ flowchart TD
 ## Verification
 
 ```bash
-# Generate hashes (one-time per password rotation)
-node scripts/hash-password.cjs            # paste output into .env
+# Local dev: put plaintext passwords in the gitignored .env
+echo 'EDITOR_PASSWORD=...' >> .env
+echo 'ADMIN_PASSWORD=...'  >> .env
 
 # Standard verification stack
 npx tsc --noEmit
 npm test
-npm run build                              # prebuild emits the gitignored hash file
+npm run build                              # prebuild hashes plaintext into the gitignored generated file
 npm run electron:dev                       # exercise both gates end-to-end
 ```
 
@@ -238,6 +283,10 @@ Manual checks:
 - **Build hygiene** — grep the built bundle for the plaintext password
   (must not appear) and grep the source tree for either hash (must only
   appear in the gitignored generated file).
+- **CI log hygiene** — after a workflow run, open the "Prebuild" /
+  build step logs and confirm neither plaintext nor the emitted hash
+  appears. GitHub will mask the raw secret automatically, but a derived
+  hash is not masked, so the script must stay silent.
 - **Editor login** — cold start with no safeStorage entry → gate
   appears; right password lets in; reload keeps you in; quit + relaunch
   keeps you in (safeStorage); sign out returns to gate.
@@ -255,8 +304,8 @@ Manual checks:
 | `src/server/runtime/auth-passwords.ts` | new — verify functions |
 | `src/server/runtime/auth-passwords.generated.ts` | new, gitignored |
 | `src/server/runtime/editor-session.ts` | new — token store |
-| `scripts/hash-password.cjs` | new — maintainer CLI |
-| `scripts/emit-auth-hashes.cjs` | new — build-time emit |
+| `scripts/hash-password.cjs` | new — optional offline-verification helper |
+| `scripts/emit-auth-hashes.cjs` | new — hashes plaintext env vars (`EDITOR_PASSWORD`/`ADMIN_PASSWORD`) at build time |
 | `src/app/api/auth/editor-login/route.ts` | new |
 | `src/app/api/auth/sign-out/route.ts` | new |
 | `src/app/api/admin/verify/route.ts` | new |
@@ -273,8 +322,8 @@ Manual checks:
 | `.env.example` | document new env vars |
 | `.gitignore` | add generated hash file |
 | `package.json` | add `argon2`, `prebuild` script |
-| `.github/workflows/desktop.yml` | wire prod secrets |
-| `.github/workflows/ci.yml` | wire CI-only test secrets |
+| `.github/workflows/desktop.yml` | wire prod secrets (`EDITOR_PASSWORD`, `ADMIN_PASSWORD`) into the `env:` block |
+| `.github/workflows/ci.yml` | wire CI-only test secrets (`CI_EDITOR_PASSWORD`, `CI_ADMIN_PASSWORD`) |
 
 ## Reused functions / patterns
 
