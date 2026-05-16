@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "downloadpage",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "download-page:dev"],
+      "port": 8080
     }
   ]
 }

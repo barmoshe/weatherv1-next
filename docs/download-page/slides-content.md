@@ -143,7 +143,7 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 
 **graphics:** `studioDashboard`, interactive mockup of the Studio tab. Tab strip on top, audio drop zone, 4-cell bento (Transcript / Render / Scene Planning / Output Preview). Each bullet is clickable and highlights its matching phase in the mockup; phase 4 shows an iPhone-frame preview on the left with transcript + scene plan on the right.
 
-**notes:** Bullets here are an **interactive index** to the mockup, not just decoration. Bullet #1 maps to phase 1 (upload), #2 to phase 2 (transcription), #3 to planning, #4 to render. Keep order and meaning aligned with the phases. If you change the bullet count or reorder, the mapping breaks.
+**notes:** Bullets here are an **interactive index** to the mockup, not just decoration. The slide opens in an **idle (00) state** — no bullet is highlighted and the drop card shows a calm "הדגמה אינטראקטיבית" welcome with a soft breathing border inviting interaction. Clicking bullet #1 advances to phase 1 (upload); #2 to transcription; #3 to planning; #4 to render. Re-entering the slide via scroll-in resets it back to the idle state. Keep order and meaning aligned with the phases. If you change the bullet count or reorder, the mapping breaks.
 
 ---
 
