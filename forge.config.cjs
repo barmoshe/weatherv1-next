@@ -119,6 +119,13 @@ module.exports = {
         name: "weatherv1",
         setupExe: "WeatherV1-Setup.exe",
         setupIcon: path.join(__dirname, "build", "icon.ico"),
+        // Branded animation shown in the Squirrel installer window during
+        // file copy. 640x480 (Squirrel's native loadingGif dimensions),
+        // ~4s loop. Source HTML + render script live in the parent
+        // claude-creative-stack repo at
+        // `artifacts/html/weatherv1-installer-loading.html` and
+        // `scripts/render-weatherv1-installer-gif.mjs`.
+        loadingGif: path.join(__dirname, "build", "installer-loading.gif"),
       },
     },
   ],

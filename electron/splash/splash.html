@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src data:; img-src data:;" />
+    <title>WeatherV1</title>
+    <style>
+      :root {
+        --c-bg-0: oklch(22% 0.07 260);
+        --c-bg-1: oklch(35% 0.14 285);
+        --c-bg-2: oklch(48% 0.18 310);
+        --c-sun: oklch(86% 0.18 88);
+        --c-cloud: oklch(96% 0.02 250);
+        --c-bolt: oklch(82% 0.20 95);
+        --c-text: oklch(98% 0.01 250);
+        --c-text-dim: oklch(78% 0.04 250);
+        --r: 22px;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+      .card {
+        position: absolute;
+        inset: 0;
+        border-radius: var(--r);
+        background:
+          radial-gradient(120% 80% at 20% 0%, var(--c-bg-2) 0%, transparent 55%),
+          radial-gradient(120% 90% at 90% 110%, var(--c-bg-1) 0%, transparent 60%),
+          linear-gradient(135deg, var(--c-bg-0) 0%, var(--c-bg-1) 100%);
+        overflow: hidden;
+        box-shadow: 0 24px 64px oklch(10% 0.05 260 / 0.55), 0 0 0 1px oklch(100% 0 0 / 0.06) inset;
+        display: grid;
+        grid-template-rows: 1fr auto;
+        animation: cardIn 480ms cubic-bezier(.2,.8,.2,1) both;
+      }
+      @keyframes cardIn {
+        from { opacity: 0; transform: scale(0.96); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+
+      .stage {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      .stage svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .sun {
+        transform-origin: 165px 138px;
+        animation: spin 14s linear infinite, sunPulse 3.2s ease-in-out infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes sunPulse {
+        0%, 100% { filter: drop-shadow(0 0 6px var(--c-sun)); }
+        50%      { filter: drop-shadow(0 0 22px var(--c-sun)); }
+      }
+
+      .cloud-a { animation: drift1 6s ease-in-out infinite; }
+      .cloud-b { animation: drift2 7.5s ease-in-out infinite; }
+      @keyframes drift1 {
+        0%, 100% { transform: translateX(0); }
+        50%      { transform: translateX(18px); }
+      }
+      @keyframes drift2 {
+        0%, 100% { transform: translateX(0); }
+        50%      { transform: translateX(-14px); }
+      }
+
+      .bolt {
+        transform-origin: 305px 175px;
+        animation: boltFlash 2.8s ease-in-out infinite;
+      }
+      @keyframes boltFlash {
+        0%, 38%, 100%   { opacity: 0; transform: scale(0.85); }
+        42%, 54%        { opacity: 1; transform: scale(1.02); }
+        58%             { opacity: 0; transform: scale(0.9); }
+      }
+
+      .drop {
+        opacity: 0;
+        animation: dropFall 1.6s ease-in infinite;
+      }
+      .drop.d2 { animation-delay: 0.55s; }
+      .drop.d3 { animation-delay: 1.05s; }
+      @keyframes dropFall {
+        0%   { opacity: 0; transform: translateY(0); }
+        20%  { opacity: 1; }
+        90%  { opacity: 1; transform: translateY(46px); }
+        100% { opacity: 0; transform: translateY(56px); }
+      }
+
+      .meta {
+        position: relative;
+        padding: 0 28px 22px;
+        display: grid;
+        gap: 6px;
+        text-align: center;
+        color: var(--c-text);
+        animation: fadeUp 600ms 220ms cubic-bezier(.2,.8,.2,1) both;
+      }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .wordmark {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        background: linear-gradient(90deg, var(--c-cloud), var(--c-sun));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-feature-settings: "ss01";
+      }
+      .tagline {
+        font-size: 13px;
+        color: var(--c-text-dim);
+        letter-spacing: 0.2px;
+      }
+
+      .bar {
+        height: 3px;
+        margin: 14px 28px 0;
+        border-radius: 999px;
+        background: oklch(100% 0 0 / 0.08);
+        overflow: hidden;
+        position: relative;
+      }
+      .bar::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: 38%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, transparent, var(--c-sun), var(--c-bg-2), transparent);
+        animation: barSlide 1.6s cubic-bezier(.5,.05,.5,.95) infinite;
+      }
+      @keyframes barSlide {
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(280%); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card" role="status" aria-label="WeatherV1 starting">
+      <div class="stage" aria-hidden="true">
+        <svg viewBox="0 0 520 220" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="oklch(94% 0.16 88)" />
+              <stop offset="65%" stop-color="oklch(82% 0.20 80)" />
+              <stop offset="100%" stop-color="oklch(72% 0.22 70 / 0)" />
+            </radialGradient>
+            <linearGradient id="cloudGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="oklch(99% 0.01 250)" />
+              <stop offset="100%" stop-color="oklch(86% 0.04 250)" />
+            </linearGradient>
+          </defs>
+
+          <g class="sun">
+            <circle cx="165" cy="138" r="36" fill="url(#sunGrad)" />
+            <g stroke="var(--c-sun)" stroke-width="3" stroke-linecap="round" opacity="0.85">
+              <line x1="165" y1="78"  x2="165" y2="92" />
+              <line x1="165" y1="184" x2="165" y2="198" />
+              <line x1="105" y1="138" x2="119" y2="138" />
+              <line x1="211" y1="138" x2="225" y2="138" />
+              <line x1="122" y1="95"  x2="132" y2="105" />
+              <line x1="198" y1="171" x2="208" y2="181" />
+              <line x1="122" y1="181" x2="132" y2="171" />
+              <line x1="198" y1="105" x2="208" y2="95" />
+            </g>
+          </g>
+
+          <g class="cloud-a">
+            <path
+              d="M120 168 q-22 0 -28 -20 q-22 -2 -22 -22 q0 -22 24 -24 q4 -22 30 -22 q22 0 28 18 q26 -2 30 22 q22 4 18 26 q-4 22 -28 22 z"
+              fill="url(#cloudGrad)"
+              opacity="0.95"
+            />
+          </g>
+
+          <g class="cloud-b" transform="translate(265 105)">
+            <path
+              d="M30 60 q-16 0 -20 -14 q-16 -2 -16 -16 q0 -16 18 -18 q4 -16 22 -16 q16 0 20 14 q18 -2 22 16 q16 4 14 18 q-4 16 -22 16 z"
+              fill="url(#cloudGrad)"
+              opacity="0.92"
+            />
+
+            <g class="bolt" transform="translate(38 36)">
+              <polygon
+                points="6,0 -10,28 0,28 -6,52 14,18 4,18 14,0"
+                fill="var(--c-bolt)"
+                stroke="oklch(94% 0.05 88)"
+                stroke-width="0.6"
+              />
+            </g>
+
+            <g fill="oklch(82% 0.12 235)">
+              <ellipse class="drop"    cx="-4" cy="48" rx="3" ry="5" />
+              <ellipse class="drop d2" cx="14" cy="48" rx="3" ry="5" />
+              <ellipse class="drop d3" cx="30" cy="48" rx="3" ry="5" />
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <div>
+        <div class="bar" aria-hidden="true"></div>
+        <div class="meta">
+          <div class="wordmark">WeatherV1</div>
+          <div class="tagline">טוען את אולפן התחזית…</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // The main process waits for `splash:done` (or a 4s hard cap) before
+      // opening the main window. Report ready as soon as the intro animation
+      // has had time to play.
+      const DONE_AT_MS = 2400;
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          try { window.splash && window.splash.done && window.splash.done(); } catch (_e) {}
+        }, DONE_AT_MS);
+      });
+    </script>
+  </body>
+</html>

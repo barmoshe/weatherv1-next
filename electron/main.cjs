@@ -103,6 +103,12 @@ function wireAutoUpdater() {
 async function bootstrap() {
   cfg.setUserDataDir(app.getPath("userData"));
 
+  // Branded first-launch splash. Fire-and-forget: any failure here must not
+  // block the main bootstrap path. Awaited so the main window opens after.
+  await maybeShowSplash().catch((err) => {
+    console.warn("[main] splash failed:", err && err.message ? err.message : err);
+  });
+
   state.ffmpeg = verifyFFmpeg();
   // Don't hard-fail on missing ffmpeg yet — the renderer's settings UI is
   // the right place to surface the error and let the user point us at a
@@ -169,6 +175,73 @@ function installAuthInterceptor() {
     callback({ requestHeaders });
   });
   state.authInterceptorInstalled = true;
+}
+
+/**
+ * Show a branded splash window once per (installed) app version.
+ *
+ * Splash lives at `electron/splash/splash.html` with a tiny preload that
+ * exposes `window.splash.done()` — the page calls it when the intro
+ * animation has had time to play. A 4 s hard cap covers anything that
+ * silently breaks (CSP, file IO, GPU) so the main window always opens.
+ */
+async function maybeShowSplash() {
+  const settings = cfg.readSettings();
+  if (settings.splashShownForVersion === app.getVersion()) return;
+
+  const splash = new BrowserWindow({
+    width: 520,
+    height: 320,
+    show: false,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    backgroundColor: "#00000000",
+    webPreferences: {
+      preload: path.join(__dirname, "splash", "preload.cjs"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  splash.once("ready-to-show", () => splash.show());
+
+  try {
+    await splash.loadFile(path.join(__dirname, "splash", "splash.html"));
+  } catch (err) {
+    console.warn("[main] splash loadFile failed:", err && err.message ? err.message : err);
+    if (!splash.isDestroyed()) splash.destroy();
+    return;
+  }
+
+  await new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      ipcMain.removeListener("splash:done", finish);
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(finish, 4000);
+    ipcMain.once("splash:done", finish);
+    splash.once("closed", finish);
+  });
+
+  if (!splash.isDestroyed()) splash.close();
+
+  try {
+    cfg.writeSettings({ splashShownForVersion: app.getVersion() });
+  } catch (err) {
+    // Non-fatal — splash just re-shows next launch.
+    console.warn("[main] splash flag write failed:", err && err.message ? err.message : err);
+  }
 }
 
 function openMainWindow() {

@@ -94,6 +94,9 @@ function defaultSettings() {
       // gateway URL. The matching password is encrypted under `keys`.
       appUsername: null,
     },
+    // App version the first-launch splash has already been shown for.
+    // `null` (or a mismatch with `app.getVersion()`) re-arms the splash.
+    splashShownForVersion: null,
   };
 }
 
