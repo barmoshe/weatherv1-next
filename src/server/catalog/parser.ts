@@ -86,6 +86,16 @@ export function parseCatalog(
     // ignore
   }
 
+  // One readdir instead of N existsSync (called on every /api/catalog,
+  // /api/plan, and per render-worker tick). Falls back to existsSync for
+  // any filename containing a path separator, since readdir is flat.
+  let videosDirIndex: Set<string> | null = null;
+  try {
+    videosDirIndex = new Set(fs.readdirSync(videosDir));
+  } catch {
+    // Dir doesn't exist or unreadable — every entry will be flagged missing.
+  }
+
   const videos: ParsedVideo[] = [];
   const missingIds: string[] = [];
   const claimedIds: string[] = [];
@@ -95,7 +105,10 @@ export function parseCatalog(
     claimedIds.push(entry.id);
 
     const filePath = path.join(videosDir, entry.filename);
-    const existsLocally = fs.existsSync(filePath);
+    const isNested = entry.filename.includes("/") || entry.filename.includes("\\");
+    const existsLocally = isNested
+      ? fs.existsSync(filePath)
+      : videosDirIndex?.has(entry.filename) ?? false;
     if (!existsLocally) {
       missingIds.push(entry.id);
     }
