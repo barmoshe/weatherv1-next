@@ -21,10 +21,15 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PREFIX: ${{ inputs.prefix }}
         run: |
+          echo "## bucket list (token's view)"
+          npx -y wrangler@latest r2 bucket list || true
+          echo
+          echo "## bucket info: weatherv1-media"
           npx -y wrangler@latest r2 bucket info weatherv1-media || true
-          echo "---"
-          if [ -n "$PREFIX" ]; then
-            npx -y wrangler@latest r2 object list weatherv1-media --prefix "$PREFIX" --per-page 1000
-          else
-            npx -y wrangler@latest r2 object list weatherv1-media --per-page 1000
-          fi
+          echo
+          echo "## REST list_objects_v2 via Cloudflare API gateway"
+          # Cloudflare API exposes a list endpoint at:
+          #   /accounts/{id}/r2/buckets/{name}/objects
+          curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets/weatherv1-media/objects?per_page=1000${PREFIX:+&prefix=$PREFIX}" \
+            | python3 -m json.tool | head -200
