@@ -21,7 +21,7 @@
         }
 
         *, *::before, *::after { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; }
+        html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
 
         body {
             font-family: 'Heebo', system-ui, -apple-system, sans-serif;
