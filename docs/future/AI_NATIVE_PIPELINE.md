@@ -1,21 +1,16 @@
-# Vision: AI-native pipeline, templates, and the product rename
+# Vision: AI-native pipeline and the product rename
 
-> Status: vision / discovery. No code changes proposed in this doc — only the direction and the open questions to chew on before we entrench the current shape. Downstream of `CATALOG_TAGGING_REDESIGN.md`; not blocking it.
+> Status: vision / discovery. No code changes proposed in this doc — only the direction and the open questions to chew on before we entrench the current shape. Sibling doc: [`TEMPLATES.md`](TEMPLATES.md) (templates as the user's unit of choice; WeatherV1 as the inaugural template). Downstream of [`CATALOG_TAGGING_REDESIGN.md`](CATALOG_TAGGING_REDESIGN.md); not blocking it.
 
 ## Why this exists
 
-The app today is single-domain (weather), runs a fixed chain of bespoke LLM calls glued together in TypeScript, and is named after its first use case. Each of those properties is a reasonable starting point. None of them is obviously the right place to *stay*. This doc captures four shifts we suspect we'll want a year from now, recorded together because they reinforce each other, and recorded early so foundational work in flight doesn't quietly foreclose them.
+The app today runs a fixed chain of bespoke LLM calls glued together in TypeScript, and is named after its first use case. Each of those properties is a reasonable starting point. Neither is obviously the right place to *stay*. This doc captures three shifts we suspect we'll want a year from now, recorded together because they reinforce each other, and recorded early so foundational work in flight doesn't quietly foreclose them. A fourth, closely related shift — the move from "the app does weather" to "the app runs *templates*, and WeatherV1 is one of them" — has been split out into its own concept doc, [`TEMPLATES.md`](TEMPLATES.md), and is referenced from here where relevant.
 
-## Four intertwined shifts
+## Three intertwined shifts
 
-- **From "the app does weather" to "the app runs templates, and weather is one of them".** A *template* is a self-contained production preset — clip catalogue, taxonomy, editorial prompts, validator rules, output format, and brand surface — that the user picks when starting a job. WeatherV1 becomes the reference template, not the whole product. New templates (army readiness briefings, education explainers, …) are added without changing the core.
 - **From a fixed pipeline to an agent that orchestrates.** Today the stages run in a hard-coded order with hard-coded handoffs. Tomorrow the stages could be tools an agent calls in whatever order the job requires, with loops, re-plans, and re-picks as first-class moves rather than special cases.
 - **From "call model, parse JSON" to "give model tools, let it work".** The codebase is shaped around consuming model outputs as typed data. A more AI-native shape gives models capabilities — search the catalogue, fetch a segment, re-segment a clip, render a preview, validate against the brief — and records what they did.
-- **From "WeatherV1" to a general AI video portal.** The name describes the first template. If the product hosts many templates and is agentic underneath, the positioning has to follow; otherwise the installer, splash, docs, and download page keep signalling "weather app" while the product no longer is one.
-
-## Templates, in one paragraph
-
-A template is the *unit of choice* a user makes at the start of a job: "I want to produce a weather forecast" or "I want to produce a readiness brief". Each template bundles everything that makes that kind of video what it is — its clip catalogue, its taxonomy, the editorial voice of its prompts, its validator's notion of "obvious mismatch", its output aspect and length conventions, and its surface branding. Only one template is active per job. Templates do not share clips or vocabularies, but they do share the generic pipeline, the runtime, and the agent that orchestrates them. **WeatherV1 is the inaugural / reference template** — the one whose existence proves the shape and against which new templates can be benchmarked.
+- **From "WeatherV1" to a general AI video portal.** The name describes the first use case. If the product hosts many templates and is agentic underneath, the positioning has to follow; otherwise the installer, splash, docs, and download page keep signalling "weather app" while the product no longer is one.
 
 ## Agentic pipeline, in one paragraph
 
@@ -27,9 +22,9 @@ Today a model returns a typed payload that imperative code interprets and branch
 
 ## Product framing, in one paragraph
 
-A rename — working title **"V1 AI Portal"** — frames the app as a portal *into* AI-driven video production, where the user picks a template (weather, briefing, explainer, …) and the portal runs it. WeatherV1 stops being "the product" and becomes "the inaugural template". The rename is a positioning shift, not a technical one: it does not require any of the engineering above to ship first, but it is the natural moment to do it, and doing it late means rewriting more surfaces. Surfaces that carry the current name include the installer filename, app and window title, splash and onboarding copy, docs, the GitHub repo, release artefacts, R2 download paths, and the public download page.
+A rename — working title **"V1 AI Portal"** — frames the app as a portal *into* AI-driven video production, where the user picks a template (weather, briefing, explainer, …) and the portal runs it. WeatherV1 stops being "the product" and becomes "the inaugural template" (see [`TEMPLATES.md`](TEMPLATES.md)). The rename is a positioning shift, not a technical one: it does not require any of the engineering above to ship first, but it is the natural moment to do it, and doing it late means rewriting more surfaces. Surfaces that carry the current name include the installer filename, app and window title, splash and onboarding copy, docs, the GitHub repo, release artefacts, R2 download paths, and the public download page.
 
-## What stays invariant across all four shifts
+## What stays invariant across all three shifts
 
 The local-first nature. The workspace + R2 sidecar model. The renderer-facing API contract. The desktop runtime guarantees (loopback ports, session-token auth, no remote URLs in ffmpeg, no permanent R2 keys on disk). The reproducibility of a finished job from its recorded artefacts.
 
@@ -77,19 +72,18 @@ Patterns and principles from public guidance (Anthropic's *Building effective ag
 ## Design tensions worth flagging now
 
 - Agent autonomy vs. predictability of cost and runtime.
-- Per-template prompts vs. one generic agent prompt that reads a template's brief.
+- Per-template prompts vs. one generic agent prompt that reads a template's brief. (Template-shape tensions live in [`TEMPLATES.md`](TEMPLATES.md).)
 - Hard-coded validator rules vs. template-supplied rule packs the agent consults.
 - Tools the agent can call freely vs. tools that require human confirmation.
 - Whether "agent" means one orchestrator or several specialists (planner / picker / critic) coordinating.
-- Whether anything is shared across templates (transitions, music, voiceover, agent loop, eval harness) or every template is fully siloed.
-- How fat a template is allowed to be: just data (catalogue + taxonomy + brief), or also code (custom tools, custom validators, custom output pipeline).
-- Whether a template is a deploy-time choice (shipped in the installer), a workspace choice (downloaded into the user's workspace), or a per-job choice (picked at job start).
 - Whether the rename should land before, alongside, or after the templates work — and how to handle continuity for existing installs, R2 paths, and update channels.
 - Whether "V1" stays in the new name (heritage / continuity) or gets dropped (clean break).
 
 ## Relationship to other future work
 
-`CATALOG_TAGGING_REDESIGN.md` is the most upstream piece. It is the natural place to let the tag schema *travel with the catalogue* rather than live in source — a small framing change there keeps the templates and agentic options open without committing to either. The `temporal/` research line is also relevant: an agentic pipeline that loops and re-plans benefits from a workflow engine underneath, and the questions raised there (durability, idempotency, observability) become more pressing once orchestration moves out of straight-line TypeScript.
+- [`TEMPLATES.md`](TEMPLATES.md) — sibling vision doc. Templates are the *what the user picks*; this doc is *how the app runs the pick*. The two reinforce each other but can be pursued independently.
+- [`CATALOG_TAGGING_REDESIGN.md`](CATALOG_TAGGING_REDESIGN.md) — the most upstream piece. The natural place to let the tag schema *travel with the catalogue* rather than live in source. A small framing change there keeps both the templates and the agentic options open without committing to either.
+- `temporal/` research line — an agentic pipeline that loops and re-plans benefits from a workflow engine underneath; the durability, idempotency, and observability questions raised there become more pressing once orchestration moves out of straight-line TypeScript.
 
 ## References
 
@@ -103,10 +97,7 @@ No implementation plan. No new APIs, file paths, env vars, or framework choices.
 
 ## Open questions
 
-- Is there real demand beyond weather, or is multi-template a thought experiment?
-- Would a second template be built in-house or onboarded by an outside editor?
-- What exactly is *in* a template (catalogue + taxonomy + prompts + rules + output format + brand) — and is that line drawn the same way for every template, or per-template?
-- How does a user discover, install, and switch between templates? Are templates a built-in gallery, a marketplace, or just folders the user drops in?
 - Does an agentic core need a workflow engine underneath, and how does that interact with the existing `temporal/` research?
-- What does evaluation look like when the pipeline is non-deterministic — and is the eval suite per-template, shared, or both?
+- What does evaluation look like when the pipeline is non-deterministic?
 - What's the actual new product name — "V1 AI Portal", "AI Video Portal V1", something else — and who decides?
+- (Template-shape open questions live in [`TEMPLATES.md`](TEMPLATES.md).)
