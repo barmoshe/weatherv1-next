@@ -54,7 +54,7 @@ export function RenderCard({ phase, tileState, planData, onRenderStart }: Render
       data-area="render"
       data-waits-for="ציר הזמן"
       data-expanded="false"
-      aria-label="שלב 3 — רינדור"
+      aria-label="שלב 5 — רינדור"
     >
       <header className="tile-header">
         <svg className="icon tile-icon icon--lg" viewBox="0 0 24 24" aria-hidden="true">

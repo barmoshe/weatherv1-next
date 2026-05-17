@@ -561,16 +561,18 @@
         .dash-grid {
             display: grid;
             gap: 0.875rem;
-            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 0.9fr);
-            grid-template-rows: minmax(220px, auto) minmax(220px, auto) auto;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+            grid-template-rows: minmax(220px, 1fr) minmax(220px, 1fr) auto;
+            min-height: 0;
             grid-template-areas:
-                "audio   plan  output"
-                "render  plan  output"
-                "diag    diag  diag";
+                "audio   review  plan  output"
+                "render  review  plan  output"
+                "diag    diag    diag  diag";
         }
         .dash-grid.hidden { display: none; }
         .dash-grid.is-empty .tile.step.is-skeleton { opacity: 1; }
         .dash-grid > [data-area="audio"]  { grid-area: audio; }
+        .dash-grid > [data-area="review"] { grid-area: review; }
         .dash-grid > [data-area="plan"]   { grid-area: plan; }
         .dash-grid > [data-area="render"] { grid-area: render; }
         .dash-grid > [data-area="output"] { grid-area: output; }
@@ -626,6 +628,59 @@
            fills the column (matches the surrounding columns' total height)
            without letting its tall content inflate the grid row tracks. */
         .dash-grid > [data-area="plan"] .scroll-y { max-height: 660px; }
+        /* Review tile spans 2 rows like plan/output — give it a matching mid-cap. */
+        .dash-grid > [data-area="review"] .scroll-y { max-height: 520px; }
+
+        /* Review tile internals */
+        .review-body { display: flex; flex-direction: column; gap: 0.6rem; }
+        .review-audio { width: 100%; }
+        .review-audio audio { width: 100%; }
+        .review-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--v1-ink-muted);
+        }
+        .review-textarea {
+            width: 100%;
+            min-height: 8rem;
+            resize: vertical;
+            font: inherit;
+            line-height: 1.55;
+            padding: 0.55rem 0.7rem;
+            border: 1px solid var(--v1-coral-soft);
+            border-radius: var(--radius-sm, 8px);
+            background: #fff;
+            color: inherit;
+        }
+        .review-textarea:focus-visible {
+            outline: 2px solid var(--v1-red);
+            outline-offset: 1px;
+            border-color: transparent;
+        }
+        .review-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .review-hint {
+            font-size: 0.78rem;
+            color: var(--v1-ink-muted);
+        }
+        .review-continue-btn {
+            font: inherit;
+            font-weight: 700;
+            padding: 0.5rem 0.95rem;
+            border-radius: 999px;
+            border: 1px solid var(--v1-red);
+            background: var(--v1-red);
+            color: #fff;
+            cursor: pointer;
+            transition: filter 0.15s ease, opacity 0.15s ease;
+        }
+        .review-continue-btn:hover { filter: brightness(1.05); }
+        .review-continue-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
         .status-pill {
             font-size: 0.78rem;
@@ -2108,13 +2163,14 @@
         /* ── Responsive — dashboard grid ───────────────────── */
         @media (max-width: 1100px) {
             .dash-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
                 grid-template-rows: auto;
                 grid-template-areas:
-                    "audio  output"
-                    "plan   output"
-                    "render render"
-                    "diag   diag";
+                    "audio   review"
+                    "plan    plan"
+                    "output  output"
+                    "render  render"
+                    "diag    diag";
             }
             .tile--output .phone-frame { max-width: 240px; }
         }
@@ -2124,9 +2180,10 @@
                 grid-template-rows: auto;
                 grid-template-areas:
                     "audio"
+                    "review"
                     "plan"
-                    "render"
                     "output"
+                    "render"
                     "diag";
             }
             .tile--output .phone-frame { max-width: 280px; }

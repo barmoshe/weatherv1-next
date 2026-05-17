@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useJobStatus } from "@/client/hooks/useJobStatus";
 import { UploadCard } from "./UploadCard";
 import { TranscribeCard } from "./TranscribeCard";
+import { ReviewCard } from "./ReviewCard";
 import { PlanCard } from "./PlanCard";
 import { RenderCard } from "./RenderCard";
 import { OutputCard } from "./OutputCard";
@@ -12,7 +13,7 @@ import { WhyPanel } from "./WhyPanel";
 import { HeroStrip } from "./HeroStrip";
 import type { Scene } from "@/shared/types";
 
-export type StudioPhase = "upload" | "transcribing" | "transcribed" | "planning" | "planned" | "rendering" | "done" | "failed";
+export type StudioPhase = "upload" | "transcribing" | "transcribed" | "reviewing" | "planning" | "planned" | "rendering" | "done" | "failed";
 
 interface TranscriptData {
   job_id: string;
@@ -33,23 +34,25 @@ export type TileState = "is-skeleton" | "waiting" | "active" | "completed" | "fa
 function deriveTileStates(phase: StudioPhase): Record<string, TileState> {
   switch (phase) {
     case "upload":
-      return { audio: "is-skeleton", plan: "is-skeleton", render: "is-skeleton", output: "is-skeleton", diag: "is-skeleton" };
+      return { audio: "is-skeleton", review: "is-skeleton", plan: "is-skeleton", render: "is-skeleton", output: "is-skeleton", diag: "is-skeleton" };
     case "transcribing":
-      return { audio: "active", plan: "waiting", render: "waiting", output: "waiting", diag: "is-skeleton" };
+      return { audio: "active", review: "waiting", plan: "waiting", render: "waiting", output: "waiting", diag: "is-skeleton" };
     case "transcribed":
-      return { audio: "completed", plan: "active", render: "waiting", output: "waiting", diag: "is-skeleton" };
+      return { audio: "completed", review: "active", plan: "waiting", render: "waiting", output: "waiting", diag: "is-skeleton" };
+    case "reviewing":
+      return { audio: "completed", review: "active", plan: "waiting", render: "waiting", output: "waiting", diag: "is-skeleton" };
     case "planning":
-      return { audio: "completed", plan: "active", render: "waiting", output: "waiting", diag: "is-skeleton" };
+      return { audio: "completed", review: "completed", plan: "active", render: "waiting", output: "waiting", diag: "is-skeleton" };
     case "planned":
-      return { audio: "completed", plan: "completed", render: "active", output: "waiting", diag: "is-skeleton" };
+      return { audio: "completed", review: "completed", plan: "completed", render: "active", output: "waiting", diag: "is-skeleton" };
     case "rendering":
-      return { audio: "completed", plan: "completed", render: "active", output: "waiting", diag: "is-skeleton" };
+      return { audio: "completed", review: "completed", plan: "completed", render: "active", output: "waiting", diag: "is-skeleton" };
     case "done":
-      return { audio: "completed", plan: "completed", render: "completed", output: "completed", diag: "completed" };
+      return { audio: "completed", review: "completed", plan: "completed", render: "completed", output: "completed", diag: "completed" };
     case "failed":
-      return { audio: "completed", plan: "completed", render: "failed", output: "is-skeleton", diag: "is-skeleton" };
+      return { audio: "completed", review: "completed", plan: "completed", render: "failed", output: "is-skeleton", diag: "is-skeleton" };
     default:
-      return { audio: "is-skeleton", plan: "is-skeleton", render: "is-skeleton", output: "is-skeleton", diag: "is-skeleton" };
+      return { audio: "is-skeleton", review: "is-skeleton", plan: "is-skeleton", render: "is-skeleton", output: "is-skeleton", diag: "is-skeleton" };
   }
 }
 
@@ -154,7 +157,7 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
         } else if (timeline.length > 0) {
           setPhase("planned");
         } else {
-          setPhase("transcribed");
+          setPhase("reviewing");
         }
       } catch (err) {
         if (!cancelled) setError(String(err));
@@ -168,7 +171,7 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
   }, [restoreJobId]);
 
   // Poll status while any non-terminal phase has an active job (rendering OR restored mid-flight).
-  const shouldPoll = !!jobId && (phase === "rendering" || phase === "planned" || phase === "transcribed" || phase === "planning" || phase === "transcribing");
+  const shouldPoll = !!jobId && (phase === "rendering" || phase === "planned" || phase === "transcribed" || phase === "reviewing" || phase === "planning" || phase === "transcribing");
   const { data: jobStatus } = useJobStatus(jobId, shouldPoll);
 
   useEffect(() => {
@@ -189,7 +192,7 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
 
   const handleUploadSuccess = useCallback((data: TranscriptData) => {
     setTranscriptData(data);
-    setPhase("transcribed");
+    setPhase("reviewing");
     setError(null);
     const preview = (data.transcript ?? "").trim().slice(0, 80);
     onJobStarted?.(data.job_id, data.filename, data.duration, new Date().toISOString(), preview);
@@ -200,6 +203,15 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
     setPlanData(data);
     setPhase("planned");
     setError(null);
+  }, []);
+
+  const handleReviewTranscriptChange = useCallback((nextTranscript: string) => {
+    setTranscriptData((prev) => (prev ? { ...prev, transcript: nextTranscript } : prev));
+  }, []);
+
+  const handleReviewConfirm = useCallback(() => {
+    setError(null);
+    setPhase("planning");
   }, []);
 
   const handleRenderStart = useCallback(async () => {
@@ -249,7 +261,7 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
   const showUploadBanner = phase === "upload";
 
   const phaseIndex = {
-    upload: 0, transcribing: 1, transcribed: 1, planning: 2, planned: 2, rendering: 3, done: 4, failed: 3,
+    upload: 0, transcribing: 1, transcribed: 2, reviewing: 2, planning: 3, planned: 3, rendering: 4, done: 5, failed: 4,
   }[phase];
 
   return (
@@ -286,6 +298,15 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
           transcriptData={transcriptData}
           phase={phase}
           tileState={tileStates.audio}
+        />
+
+        <ReviewCard
+          jobId={jobId}
+          transcriptData={transcriptData}
+          tileState={tileStates.review}
+          onTranscriptChange={handleReviewTranscriptChange}
+          onConfirm={handleReviewConfirm}
+          onError={setError}
         />
 
         <PlanCard

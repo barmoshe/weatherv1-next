@@ -90,15 +90,15 @@ export function PlanCard({
       });
     } catch (err) {
       onError(String(err));
-      onPhaseChange("transcribed");
+      onPhaseChange("reviewing");
     } finally {
       setLoading(false);
     }
   }, [transcriptData, jobId, onPlanSuccess, onPhaseChange, onError]);
 
-  // Auto-plan as soon as transcription completes, mirroring the Flask flow.
+  // Fire planning once the user confirms the review step (phase -> "planning").
   useEffect(() => {
-    if (phase !== "transcribed") return;
+    if (phase !== "planning") return;
     if (!transcriptData || !jobId) return;
     if (hasPlan) return;
     if (triggeredForJobRef.current === jobId) return;
@@ -116,7 +116,7 @@ export function PlanCard({
       data-area="plan"
       data-waits-for="תמלול"
       data-expanded="false"
-      aria-label="שלב 2 — תכנון"
+      aria-label="שלב 4 — תכנון"
     >
       <header className="tile-header">
         <svg className="icon tile-icon icon--lg" viewBox="0 0 24 24" aria-hidden="true">

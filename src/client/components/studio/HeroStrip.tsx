@@ -15,7 +15,8 @@ interface HeroStripProps {
 const PHASE_TO_STATUS: Record<StudioPhase, string> = {
   upload: "pending",
   transcribing: "active",
-  transcribed: "completed",
+  transcribed: "active",
+  reviewing: "active",
   planning: "active",
   planned: "completed",
   rendering: "active",
@@ -162,11 +163,11 @@ export function HeroStrip({ jobId, phase, phaseIndex, filename, duration, create
         id="seg-bar"
         role="progressbar"
         aria-valuemin={0}
-        aria-valuemax={4}
+        aria-valuemax={5}
         aria-valuenow={phaseIndex}
         aria-label="התקדמות הפקה"
       >
-        {[0, 1, 2, 3].map((i) => (
+        {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className={`seg${phaseIndex > i ? " done" : phaseIndex === i && phase !== "upload" ? " active" : ""}`}>
             <span className="fill" />
           </div>

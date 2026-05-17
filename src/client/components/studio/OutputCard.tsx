@@ -27,7 +27,7 @@ export function OutputCard({ phase, tileState, jobStatus, outputFilename }: Outp
       data-area="output"
       data-waits-for="הרינדור"
       data-expanded="false"
-      aria-label="שלב 4 — וידאו סופי"
+      aria-label="שלב 6 — וידאו סופי"
     >
       <header className="tile-header">
         <svg className="icon tile-icon icon--lg" viewBox="0 0 24 24" aria-hidden="true">
