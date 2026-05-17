@@ -32,6 +32,9 @@
       --story-vw: 100vw;
       /* One viewport-tall slide frame across the pitch (#storyRoll panels / subslides). */
       --story-slide-h: 100svh;
+      /* Vertical rhythm — shrinks on short viewports so padding/gaps stay proportional. */
+      --panel-pad-top: clamp(calc(var(--nav-height) + 12px), calc(var(--nav-height) + 4svh), calc(var(--nav-height) + 44px));
+      --panel-pad-bottom: clamp(20px, 6svh, 64px);
       font-family: Heebo, "Segoe UI", "Segoe UI Historic", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
@@ -411,7 +414,7 @@
       max-height: var(--story-slide-h);
       min-height: var(--story-slide-h);
       overflow: hidden;
-      padding: calc(var(--nav-height) + 36px) clamp(14px, 2vw, 32px) 64px;
+      padding: var(--panel-pad-top) clamp(14px, 2vw, 32px) var(--panel-pad-bottom);
       display: grid;
       align-items: stretch;
       justify-items: center;
@@ -494,8 +497,8 @@
     .story-panel[data-panel-layout="stack-visual-top"] .panel-inner,
     .story-subslide[data-panel-layout="stack-visual-top"] .panel-inner {
       grid-template-columns: 1fr;
-      grid-template-rows: minmax(34svh, 0.55fr) minmax(0, 1fr);
-      gap: clamp(14px, 2.8vw, 36px);
+      grid-template-rows: minmax(0, 0.55fr) minmax(0, 1fr);
+      gap: clamp(10px, 2.4svh, 36px);
       align-items: stretch;
     }
 
@@ -527,9 +530,39 @@
       overflow-y: auto;
       overscroll-behavior: contain;
       display: grid;
-      gap: 18px;
+      gap: clamp(10px, 2svh, 18px);
       justify-items: start;
       align-content: start;
+    }
+
+    /* Short viewports: compress vertical rhythm so 100svh slides don't overflow. */
+    @media (max-height: 720px) {
+      .story-panel {
+        padding-top: clamp(calc(var(--nav-height) + 4px), calc(var(--nav-height) + 1.5svh), calc(var(--nav-height) + 20px));
+        padding-bottom: clamp(12px, 3svh, 28px);
+      }
+      .panel-inner {
+        gap: clamp(12px, 3vw, 28px);
+      }
+      .bullets {
+        gap: 6px;
+      }
+    }
+
+    /* Ultrawide: give content room to breathe instead of pinning to 1360px. */
+    @media (min-width: 1600px) {
+      .panel-inner {
+        width: min(1560px, 100%);
+        gap: clamp(48px, 4vw, 96px);
+      }
+    }
+    @media (min-width: 2000px) {
+      :root {
+        font-size: 18px;
+      }
+      .panel-inner {
+        width: min(1760px, 100%);
+      }
     }
 
     /* === Hide scrollbar chrome on deck-level scrollers ===
@@ -588,7 +621,7 @@
       margin: 0;
       max-width: 10.5ch;
       color: var(--v1-ink);
-      font-size: clamp(3rem, 7vw, 7.4rem);
+      font-size: clamp(2.4rem, min(7vw, 9svh), 7.4rem);
       line-height: .9;
       letter-spacing: 0;
       text-align: start;
@@ -598,7 +631,7 @@
       max-width: 34rem;
       margin: 0;
       color: var(--v1-muted);
-      font-size: clamp(1.05rem, 1.8vw, 1.55rem);
+      font-size: clamp(.98rem, min(1.8vw, 2.4svh), 1.55rem);
       font-weight: 700;
       line-height: 1.35;
     }
@@ -651,7 +684,7 @@
 
     .numbered-sample-visual {
       width: min(100%, 520px);
-      min-height: min(52svh, 420px);
+      min-height: min(38svh, 420px);
       border: 3px solid var(--v1-ink);
       border-radius: 24px;
       background: rgb(255 255 255 / .78);
