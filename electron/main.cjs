@@ -27,6 +27,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
 const { app, BrowserWindow, autoUpdater, dialog, ipcMain, session, shell, safeStorage } = require("electron");
+const { buildWindowsCleanupCmd } = require("./uninstall-utils.cjs");
 
 // Windows Squirrel runs the installed app briefly during install/uninstall
 // to fire `--squirrel-install`, `--squirrel-updated`, etc. The app MUST
@@ -262,6 +263,96 @@ ipcMain.handle("desktop:getAppInfo", async () => ({
 }));
 
 ipcMain.handle("desktop:getUpdateState", async () => state.updateState);
+
+ipcMain.handle("desktop:beginUninstallWithCleanup", async () => {
+  if (!app.isPackaged) {
+    return { ok: false, reason: "זמין רק בגרסה ארוזה." };
+  }
+
+  const parentWindow = state.window && !state.window.isDestroyed() ? state.window : null;
+  const showBox = (opts) =>
+    parentWindow ? dialog.showMessageBox(parentWindow, opts) : dialog.showMessageBox(opts);
+
+  const userData = app.getPath("userData");
+  const detail =
+    "האפליקציה תיסגר, יימחקו כל הנתונים המקומיים (מפתחות API, הגדרות, סשנים, יומנים) " +
+    `מהנתיב:\n${userData}\n\nתיקיית הסביבה (workspace) שבחרת לא תיגע — מחק אותה ידנית במידת הצורך.`;
+
+  if (process.platform === "win32") {
+    const updateExe = path.join(path.dirname(process.execPath), "..", "Update.exe");
+    if (!fs.existsSync(updateExe)) {
+      await shell.openExternal("ms-settings:appsfeatures");
+      return {
+        ok: false,
+        reason: "לא נמצא מסיר ההתקנה. נפתחו הגדרות יישומים — ניתן להסיר את WeatherV1 משם.",
+      };
+    }
+
+    const { response } = await showBox({
+      type: "warning",
+      buttons: ["ביטול", "הסר וניקוי מלא"],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      message: "הסרת WeatherV1 וניקוי כל הנתונים?",
+      detail,
+    });
+    if (response !== 1) {
+      return { ok: false, reason: "בוטל" };
+    }
+
+    // Spawn a detached cmd that waits for the app to exit, wipes userData, then
+    // runs the Squirrel uninstaller. windowsVerbatimArguments lets us pass the
+    // composite "& "-chained command line through cmd /c without re-quoting.
+    const cmdLine = buildWindowsCleanupCmd(userData, updateExe);
+    const child = spawn("cmd.exe", ["/c", cmdLine], {
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+      windowsVerbatimArguments: true,
+    });
+    child.unref();
+    setImmediate(() => {
+      app.quit();
+    });
+    return { ok: true };
+  }
+
+  if (process.platform === "darwin") {
+    const { response } = await showBox({
+      type: "warning",
+      buttons: ["ביטול", "מחק נתונים ופתח Finder"],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      message: "הסרת WeatherV1 וניקוי כל הנתונים?",
+      detail,
+    });
+    if (response !== 1) {
+      return { ok: false, reason: "בוטל" };
+    }
+
+    try {
+      fs.rmSync(userData, { recursive: true, force: true });
+    } catch (e) {
+      return { ok: false, reason: `מחיקת נתונים נכשלה: ${e instanceof Error ? e.message : String(e)}` };
+    }
+
+    const bundlePath = path.join(path.dirname(process.execPath), "..", "..");
+    shell.showItemInFolder(bundlePath);
+    return { ok: true };
+  }
+
+  await showBox({
+    type: "info",
+    buttons: ["אישור"],
+    defaultId: 0,
+    noLink: true,
+    message: "הסרת האפליקציה",
+    detail: `מחק את תיקיית ההתקנה ידנית, וכן את:\n${userData}`,
+  });
+  return { ok: true };
+});
 
 ipcMain.handle("desktop:beginUninstall", async () => {
   if (!app.isPackaged) {

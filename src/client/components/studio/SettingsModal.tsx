@@ -162,6 +162,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, []);
 
+  const beginUninstallWithCleanup = useCallback(async () => {
+    if (!desktop) return;
+    setUninstallBusy(true);
+    setDesktopError(null);
+    try {
+      const r = await desktop.beginUninstallWithCleanup();
+      if (!r.ok && r.reason && r.reason !== "בוטל") {
+        setDesktopError(r.reason);
+      }
+    } catch (e) {
+      setDesktopError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setUninstallBusy(false);
+    }
+  }, []);
+
   const saveDesktopSettings = useCallback(async () => {
     if (!desktop) return;
     setSaving(true);
@@ -578,6 +594,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       onClearDerivedCache: clearDerivedCache,
                       clearCacheBusy,
                       onBeginUninstall: beginUninstall,
+                      onBeginUninstallWithCleanup: beginUninstallWithCleanup,
                       uninstallBusy,
                     }}
                     ai={{

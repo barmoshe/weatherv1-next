@@ -65,6 +65,7 @@ export interface DesktopBridge {
   getUpdateState(): Promise<DesktopUpdateState>;
   saveSettings(update: DesktopSettingsUpdate): Promise<{ success: true }>;
   beginUninstall(): Promise<DesktopBeginUninstallResult>;
+  beginUninstallWithCleanup(): Promise<DesktopBeginUninstallResult>;
   setEditorSession(payload: { token: string }): Promise<{ success: boolean; error?: string }>;
   getEditorSession(): Promise<{ token: string | null }>;
   clearEditorSession(): Promise<{ success: true }>;

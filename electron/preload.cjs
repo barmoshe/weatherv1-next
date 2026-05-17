@@ -20,6 +20,7 @@ const bridge = {
   getUpdateState: () => ipcRenderer.invoke("desktop:getUpdateState"),
   saveSettings: (update) => ipcRenderer.invoke("desktop:saveSettings", update),
   beginUninstall: () => ipcRenderer.invoke("desktop:beginUninstall"),
+  beginUninstallWithCleanup: () => ipcRenderer.invoke("desktop:beginUninstallWithCleanup"),
   setEditorSession: (payload) => ipcRenderer.invoke("desktop:setEditorSession", payload),
   getEditorSession: () => ipcRenderer.invoke("desktop:getEditorSession"),
   clearEditorSession: () => ipcRenderer.invoke("desktop:clearEditorSession"),

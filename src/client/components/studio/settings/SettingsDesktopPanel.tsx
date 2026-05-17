@@ -26,6 +26,7 @@ interface SettingsDesktopPanelProps {
   onClearDerivedCache: () => void;
   clearCacheBusy: boolean;
   onBeginUninstall: () => void;
+  onBeginUninstallWithCleanup: () => void;
   uninstallBusy: boolean;
 }
 
@@ -51,6 +52,7 @@ export function SettingsDesktopPanel({
   onClearDerivedCache,
   clearCacheBusy,
   onBeginUninstall,
+  onBeginUninstallWithCleanup,
   uninstallBusy,
 }: SettingsDesktopPanelProps) {
   return (
@@ -216,17 +218,29 @@ export function SettingsDesktopPanel({
             <h3>הסרת אפליקציה</h3>
           </div>
           <p className="settings-hint">
-            ב-Windows יופעל מסיר ההתקנה של המערכת. ב-macOS ייפתח Finder ליד WeatherV1.app — סגור את האפליקציה
-            וגרור את היישום לסל המחזור.
+            <strong>הסרה רגילה:</strong> מסירה את האפליקציה אך משאירה נתונים מקומיים (מפתחות API, הגדרות, סשנים, יומנים).
+            כך תוכל להתקין מחדש בלי לאבד הגדרות.
+          </p>
+          <p className="settings-hint">
+            <strong>הסרה וניקוי מלא:</strong> מסירה את האפליקציה <em>וגם</em> מוחקת את כל הנתונים המקומיים — מצב פתיחה ראשונית.
+            תיקיית הסביבה (workspace) לא נמחקת בשני המקרים.
           </p>
           <div className="settings-actions-row">
             <button
               type="button"
-              className="btn btn--danger"
+              className="btn btn--secondary"
               onClick={() => void onBeginUninstall()}
               disabled={saving || desktopLoading || uninstallBusy}
             >
               {uninstallBusy ? 'מעבד…' : 'הסר את WeatherV1'}
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={() => void onBeginUninstallWithCleanup()}
+              disabled={saving || desktopLoading || uninstallBusy}
+            >
+              {uninstallBusy ? 'מעבד…' : 'הסר וניקוי מלא'}
             </button>
           </div>
         </section>
