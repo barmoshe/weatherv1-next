@@ -25,6 +25,7 @@ describe("ReviewCard", () => {
         jobId="job-abc"
         transcriptData={baseTranscript}
         tileState="active"
+        phase="reviewing"
         onTranscriptChange={() => {}}
         onConfirm={() => {}}
         onError={() => {}}
@@ -42,6 +43,7 @@ describe("ReviewCard", () => {
         jobId="job-abc"
         transcriptData={baseTranscript}
         tileState="active"
+        phase="reviewing"
         onTranscriptChange={() => {}}
         onConfirm={onConfirm}
         onError={() => {}}
@@ -66,6 +68,7 @@ describe("ReviewCard", () => {
         jobId="job-abc"
         transcriptData={baseTranscript}
         tileState="active"
+        phase="reviewing"
         onTranscriptChange={onTranscriptChange}
         onConfirm={onConfirm}
         onError={() => {}}
@@ -100,6 +103,7 @@ describe("ReviewCard", () => {
         jobId="job-abc"
         transcriptData={baseTranscript}
         tileState="active"
+        phase="reviewing"
         onTranscriptChange={() => {}}
         onConfirm={onConfirm}
         onError={onError}

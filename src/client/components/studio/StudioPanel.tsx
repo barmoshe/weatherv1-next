@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useJobStatus } from "@/client/hooks/useJobStatus";
 import { UploadCard } from "./UploadCard";
-import { TranscribeCard } from "./TranscribeCard";
 import { ReviewCard } from "./ReviewCard";
 import { PlanCard } from "./PlanCard";
 import { RenderCard } from "./RenderCard";
@@ -275,33 +274,30 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
         {error}
       </div>
 
-      <HeroStrip
-        jobId={jobId}
-        phase={phase}
-        phaseIndex={phaseIndex}
-        filename={transcriptData?.filename}
-        duration={transcriptData?.duration}
-      />
-
-      {showUploadBanner && (
-        <UploadCard
-          onSuccess={handleUploadSuccess}
-          onError={setError}
-          onPhaseChange={setPhase}
+      <div className={`studio-topbar${showUploadBanner ? " has-upload" : ""}`}>
+        <HeroStrip
+          jobId={jobId}
+          phase={phase}
+          phaseIndex={phaseIndex}
+          filename={transcriptData?.filename}
+          duration={transcriptData?.duration}
         />
-      )}
+
+        {showUploadBanner && (
+          <UploadCard
+            onSuccess={handleUploadSuccess}
+            onError={setError}
+            onPhaseChange={setPhase}
+          />
+        )}
+      </div>
 
       <div className={`dash-grid${showUploadBanner ? " is-empty" : ""}`} id="dash-grid">
-        <TranscribeCard
-          transcriptData={transcriptData}
-          phase={phase}
-          tileState={tileStates.audio}
-        />
-
         <ReviewCard
           jobId={jobId}
           transcriptData={transcriptData}
           tileState={tileStates.review}
+          phase={phase}
           onTranscriptChange={handleReviewTranscriptChange}
           onConfirm={handleReviewConfirm}
           onError={setError}
@@ -319,19 +315,21 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
           onError={setError}
         />
 
-        <RenderCard
-          phase={phase}
-          tileState={tileStates.render}
-          planData={planData}
-          onRenderStart={handleRenderStart}
-        />
+        <div className="dash-col-right" data-area="rightcol">
+          <RenderCard
+            phase={phase}
+            tileState={tileStates.render}
+            planData={planData}
+            onRenderStart={handleRenderStart}
+          />
 
-        <OutputCard
-          phase={phase}
-          tileState={tileStates.output}
-          jobStatus={jobStatus ?? null}
-          outputFilename={jobStatus?.output_url ?? null}
-        />
+          <OutputCard
+            phase={phase}
+            tileState={tileStates.output}
+            jobStatus={jobStatus ?? null}
+            outputFilename={jobStatus?.output_url ?? null}
+          />
+        </div>
 
         <WhyPanel
           tileState={tileStates.diag}
