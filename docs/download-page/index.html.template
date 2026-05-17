@@ -449,7 +449,7 @@
 
       .story-panel[data-panel-layout="split-visual-heavy"] .panel-inner,
       .story-subslide[data-panel-layout="split-visual-heavy"] .panel-inner {
-        grid-template-columns: minmax(0, 0.68fr) minmax(300px, 1.32fr);
+        grid-template-columns: minmax(0, 0.58fr) minmax(320px, 1.42fr);
       }
 
       .story-panel[data-panel-layout="split-copy-heavy"] .panel-inner,
@@ -1404,7 +1404,7 @@
     /* —— Shared app chrome (catalog can reuse .pitch-app-shell + toolbar/tabs) —— */
     .pitch-app-shell {
       --pitch-app-r: 20px;
-      width: min(100%, 720px);
+      width: min(100%, 880px);
       margin-inline: auto;
       border-radius: var(--pitch-app-r);
       border: 1px solid rgb(0 0 0 / 0.1);
