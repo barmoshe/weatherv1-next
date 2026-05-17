@@ -7,11 +7,7 @@ on a single vendor. Today we ship:
 - **LLM**: Anthropic (Claude) or OpenAI (GPT-4o), user-pickable in Settings.
 - **Transcription**: OpenAI Whisper cloud only.
 
-A local transcription engine lived here briefly (whisper.cpp, then a
-transformers.js / ONNX rewrite) but was removed: shipping native binaries
-per platform was high-friction for low payoff once cloud Whisper covered
-the same use case. The provider shape is preserved so we can plug a new
-local engine back in without touching call sites.
+The provider shape supports plugging in a local transcription engine without touching call sites.
 
 ## Layout
 

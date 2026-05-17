@@ -41,8 +41,8 @@ For desktop releases, follow `docs/RELEASE_CONVENTION.md` exactly:
 - bump `package.json` and `package-lock.json` together
 - create the next `v*` tag
 - push `main` and the tag
-- watch Desktop and Desktop publish release
-- verify `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe`
+- watch Desktop and Desktop publish to R2
+- verify `https://<worker-host>/downloads/windows/{latest,<tag>}/WeatherV1-Setup.exe` both return 200 (macOS is built locally only)
 
 ## Response Rule
 

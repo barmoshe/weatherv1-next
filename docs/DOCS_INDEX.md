@@ -15,8 +15,8 @@ A local-first weather-video production app: narration → Whisper transcript →
 
 1. [PROJECT_GOAL.md](PROJECT_GOAL.md) — current product/engineering goal, "Done means" checklist, invariants.
 2. [../README.md](../README.md) — public intro, quick start, repo map.
-3. [../AGENTS.md](../AGENTS.md) — operational map, safety rules, commit style, verification defaults.
-4. [../CLAUDE.md](../CLAUDE.md) — full Claude-facing project guide.
+3. [../CLAUDE.md](../CLAUDE.md) — full Claude-facing project guide (commands, architecture pointer, safety rules, env, CI).
+4. [../AGENTS.md](../AGENTS.md) — short pointer for agents.
 
 ## Pick the right doc by task
 
@@ -25,7 +25,8 @@ A local-first weather-video production app: narration → Whisper transcript →
 | Understand the product and run it locally | [../README.md](../README.md) | `src/app`, `src/client`, `src/server` |
 | Start substantial multi-step work | [PROJECT_GOAL.md](PROJECT_GOAL.md), invoke `/weatherv1-goal` | `.claude/skills/weatherv1-goal/SKILL.md` |
 | Modify or reason about Electron (main, preload, renderer, IPC, packaging, releases) | [ELECTRON.md](ELECTRON.md) | `electron/`, `forge.config.cjs`, `src/proxy.ts`, `src/shared/desktop.ts` |
-| Change desktop UI flows | [ELECTRON_UXUI_RESEARCH.md](ELECTRON_UXUI_RESEARCH.md) | `src/client/components/**`, `src/client/lib/desktop.ts`, `src/app/globals.css` |
+| Change desktop UI flows | [CSS_CONVENTIONS.md](CSS_CONVENTIONS.md) (renderer styling source of truth); [ELECTRON.md](ELECTRON.md) (process model) | `src/client/components/**`, `src/client/lib/desktop.ts`, `src/app/globals.css` |
+| Edit Hebrew pitch-deck slide content | [SLIDES.md](SLIDES.md), [`download-page/slides-content.md`](download-page/slides-content.md) | `docs/download-page/index.html.template` |
 | Work on R2, Worker, or Pulumi infra | [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md), [CLOUDFLARE_INTEGRATION.md](CLOUDFLARE_INTEGRATION.md), [../infra/cloudflare/README.md](../infra/cloudflare/README.md) | `src/server/sync/r2/`, `src/app/api/sync/r2/`, `infra/cloudflare/` |
 | Package or ship a desktop release | [RELEASE_CONVENTION.md](RELEASE_CONVENTION.md), or invoke `/weatherv1-release` | `.github/workflows/desktop*.yml`, `forge.config.cjs` |
 | Add CSS class names to renderer components | [CSS_CONVENTIONS.md](CSS_CONVENTIONS.md) | `src/app/globals.css` (source of truth) |

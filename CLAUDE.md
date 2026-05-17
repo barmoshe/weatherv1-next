@@ -8,13 +8,12 @@ This repo runs **Next.js 16** with React 19. APIs, conventions, and file structu
 
 ## Start here for substantial work
 
-1. `docs/PROJECT_GOAL.md` — current product/engineering goal, "Done means" checklist, invariants.
-2. `docs/DOCS_INDEX.md` — task-to-doc router and code map.
-3. `AGENTS.md` — short operational map (safety rules, commit style, verification defaults).
-4. For Electron work: `docs/ELECTRON.md` (single reference — architecture, IPC, pitfalls, sharp edges, packaging, release path).
-5. For R2 / Worker / Pulumi: `docs/R2_PULUMI_HANDOFF.md` + `docs/CLOUDFLARE_INTEGRATION.md` + `infra/cloudflare/README.md`.
-6. For releases: `docs/RELEASE_CONVENTION.md` (or invoke the `weatherv1-release` skill).
-7. For new goal-driven sessions, invoke the `weatherv1-goal` skill (`/weatherv1-goal`).
+1. `docs/PROJECT_GOAL.md` — current goal, "Done means", invariants.
+2. `docs/DOCS_INDEX.md` — task-to-doc router and code map (canonical home).
+3. For Electron work: `docs/ELECTRON.md`.
+4. For R2/Worker/Pulumi: `docs/R2_PULUMI_HANDOFF.md` + `infra/cloudflare/README.md`.
+5. For releases: `docs/RELEASE_CONVENTION.md` (or `/weatherv1-release`).
+6. For goal-driven sessions: `/weatherv1-goal`.
 
 ## Queued and historical work
 
@@ -49,65 +48,16 @@ npm run electron:make            # …+ electron-forge make → installers in ou
 npm run notebooklm:export:chunks
 ```
 
-**Verification defaults** (from AGENTS.md):
+**Verification defaults:**
 - Server/runtime changes → `npx tsc --noEmit` + `npm test`.
 - Next route or build behavior → also `npm run build`.
 - Electron startup/package changes → also `npm run standalone:prep` and, when feasible, `npm run electron:build`.
 
-## Architecture
+## Architecture (one paragraph)
 
-WeatherV1 is a **local-first pipeline** that turns recorded narration into a **9:16 forecast MP4**:
-audio MP3 → OpenAI Whisper transcript → scene planner → pick clips from a local catalog (`v1Drive`/workspace) → ffmpeg render. The same Next.js app runs in two runtimes — web/server and Electron desktop — sharing all of `src/`.
+WeatherV1 is a **local-first pipeline**: audio MP3 → OpenAI Whisper → scene planner → pick clips from a local catalog → ffmpeg renders a 9:16 MP4. The same Next.js app runs in two runtimes — **web/server** (long-lived Node + native ffmpeg) and **desktop** (Electron shell supervising a `fork()`-spawned Next standalone child on `127.0.0.1:3765`, bundled ffmpeg, per-launch session-token auth on `/api/*`). Switching is driven by runtime detection in `src/server/runtime/`; most code under `src/server/**` and `src/app/**` is runtime-agnostic.
 
-### Two runtimes, same app
-
-- **Web/server mode**: long-lived Node host or Docker VM with native ffmpeg on `PATH`; uses `../v1Drive/weather` as the media root by default.
-- **Desktop mode**: Electron shell supervises a Next standalone child server; ffmpeg comes from `ffmpeg-static` + `ffprobe-static`; the user picks a workspace directory; per-launch session-token auth gates `/api/*`.
-
-Switching is driven by runtime detection in `src/server/runtime/` — most code in `src/server/**` and `src/app/**` should not care which runtime it is in.
-
-### Electron process model (read `docs/ELECTRON.md` before editing `electron/`)
-
-Four processes:
-
-- **main** (`electron/main.cjs`) — Node, owns `BrowserWindow`, IPC handlers, session token, auth interceptor that injects `x-weather-desktop-token` on loopback requests.
-- **preload** (`electron/preload.cjs`) — isolated; exposes a narrow `window.desktop.*` API via `contextBridge`. One wrapper function per channel — never expose `ipcRenderer` itself.
-- **renderer** — the Next.js UI at `http://127.0.0.1:<port>`. No Node, no `fs`. Cannot import from `src/server/*`.
-- **Next child server** — spawned by `electron/server-manager.cjs` via the `fork()` wrapper (uses Electron Helper as Node so macOS does not get a duplicate dock tile). Runs `.next/standalone/server.js`.
-
-Loopback host is **`127.0.0.1`** (not `localhost`) and ports are deterministic: `3765` then fallbacks `3766/3767/3768` (`electron/config.cjs`). API keys are persisted via main-process `safeStorage`, never in renderer `localStorage`.
-
-### Desktop perimeter (auth)
-
-`src/proxy.ts` (Next middleware on `/api/*`, `/outputs/*`, `/videos/*`) calls `isDesktopRequestAuthorized` to enforce the per-launch token in desktop mode. **It is the perimeter, not the only guard** — mutating handlers must also re-check via `src/server/runtime/auth.ts`. Web mode short-circuits the check.
-
-### Server layout (`src/server/`)
-
-- `runtime/` — runtime config, derived paths, desktop auth, R2 env. Single source of truth for "where do files live" and "is this a desktop request."
-- `catalog/` — parse/persist the `v1Drive` catalog (videos, segments, posters, tags).
-- `pipeline/` — scene planner, picker, validator, beat tagging. Timeline picks carry both `picker_reason` (LLM editorial) and `reason` (post-validator).
-- `ffmpeg/` — binary resolution, probe, preview/poster generation, the render graph.
-- `jobs/` — file-backed job store, queue, worker drain, plan-bundle hydration, usage persist.
-- `providers/` — pluggable LLM (Anthropic/OpenAI) + OpenAI Whisper cloud transcription with unified error mapping.
-- `sync/r2/` — **optional** Cloudflare R2 sidecar (catalog/media/posters/voiceovers). The local catalog is always the hot path; R2 mints short-lived S3 creds via the Worker gateway, and remote-only rows **materialize to disk before ffmpeg runs**.
-- `assets/`, `billing/`, `tag-vocab.ts` — supporting modules.
-
-### Routes and rendering (`src/app/`)
-
-App Router. `src/app/api/*` is the HTTP surface: `plan`, `replan_scene`, `render`, `status`, `transcribe`, `catalog`, `jobs`, `outputs`, `videos`, `config`, `desktop`, `internal`, `runtime`, `sync`. `outputs/` and `videos/` are rewritten to `/api/...` (see `next.config.ts`) so rendered MP4s and uploads stream through Next.
-
-### Client (`src/client/`)
-
-Studio UI (tabs, job history, settings) under `components/`, with `hooks/` and `lib/` (including `lib/desktop.ts` for the `window.desktop` calls). React Query is the data layer.
-
-### Pipeline standalone packaging
-
-`next.config.ts` sets `output: "standalone"` so Electron can run `node .next/standalone/server.js` as a managed child. Two non-obvious bits:
-
-- `outputFileTracingExcludes` keeps dev `runtime/jobs.json` out of the traced bundle.
-- `turbopack.root = __dirname` pins the tracing root so the standalone tree lands at `.next/standalone/server.js` and not a nested host-repo subpath. Without this `electron/server-manager.cjs` cannot find the entry.
-- `scripts/prepare-standalone.cjs` copies `public/` and `.next/static/` into the standalone tree (Next omits them by design).
-- `forge.config.cjs` `asar.unpack`s `ffmpeg-static`, `ffprobe-static`, and the entire standalone tree — spawning a binary from inside `app.asar` `ENOTDIR`s.
+Code map and per-folder roles: [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md). Electron process model + sharp edges: [`docs/ELECTRON.md`](docs/ELECTRON.md). R2 sidecar: [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md).
 
 ## Conventions
 
@@ -139,9 +89,9 @@ Required: `OPENAI_API_KEY` (Whisper + GPT picker). Optional: `GEMINI_API_KEY` (v
 
 ## CI / release workflows
 
-- `.github/workflows/desktop.yml` — runs `electron-forge make --arch=x64` on macOS and Windows for `v*` tags; uploads `desktop-macos-latest`, `desktop-windows-latest`, and a tiny `release-ref` artifact carrying the tag name.
-- `.github/workflows/desktop-publish-release.yml` — `workflow_run`-triggered; downloads artifacts from the matching Desktop run and attaches **`WeatherV1-macOS.zip`** and **`WeatherV1-Setup.exe`** to the GitHub Release. Stable latest URLs only work when the latest release is non-draft, non-prerelease, with those exact asset names.
-- `.github/workflows/pitch-deck.yml` — deploys the download/pitch-deck page (`docs/download-page/`) to Cloudflare Pages (`weatherv1-download.pages.dev`) via `cloudflare/wrangler-action`.
+- `.github/workflows/desktop.yml` — Windows-only `electron-forge make --arch=x64` on `v*` tags; uploads `desktop-windows-latest` and a tiny `release-ref` artifact carrying the tag name. macOS is **not** built in CI (see `docs/RELEASE_CONVENTION.md` for the local Mac build).
+- `.github/workflows/desktop-publish-release.yml` ("Desktop publish to R2") — `workflow_run`-triggered after Desktop; uploads `WeatherV1-Setup.exe` to R2 via the S3 API at `tenants/<tenantId>/downloads/windows/{latest,<tag>}/`. Nothing is attached to the GitHub Release. Public URLs are served by the Worker at `https://<worker-host>/downloads/windows/{latest,<tag>}/WeatherV1-Setup.exe`.
+- `.github/workflows/pitch-deck.yml` — deploys the download/pitch-deck page (`docs/download-page/`) to Cloudflare Pages (`weatherv1-download.pages.dev`).
 - `.github/workflows/ci.yml` — standard CI.
 
 For a release, prefer the `weatherv1-release` skill, which drives preflight → version bump → tag/push → workflow watch → asset verification end-to-end.

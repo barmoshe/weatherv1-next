@@ -1,17 +1,6 @@
 # Desktop Release Convention
 
-Use this as the repeatable release runbook for WeatherV1 desktop installers.
-It is written like a project skill: load the context, follow the workflow, verify
-the outcome, and loop until the public download links work.
-
----
-
-name: desktop-release-convention
-description: Build and publish WeatherV1 desktop releases. Use when creating a
-  new `v*` release tag, fixing release assets, validating GitHub Releases, or
-  troubleshooting macOS/Windows installer delivery.
-
----
+Repeatable runbook for WeatherV1 desktop installers: load the context, follow the workflow, verify the outcome, loop until the public download links work.
 
 ## When To Use
 
@@ -48,7 +37,7 @@ macOS is **not** built in CI. See "Building the macOS installer locally" below.
 
 - Desktop build workflow: `.github/workflows/desktop.yml`
 - Release asset publisher: `.github/workflows/desktop-publish-release.yml`
-- Download page workflow: `.github/workflows/pages.yml`
+- Download page workflow: `.github/workflows/pitch-deck.yml`
 - Download page template: `docs/download-page/index.html.template`
 - Packager config: `forge.config.cjs`
 - Packaged Next spawn logic: `electron/server-manager.cjs`

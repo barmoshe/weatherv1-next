@@ -19,27 +19,23 @@ component-scoped CSS module fallback in this codebase.
 
 ## Canonical patterns
 
-### Modals
+| Concern | Pattern |
+| --- | --- |
+| Modal | `modal` (overlay) → `modal-backdrop` + `modal-dialog` (optionally `modal-dialog--wide` / `modal-dialog--settings`) → `modal-header` / `modal-title` / `modal-subtitle` / `modal-close` / `modal-body` / `modal-footer` |
+| Form field | `field` wrapping `field-label` + bare `textarea` / `select` / `input` (the `.field textarea, .field select` rule styles them) |
+| Catalog detail body | `detail-form-grid` + `detail-segments` + `detail-footer` (`detail-footer .btn--primary` is coral) |
+| Segment row | `segment-block` (grid: thumb / header / desc / tags) with `segment-thumb`, `segment-header`, `segment-time`, `segment-conf`, `segment-desc-input`, `segment-tags-input`, `tag-pill`, `tag-pill__remove`, `segment-tag-add` |
+| Buttons | `btn` + `btn--primary` (coral) / `btn--secondary` (bordered) / `btn--danger` (red) / `btn--ghost` (outlined) / `btn--sm`. `btn--confirm` adds the pulse animation used for two-step destructive confirms |
+| Inline error | `error-banner` (inside `modal-body` or panels) |
 
-`modal`, `modal-backdrop`, `modal-dialog`, `modal-header`, `modal-title`,
-`modal-body`, `modal-close`, `modal-footer`.
+BEM `__`-style names (`modal-overlay`, `modal__header`, `field-group`, `field-input`, `segments-list`, `segment-row__*`) are **not** part of the convention and have no CSS — components using them render unstyled.
 
-### Forms
+### Plan preview: segment explanations
 
-`field` + `field-label`. Inputs are bare `<input>`, `<textarea>`, `<select>` —
-they pick up styling from the parent `field`. Do not wrap inputs in
-custom-named containers.
+The Studio **Plan** tile and **למה הקליפים האלה?** panel show why each catalog row was chosen. Timeline picks carry two strings:
 
-### Segment editor (catalog)
-
-`segment-block`, `segment-thumb`, `segment-header`, `segment-time`,
-`segment-desc-input`, `segment-tags-input`.
-
-### Buttons
-
-`btn` + exactly one of `btn--primary`, `btn--secondary`, `btn--danger`,
-`btn--ghost`. Size modifier: `btn--sm`. Buttons without `btn` will not pick
-up the base styles.
+- **`picker_reason`** — optional, set **before** `validateAndSwap` from the picker LLM's `reason` field. Editorial Hebrew sentence (weather/shots matching the narration).
+- **`reason`** — mutable; the validator overwrites it with technical messages when it swaps segments (`validator: …`). The UI prefers `picker_reason` when present (`pickDisplayReason` in `src/client/lib/plan-pick-display.ts`).
 
 ## When this guide applies
 
@@ -50,9 +46,3 @@ Editing files matching:
 - `src/app/globals.css`
 
 Server, electron, scripts, and infra code do not need this guide.
-
-## Why this exists separately
-
-Earlier this rule lived inside `AGENTS.md` as a long paragraph. It was moved
-here so non-renderer work (server, electron, infra, docs) does not pay the
-context cost of loading CSS guidance on every session.

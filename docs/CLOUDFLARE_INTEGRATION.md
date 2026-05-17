@@ -14,36 +14,7 @@ file to orient before reading deeper R2, Worker, Pulumi, or MCP docs.
 
 ## What's running today
 
-| Resource | Identifier |
-| --- | --- |
-| R2 bucket | `weatherv1-media` |
-| Worker | `weatherv1-r2-gateway` |
-| Worker URL | `https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev` |
-| Pulumi stack | `dev` (see [`infra/cloudflare/Pulumi.dev.yaml`](../infra/cloudflare/Pulumi.dev.yaml)) |
-| Object key layout | `tenants/<tenantId>/...` (see `tenantKey()` in [`src/server/sync/r2/client.ts`](../src/server/sync/r2/client.ts)) |
-
-Health check (no auth):
-
-```bash
-curl https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev/v1/health
-```
-
-## Auth model
-
-The desktop app talks to the Worker over **HTTP Basic Auth** with a single
-shared username + password pair (`R2_APP_USERNAME` / `R2_APP_PASSWORD`).
-The Worker enforces this with a constant-time compare
-(`crypto.subtle.timingSafeEqual`).
-
-For R2 itself, the Worker mints **short-lived scoped S3 credentials** via
-Cloudflare's [`/r2/temp-access-credentials`](https://developers.cloudflare.com/r2/api/s3/temporary-credentials/)
-API. The credentials are scoped to `tenants/<tenantId>/` and expire in 15
-minutes. The app never stores permanent R2 keys.
-
-Two Cloudflare tokens are involved — they can be the same physical token
-but minimum-scoped distinct tokens are safer. See
-[`infra/cloudflare/README.md`](../infra/cloudflare/README.md#cloudflareapitoken-vs-cloudflareapitoken)
-for the breakdown.
+Live identifiers (bucket, Worker, URL, Pulumi stack) and the auth model (Basic Auth + short-lived scoped S3 creds via `/r2/temp-access-credentials`) are documented in [`../infra/cloudflare/README.md`](../infra/cloudflare/README.md) — single source of truth. Object-key layout (`tenantKey()` prefix, forbidden `outputs/`) is in [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md).
 
 ## MCP integration
 

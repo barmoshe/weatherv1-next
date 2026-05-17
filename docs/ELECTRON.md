@@ -43,9 +43,7 @@ Loopback host is **`127.0.0.1`** (not `localhost` — macOS may resolve to `::1`
 | `src/types/desktop.d.ts` | `window.desktop` ambient declaration. |
 | `src/client/lib/desktop.ts` | SSR-safe `window.desktop` access. |
 
-## Routine pitfalls
-
-Each item is something the code already does correctly — the rule is "don't regress it."
+## Don't regress these
 
 1. **`import fs` from the renderer.** Doesn't work — sandbox + contextIsolation. Add an `ipcMain.handle("namespace:action", ...)` in main, expose a wrapper in `preload.cjs` under `window.desktop.action`, call from the renderer.
 2. **Legacy IPC.** Codebase is 100% Promise-based `ipcMain.handle` + `ipcRenderer.invoke`. Zero `ipcMain.on` calls — keep it that way.

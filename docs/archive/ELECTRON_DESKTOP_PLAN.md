@@ -11,7 +11,7 @@
 
 ## Cloudflare R2 (current sync model)
 
-**Google Drive** references later in this document describe a **superseded** design. The shipped system uses **R2** + a **Worker** (HTTP Basic Auth to the Worker; temporary S3 credentials for object I/O). Read [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) and [`docs/DOCS_INDEX.md`](DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror) for the live architecture, env vars, and Pulumi operator steps.
+**Google Drive** references later in this document describe a **superseded** design. The shipped system uses **R2** + a **Worker** (HTTP Basic Auth to the Worker; temporary S3 credentials for object I/O). Read [`../R2_PULUMI_HANDOFF.md`](../R2_PULUMI_HANDOFF.md) and [`../../infra/cloudflare/README.md`](../../infra/cloudflare/README.md) for the live architecture, env vars, and Pulumi operator steps.
 
 - The app is `Next 16.2.6` with the App Router and route handlers in `src/app/api/**`.
 - The app depends on local filesystem state and an in-process worker:

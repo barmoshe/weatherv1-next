@@ -36,15 +36,7 @@
 
 ## What this is
 
-**WeatherV1-next** is the **Next.js / TypeScript** port of a weather **forecast video generator** for editorial workflows: record narration → **OpenAI Whisper** transcribes → a **scene-aware planner** picks clips from your **local catalog** (`v1Drive`) → **ffmpeg** renders **vertical MP4**. The UI is a studio shell (tabs, job history, settings) over a **job queue** and **filesystem-backed outputs** — a compact **creative pipeline**, not a sandbox toy.
-
-Three layers (same *shape* as Skill → live preview → side-effects in the Claude creative-stack mental model):
-
-| Layer | Role here |
-| --- | --- |
-| **Deterministic core** | Catalog parsing, validation, ffmpeg graphs, job store + worker drain |
-| **Live surface** | Next.js App Router + `/api/*` — plan, replan, render, status |
-| **Persistent world** | `v1Drive/` media tree · `runtime/` jobs · uploads · caches · MP4s |
+**WeatherV1-next** is the **Next.js / TypeScript** port of a weather **forecast video generator**: record narration → **OpenAI Whisper** transcribes → a **scene-aware planner** picks clips from your local catalog (`v1Drive`) → **ffmpeg** renders **vertical 9:16 MP4**. The UI is a studio shell over a job queue and filesystem-backed outputs.
 
 ---
 
@@ -78,64 +70,9 @@ flowchart LR
 
 Long-lived **Node**, **ffmpeg subprocesses**, **disk**, **multi-minute encodes**, and **large uploads** push against typical FaaS limits. Run it on a **real VM/container with ffmpeg**, or on the **desktop** via Electron. Full rationale: [`docs/DESIGN_DEPLOYMENT.md`](docs/DESIGN_DEPLOYMENT.md).
 
-**Optional Cloudflare R2:** the catalog and media can mirror to R2 via a Worker gateway (short-lived credentials; local-first ffmpeg). Start at [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md) and the doc index section [Cloudflare R2](docs/DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror).
+**Optional Cloudflare R2:** catalog and media can mirror to R2 via a Worker gateway (short-lived credentials; local-first ffmpeg). See [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md).
 
----
-
-## Repository map
-
-```
-weatherv1-next/
-├── src/
-│   ├── app/              # App Router — UI + api/*
-│   ├── client/           # Studio UI
-│   ├── server/
-│   │   ├── ffmpeg/       # probe · spawn · renderer · posters · previews
-│   │   ├── jobs/         # queue · store · plan bundles
-│   │   ├── pipeline/     # planner · picker · validator · beats
-│   │   ├── catalog/      # v1Drive-backed storage
-│   │   ├── sync/r2/      # optional Cloudflare R2 sidecar (catalog · media · posters)
-│   │   └── runtime/      # paths · config · desktop auth · R2 env
-│   ├── shared/
-│   └── proxy.ts          # desktop token guard
-├── electron/
-├── scripts/
-├── runtime/              # local state (gitignored)
-├── build/                # app icons
-├── docs/
-│   ├── DOCS_INDEX.md       # agent/human router (incl. R2 section)
-│   ├── R2_PULUMI_HANDOFF.md
-│   └── readme-assets/      # SVG banners for this README
-├── infra/cloudflare/       # Pulumi: R2 bucket + Worker gateway
-├── Dockerfile
-├── docker-compose.yml
-└── package.json
-```
-
-## AI-native navigation
-
-Agents and humans should start with:
-
-| Need | Start here |
-| --- | --- |
-| Current goal and success criteria | [`docs/PROJECT_GOAL.md`](docs/PROJECT_GOAL.md) |
-| Docs router and code map | [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md) |
-| Cloudflare R2, Worker gateway, Pulumi | [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md), [`infra/cloudflare/README.md`](infra/cloudflare/README.md) |
-| Agent guardrails and verification commands | [`AGENTS.md`](AGENTS.md) |
-| Claude project goal skill | [`.claude/skills/weatherv1-goal/SKILL.md`](.claude/skills/weatherv1-goal/SKILL.md) |
-| NotebookLM / staff briefings from the repo | [`docs/NOTEBOOKLM.md`](docs/NOTEBOOKLM.md) (`npm run notebooklm:export:chunks`) |
-
-For larger Claude Code sessions, invoke `/weatherv1-goal` first, then set a built-in `/goal` condition using one of the templates in [`docs/PROJECT_GOAL.md`](docs/PROJECT_GOAL.md).
-
----
-
-## Pick your runway
-
-|  |  |
-| --- | --- |
-| **Hack the web app** | [Local dev (web)](#local-dev-web) |
-| **Ship desktop** | [Electron](#desktop-electron) · bundled ffmpeg · user workspace |
-| **Ops / cloud VM** | [Docker](#docker) · [`docs/DESIGN_DEPLOYMENT.md`](docs/DESIGN_DEPLOYMENT.md) |
+**Docs router + code map:** [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md). Agent guide: [`AGENTS.md`](AGENTS.md). Goal-driven sessions: `/weatherv1-goal`.
 
 ---
 
@@ -165,7 +102,7 @@ npm run electron:make         # out/ — .zip (macOS) · Squirrel (Windows)
 
 Icons: `build/icon.icns` · `build/icon.ico` · [regeneration](docs/ELECTRON.md#app-icons). Ops & boundaries: [`docs/ELECTRON.md`](docs/ELECTRON.md).
 
-**Published installers:** Push a tag matching `v*` (for example `v0.1.1`) so [`.github/workflows/desktop.yml`](.github/workflows/desktop.yml) runs `electron-forge make --arch=x64` on macOS and Windows, then uploads CI artifacts (macOS also uploads a tiny `release-ref` artifact with the tag name for reliability). [`.github/workflows/desktop-publish-release.yml`](.github/workflows/desktop-publish-release.yml) runs from **default `main`** after **Desktop** completes ([`workflow_run`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run)), downloads artifacts from that run using [`run-id` + `github-token`](https://github.com/actions/download-artifact/blob/v4/README.md#download-artifacts-from-other-workflow-runs-or-repositories), and attaches **`WeatherV1-macOS.zip`** and **`WeatherV1-Setup.exe`**. The macOS zip is intentionally Intel (`x64`) so it opens on Intel Macs; Apple Silicon can run it via Rosetta. Tag detection follows [`github.event.workflow_run.head_branch`](https://stackoverflow.com/questions/65582737/how-to-read-tag-name-using-workflow-run) for tag builds, with `release-ref` as the source of truth when present. Stable download URLs are `https://github.com/OWNER/REPO/releases/latest/download/WeatherV1-macOS.zip` and the same path with `WeatherV1-Setup.exe` (substitute your repo’s `OWNER/REPO`). Those URLs only work when GitHub’s **Latest** release is a normal (non-draft, non–pre-release) release with those exact asset names. If a release only shows GitHub’s **Source code** archives, run **Actions → Desktop publish release → Run workflow** with `tag` (for example `v0.1.1`) and the successful **Desktop** run ID that contains the installer artifacts, or re-run **Desktop** for that tag after merging the publish workflow. Enable **GitHub Pages** with source **GitHub Actions** once in repo settings; [`.github/workflows/pages.yml`](.github/workflows/pages.yml) deploys a small download page from [`docs/download-page/index.html.template`](docs/download-page/index.html.template) to `https://OWNER.github.io/REPO/` on relevant pushes to `main`.
+**Published installers:** Push a `v*` tag — [`.github/workflows/desktop.yml`](.github/workflows/desktop.yml) builds `WeatherV1-Setup.exe` on Windows (`--arch=x64`); [`.github/workflows/desktop-publish-release.yml`](.github/workflows/desktop-publish-release.yml) uploads it to Cloudflare R2 via the S3 API. Public URLs: `https://<worker-host>/downloads/windows/{latest,<tag>}/WeatherV1-Setup.exe`. macOS is built locally only (see [`docs/RELEASE_CONVENTION.md`](docs/RELEASE_CONVENTION.md)). The download/pitch-deck page is deployed by [`.github/workflows/pitch-deck.yml`](.github/workflows/pitch-deck.yml) to Cloudflare Pages (`weatherv1-download.pages.dev`). Full procedure: [`docs/RELEASE_CONVENTION.md`](docs/RELEASE_CONVENTION.md) or invoke `/weatherv1-release`.
 
 ---
 

@@ -7,7 +7,7 @@ Read it before large changes, release work, or any task where the desired end st
 
 WeatherV1 is a local-first weather video production app. It turns recorded narration into a transcribed, scene-planned, ffmpeg-rendered 9:16 forecast video using a local media catalog, with optional Cloudflare R2 sync for catalog/media assets.
 
-R2 is documented end-to-end in [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) (app sync, Worker auth, live status) and [`infra/cloudflare/README.md`](../infra/cloudflare/README.md) (Pulumi). The docs router is [`docs/DOCS_INDEX.md`](DOCS_INDEX.md) → section *Cloudflare R2 (optional cloud mirror)*.
+R2 is documented in [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) (object keys, decisions, risks) and [`infra/cloudflare/README.md`](../infra/cloudflare/README.md) (Pulumi operator runbook + secrets). Docs router: [`docs/DOCS_INDEX.md`](DOCS_INDEX.md).
 
 The project must stay useful in two runtimes:
 
@@ -25,8 +25,8 @@ Ship a reliable desktop alpha that a non-developer can install, open, point at a
 - `npm run build` produces `.next/standalone/server.js`.
 - Electron startup does not crash if macOS `activate` fires before or after bootstrap.
 - Packaged child-server failures include useful diagnostics from `next-child.log`.
-- A `v*` tag creates macOS and Windows installer artifacts in GitHub Actions.
-- The release publisher attaches `WeatherV1-macOS.zip` and `WeatherV1-Setup.exe`.
+- A `v*` tag builds `WeatherV1-Setup.exe` in GitHub Actions (Windows-only).
+- The publish workflow uploads it to R2; `https://<worker-host>/downloads/windows/{latest,<tag>}/WeatherV1-Setup.exe` returns 200.
 - Optional R2 sync can reach the deployed Worker gateway, mint short-lived credentials, push/pull the catalog, and materialize cloud-only videos back to local disk.
 - Docs explain the current goal, release procedure, and known smoke-test gaps.
 
@@ -57,7 +57,7 @@ Use these as copy-ready completion conditions when running a long agent session:
 ```
 
 ```text
-/goal A new desktop release is published: v0.1.x exists locally and on origin, the Desktop workflow succeeds for the tag, Desktop publish release succeeds, and the GitHub Release contains WeatherV1-macOS.zip and WeatherV1-Setup.exe.
+/goal A new desktop release is published: v0.1.x exists locally and on origin, the Desktop workflow succeeds for the tag, Desktop publish to R2 succeeds, and https://<worker-host>/downloads/windows/{latest,v0.1.x}/WeatherV1-Setup.exe both return 200.
 ```
 
 ```text

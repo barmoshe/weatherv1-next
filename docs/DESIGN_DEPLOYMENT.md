@@ -1,6 +1,6 @@
 # Deployment design — weatherV1-next on a single Node host
 
-This document explains the architecture choices behind the `Dockerfile` and `docker-compose.yml` for running the **Next.js app** as a long-lived process on a VM or metal. **Optional Cloudflare R2** (catalog/media mirror) is a separate stack; see [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) and [`docs/DOCS_INDEX.md`](DOCS_INDEX.md#cloudflare-r2-optional-cloud-mirror).
+This document explains the architecture choices behind the `Dockerfile` and `docker-compose.yml` for running the **Next.js app** as a long-lived process on a VM or metal. **Optional Cloudflare R2** (catalog/media mirror) is a separate stack; see [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md).
 
 ## Why a single-box deploy, not split serverless
 
@@ -36,9 +36,9 @@ Debian glibc, official multi-arch (`linux/amd64` + `linux/arm64`), small (~80 MB
 - `builder` does the Next.js compile, then `npm prune --omit=dev` shrinks `node_modules` for the runner.
 - `runner` ships only the production deps and the compiled `.next/` output. TypeScript, vitest, and other build tools never reach the runtime image.
 
-### Why not `output: "standalone"` yet
+### `output: "standalone"`
 
-Enabling Next's standalone output mode would shrink the runner from ~250 MB to ~80 MB and remove the need to copy `node_modules` and `package.json` into it. It requires editing `next.config.ts`, which is out of scope for the current pass (no application changes). Tracked as a follow-up below.
+Enabled in `next.config.ts` — primarily for Electron packaging (`electron/server-manager.cjs` runs `.next/standalone/server.js` as a managed child). The Docker runner stage still copies the full `node_modules` for simplicity; switching it to consume the standalone tree directly would shrink the image from ~250 MB to ~80 MB and is tracked below.
 
 ### Runtime image extras
 
@@ -98,7 +98,7 @@ Typical single-box deploy: **2+ vCPU**, **4+ GB RAM**, **enough disk** for `v1Dr
 
 | Improvement | Status | Notes |
 |---|---|---|
-| `output: "standalone"` in `next.config.ts` | not done | Shrinks the image from ~250 MB to ~80 MB; drops the need to copy `node_modules` into the runner. |
+| Consume standalone tree in Docker runner | not done | `next.config.ts` already enables standalone (for Electron); switching the Docker runner to use it would shrink the image from ~250 MB to ~80 MB. |
 | Move bg-music to `v1Drive/weather/music/` in `renderer.ts:89` | not done | Drops the cross-project filesystem dependency on the Flask `app/` tree. |
 | GitHub Actions image publish | not done | Would push `weatherv1-next:arm64` to GHCR so the VM does `docker pull` instead of building. |
 | Off-load media to object storage | optional | **Cloudflare R2** sidecar is implemented (`src/server/sync/r2/`). Use when you want a remote mirror, not as a ffmpeg remote-read path. |

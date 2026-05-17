@@ -108,6 +108,6 @@ Report to the user, item by item:
   `forge.config.cjs:21-27`; local Forge runs skip signing.
 - Edit the download page template. That lives at
   `docs/download-page/index.html.template` and is published by
-  `.github/workflows/pages.yml` independently.
+  `.github/workflows/pitch-deck.yml` independently.
 - Auto-rollback a bad release. If a release ships broken assets, delete the
   bad release through the GitHub UI before re-running publish.
