@@ -12,7 +12,20 @@ Planned but un-shipped docs. Each is self-contained (Goal / Plan / Verification)
 | [after-effects-graphics/](after-effects-graphics/) | _(Discovery)_ Bring V1's existing After Effects graphic layer (overlays, lower-thirds, intro/outro cards, animated weather icons) into this app. |
 | [temporal/](temporal/) | _(Research)_ Integrate Temporal.io for durability, observability, and scale. Architecture, pipeline mapping, embedded-in-Electron research, idempotency convention, versioning tradeoffs, UI integration, and a Phase 1 proposal to replace the R2 mirror queue. |
 | [CATALOG_TAGGING_REDESIGN.md](CATALOG_TAGGING_REDESIGN.md) | _(Research)_ Catalog tagging redesign. Failure-mode evidence, root causes (Hebrew/English split, missing subject/polarity axes), four candidate approaches, success criteria. |
-| [AI_NATIVE_PIPELINE.md](AI_NATIVE_PIPELINE.md) | _(Vision)_ Three intertwined shifts: agentic pipeline, AI-native (tools over JSON), and the "WeatherV1 → V1 AI Portal" rename. Industry best practices, design tensions, open questions. |
-| [TEMPLATES.md](TEMPLATES.md) | _(Vision)_ Templates as the unit of choice — self-contained production presets (catalogue + taxonomy + brief + prompts + rules + output + brand) the user picks at job start. WeatherV1 as the inaugural / reference template. Sibling to AI_NATIVE_PIPELINE.md. |
-| [UX_DIRECTION.md](UX_DIRECTION.md) | _(Vision)_ Experience-layer shifts for a templates-first, agentic app: template picker as home, agent-trace UI, intervene-any-time, visible cost, per-template onboarding. Floor-vs-ceiling and confirm-gate tensions. |
-| [PRODUCT_DIRECTION.md](PRODUCT_DIRECTION.md) | _(Vision)_ Product-level shifts the rename and templates imply: from a single-buyer Hebrew weather tool to a multi-template portal. Pricing surfaces, open-vs-curated templates, rename-as-launch, distribution mix, geography. |
+
+### V1 AI Portal vision set — separation of concerns
+
+Ten sibling vision docs that together sketch what WeatherV1 could become as a multi-template, agent-orchestrated AI video portal. Each owns one non-overlapping concern; each is research-grounded with public-source citations. All are vision / discovery only — no implementation plans.
+
+| Doc | Concern owned |
+| --- | --- |
+| [TEMPLATES.md](TEMPLATES.md) | The *concept* of a template (manifest + body + configurable surface), what's inside one, authorship models, versioning, "WeatherV1 as the reference template". |
+| [AI_NATIVE_PIPELINE.md](AI_NATIVE_PIPELINE.md) | Engineering — agent patterns (Anthropic's vocabulary), tool design, OTel observability, pipeline-level evals, JSON-API-to-tools shift, cost discipline. |
+| [UX_DIRECTION.md](UX_DIRECTION.md) | Experience layer — template picker, agent-trace UI, risk-tiered confirm gates, intervention, per-template onboarding, RTL+LTR shell mechanics, ambient cost. |
+| [PRODUCT_DIRECTION.md](PRODUCT_DIRECTION.md) | Positioning — buyer, pricing, distribution, marketplace dynamics, competitive landscape, the rename ("WeatherV1 → V1 AI Portal") as a launch event. |
+| [DATA_AND_CONTENT.md](DATA_AND_CONTENT.md) | Asset lifecycle — IPTC/C2PA rights & provenance, ingest, AI-tagging confidence bands, retention and soft delete, marketplace-with-rights-passthrough. |
+| [QUALITY_AND_EVAL.md](QUALITY_AND_EVAL.md) | Editorial correctness — per-template golden sets, rubric-graded eval, reviewer calibration, ship/no-ship criteria, LLM-as-judge bias controls, regression dashboards. |
+| [DISTRIBUTION.md](DISTRIBUTION.md) | Release engineering — update channels, signing/notarisation, plugin trust, delta updates, rollback, telemetry posture, launcher + on-demand modules. |
+| [MODEL_STRATEGY.md](MODEL_STRATEGY.md) | Provider strategy — multi-provider abstraction, cost-tier routing, local inference, version pinning, BYOK vs. managed, per-locale voice/vision/embedding. |
+| [ECOSYSTEM.md](ECOSYSTEM.md) | Template-author DX — scaffolding, hot-reload, Diátaxis docs, time-to-hello-world, forum-vs-Discord, supply-chain hygiene, author monetisation plumbing. |
+| [LOCALIZATION.md](LOCALIZATION.md) | Per-locale content — transcript / voice / vision per language, taxonomies as parallel vocabularies (not translations), locale-aware prompting, bidi in burned-in captions, font licensing. |
