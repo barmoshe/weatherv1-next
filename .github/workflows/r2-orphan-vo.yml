@@ -12,93 +12,76 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
       - env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_R2_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           CONFIRM: ${{ inputs.confirm }}
         run: |
+          BUCKET=weatherv1-media
+
+          echo "== fetch jobs.json =="
+          aws s3api get-object --bucket "$BUCKET" \
+            --key tenants/default/jobs/jobs.json \
+            --endpoint-url "$R2_ENDPOINT" /tmp/jobs.json > /dev/null
+
+          echo "== list voiceovers/ =="
+          aws s3api list-objects-v2 --bucket "$BUCKET" \
+            --prefix tenants/default/voiceovers/ \
+            --endpoint-url "$R2_ENDPOINT" > /tmp/vo.json
+
           python3 - <<'PY'
-          import json, os, subprocess, sys, urllib.request
-          tok = os.environ['CLOUDFLARE_API_TOKEN']
-          acct = os.environ['CLOUDFLARE_ACCOUNT_ID']
-          bucket = 'weatherv1-media'
-          confirm = os.environ['CONFIRM']
-
-          def cf(path):
-              req = urllib.request.Request(
-                  f"https://api.cloudflare.com/client/v4/accounts/{acct}/r2/buckets/{bucket}{path}",
-                  headers={'Authorization': f'Bearer {tok}'},
-              )
-              with urllib.request.urlopen(req) as r:
-                  return r.read()
-
-          # 1. Fetch jobs.json via wrangler (Cloudflare REST list endpoint
-          #    doesn't expose object GET; the S3 endpoint needs sigv4 — wrangler
-          #    handles both).
-          r = subprocess.run(
-              ['npx','-y','wrangler@latest','r2','object','get',
-               f'{bucket}/tenants/default/jobs/jobs.json','--remote','--pipe'],
-              env={**os.environ}, capture_output=True,
-          )
-          if r.returncode != 0:
-              print(r.stderr.decode(), file=sys.stderr); sys.exit(r.returncode)
-          jobs_raw = r.stdout.decode()
-          jobs = json.loads(jobs_raw)
-          # accept either {jobs: [...]} or [...]
-          job_records = jobs.get('jobs') if isinstance(jobs, dict) and 'jobs' in jobs else jobs
-          if not isinstance(job_records, list):
-              # try other common shapes
-              job_records = list(jobs.values()) if isinstance(jobs, dict) else []
-          known_ids = set()
-          for r in job_records:
+          import json, os, subprocess, sys
+          jobs = json.load(open('/tmp/jobs.json'))
+          recs = jobs.get('jobs') if isinstance(jobs, dict) and 'jobs' in jobs else jobs
+          if not isinstance(recs, list):
+              recs = list(jobs.values()) if isinstance(jobs, dict) else []
+          known = set()
+          for r in recs:
               if isinstance(r, dict):
-                  for k in ('id', 'jobId', 'job_id'):
-                      if r.get(k):
-                          known_ids.add(r[k]); break
+                  for k in ('id','jobId','job_id'):
+                      if r.get(k): known.add(r[k]); break
               elif isinstance(r, str):
-                  known_ids.add(r)
-          print(f"jobs.json: {len(job_records)} records, {len(known_ids)} ids extracted")
-          print("known ids:", sorted(known_ids))
+                  known.add(r)
+          print(f"jobs.json: {len(recs)} records, {len(known)} ids")
+          print("known:", sorted(known))
 
-          # 2. List voiceover prefix
-          data = json.loads(cf('/objects?per_page=1000&prefix=tenants/default/voiceovers/'))
-          vo_objs = data.get('result') or []
-          vo_by_id = {}
-          for o in vo_objs:
-              # key: tenants/default/voiceovers/<jobId>/<file>
-              parts = o['key'].split('/')
+          vo = json.load(open('/tmp/vo.json')).get('Contents') or []
+          by_id = {}
+          for o in vo:
+              parts = o['Key'].split('/')
               if len(parts) >= 4:
-                  vo_by_id.setdefault(parts[3], []).append(o)
-          print(f"\nvoiceovers/: {len(vo_objs)} objects across {len(vo_by_id)} jobIds")
+                  by_id.setdefault(parts[3], []).append(o)
+          print(f"\nvoiceovers/: {len(vo)} objects across {len(by_id)} jobIds")
 
-          orphans = sorted(set(vo_by_id) - known_ids)
-          referenced = sorted(set(vo_by_id) & known_ids)
-          print(f"\nreferenced jobIds ({len(referenced)}): {referenced}")
-          print(f"orphan jobIds ({len(orphans)}):")
-          orphan_objs = []
-          total_bytes = 0
+          orphans = sorted(set(by_id) - known)
+          referenced = sorted(set(by_id) & known)
+          print(f"\nreferenced ({len(referenced)}): {referenced}")
+          print(f"orphans ({len(orphans)}):")
+          to_delete, total = [], 0
           for jid in orphans:
-              for o in vo_by_id[jid]:
-                  orphan_objs.append(o)
-                  total_bytes += o['size']
-                  print(f"  {o['size']:>10,}  {o['key']}")
-          print(f"\nwould delete {len(orphan_objs)} objects, {total_bytes:,} bytes")
+              for o in by_id[jid]:
+                  to_delete.append(o['Key']); total += o['Size']
+                  print(f"  {o['Size']:>10,}  {o['Key']}")
+          print(f"\nwould delete {len(to_delete)} objects, {total:,} bytes")
 
-          if confirm != 'yes':
+          if os.environ['CONFIRM'] != 'yes':
               print("\nconfirm != 'yes'; dry run only.")
               sys.exit(0)
 
-          for o in orphan_objs:
-              print(f"DELETE {o['key']}")
-              r = subprocess.run(
-                  ['npx', '-y', 'wrangler@latest', 'r2', 'object', 'delete', f"{bucket}/{o['key']}", '--remote'],
-                  env={**os.environ}, capture_output=True, text=True,
-              )
-              print(r.stdout.strip())
-              if r.returncode != 0:
-                  print(r.stderr, file=sys.stderr); sys.exit(r.returncode)
-          print(f"\ndeleted {len(orphan_objs)} objects.")
+          if not to_delete:
+              sys.exit(0)
+          # Batch delete (S3 supports up to 1000 per call)
+          payload = {"Objects": [{"Key": k} for k in to_delete], "Quiet": True}
+          json.dump(payload, open('/tmp/del.json','w'))
+          r = subprocess.run(
+              ['aws','s3api','delete-objects',
+               '--bucket', os.environ.get('BUCKET','weatherv1-media'),
+               '--delete', 'file:///tmp/del.json',
+               '--endpoint-url', os.environ['R2_ENDPOINT']],
+              capture_output=True, text=True,
+          )
+          print(r.stdout); print(r.stderr, file=sys.stderr)
+          sys.exit(r.returncode)
           PY
