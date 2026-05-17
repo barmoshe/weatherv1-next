@@ -35,8 +35,17 @@ jobs:
               with urllib.request.urlopen(req) as r:
                   return r.read()
 
-          # 1. Fetch jobs.json
-          jobs_raw = cf('/objects/tenants/default/jobs/jobs.json').decode()
+          # 1. Fetch jobs.json via wrangler (Cloudflare REST list endpoint
+          #    doesn't expose object GET; the S3 endpoint needs sigv4 — wrangler
+          #    handles both).
+          r = subprocess.run(
+              ['npx','-y','wrangler@latest','r2','object','get',
+               f'{bucket}/tenants/default/jobs/jobs.json','--remote','--pipe'],
+              env={**os.environ}, capture_output=True,
+          )
+          if r.returncode != 0:
+              print(r.stderr.decode(), file=sys.stderr); sys.exit(r.returncode)
+          jobs_raw = r.stdout.decode()
           jobs = json.loads(jobs_raw)
           # accept either {jobs: [...]} or [...]
           job_records = jobs.get('jobs') if isinstance(jobs, dict) and 'jobs' in jobs else jobs

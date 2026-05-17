@@ -95,12 +95,14 @@ If `node_modules` is stale, `npm install` before `electron:*` scripts. New Elect
 
 ## Release path
 
-`v*` tags trigger `.github/workflows/desktop.yml` (macOS + Windows, Node 22, `electron-forge make --arch=x64`). `desktop-publish-release.yml` runs on the matching `workflow_run` and attaches **`WeatherV1-macOS.zip`** + **`WeatherV1-Setup.exe`** to the GitHub Release. Stable latest-download URLs require a non-draft, non-prerelease "Latest" release with those exact asset names.
+`v*` tags trigger `.github/workflows/desktop.yml` (Windows-only matrix, Node 22, `electron-forge make --arch=x64`). `desktop-publish-release.yml` runs on the matching `workflow_run` and uploads **`WeatherV1-Setup.exe`** to Cloudflare R2 via the Worker, served at `https://<worker-host>/downloads/windows/latest/WeatherV1-Setup.exe` and the per-tag `…/windows/<tag>/…`. No asset is attached to the GitHub Release.
 
-Signing secrets (set only on release CI):
+macOS is **not** built in CI — `WeatherV1-<ver>.zip` is produced locally on a developer Mac via `npm run electron:make` and shipped ad-hoc.
 
-- macOS: `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`, Developer ID cert via `apple-actions/import-codesign-certs`.
-- Windows: `WIN_CERT_FILE` (base64 `.p12`), `WIN_CERT_PASSWORD`.
+Signing:
+
+- **Windows installers ship unsigned by design** — see `forge.config.cjs` header. Users see a one-time SmartScreen "unknown publisher" warning.
+- **macOS** signing is operator-local only (the macOS zip is a local-build artifact, not CI-built): `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`, `OSX_SIGN_IDENTITY` exported from a developer Mac's `.env` for `npm run electron:make`.
 
 Full procedure: [`RELEASE_CONVENTION.md`](RELEASE_CONVENTION.md). For a guided release, invoke the `weatherv1-release` skill.
 

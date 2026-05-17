@@ -17,11 +17,8 @@
 //   - macOS signing + notarization are driven entirely by env vars so a
 //     local make on a developer Mac can flip them on while CI (Windows
 //     only today) never accidentally tries to notarize.
-//   - Windows installers are unsigned by design until a code-signing
-//     cert is purchased. Users see a one-time SmartScreen "unknown
-//     publisher" warning on first install. Re-introduce Windows signing
-//     by wiring `certificateFile` + `certificatePassword` into the
-//     maker-squirrel config below.
+//   - Windows installers are unsigned by design. Users see a one-time
+//     SmartScreen "unknown publisher" warning on first install.
 
 "use strict";
 
