@@ -1,0 +1,718 @@
+{
+  "job_id": "03d56e80ae204f508a2200deb847be21",
+  "created_at": "2026-05-15T20:45:59.887Z",
+  "audio_filename": "190ef68df4714166ae93ddaee06a8615.mp3",
+  "duration_sec": 80.80000305175781,
+  "transcript": "לפחות לסוף השבוע, פרק השרב מאחורינו. היום יהיה מעונן חלקית, הטמפרטורות יורדות, הן יהיו פחות מהממוצע לתקופה. נרגיש גם את הרוחות מתחזקות מכיוון הים. ובשבת, עוד ירידה קלה בטמפרטורות, וגם סיכוי לגשם קל, טפטופים, בשעות הבוקר, בעיקר בצפון ובאזור החוף. בתחילת השבוע הבא, נחזור למזג האוויר השרבי, וייתכן גם עובך. היום בבוקר, מעט קריר. ביום, נעים. ברוב הארץ לא חם מדי, כך שכדאי להתחיל את היום עם שתי שכבות ביגוד קלות. אפשר טישרט עם שרבול קצר, ומעל עליון קל. ובצהריים, להישאר עם חולצה עם שרבול ארוך, זה יספיק. הבדל גדול בטמפרטורות בין אתמול להיום. ביטבריה, הם עדדו בצהריים 27 מעלות. בתל אביב, 23. אשדוד, 24. ירושלים, 23. מסדרות, 25. בר שבע, 28. ובעילת, 38 מעלות. הים התיכון היום, הם גלים עד גובה מטר וחצי. טמפרטורות המים, 22 מעלות. בכנרת, טמפרטורות המים עולה ל-24 מעלות, ובעילת היא 23. אינדקסט קרינת השמש יהיה גבוה, שמונה ומעלה, בין השעות 11 ל-3. הוא יהיה גבוה במיוחד בין השעות 12 ל-2. ינוע בין רמת 9 ל-10. רצוי לצמצם חשיפה לשמש בשעות האלו. והשקיעה הערב בשעה 7.29.",
+  "transcript_segments": [
+    {
+      "idx": 0,
+      "start": 0,
+      "end": 7,
+      "text": " לפחות לסוף השבוע, פרק השרב מאחורינו. היום יהיה מעונן חלקית, הטמפרטורות יורדות,"
+    },
+    {
+      "idx": 1,
+      "start": 7,
+      "end": 12,
+      "text": " הן יהיו פחות מהממוצע לתקופה. נרגיש גם את הרוחות מתחזקות מכיוון הים."
+    },
+    {
+      "idx": 2,
+      "start": 12,
+      "end": 20,
+      "text": " ובשבת, עוד ירידה קלה בטמפרטורות, וגם סיכוי לגשם קל, טפטופים, בשעות הבוקר, בעיקר בצפון ובאזור החוף."
+    },
+    {
+      "idx": 3,
+      "start": 20,
+      "end": 24,
+      "text": " בתחילת השבוע הבא, נחזור למזג האוויר השרבי, וייתכן גם עובך."
+    },
+    {
+      "idx": 4,
+      "start": 25,
+      "end": 32,
+      "text": " היום בבוקר, מעט קריר. ביום, נעים. ברוב הארץ לא חם מדי, כך שכדאי להתחיל את היום עם שתי שכבות ביגוד קלות."
+    },
+    {
+      "idx": 5,
+      "start": 32,
+      "end": 39,
+      "text": " אפשר טישרט עם שרבול קצר, ומעל עליון קל. ובצהריים, להישאר עם חולצה עם שרבול ארוך, זה יספיק."
+    },
+    {
+      "idx": 6,
+      "start": 39,
+      "end": 44,
+      "text": " הבדל גדול בטמפרטורות בין אתמול להיום. ביטבריה, הם עדדו בצהריים 27 מעלות."
+    },
+    {
+      "idx": 7,
+      "start": 44,
+      "end": 53,
+      "text": " בתל אביב, 23. אשדוד, 24. ירושלים, 23. מסדרות, 25. בר שבע, 28. ובעילת, 38 מעלות."
+    },
+    {
+      "idx": 8,
+      "start": 53,
+      "end": 59,
+      "text": " הים התיכון היום, הם גלים עד גובה מטר וחצי. טמפרטורות המים, 22 מעלות."
+    },
+    {
+      "idx": 9,
+      "start": 59,
+      "end": 64,
+      "text": " בכנרת, טמפרטורות המים עולה ל-24 מעלות, ובעילת היא 23."
+    },
+    {
+      "idx": 10,
+      "start": 64,
+      "end": 69,
+      "text": " אינדקסט קרינת השמש יהיה גבוה, שמונה ומעלה, בין השעות 11 ל-3."
+    },
+    {
+      "idx": 11,
+      "start": 69,
+      "end": 74,
+      "text": " הוא יהיה גבוה במיוחד בין השעות 12 ל-2. ינוע בין רמת 9 ל-10."
+    },
+    {
+      "idx": 12,
+      "start": 74,
+      "end": 80,
+      "text": " רצוי לצמצם חשיפה לשמש בשעות האלו. והשקיעה הערב בשעה 7.29."
+    }
+  ],
+  "scenes": [
+    {
+      "idx": 0,
+      "start_sec": 0,
+      "end_sec": 7,
+      "title_he": "פתיחה — מזג אוויר מעונן",
+      "narration": "לפחות לסוף השבוע, פרק השרב מאחורינו. היום יהיה מעונן חלקית, הטמפרטורות יורדות,",
+      "keywords": [
+        "מעונן",
+        "טמפרטורות יורדות",
+        "סוף השבוע"
+      ],
+      "mood": "calm",
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        0
+      ]
+    },
+    {
+      "idx": 1,
+      "start_sec": 7,
+      "end_sec": 12,
+      "title_he": "רוחות מתחזקות מכיוון הים",
+      "narration": "הן יהיו פחות מהממוצע לתקופה. נרגיש גם את הרוחות מתחזקות מכיוון הים.",
+      "keywords": [
+        "רוחות",
+        "ים",
+        "טמפרטורות נמוכות"
+      ],
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        1
+      ]
+    },
+    {
+      "idx": 2,
+      "start_sec": 12,
+      "end_sec": 20,
+      "title_he": "שבת — גשם קל בצפון ובחוף",
+      "narration": "ובשבת, עוד ירידה קלה בטמפרטורות, וגם סיכוי לגשם קל, טפטופים, בשעות הבוקר, בעיקר בצפון ובאזור החוף.",
+      "keywords": [
+        "גשם קל",
+        "טפטופים",
+        "צפון",
+        "חוף"
+      ],
+      "kind": "list",
+      "heterogeneous": true,
+      "whisper_beat_indices": [
+        2
+      ]
+    },
+    {
+      "idx": 3,
+      "start_sec": 20,
+      "end_sec": 24,
+      "title_he": "תחילת שבוע — חזרה לשרב",
+      "narration": "בתחילת השבוע הבא, נחזור למזג האוויר השרבי, וייתכן גם עובך.",
+      "keywords": [
+        "שרב",
+        "עובך",
+        "תחילת השבוע"
+      ],
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        3
+      ]
+    },
+    {
+      "idx": 4,
+      "start_sec": 24,
+      "end_sec": 39,
+      "title_he": "המלצות לבוש ליום",
+      "narration": "היום בבוקר, מעט קריר. ביום, נעים. ברוב הארץ לא חם מדי, כך שכדאי להתחיל את היום עם שתי שכבות ביגוד קלות. אפשר טישרט עם שרבול קצר, ומעל עליון קל. ובצהריים, להישאר עם חולצה עם שרבול ארוך, זה יספיק.",
+      "keywords": [
+        "לבוש",
+        "בוקר קריר",
+        "צהריים"
+      ],
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        4,
+        5
+      ]
+    },
+    {
+      "idx": 5,
+      "start_sec": 39,
+      "end_sec": 53,
+      "title_he": "טמפרטורות בערים שונות",
+      "narration": "הבדל גדול בטמפרטורות בין אתמול להיום. ביטבריה, הם עדדו בצהריים 27 מעלות. בתל אביב, 23. אשדוד, 24. ירושלים, 23. מסדרות, 25. בר שבע, 28. ובעילת, 38 מעלות.",
+      "keywords": [
+        "טמפרטורות",
+        "ערים",
+        "הבדל"
+      ],
+      "kind": "list",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        6,
+        7
+      ]
+    },
+    {
+      "idx": 6,
+      "start_sec": 53,
+      "end_sec": 64,
+      "title_he": "מצב הים והכנרת",
+      "narration": "הים התיכון היום, הם גלים עד גובה מטר וחצי. טמפרטורות המים, 22 מעלות. בכנרת, טמפרטורות המים עולה ל-24 מעלות, ובעילת היא 23.",
+      "keywords": [
+        "ים",
+        "כנרת",
+        "טמפרטורות מים"
+      ],
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        8,
+        9
+      ]
+    },
+    {
+      "idx": 7,
+      "start_sec": 64,
+      "end_sec": 80.80000305175781,
+      "title_he": "קרינת שמש ושקיעה",
+      "narration": "אינדקסט קרינת השמש יהיה גבוה, שמונה ומעלה, בין השעות 11 ל-3. הוא יהיה גבוה במיוחד בין השעות 12 ל-2. ינוע בין רמת 9 ל-10. רצוי לצמצם חשיפה לשמש בשעות האלו. והשקיעה הערב בשעה 7.29.",
+      "keywords": [
+        "קרינת שמש",
+        "שקיעה",
+        "חשיפה"
+      ],
+      "kind": "prose",
+      "heterogeneous": false,
+      "whisper_beat_indices": [
+        10,
+        11,
+        12
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "scene_idx": 0,
+      "segment_id": "IB006-s0",
+      "audio_start": 0,
+      "audio_end": 7,
+      "reason": "validator: התאמה סמנטית — הוחלף מ-IB019-s1 (חפיפת תגיות=3)",
+      "video_id": "IB006",
+      "video_start": 0,
+      "video_end": 7,
+      "fallback_reason": "נבחר לאחר בדיקת התאמה אוטומטית: הקטע מציג צילום אווירי של גלי ים כחולים פתוחים ביום בהיר..",
+      "picker_reason": "validator: התאמה סמנטית — הוחלף מ-IB019-s1 (חפיפת תגיות=3)"
+    },
+    {
+      "scene_idx": 1,
+      "segment_id": "W044-s0",
+      "audio_start": 7,
+      "audio_end": 12,
+      "reason": "הסצנה מתארת רוחות מכיוון הים והקטע מציג אווירה סתווית-חורפית המתאימה לתיאור.",
+      "picker_reason": "הסצנה מתארת רוחות מכיוון הים והקטע מציג אווירה סתווית-חורפית המתאימה לתיאור.",
+      "video_id": "W044",
+      "video_start": 0,
+      "video_end": 5
+    },
+    {
+      "scene_idx": 2,
+      "segment_id": "IB046-s0",
+      "audio_start": 12,
+      "audio_end": 16,
+      "reason": "validator: התאמה סמנטית — הוחלף מ-W004-s0 (חפיפת תגיות=2)",
+      "video_id": "IB046",
+      "video_start": 0,
+      "video_end": 4,
+      "fallback_reason": "נבחר לאחר בדיקת התאמה אוטומטית: הקטע מציג עץ נישא ברוח חזקה לחוף הים תחת שמיים מעוננים חלקית..",
+      "picker_reason": "validator: התאמה סמנטית — הוחלף מ-W004-s0 (חפיפת תגיות=2)"
+    },
+    {
+      "scene_idx": 2,
+      "segment_id": "IB046-s0",
+      "audio_start": 16,
+      "audio_end": 20,
+      "reason": "validator: התאמה סמנטית — הוחלף מ-W032-s2 (חפיפת תגיות=2)",
+      "video_id": "IB046",
+      "video_start": 0,
+      "video_end": 4,
+      "fallback_reason": "נבחר לאחר בדיקת התאמה אוטומטית: הקטע מציג עץ נישא ברוח חזקה לחוף הים תחת שמיים מעוננים חלקית..",
+      "picker_reason": "validator: התאמה סמנטית — הוחלף מ-W032-s2 (חפיפת תגיות=2)"
+    },
+    {
+      "scene_idx": 3,
+      "segment_id": "IB106-s0",
+      "audio_start": 20,
+      "audio_end": 24,
+      "reason": "הסצנה מתארת מזג אוויר שרבי והקטע מציג שקיעה דרמטית שמתאימה לאווירה השרבית.",
+      "picker_reason": "הסצנה מתארת מזג אוויר שרבי והקטע מציג שקיעה דרמטית שמתאימה לאווירה השרבית.",
+      "video_id": "IB106",
+      "video_start": 0,
+      "video_end": 4
+    },
+    {
+      "scene_idx": 4,
+      "segment_id": "IB016-s0",
+      "audio_start": 24,
+      "audio_end": 32,
+      "reason": "validator: כיסוי — הוחלף מ-IB036-s0 (8.0s חוסר, חפיפת תגיות=2)",
+      "video_id": "IB016",
+      "video_start": 0,
+      "video_end": 8,
+      "fallback_reason": "נבחר לאחר בדיקת התאמה אוטומטית: הקטע מציג ענפי עץ פורחים בוורוד על רקע שמיים כחולים בהירים..",
+      "picker_reason": "validator: כיסוי — הוחלף מ-IB036-s0 (8.0s חוסר, חפיפת תגיות=2)"
+    },
+    {
+      "scene_idx": 4,
+      "segment_id": "IB017-s3",
+      "audio_start": 32,
+      "audio_end": 39,
+      "reason": "validator: כיסוי — הוחלף מ-IB036-s1 (7.0s חוסר, חפיפת תגיות=2)",
+      "video_id": "IB017",
+      "video_start": 27.857,
+      "video_end": 34.857,
+      "fallback_reason": "נבחר לאחר בדיקת התאמה אוטומטית: הקטע מציג פועלי בניין עובדים באולם תחת קירוי פלדה..",
+      "picker_reason": "validator: כיסוי — הוחלף מ-IB036-s1 (7.0s חוסר, חפיפת תגיות=2)"
+    },
+    {
+      "scene_idx": 5,
+      "segment_id": "W005-s0",
+      "audio_start": 39,
+      "audio_end": 53,
+      "reason": "validator: כיסוי — הוחלף מ-IB072-s34 (5.0s חוסר, חפיפת תגיות=3)",
+      "video_id": "W005",
+      "video_start": 0,
+      "video_end": 14,
+      "fallback_reason": "נבחר לאחר בדיקת התאמה אוטומטית: הקטע מציג שיטפון של מים חומים זורם בנחל מדברי לאחר גשם..",
+      "picker_reason": "validator: כיסוי — הוחלף מ-IB072-s34 (5.0s חוסר, חפיפת תגיות=3)"
+    },
+    {
+      "scene_idx": 6,
+      "segment_id": "IB145-s2",
+      "audio_start": 53,
+      "audio_end": 64,
+      "reason": "הסצנה מתארת מצב הים והקטע מציג מלונות לאורך חוף אילת, מתאים לתיאור ים וכנרת.",
+      "picker_reason": "הסצנה מתארת מצב הים והקטע מציג מלונות לאורך חוף אילת, מתאים לתיאור ים וכנרת.",
+      "video_id": "IB145",
+      "video_start": 22.94,
+      "video_end": 33.94
+    },
+    {
+      "scene_idx": 7,
+      "segment_id": "IB014-s0",
+      "audio_start": 64,
+      "audio_end": 71,
+      "reason": "validator: התאמה סמנטית — הוחלף מ-IB138-s1 (חפיפת תגיות=2)",
+      "video_id": "IB014",
+      "video_start": 0,
+      "video_end": 7,
+      "fallback_reason": "נבחר לאחר בדיקת התאמה אוטומטית: הקטע מציג כבאי מכבה שריפת חורש בעזרת צינור מים.",
+      "picker_reason": "validator: התאמה סמנטית — הוחלף מ-IB138-s1 (חפיפת תגיות=2)"
+    },
+    {
+      "scene_idx": 7,
+      "segment_id": "IB004-s0",
+      "audio_start": 71,
+      "audio_end": 80.8,
+      "reason": "validator: כיסוי — הוחלף מ-IB138-s2 (0.5s חוסר, חפיפת תגיות=2)",
+      "video_id": "IB004",
+      "video_start": 0,
+      "video_end": 9.799999999999997,
+      "fallback_reason": "נבחר לאחר בדיקת התאמה אוטומטית: הקטע מציג צילום אווירי של קו רקיע אורבני במרכז הארץ ביום בהיר וכחול..",
+      "picker_reason": "validator: כיסוי — הוחלף מ-IB138-s2 (0.5s חוסר, חפיפת תגיות=2)"
+    }
+  ],
+  "validator": {
+    "score": 71,
+    "hard_violations_fixed": [
+      {
+        "issue": "coverage gap",
+        "original": "IB036-s0",
+        "swapped_to": "IB016-s0",
+        "swap_reason": "longer segment; gap=8.00s, tag overlap=2",
+        "fixed": true
+      },
+      {
+        "issue": "coverage gap",
+        "original": "IB036-s1",
+        "swapped_to": "IB017-s3",
+        "swap_reason": "longer segment; gap=7.00s, tag overlap=2",
+        "fixed": true
+      },
+      {
+        "issue": "coverage gap",
+        "original": "IB072-s34",
+        "swapped_to": "W005-s0",
+        "swap_reason": "longer segment; gap=4.95s, tag overlap=3",
+        "fixed": true
+      },
+      {
+        "issue": "coverage gap",
+        "original": "IB138-s2",
+        "swapped_to": "IB004-s0",
+        "swap_reason": "longer segment; gap=0.55s, tag overlap=2",
+        "fixed": true
+      },
+      {
+        "issue": "semantic mismatch",
+        "original": "IB019-s1",
+        "swapped_to": "IB006-s0",
+        "swap_reason": "target weather/concept contradiction; overlap=3",
+        "fixed": true
+      },
+      {
+        "issue": "semantic mismatch",
+        "original": "W004-s0",
+        "swapped_to": "IB046-s0",
+        "swap_reason": "target weather/concept contradiction; overlap=2",
+        "fixed": true
+      },
+      {
+        "issue": "semantic mismatch",
+        "original": "W032-s2",
+        "swapped_to": "IB046-s0",
+        "swap_reason": "target weather/concept contradiction; overlap=2",
+        "fixed": true
+      },
+      {
+        "issue": "semantic mismatch",
+        "original": "IB138-s1",
+        "swapped_to": "IB014-s0",
+        "swap_reason": "target weather/concept contradiction; overlap=2",
+        "fixed": true
+      }
+    ],
+    "hard_violations_kept": [
+      {
+        "issue": "same clip reuse",
+        "video_id": "IB046",
+        "segment_id": "IB046-s0",
+        "swap_reason": "no replacement ≥ 4.0s; kept",
+        "fixed": false
+      },
+      {
+        "issue": "consecutive duplicate",
+        "segment_id": "IB046-s0",
+        "swap_reason": "no replacement ≥ 4.0s; kept",
+        "fixed": false
+      }
+    ],
+    "warnings": [
+      {
+        "issue": "unknown segment_id",
+        "segment_id": "IB036-s0"
+      },
+      {
+        "issue": "unknown segment_id",
+        "segment_id": "IB036-s1"
+      },
+      {
+        "issue": "thematic adjacency",
+        "tag": "ים ושקיעה",
+        "run_length": 11,
+        "indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "segment_ids": [
+          "IB006-s0",
+          "W044-s0",
+          "IB046-s0",
+          "IB046-s0",
+          "IB106-s0",
+          "IB016-s0",
+          "IB017-s3",
+          "W005-s0",
+          "IB145-s2",
+          "IB014-s0",
+          "IB004-s0"
+        ]
+      }
+    ],
+    "catalog_health": {
+      "loaded_clips": 212,
+      "loaded_segments": 408,
+      "tagged_segments": 408,
+      "untagged_picks": 0
+    }
+  },
+  "picker_status": {
+    "provider": "openai",
+    "model": "gpt-4o",
+    "catalog_rows": 408,
+    "scenes_requested": 8,
+    "payload_bytes": 379287,
+    "state": "ok",
+    "usable_picks": 11,
+    "llm_attempts_used": 3,
+    "last_retry_reason": "exhausted_llm_attempts_validator_still_matched_swaps",
+    "validator_feedback_digest": "coverage gap; coverage gap; coverage gap; coverage gap; semantic mismatch; semantic mismatch; semantic mismatch; semantic mismatch"
+  },
+  "catalog_snapshot": {
+    "version": "5f30c5f7",
+    "claimed_count": 212,
+    "loaded_count": 212,
+    "missing_ids": [
+      "IB001",
+      "IB002",
+      "IB003",
+      "IB004",
+      "IB005",
+      "IB006",
+      "IB007",
+      "IB008",
+      "IB009",
+      "IB010",
+      "IB011",
+      "IB012",
+      "IB013",
+      "W001",
+      "IB014",
+      "W002",
+      "IB015",
+      "W003",
+      "IB016",
+      "W004",
+      "IB017",
+      "W005",
+      "IB018",
+      "IB019",
+      "IB020",
+      "IB021",
+      "IB022",
+      "IB023",
+      "IB024",
+      "IB025",
+      "IB026",
+      "IB027",
+      "IB028",
+      "IB029",
+      "IB030",
+      "IB031",
+      "W006",
+      "IB032",
+      "W007",
+      "IB033",
+      "IB034",
+      "IB035",
+      "W008",
+      "W009",
+      "W010",
+      "W011",
+      "IB037",
+      "IB038",
+      "IB039",
+      "IB040",
+      "IB041",
+      "IB042",
+      "IB043",
+      "IB044",
+      "IB045",
+      "IB046",
+      "IB047",
+      "IB048",
+      "IB049",
+      "IB050",
+      "IB051",
+      "IB052",
+      "IB053",
+      "IB054",
+      "IB055",
+      "IB056",
+      "vid_001",
+      "W012",
+      "W013",
+      "W014",
+      "W015",
+      "IB057",
+      "W016",
+      "W017",
+      "IB058",
+      "W018",
+      "IB059",
+      "IB060",
+      "IB061",
+      "IB062",
+      "IB063",
+      "IB064",
+      "IB065",
+      "IB066",
+      "IB067",
+      "IB068",
+      "IB069",
+      "IB070",
+      "IB071",
+      "IB072",
+      "IB073",
+      "IB074",
+      "IB075",
+      "IB076",
+      "IB077",
+      "IB078",
+      "IB079",
+      "IB080",
+      "IB081",
+      "IB082",
+      "IB083",
+      "IB084",
+      "IB085",
+      "W019",
+      "W020",
+      "W021",
+      "W022",
+      "W023",
+      "vid_002",
+      "vid_003",
+      "vid_004",
+      "vid_005",
+      "IB086",
+      "vid_006",
+      "vid_007",
+      "vid_008",
+      "vid_009",
+      "IB087",
+      "IB088",
+      "vid_010",
+      "IB089",
+      "IB090",
+      "IB091",
+      "vid_011",
+      "IB092",
+      "IB093",
+      "vid_012",
+      "IB094",
+      "IB095",
+      "vid_013",
+      "IB096",
+      "IB097",
+      "IB098",
+      "IB099",
+      "IB100",
+      "IB101",
+      "IB102",
+      "IB103",
+      "IB104",
+      "IB105",
+      "IB106",
+      "IB107",
+      "IB108",
+      "IB109",
+      "IB110",
+      "IB111",
+      "IB112",
+      "IB113",
+      "W024",
+      "IB114",
+      "IB115",
+      "IB116",
+      "IB117",
+      "IB118",
+      "IB119",
+      "IB120",
+      "IB121",
+      "vid_014",
+      "IB122",
+      "IB123",
+      "IB124",
+      "IB125",
+      "IB126",
+      "IB127",
+      "IB128",
+      "IB129",
+      "IB130",
+      "IB131",
+      "IB132",
+      "IB133",
+      "IB134",
+      "IB135",
+      "IB136",
+      "IB137",
+      "IB138",
+      "IB139",
+      "IB140",
+      "IB141",
+      "IB142",
+      "IB143",
+      "IB144",
+      "W025",
+      "W026",
+      "IB145",
+      "W027",
+      "IB146",
+      "IB147",
+      "W028",
+      "W029",
+      "W030",
+      "W031",
+      "W032",
+      "W033",
+      "W034",
+      "W035",
+      "W036",
+      "W037",
+      "W038",
+      "W039",
+      "W040",
+      "W041",
+      "W042",
+      "IB148",
+      "W043",
+      "W044",
+      "IB149",
+      "IB150",
+      "IB151",
+      "IB152",
+      "IB153",
+      "IB154",
+      "W045"
+    ]
+  },
+  "output_url": "forecast_03d56e80ae204f508a2200deb847be21.mp4"
+}

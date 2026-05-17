@@ -1,0 +1,104 @@
+{
+  "6c49bb99591d4f619f19af89d4f17783": {
+    "job_id": "6c49bb99591d4f619f19af89d4f17783",
+    "status": "completed",
+    "output_url": "forecast_6c49bb99591d4f619f19af89d4f17783.mp4",
+    "error": null,
+    "created_at": "2026-05-17T10:57:30.265Z",
+    "audio_filename": "88bea3fcc05c4abba97d08afaa01adab.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 303259,
+      "output_tokens": 2154,
+      "cached_input_tokens": 100352,
+      "llm_cost_usd_estimate": 0.6542475000000001,
+      "transcription_billed_audio_sec": 27.040000915527344,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027040000915527344,
+      "total_cost_usd_estimate": 0.6569515000915528
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1913,
+        "output_tokens": 792
+      },
+      {
+        "step": "picker_attempt_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100368,
+        "output_tokens": 498
+      },
+      {
+        "step": "picker_attempt_2",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100495,
+        "output_tokens": 501
+      },
+      {
+        "step": "picker_attempt_3",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100483,
+        "output_tokens": 363,
+        "cached_input_tokens": 100352
+      }
+    ]
+  },
+  "8a7445b7fdfa4facafa72b3414970a60": {
+    "job_id": "8a7445b7fdfa4facafa72b3414970a60",
+    "status": "completed",
+    "output_url": "forecast_8a7445b7fdfa4facafa72b3414970a60.mp4",
+    "error": null,
+    "created_at": "2026-05-17T11:25:18.880Z",
+    "audio_filename": "d467671626f644ec8df9d4a44ca9d869.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 304330,
+      "output_tokens": 1728,
+      "cached_input_tokens": 201728,
+      "llm_cost_usd_estimate": 0.525945,
+      "transcription_billed_audio_sec": 27.040000915527344,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027040000915527344,
+      "total_cost_usd_estimate": 0.5286490000915527
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1913,
+        "output_tokens": 695,
+        "cached_input_tokens": 1024
+      },
+      {
+        "step": "picker_attempt_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100529,
+        "output_tokens": 315
+      },
+      {
+        "step": "picker_attempt_2",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100998,
+        "output_tokens": 371,
+        "cached_input_tokens": 100352
+      },
+      {
+        "step": "picker_attempt_3",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100890,
+        "output_tokens": 347,
+        "cached_input_tokens": 100352
+      }
+    ]
+  }
+}
