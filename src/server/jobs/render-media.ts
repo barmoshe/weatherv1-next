@@ -79,6 +79,43 @@ async function defaultCutSegment(args: {
   }
 }
 
+// Independent R2 fetches; bounded so we don't hammer the gateway.
+const DOWNLOAD_CONCURRENCY = 4;
+// ffmpeg + libx264 is CPU-heavy. 2 in parallel halves wall time on most
+// machines without thrashing; higher only helps on >=8-core hosts.
+const CUT_CONCURRENCY = 2;
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(limit, items.length);
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i]);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
+interface CutPlan {
+  key: string;
+  pick: ResolvedPick;
+  sourceVideo: ParsedVideo;
+  audioDur: number;
+  seekStart: number;
+  decodeDur: number;
+  padDur: number;
+  mediaId: string;
+  outputPath: string;
+}
+
 export async function prepareRenderMedia(
   timeline: ResolvedPick[],
   sourceVideoMap: Record<string, ParsedVideo>,
@@ -96,70 +133,99 @@ export async function prepareRenderMedia(
   await fs.promises.mkdir(sourcesDir, { recursive: true });
   await fs.promises.mkdir(segmentsDir, { recursive: true });
 
+  // ---- Plan: validate + deduplicate up front, before any async work.
+  // Validation failures here surface synchronously instead of mid-download.
   const sourcePaths = new Map<string, string>();
-  const preparedByPick = new Map<string, { mediaId: string; media: RenderReadyMedia }>();
-  const preparedTimeline: ResolvedPick[] = [];
-  const preparedVideoMap: Record<string, ParsedVideo> = {};
-  const media: RenderReadyMedia[] = [];
+  const remoteKeys = new Map<string, string>();
+  const uniqueCuts = new Map<string, CutPlan>();
+  const timelineCutKeys: string[] = [];
 
-  try {
-    for (const pick of timeline) {
-      const sourceVideo = sourceVideoMap[pick.video_id];
-      if (!sourceVideo) {
-        throw new Error(`Clip ${pick.video_id} was picked but is missing from the catalog`);
-      }
+  for (const pick of timeline) {
+    const sourceVideo = sourceVideoMap[pick.video_id];
+    if (!sourceVideo) {
+      throw new Error(`Clip ${pick.video_id} was picked but is missing from the catalog`);
+    }
+    const remoteKey = sourceVideo.remote?.key;
+    if (!remoteKey) {
+      throw new Error(`Clip ${pick.video_id} exists in the catalog but has no R2 video object`);
+    }
 
-      const remoteKey = sourceVideo.remote?.key;
-      if (!remoteKey) {
-        throw new Error(`Clip ${pick.video_id} exists in the catalog but has no R2 video object`);
-      }
+    if (!sourcePaths.has(pick.video_id)) {
+      const ext = path.extname(sourceVideo.filename || "") || ".mp4";
+      sourcePaths.set(pick.video_id, path.join(sourcesDir, `${safeId(pick.video_id)}${ext}`));
+      remoteKeys.set(pick.video_id, remoteKey);
+    }
 
-      let sourcePath = sourcePaths.get(pick.video_id);
-      if (!sourcePath) {
-        const ext = path.extname(sourceVideo.filename || "") || ".mp4";
-        sourcePath = path.join(sourcesDir, `${safeId(pick.video_id)}${ext}`);
-        await downloadObject(remoteKey, sourcePath);
-        sourcePaths.set(pick.video_id, sourcePath);
-      }
+    const key = pickKey(pick);
+    timelineCutKeys.push(key);
 
-      const key = pickKey(pick);
+    if (!uniqueCuts.has(key)) {
       const { audioDur, seekStart, decodeDur, padDur } = narrativeDecodeFromPick(pick);
       if (!(audioDur > 0) || !(decodeDur > 0)) {
         throw new Error(`Timeline pick ${pick.segment_id} has a non-positive decodable duration`);
       }
+      const mediaId = `render-${safeId(pick.video_id)}-${key}`;
+      const outputPath = path.join(segmentsDir, `${mediaId}.mp4`);
+      uniqueCuts.set(key, {
+        key, pick, sourceVideo, audioDur, seekStart, decodeDur, padDur, mediaId, outputPath,
+      });
+    }
+  }
 
-      let prepared = preparedByPick.get(key);
+  try {
+    // Pass 1: download distinct source videos in parallel.
+    const downloadJobs = Array.from(sourcePaths.entries()).map(([vid, sourcePath]) => ({
+      vid, sourcePath, remoteKey: remoteKeys.get(vid)!,
+    }));
+    await mapWithConcurrency(downloadJobs, DOWNLOAD_CONCURRENCY, (job) =>
+      downloadObject(job.remoteKey, job.sourcePath),
+    );
+
+    // Pass 2: cut distinct segments in parallel.
+    const cutPlans = Array.from(uniqueCuts.values());
+    await mapWithConcurrency(cutPlans, CUT_CONCURRENCY, (plan) =>
+      cutSegment({
+        sourcePath: sourcePaths.get(plan.pick.video_id)!,
+        outputPath: plan.outputPath,
+        start: plan.seekStart,
+        decodeDur: plan.decodeDur,
+        padDur: plan.padDur,
+        jobId,
+      }),
+    );
+
+    // Pass 3: build outputs in original timeline order.
+    const preparedByKey = new Map<string, { mediaId: string; media: RenderReadyMedia }>();
+    const preparedTimeline: ResolvedPick[] = [];
+    const preparedVideoMap: Record<string, ParsedVideo> = {};
+    const media: RenderReadyMedia[] = [];
+
+    for (let i = 0; i < timeline.length; i++) {
+      const pick = timeline[i];
+      const plan = uniqueCuts.get(timelineCutKeys[i])!;
+
+      let prepared = preparedByKey.get(plan.key);
       if (!prepared) {
-        const mediaId = `render-${safeId(pick.video_id)}-${key}`;
-        const outputPath = path.join(segmentsDir, `${mediaId}.mp4`);
-        await cutSegment({
-          sourcePath,
-          outputPath,
-          start: seekStart,
-          decodeDur,
-          padDur,
-          jobId,
-        });
-        const readyMedia = {
-          filePath: outputPath,
-          duration: audioDur,
+        const readyMedia: RenderReadyMedia = {
+          filePath: plan.outputPath,
+          duration: plan.audioDur,
           segmentId: pick.segment_id,
           videoId: pick.video_id,
         };
-        prepared = { mediaId, media: readyMedia };
-        preparedByPick.set(key, prepared);
+        prepared = { mediaId: plan.mediaId, media: readyMedia };
+        preparedByKey.set(plan.key, prepared);
         media.push(readyMedia);
-        preparedVideoMap[mediaId] = {
-          ...sourceVideo,
-          id: mediaId,
-          filename: path.basename(outputPath),
-          path: outputPath,
+        preparedVideoMap[plan.mediaId] = {
+          ...plan.sourceVideo,
+          id: plan.mediaId,
+          filename: path.basename(plan.outputPath),
+          path: plan.outputPath,
           availability: "local",
-          duration_sec: audioDur,
+          duration_sec: plan.audioDur,
           segments: [{
             id: pick.segment_id,
             start_sec: 0,
-            end_sec: audioDur,
+            end_sec: plan.audioDur,
             description: "",
             tags: [],
           }],
