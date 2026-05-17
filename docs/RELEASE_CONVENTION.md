@@ -63,7 +63,8 @@ rotation procedure for each is documented in
 | Secret | Used by | Required for |
 | --- | --- | --- |
 | `EDITOR_PASSWORD`, `ADMIN_PASSWORD` | `desktop.yml` → `scripts/emit-auth-hashes.cjs` | Argon2id hashing at prebuild — build fails loud if unset |
-| `CLOUDFLARE_R2_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | `desktop-publish-release.yml` | Uploading `WeatherV1-Setup.exe` to R2 (R2-only token; pitch-deck.yml uses a separate `CLOUDFLARE_API_TOKEN` for Pages) |
+| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT` | `desktop-publish-release.yml` | Uploading `WeatherV1-Setup.exe` to R2 via S3 API (`aws s3 cp`). Wrangler can't handle >300 MiB installers, so the publish step uses S3-style credentials issued from Cloudflare dashboard → R2 → Manage R2 API Tokens (Object Read & Write, scoped to bucket `weatherv1-media`). |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | `pitch-deck.yml` | Pages deploy via `cloudflare/wrangler-action`. Separate from R2 credentials so each secret's blast radius matches its single workflow. |
 | `GITHUB_TOKEN` | Auto-injected | Cross-run artifact download in the publish workflow |
 
 A tag build with either `EDITOR_PASSWORD` or `ADMIN_PASSWORD` unset

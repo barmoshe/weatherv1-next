@@ -164,7 +164,7 @@ YAML), and **runtime user** (Electron `safeStorage`, never in repo).
 | --- | --- | --- | --- |
 | `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`, `OSX_SIGN_IDENTITY` | Operator-local (`.env` for `npm run electron:make` on a developer Mac) | Notarization for the locally-built macOS zip per [`docs/RELEASE_CONVENTION.md`](../../docs/RELEASE_CONVENTION.md). Not used in CI. | Notarization identity; revocable in Apple Developer portal |
 | `CLOUDFLARE_API_TOKEN` | GitHub Secrets | `.github/workflows/pitch-deck.yml` (Pages deploy via `cloudflare/wrangler-action`) | Cloudflare Pages:Edit on the account |
-| `CLOUDFLARE_R2_TOKEN` | GitHub Secrets | `.github/workflows/desktop-publish-release.yml` (`wrangler r2 object put` of the Windows installer) | Workers R2 Storage:Edit, scoped to bucket `weatherv1-media` |
+| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT` | GitHub Secrets | `.github/workflows/desktop-publish-release.yml` (`aws s3 cp` of the Windows installer via R2's S3 endpoint) | S3-style R2 credentials, Object Read & Write scoped to bucket `weatherv1-media`. Issued via Cloudflare dashboard → R2 → Manage R2 API Tokens. Wrangler's `r2 object put` caps at 300 MiB; the installer is ~437 MiB, so aws-cli's S3 multipart is required. |
 | `CLOUDFLARE_ACCOUNT_ID` | GitHub Secrets | Both workflows above | Identifier, not a secret in the credential sense |
 | `EDITOR_PASSWORD`, `ADMIN_PASSWORD` | GitHub Secrets | `.github/workflows/desktop.yml` env → `scripts/emit-auth-hashes.cjs` (Argon2id at prebuild) → gitignored `auth-passwords.generated.ts` | App-level gate credentials baked into the installer |
 | `GITHUB_TOKEN` | Auto-injected per run | All workflows | Repo-scoped; nothing to rotate |
@@ -194,9 +194,15 @@ is set, and `gh secret set` will reject the extra words.
 
 **`EDITOR_PASSWORD` / `ADMIN_PASSWORD`:** rotation is `gh secret set <NAME>` followed by a fresh tag build. The Argon2id hash is re-minted on every build; nothing to clean up in the source tree.
 
-**Apple signing secrets:** rotate the app-specific password at <https://appleid.apple.com> → Sign-In and Security → App-Specific Passwords. Update the GitHub Secret. `APPLE_TEAM_ID` and `APPLE_ID` rarely change.
+**Apple signing secrets (operator-local):** rotate the app-specific password at <https://appleid.apple.com> → Sign-In and Security → App-Specific Passwords. Update the operator's local `.env` and re-run `npm run electron:make` on the Mac. `APPLE_TEAM_ID` and `APPLE_ID` rarely change. Not in GitHub Secrets — macOS builds happen locally only.
 
-**Cloudflare tokens** (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_R2_TOKEN`, `cloudflare:apiToken`, `weatherv1-cloudflare:cloudflareApiToken`): issue replacement tokens at <https://dash.cloudflare.com/profile/api-tokens>. The GitHub Actions secrets (`CLOUDFLARE_API_TOKEN` for Pages, `CLOUDFLARE_R2_TOKEN` for R2 uploads) are set with `gh secret set <NAME>` and roll independently — neither needs Pulumi reapply. For Pulumi-stored tokens, re-encrypt and apply:
+**Cloudflare tokens** — issue replacements as follows, then `gh secret set <NAME>`:
+
+- `CLOUDFLARE_API_TOKEN` (Pages deploy): <https://dash.cloudflare.com/profile/api-tokens>, Cloudflare Pages:Edit.
+- `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_ENDPOINT` (S3-style, for `aws s3 cp` of the installer): Cloudflare dashboard → R2 → **Manage R2 API Tokens** → Object Read & Write scoped to bucket `weatherv1-media`. Cloudflare shows the secret access key once at creation.
+- `cloudflare:apiToken` and `weatherv1-cloudflare:cloudflareApiToken` (Pulumi-stored): re-encrypt and apply per the snippet below.
+
+None of the GitHub Actions secrets need a Pulumi reapply. For Pulumi-stored tokens:
 
 ```bash
 pulumi --cwd infra/cloudflare config set --secret cloudflareApiToken <new-token>

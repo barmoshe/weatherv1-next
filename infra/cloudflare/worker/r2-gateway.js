@@ -97,10 +97,14 @@ export default {
       if (!object) return json({ success: false, error: "not found" }, cors, 404);
 
       const filename = rawKey.split("/").pop() || "download.bin";
-      const isMutablePointer =
-        rawKey.includes("/latest/") || rawKey.includes("/latest-stable/");
+      // Anchor the pointer match: include the trailing `/<filename>` so that
+      // e.g. `downloads/archive/latest/v1/foo.exe` does NOT get the 5-min
+      // cache policy meant only for `…/latest/<file>` (or latest-stable).
+      const isMutablePointer = /\/(latest|latest-stable)\/[^/]+$/.test(rawKey);
       const headers = {
         ...cors,
+        // The whitelist regex above (`[A-Za-z0-9._/-]+`) excludes `"` and `\`,
+        // so interpolating filename directly into content-disposition is safe.
         "content-type": "application/octet-stream",
         "content-disposition": `attachment; filename="${filename}"`,
         etag: object.httpEtag,
@@ -109,10 +113,10 @@ export default {
           ? "public, max-age=300"
           : "public, max-age=31536000, immutable",
       };
-      if (object.size !== undefined) headers["content-length"] = String(object.size);
       if (object.uploaded) headers["last-modified"] = new Date(object.uploaded).toUTCString();
 
       if (request.method === "HEAD") {
+        if (object.size !== undefined) headers["content-length"] = String(object.size);
         return new Response(null, { status: 200, headers });
       }
       const status = range && object.range ? 206 : 200;
@@ -121,6 +125,9 @@ export default {
         const length = object.range.length ?? 0;
         const end = start + length - 1;
         headers["content-range"] = `bytes ${start}-${end}/${object.size}`;
+        headers["content-length"] = String(length);
+      } else if (object.size !== undefined) {
+        headers["content-length"] = String(object.size);
       }
       return new Response(object.body, { status, headers });
     }

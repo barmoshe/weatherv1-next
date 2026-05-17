@@ -98,36 +98,35 @@ jobs:
           echo "Resolved tag: $TAG"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      # Upload via R2's S3-compatible endpoint with aws-cli rather than wrangler,
-      # because the installer is ~437 MiB and wrangler `r2 object put` caps at
-      # 300 MiB for remote uploads even on 4.x. aws-cli is preinstalled on
-      # ubuntu-latest and auto-multiparts files >8 MiB.
-      #
-      # Credentials are S3-style (Access Key ID + Secret Access Key) issued via
-      # Cloudflare dashboard → R2 → Manage R2 API Tokens, scoped to
-      # Object Read & Write on bucket `weatherv1-media` only.
-      #
-      # TODO(latest-stable): once we adopt a stable-vs-prerelease tag convention
-      # (e.g. SemVer prerelease suffix: vX.Y.Z stable, vX.Y.Z-beta.N prerelease),
-      # gate a third `aws s3 cp` to
-      # s3://weatherv1-media/downloads/windows/latest-stable/WeatherV1-Setup.exe
-      # on the stable check.
+      # Upload via R2's S3-compatible endpoint: wrangler r2 object put caps at
+      # 300 MiB and the installer is ~437 MiB. aws-cli is preinstalled on
+      # ubuntu-latest and auto-multiparts. Credentials are S3-style, issued
+      # via Cloudflare dashboard → R2 → Manage R2 API Tokens.
       - name: Upload installer to R2 (S3 API)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          # R2 ignores region but the SDK requires one; `auto` is the documented
-          # value Cloudflare expects.
           AWS_DEFAULT_REGION: auto
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           TAG: ${{ steps.reltag.outputs.tag }}
+          # TODO(latest-stable): once we adopt a stable-vs-prerelease tag
+          # convention, gate a third destination "latest-stable" inside the
+          # POINTERS list on the stable check.
+          POINTERS: latest
         run: |
           set -euo pipefail
-          aws s3 cp dist/WeatherV1-Setup.exe \
-            "s3://weatherv1-media/downloads/windows/${TAG}/WeatherV1-Setup.exe" \
+          BASE="s3://weatherv1-media/downloads/windows"
+          VERSIONED="${BASE}/${TAG}/WeatherV1-Setup.exe"
+          # First upload uses the runner's local copy. Pointer keys are then
+          # server-side CopyObject from the versioned key — saves ~437 MiB
+          # egress per pointer. R2 supports CopyObject via the S3 API
+          # (5 GiB single-part limit, well above our installer size).
+          aws s3 cp dist/WeatherV1-Setup.exe "$VERSIONED" \
             --endpoint-url "$R2_ENDPOINT" \
             --content-type application/octet-stream
-          aws s3 cp dist/WeatherV1-Setup.exe \
-            "s3://weatherv1-media/downloads/windows/latest/WeatherV1-Setup.exe" \
-            --endpoint-url "$R2_ENDPOINT" \
-            --content-type application/octet-stream
+          for POINTER in $POINTERS; do
+            aws s3 cp "$VERSIONED" "${BASE}/${POINTER}/WeatherV1-Setup.exe" \
+              --endpoint-url "$R2_ENDPOINT" \
+              --content-type application/octet-stream \
+              --metadata-directive REPLACE
+          done
