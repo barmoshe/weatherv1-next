@@ -160,6 +160,12 @@ export async function uploadR2File(
   contentType: string,
   onProgress?: (loaded?: number, total?: number) => void,
 ): Promise<{ etag?: string; size: number }> {
+  // Rendered forecast MP4s must stay local — they are large, regenerable from
+  // the plan bundle, and their previous R2 home (`tenants/<id>/outputs/<jobId>/forecast.mp4`)
+  // was removed in 826a79b. Reject any attempt to revive that path.
+  if (/(^|\/)outputs\//.test(key)) {
+    throw new Error(`uploadR2File: refusing to upload to outputs/ prefix (key=${key})`);
+  }
   const { client, credentials } = await makeS3Client();
   const stat = fs.statSync(filePath);
   const upload = new Upload({

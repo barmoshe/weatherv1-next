@@ -1,58 +1,81 @@
-name: R2 bucket inventory
+name: R2 bucket inventory (one-shot)
 
 on:
   workflow_dispatch:
     inputs:
-      prefix:
-        description: "Optional key prefix"
+      action:
+        description: "list | delete-legacy-outputs"
+        required: true
+        default: "list"
+      confirm:
+        description: "type 'yes' to actually delete"
         required: false
-        default: ""
+        default: "no"
 
 jobs:
-  list:
+  run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: List bucket
+      - name: Inventory or delete
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_R2_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PREFIX: ${{ inputs.prefix }}
+          ACTION: ${{ inputs.action }}
+          CONFIRM: ${{ inputs.confirm }}
         run: |
-          echo "## bucket list (token's view)"
-          npx -y wrangler@latest r2 bucket list || true
-          echo
-          echo "## bucket info: weatherv1-media"
-          npx -y wrangler@latest r2 bucket info weatherv1-media || true
-          echo
-          echo "## REST list_objects_v2 via Cloudflare API gateway"
-          # Cloudflare API exposes a list endpoint at:
-          #   /accounts/{id}/r2/buckets/{name}/objects
-          curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets/weatherv1-media/objects?per_page=1000${PREFIX:+&prefix=$PREFIX}" \
-            > /tmp/r2.json
-          echo "## summary by top-3 prefix segments (count, bytes)"
           python3 - <<'PY'
-          import json, collections
-          data = json.load(open('/tmp/r2.json'))
-          objs = data.get('result') or []
-          print(f"total objects: {len(objs)}")
-          print(f"total bytes:   {sum(o['size'] for o in objs):,}")
-          print(f"truncated?     {data.get('result_info', {}).get('is_truncated')}")
-          print(f"cursor:        {data.get('result_info', {}).get('cursor')!r}")
-          by_pref = collections.defaultdict(lambda: [0,0])
-          for o in objs:
-              p = '/'.join(o['key'].split('/')[:3])
-              by_pref[p][0] += 1
-              by_pref[p][1] += o['size']
-          print()
-          print(f"{'prefix':<40} {'count':>6} {'bytes':>14}")
-          for p, (c, b) in sorted(by_pref.items()):
-              print(f"{p:<40} {c:>6} {b:>14,}")
-          print()
-          print("## full key list")
-          for o in sorted(objs, key=lambda x: x['key']):
-              print(f"{o['size']:>12,}  {o['last_modified']}  {o['key']}")
+          import json, os, subprocess, urllib.request, urllib.parse, sys
+          tok = os.environ['CLOUDFLARE_API_TOKEN']
+          acct = os.environ['CLOUDFLARE_ACCOUNT_ID']
+          bucket = 'weatherv1-media'
+          action = os.environ['ACTION']
+          confirm = os.environ['CONFIRM']
+
+          def api(path, method='GET', body=None):
+              req = urllib.request.Request(
+                  f"https://api.cloudflare.com/client/v4/accounts/{acct}/r2/buckets/{bucket}{path}",
+                  method=method,
+                  headers={'Authorization': f'Bearer {tok}', 'Content-Type': 'application/json'},
+                  data=json.dumps(body).encode() if body else None,
+              )
+              with urllib.request.urlopen(req) as r:
+                  return json.loads(r.read())
+
+          if action == 'list':
+              data = api('/objects?per_page=1000')
+              objs = data.get('result') or []
+              print(f"total: {len(objs)} objects, {sum(o['size'] for o in objs):,} bytes")
+              for o in sorted(objs, key=lambda x: x['key']):
+                  print(f"{o['size']:>12,}  {o['key']}")
+              sys.exit(0)
+
+          if action == 'delete-legacy-outputs':
+              data = api('/objects?per_page=1000&prefix=tenants/default/outputs/')
+              objs = data.get('result') or []
+              print(f"would delete {len(objs)} objects, {sum(o['size'] for o in objs):,} bytes:")
+              for o in objs:
+                  print(f"  {o['key']}")
+              if confirm != 'yes':
+                  print("\nconfirm != 'yes'; dry run only.")
+                  sys.exit(0)
+              # R2 S3 API doesn't expose batch delete via /client/v4. Use wrangler per-key.
+              for o in objs:
+                  print(f"DELETE {o['key']}")
+                  r = subprocess.run(
+                      ['npx', '-y', 'wrangler@latest', 'r2', 'object', 'delete', f"{bucket}/{o['key']}", '--remote'],
+                      env={**os.environ},
+                      capture_output=True, text=True,
+                  )
+                  print(r.stdout.strip())
+                  if r.returncode != 0:
+                      print(r.stderr, file=sys.stderr)
+                      sys.exit(r.returncode)
+              print(f"\ndeleted {len(objs)} objects.")
+              sys.exit(0)
+
+          print(f"unknown action: {action}", file=sys.stderr)
+          sys.exit(2)
           PY
