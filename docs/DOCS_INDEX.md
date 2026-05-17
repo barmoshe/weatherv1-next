@@ -9,7 +9,7 @@ A local-first weather-video production app: narration → Whisper transcript →
 - **Web/server** — long-lived Node host or Docker VM with native ffmpeg.
 - **Desktop** — Electron shell around a managed local Next child server, user-chosen workspace, bundled ffmpeg.
 
-**Optional Cloudflare R2** mirrors catalog JSON, videos, posters, voiceovers, and outputs through a Worker gateway. ffmpeg and the hot catalog path stay local; R2 is a sidecar.
+**Optional Cloudflare R2** mirrors catalog JSON, videos, posters, and voiceovers through a Worker gateway. ffmpeg and the hot catalog path stay local; R2 is a sidecar. Rendered forecast MP4s are intentionally **not** mirrored — they are regenerable from the plan bundle and `uploadR2File` rejects any `outputs/` key.
 
 ## Read this first
 

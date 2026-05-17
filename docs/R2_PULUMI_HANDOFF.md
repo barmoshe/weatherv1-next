@@ -19,8 +19,12 @@ All uploads use `tenantKey(relative)` in [`src/server/sync/r2/client.ts`](../src
 - `videos/<videoId>/<filename>`
 - `posters/clips/<videoId>.jpg`
 - `posters/segments/<segmentId>.jpg`
+- `voiceovers/<jobId>/<basename>.mp3` (uploaded by the transcribe route via `uploadRuntimeFile`)
+- `jobs/jobs.json` and `jobs/<jobId>/plan.json` (plan-bundle sidecar; written by the desktop app)
 
 So the full object key for a segment poster is `tenants/default/posters/segments/<segmentId>.jpg` when `tenantId` is `default`.
+
+**Forbidden prefix.** `outputs/` is intentionally not used. Rendered `forecast_<jobId>.mp4` files stay local — they are large, regenerable from the plan bundle, and were previously uploaded under `tenants/<id>/outputs/<jobId>/forecast.mp4` (removed in 826a79b). [`uploadR2File`](../src/server/sync/r2/client.ts) now throws on any key matching `(^|/)outputs/` as a defense-in-depth guard.
 
 ## Current Goal
 
@@ -38,7 +42,7 @@ Replace the reverted Google Drive sync with Cloudflare R2-backed asset sync and 
 - Added initial R2 API routes under `src/app/api/sync/r2/*`.
 - Hooked catalog import/update/delete into R2 sidecar sync.
 - Hooked preview/poster routes to return a clear `409` when an asset is remote-only.
-- Hooked render jobs to materialize remote source clips before ffmpeg and upload completed outputs to R2.
+- Hooked render jobs to materialize remote source clips before ffmpeg. (The original change also uploaded completed `forecast.mp4` outputs to R2; that upload was removed in 826a79b — renders stay local.)
 - Hooked transcription to upload voiceovers to R2 after a local transcription job is created.
 - Added R2 sync status to desktop/internal health responses.
 - Removed Google Drive from Electron config/main/preload, desktop bridge types, catalog tests, runtime desktop tests, and deleted Drive-specific source files/routes.

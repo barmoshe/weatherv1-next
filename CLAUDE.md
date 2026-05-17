@@ -130,6 +130,7 @@ Studio UI (tabs, job history, settings) under `components/`, with `hooks/` and `
 - Do **not** call `shell.openExternal(url)` on renderer-provided URLs without `https:` + host allowlist.
 - Do **not** reintroduce legacy IPC patterns or expose `ipcRenderer` itself via `contextBridge`.
 - Do **not** mix generated runtime artifacts (`runtime/`, fixtures) into release commits unless the user explicitly asks.
+- Do **not** upload rendered `forecast_<jobId>.mp4` outputs to R2. Renders stay local; `uploadR2File` throws on any `outputs/` key as a defense-in-depth guard. R2 mirrors catalog/videos/posters/voiceovers only.
 - Keep Electron renderer security: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`.
 
 ## Environment variables
