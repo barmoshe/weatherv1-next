@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       transcription_model,
     });
 
-    updatePlanBundle(jobId, {
+    await updatePlanBundle(jobId, {
       created_at: new Date().toISOString(),
       audio_filename: savedName,
       duration_sec: duration,

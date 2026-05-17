@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Missing job_id" }, { status: 400 });
   }
 
-  updatePlanBundle(jobId, {
+  await updatePlanBundle(jobId, {
     audio_filename: audioFilename,
     system_prompt: data.system_prompt,
     catalog_snapshot: { ...lastHealth },

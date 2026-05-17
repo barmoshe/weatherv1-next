@@ -7,6 +7,10 @@ export async function register() {
   const { startWorker } = await import("@/server/jobs/worker");
   startWorker();
 
+  // Drain any R2 mirror ops left in `r2-sync-state.json` from a prior process.
+  const { kickMirrorQueue } = await import("@/server/sync/r2/mirror-queue");
+  kickMirrorQueue();
+
   // Soft parity check for `next dev` only. The authoritative ffmpeg gate is
   // `electron/ffmpeg-verify.cjs`, called from Electron main before the Next
   // child is spawned. Under `node .next/standalone/server.js` this

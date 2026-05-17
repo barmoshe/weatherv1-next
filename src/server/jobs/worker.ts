@@ -89,7 +89,7 @@ async function runJob(jobId: string, audioFilename: string): Promise<void> {
         status: "completed",
         output_url: path.basename(outputPath),
       });
-      updatePlanBundle(jobId, { output_url: path.basename(outputPath) });
+      await updatePlanBundle(jobId, { output_url: path.basename(outputPath) });
     } else {
       updateJob(jobId, { status: "failed", error: "Renderer returned failure" });
     }

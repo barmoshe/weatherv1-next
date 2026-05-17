@@ -20,7 +20,8 @@ import {
 } from "./client";
 import { hydratePlanBundleFromR2 } from "@/server/jobs/plan-bundle";
 import { getAllJobs, writeJobsJsonFromHydration } from "@/server/jobs/store";
-import { patchObjectProgress, readR2SyncState, writeR2SyncState } from "./state";
+import { patchObjectProgress, patchR2SyncState, readR2SyncState } from "./state";
+import { getMirrorQueueCounts } from "./mirror-queue";
 import type { R2SyncStatus } from "./types";
 
 export class R2CatalogConflictError extends Error {
@@ -90,6 +91,7 @@ export async function getR2SyncStatus(): Promise<R2SyncStatus> {
     lastSyncAt: state.lastSyncAt,
     conflict: state.conflict,
     counts: statusCounts(),
+    mirror: getMirrorQueueCounts(),
     error: enabled && !ready ? "R2 sync is enabled but gateway URL, tenant ID, username, or password is missing" : undefined,
   };
 }
@@ -99,13 +101,13 @@ export async function pullCatalogFromR2(): Promise<R2SyncStatus> {
   const remote = await getR2Text(catalogKey());
   const catalog = CatalogSchema.parse(JSON.parse(remote.text));
   await writeCatalog(catalog);
-  writeR2SyncState({
-    ...readR2SyncState(),
+  await patchR2SyncState((state) => ({
+    ...state,
     lastCatalogEtag: remote.etag,
     lastCatalogHash: catalogHash(catalog),
     lastSyncAt: new Date().toISOString(),
     conflict: undefined,
-  });
+  }));
   invalidateCatalogCache();
   return getR2SyncStatus();
 }
@@ -210,7 +212,7 @@ export async function pullJobsFromR2(opts?: { force?: boolean }): Promise<void> 
     }
 
     const canonicalJson = JSON.stringify(jobs, null, 2);
-    writeJobsJsonFromHydration(canonicalJson);
+    await writeJobsJsonFromHydration(canonicalJson);
   } catch (e) {
     fail("hydrate failed", e);
   }
@@ -276,19 +278,19 @@ export async function pushCatalogToR2(args: { replaceRemote?: boolean } = {}): P
     const known = state.lastCatalogEtag;
     if (!known || known !== remote.etag) {
       const conflict = { remoteEtag: remote.etag, localHash, detectedAt: new Date().toISOString() };
-      writeR2SyncState({ ...state, conflict });
+      await patchR2SyncState((s) => ({ ...s, conflict }));
       throw new R2CatalogConflictError();
     }
   }
 
   const result = await putR2Text(catalogKey(), catalogJson(catalog));
-  writeR2SyncState({
-    ...state,
+  await patchR2SyncState((s) => ({
+    ...s,
     lastCatalogEtag: result.etag,
     lastCatalogHash: localHash,
     lastSyncAt: new Date().toISOString(),
     conflict: undefined,
-  });
+  }));
   return getR2SyncStatus();
 }
 
@@ -308,9 +310,9 @@ export async function uploadVideoForEntry(videoId: string): Promise<void> {
   try {
     entry.remote = { ...(entry.remote ?? {}), key, status: "uploading" };
     await writeCatalog(catalog);
-    patchObjectProgress(key, { status: "uploading", loaded: 0, total: fs.statSync(localPath).size });
+    await patchObjectProgress(key, { status: "uploading", loaded: 0, total: fs.statSync(localPath).size });
     const uploaded = await uploadR2File(key, localPath, mimeFor(entry.filename), (loaded, total) => {
-      patchObjectProgress(key, { status: "uploading", loaded, total });
+      void patchObjectProgress(key, { status: "uploading", loaded, total });
     });
     const nextCatalog = readCatalog();
     const nextEntry = nextCatalog.videos.find((v) => v.id === videoId);
@@ -326,7 +328,7 @@ export async function uploadVideoForEntry(videoId: string): Promise<void> {
       };
       await writeCatalog(nextCatalog);
     }
-    patchObjectProgress(key, { status: "synced", loaded: uploaded.size, total: uploaded.size });
+    await patchObjectProgress(key, { status: "synced", loaded: uploaded.size, total: uploaded.size });
     try {
       await pushCatalogToR2({ replaceRemote: false });
     } catch (err) {
@@ -340,7 +342,7 @@ export async function uploadVideoForEntry(videoId: string): Promise<void> {
       nextEntry.remote = { ...(nextEntry.remote ?? {}), key, status: "error", error: message };
       await writeCatalog(nextCatalog);
     }
-    patchObjectProgress(key, { status: "error", error: message });
+    await patchObjectProgress(key, { status: "error", error: message });
     throw err;
   }
 }
@@ -382,7 +384,7 @@ export async function materializeVideo(videoId: string): Promise<ParsedVideo> {
 
   entry.remote = { ...(entry.remote ?? {}), status: "downloading", error: undefined };
   await writeCatalog(catalog);
-  patchObjectProgress(key, { status: "downloading" });
+  await patchObjectProgress(key, { status: "downloading" });
 
   try {
     const downloaded = await downloadR2File(key, localPath);
@@ -400,7 +402,7 @@ export async function materializeVideo(videoId: string): Promise<ParsedVideo> {
       };
       await writeCatalog(nextCatalog);
     }
-    patchObjectProgress(key, { status: "synced", loaded: downloaded.size, total: downloaded.size });
+    await patchObjectProgress(key, { status: "synced", loaded: downloaded.size, total: downloaded.size });
     return parseCatalog(readCatalog()).find((v) => v.id === videoId)!;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -410,7 +412,7 @@ export async function materializeVideo(videoId: string): Promise<ParsedVideo> {
       nextEntry.remote = { ...(nextEntry.remote ?? {}), key, status: "error", error: message };
       await writeCatalog(nextCatalog);
     }
-    patchObjectProgress(key, { status: "error", error: message });
+    await patchObjectProgress(key, { status: "error", error: message });
     throw err;
   }
 }

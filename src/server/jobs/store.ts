@@ -1,15 +1,21 @@
 /**
- * JobsStore — in-memory job registry with optional JSON persistence.
+ * JobsStore — in-memory job registry backed by `runtime/jobs.json`.
  *
- * Risk A2 mitigation: save() is the primary writer for in-app mutations.
- * writeJobsJsonFromHydration() is used only when replacing disk from R2 (no R2 mirror).
+ * Persistence path goes through `updateJson()` so reads and writes are
+ * serialized under a `proper-lockfile` advisory lock — concurrent
+ * `upsertJob`/`updateJob` calls no longer race with each other or with the
+ * crash-recovery sweep. R2 mirroring is enqueued (durable, retried) rather
+ * than fire-and-forget, so cloud and disk stay in sync even across outages.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { getRuntimePaths } from "@/server/runtime/paths";
-import { putR2Text, r2Configured, tenantKey } from "@/server/sync/r2/client";
+import { readJsonSync, updateJson, writeRawJson } from "@/server/runtime/atomic-json";
+import { r2Configured, tenantKey } from "@/server/sync/r2/client";
+import { enqueueMirror } from "@/server/sync/r2/mirror-queue";
 import { planBundlePath } from "./plan-bundle";
+import { JobsFileSchema } from "./schema";
 
 /** Drop old drafts that never got a plan bundle (phantom seeds / abandoned). */
 const DRAFT_WITHOUT_PLAN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -29,47 +35,76 @@ export interface JobRecord {
   usage_calls?: import("@/shared/usage").UsageCallRecord[];
 }
 
+type JobsFile = Record<string, JobRecord>;
+
+const EMPTY_FILE: JobsFile = {};
+
 function getJobsPath(): string {
   return path.join(getRuntimePaths().runtimeDir, "jobs.json");
 }
 
-// In-memory store (single source of truth at runtime)
+// In-memory store (single source of truth at runtime). The disk file is the
+// canonical persistent copy; the map is a hot read-through cache.
 const store = new Map<string, JobRecord>();
 let initialized = false;
 
-function ensureDir(): void {
-  const dir = path.dirname(getJobsPath());
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-function save(): void {
-  const jobsPath = getJobsPath();
-  ensureDir();
-  const tmp = `${jobsPath}.tmp.${process.pid}`;
-  const data = JSON.stringify(Object.fromEntries(store), null, 2);
-  fs.writeFileSync(tmp, data, "utf8");
-  fs.renameSync(tmp, jobsPath);
-
-  if (r2Configured()) {
-    const key = tenantKey("jobs/jobs.json");
-    void putR2Text(key, data).catch((e) => console.warn("[jobs] R2 mirror failed:", e));
+function applyDiskToStore(records: JobsFile): void {
+  store.clear();
+  for (const [id, job] of Object.entries(records)) {
+    store.set(id, job as JobRecord);
   }
 }
 
 function load(): void {
   if (initialized) return;
   initialized = true;
-  ensureDir();
-  const jobsPath = getJobsPath();
-  if (!fs.existsSync(jobsPath)) return;
-  try {
-    const raw = JSON.parse(fs.readFileSync(jobsPath, "utf8")) as Record<string, unknown>;
-    for (const [id, job] of Object.entries(raw)) {
-      if (job && typeof job === "object") store.set(id, job as JobRecord);
-    }
-  } catch {
-    // Corrupt jobs.json — start fresh
-  }
+  const raw = readJsonSync(getJobsPath(), JobsFileSchema, EMPTY_FILE) as JobsFile;
+  applyDiskToStore(raw);
+}
+
+function snapshot(): JobsFile {
+  return Object.fromEntries(store) as JobsFile;
+}
+
+function scheduleMirror(): void {
+  if (!r2Configured()) return;
+  void enqueueMirror({ kind: "jobs", key: tenantKey("jobs/jobs.json") }).catch((e) =>
+    console.warn("[jobs] enqueue mirror failed:", e),
+  );
+}
+
+/**
+ * Apply a mutation under the on-disk lock, then mirror to R2. The mutator
+ * receives the current disk contents (not the in-memory snapshot) so it sees
+ * any out-of-band changes from another writer that may have landed between
+ * our last read and this update.
+ */
+async function mutateAndPersist(
+  mutate: (current: JobsFile) => JobsFile | void,
+): Promise<void> {
+  load();
+  const next = await updateJson(getJobsPath(), JobsFileSchema, EMPTY_FILE, (current) => {
+    // Start from the latest disk contents so we don't clobber concurrent writers.
+    const draft: JobsFile = { ...(current as JobsFile) };
+    const result = mutate(draft);
+    return (result ?? draft) as JobsFile;
+  });
+  applyDiskToStore(next as JobsFile);
+  scheduleMirror();
+}
+
+function mutateAndPersistSync(mutate: (current: JobsFile) => JobsFile | void): void {
+  // Synchronous-call shim for the few callers that historically didn't await
+  // (`updateJob`/`crashRecoverySweep`). We fire the lock-protected write but
+  // don't block — the in-memory store still reflects the change immediately
+  // (these callers mutate the live record before invoking save), and the
+  // disk write is consistent because everyone goes through `updateJson`.
+  void mutateAndPersist(mutate).catch((e) => console.warn("[jobs] persist failed:", e));
+}
+
+function ensureDir(): void {
+  const dir = path.dirname(getJobsPath());
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
 /** Clear the in-memory map so the next accessor re-reads from disk. */
@@ -80,14 +115,12 @@ export function resetJobsStore(): void {
 
 /**
  * Replace `jobs.json` from an R2 snapshot without mirroring back to R2
- * (the remote object is already authoritative).
+ * (the remote object is already authoritative). Uses the same atomic+lock
+ * path as in-app mutations, so it is safe even with concurrent writers.
  */
-export function writeJobsJsonFromHydration(canonicalJson: string): void {
-  const jobsPath = getJobsPath();
+export async function writeJobsJsonFromHydration(canonicalJson: string): Promise<void> {
   ensureDir();
-  const tmp = `${jobsPath}.tmp.hydrate.${process.pid}`;
-  fs.writeFileSync(tmp, canonicalJson, "utf8");
-  fs.renameSync(tmp, jobsPath);
+  await writeRawJson(getJobsPath(), JobsFileSchema, canonicalJson);
   resetJobsStore();
 }
 
@@ -104,7 +137,10 @@ export function getAllJobs(): JobRecord[] {
 export function setJob(record: JobRecord): void {
   load();
   store.set(record.job_id, record);
-  save();
+  const id = record.job_id;
+  mutateAndPersistSync((current) => {
+    current[id] = record;
+  });
 }
 
 export function updateJob(jobId: string, patch: Partial<Omit<JobRecord, "job_id">>): void {
@@ -112,25 +148,33 @@ export function updateJob(jobId: string, patch: Partial<Omit<JobRecord, "job_id"
   const existing = store.get(jobId);
   if (!existing) return;
   Object.assign(existing, patch);
-  save();
+  mutateAndPersistSync((current) => {
+    const target = current[jobId] ?? { ...existing };
+    Object.assign(target, patch);
+    current[jobId] = target;
+  });
 }
 
 export function deleteJob(jobId: string): boolean {
   load();
   const deleted = store.delete(jobId);
-  if (deleted) save();
+  if (deleted) {
+    mutateAndPersistSync((current) => {
+      delete current[jobId];
+    });
+  }
   return deleted;
 }
 
 export function upsertJob(record: JobRecord): void {
   load();
   const existing = store.get(record.job_id);
-  if (existing) {
-    Object.assign(existing, record);
-  } else {
-    store.set(record.job_id, record);
-  }
-  save();
+  if (existing) Object.assign(existing, record);
+  else store.set(record.job_id, record);
+  mutateAndPersistSync((current) => {
+    const prior = current[record.job_id];
+    current[record.job_id] = prior ? { ...prior, ...record } : { ...record };
+  });
 }
 
 function sweepStaleDraftsWithoutPlan(): boolean {
@@ -168,5 +212,8 @@ export function crashRecoverySweep(): void {
     }
   }
   if (sweepStaleDraftsWithoutPlan()) changed = true;
-  if (changed) save();
+  if (changed) {
+    const fresh = snapshot();
+    mutateAndPersistSync(() => fresh);
+  }
 }

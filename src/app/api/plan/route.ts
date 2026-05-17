@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    updatePlanBundle(jobId, {
+    await updatePlanBundle(jobId, {
       scenes,
       timeline,
       validator: validatorResult,

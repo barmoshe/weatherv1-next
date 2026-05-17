@@ -5,20 +5,26 @@
  * into the same file so the bundle grows without overwriting prior data.
  *
  * Local file: runtime/outputs/forecast_{jobId}.plan.json
- * When R2 is configured, the full bundle is also mirrored to
- * tenants/<tenant>/jobs/<jobId>/plan.json so another machine can restore.
+ * When R2 is configured, the full bundle is mirrored to
+ * tenants/<tenant>/jobs/<jobId>/plan.json via the durable mirror queue.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { getRuntimePaths } from "@/server/runtime/paths";
+import { readJsonSync, updateJson, writeRawJson } from "@/server/runtime/atomic-json";
 import {
   getR2Text,
   headR2Object,
-  putR2Text,
   r2Configured,
   tenantKey,
 } from "@/server/sync/r2/client";
+import { enqueueMirror } from "@/server/sync/r2/mirror-queue";
+import { PlanBundleSchema } from "./schema";
+
+type PlanBundle = Record<string, unknown>;
+
+const EMPTY_BUNDLE: PlanBundle = {};
 
 function getOutputsDir(): string {
   return getRuntimePaths().outputsDir;
@@ -28,26 +34,27 @@ export function planBundlePath(jobId: string): string {
   return path.join(getOutputsDir(), `forecast_${jobId}.plan.json`);
 }
 
-export function readPlanBundle(jobId: string): Record<string, unknown> {
-  const p = planBundlePath(jobId);
-  if (!fs.existsSync(p)) return {};
-  try {
-    return JSON.parse(fs.readFileSync(p, "utf8")) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
+export function readPlanBundle(jobId: string): PlanBundle {
+  return readJsonSync(planBundlePath(jobId), PlanBundleSchema, EMPTY_BUNDLE) as PlanBundle;
 }
 
 /** True when local disk already has a parsed bundle for this job id. */
 function localPlanBundleComplete(jobId: string): boolean {
-  const p = planBundlePath(jobId);
-  if (!fs.existsSync(p)) return false;
-  try {
-    const raw = JSON.parse(fs.readFileSync(p, "utf8")) as Record<string, unknown>;
-    return raw.job_id === jobId;
-  } catch {
-    return false;
-  }
+  const bundle = readPlanBundle(jobId);
+  return bundle.job_id === jobId;
+}
+
+function planRemoteKey(jobId: string): string {
+  return tenantKey(`jobs/${jobId}/plan.json`);
+}
+
+function scheduleMirror(jobId: string): void {
+  if (!r2Configured()) return;
+  void enqueueMirror({
+    kind: "plan",
+    jobId,
+    key: planRemoteKey(jobId),
+  }).catch((e) => console.warn("[plan-bundle] enqueue mirror failed:", e));
 }
 
 /**
@@ -61,25 +68,23 @@ export async function hydratePlanBundleFromR2(jobId: string, opts?: { force?: bo
   const force = Boolean(opts?.force);
   if (!force && localPlanBundleComplete(jobId)) return false;
 
-  const key = tenantKey(`jobs/${jobId}/plan.json`);
+  const key = planRemoteKey(jobId);
   try {
     const head = await headR2Object(key);
     if (!head) return false;
 
     const { text } = await getR2Text(key);
-    let parsed: Record<string, unknown>;
+    let parsed: PlanBundle;
     try {
-      parsed = JSON.parse(text) as Record<string, unknown>;
-    } catch {
+      parsed = PlanBundleSchema.parse(JSON.parse(text)) as PlanBundle;
+    } catch (e) {
+      console.warn("[plan-bundle] remote bundle failed schema validation:", jobId.slice(0, 8), e);
       return false;
     }
     if (parsed.job_id !== jobId) return false;
 
     fs.mkdirSync(getOutputsDir(), { recursive: true });
-    const dest = planBundlePath(jobId);
-    const tmp = `${dest}.tmp.hydrate.${process.pid}`;
-    fs.writeFileSync(tmp, JSON.stringify(parsed, null, 2), "utf8");
-    fs.renameSync(tmp, dest);
+    await writeRawJson(planBundlePath(jobId), PlanBundleSchema, JSON.stringify(parsed, null, 2));
     return true;
   } catch (e) {
     console.warn("[plan-bundle] R2 hydrate failed:", jobId.slice(0, 8), e);
@@ -87,23 +92,17 @@ export async function hydratePlanBundleFromR2(jobId: string, opts?: { force?: bo
   }
 }
 
-export function updatePlanBundle(
+export async function updatePlanBundle(
   jobId: string,
   fields: Record<string, unknown>,
-): Record<string, unknown> {
+): Promise<PlanBundle> {
   fs.mkdirSync(getOutputsDir(), { recursive: true });
-  const bundle = readPlanBundle(jobId);
-  bundle.job_id = jobId;
-  Object.assign(bundle, fields);
-  const tmp = `${planBundlePath(jobId)}.tmp.${process.pid}`;
-  fs.writeFileSync(tmp, JSON.stringify(bundle, null, 2), "utf8");
-  fs.renameSync(tmp, planBundlePath(jobId));
+  const next = await updateJson(planBundlePath(jobId), PlanBundleSchema, EMPTY_BUNDLE, (current) => {
+    const merged: PlanBundle = { ...(current as PlanBundle), ...fields };
+    merged.job_id = jobId;
+    return merged;
+  });
 
-  if (r2Configured()) {
-    const key = tenantKey(`jobs/${jobId}/plan.json`);
-    const payload = JSON.stringify(bundle, null, 2);
-    void putR2Text(key, payload).catch((e) => console.warn("[plan-bundle] R2 mirror failed:", e));
-  }
-
-  return bundle;
+  scheduleMirror(jobId);
+  return next as PlanBundle;
 }

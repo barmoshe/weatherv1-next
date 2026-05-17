@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
       allowSceneGapFill: newPicksRaw.length > 0,
     });
 
-    updatePlanBundle(jobId, { timeline: merged, validator: validatorResult, picker_status: pickerResult.picker_status });
+    await updatePlanBundle(jobId, { timeline: merged, validator: validatorResult, picker_status: pickerResult.picker_status });
 
     persistReplanPickerUsage(jobId, pickerResult.picker_usages ?? []);
 
