@@ -776,9 +776,19 @@
             transition: background 0.15s ease, color 0.15s ease;
         }
         .review-segment__play:hover { background: var(--v1-coral-soft); }
+        .review-segment__play:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: transparent;
+        }
+        .review-segment__play:disabled:hover { background: transparent; }
         .review-segment.is-playing .review-segment__play {
             background: var(--v1-red);
             color: #fff;
+        }
+        .review-audio-missing {
+            color: var(--v1-red);
+            font-weight: 600;
         }
         .review-segment__time {
             font-size: 0.7rem;

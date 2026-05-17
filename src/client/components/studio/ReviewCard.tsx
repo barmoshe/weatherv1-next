@@ -53,6 +53,9 @@ export function ReviewCard({
   const [saving, setSaving] = useState(false);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  // null = not yet probed; true/false = known. Probed via HEAD so the play
+  // button can render disabled instead of throwing NotSupportedError on click.
+  const [audioAvailable, setAudioAvailable] = useState<boolean | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastSyncedJob = useRef<string | null>(null);
 
@@ -64,6 +67,7 @@ export function ReviewCard({
     setDrafts(transcriptData.segments.map((s) => s.text));
     setPlayingIdx(null);
     setActiveIdx(null);
+    setAudioAvailable(null);
   }, [transcriptData]);
 
   const joined = useMemo(() => {
@@ -74,6 +78,27 @@ export function ReviewCard({
   const dirty = useMemo(() => joined.trim() !== baseline.trim(), [joined, baseline]);
 
   const audioSrc = jobId ? `/api/voiceovers/${jobId}` : null;
+
+  // Probe availability with HEAD so the play buttons can render disabled when
+  // the underlying voiceover file is missing (e.g. plan bundle survived but
+  // the uploads dir was cleared, or the job was created in a prior workspace).
+  useEffect(() => {
+    if (!audioSrc) {
+      setAudioAvailable(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(audioSrc, { method: "HEAD" })
+      .then((r) => {
+        if (!cancelled) setAudioAvailable(r.ok);
+      })
+      .catch(() => {
+        if (!cancelled) setAudioAvailable(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [audioSrc]);
 
   useEffect(() => {
     const a = audioRef.current;
@@ -106,13 +131,19 @@ export function ReviewCard({
     const a = audioRef.current;
     const seg = segments[idx];
     if (!a || !seg) return;
+    if (audioAvailable === false) return;
     if (playingIdx === idx && !a.paused) {
       a.pause();
       setPlayingIdx(null);
       return;
     }
     a.currentTime = seg.start;
-    void a.play();
+    a.play().catch(() => {
+      // Source 404 / decode failure / autoplay block — surface as a disabled
+      // button rather than letting the unhandled rejection bubble to the page.
+      setAudioAvailable(false);
+      setPlayingIdx(null);
+    });
     setPlayingIdx(idx);
   }
 
@@ -209,15 +240,20 @@ export function ReviewCard({
       </header>
       <div className="tile-body">
         <div className="step-content scroll-y review-body">
-          {(filenameLabel || durationLabel || segmentCountLabel) && (
+          {(filenameLabel || durationLabel || segmentCountLabel || audioAvailable === false) && (
             <div className="review-summary">
               {filenameLabel && <span dir="ltr">{filenameLabel}</span>}
               {durationLabel && <span dir="ltr">{durationLabel}</span>}
               {segmentCountLabel && <span>{segmentCountLabel}</span>}
+              {audioAvailable === false && (
+                <span className="review-audio-missing" data-testid="review-audio-missing">
+                  הקול המקורי אינו זמין · עריכת טקסט בלבד
+                </span>
+              )}
             </div>
           )}
 
-          {audioSrc && (
+          {audioSrc && audioAvailable !== false && (
             // eslint-disable-next-line jsx-a11y/media-has-caption
             <audio
               ref={audioRef}
@@ -225,6 +261,7 @@ export function ReviewCard({
               src={audioSrc}
               data-testid="review-audio"
               style={{ display: "none" }}
+              onError={() => setAudioAvailable(false)}
             />
           )}
 
@@ -246,7 +283,19 @@ export function ReviewCard({
                       type="button"
                       className="review-segment__play"
                       onClick={() => toggleSegment(idx)}
-                      aria-label={isPlaying ? "השהה משפט" : "השמע משפט"}
+                      aria-label={
+                        audioAvailable === false
+                          ? "הקול המקורי אינו זמין"
+                          : isPlaying
+                            ? "השהה משפט"
+                            : "השמע משפט"
+                      }
+                      title={
+                        audioAvailable === false
+                          ? "הקול המקורי אינו זמין"
+                          : undefined
+                      }
+                      disabled={audioAvailable === false}
                       data-testid={`review-segment-play-${idx}`}
                     >
                       {isPlaying ? <PauseIcon /> : <PlayIcon />}

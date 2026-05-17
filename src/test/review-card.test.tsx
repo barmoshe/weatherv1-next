@@ -10,9 +10,25 @@ const baseTranscript = {
   segments: [],
 };
 
+// All API traffic from ReviewCard except the voiceover HEAD probe flows
+// through `apiFetch`. The HEAD probe is handled by the dispatcher below so
+// per-test mockResolvedValueOnce calls aren't accidentally consumed by it.
+let apiFetch: ReturnType<typeof vi.fn>;
+
+function installFetch(headOk: boolean) {
+  apiFetch = vi.fn();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((_url: string, init?: RequestInit) => {
+      if (init?.method === "HEAD") return Promise.resolve({ ok: headOk });
+      return apiFetch(_url, init);
+    }),
+  );
+}
+
 describe("ReviewCard", () => {
   beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
+    installFetch(true);
   });
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -37,7 +53,6 @@ describe("ReviewCard", () => {
 
   it("clean Continue skips PATCH and calls onConfirm", async () => {
     const onConfirm = vi.fn();
-    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     render(
       <ReviewCard
         jobId="job-abc"
@@ -51,14 +66,13 @@ describe("ReviewCard", () => {
     );
     fireEvent.click(screen.getByTestId("review-continue"));
     await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
   });
 
   it("dirty Continue PATCHes transcript then calls onConfirm", async () => {
     const onConfirm = vi.fn();
     const onTranscriptChange = vi.fn();
-    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    fetchMock.mockResolvedValueOnce({
+    apiFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true, transcript: "edited text", segments: [] }),
     });
@@ -80,8 +94,8 @@ describe("ReviewCard", () => {
     fireEvent.click(screen.getByTestId("review-continue"));
 
     await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = apiFetch.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/transcript/job-abc");
     expect(init.method).toBe("PATCH");
     expect(JSON.parse(init.body as string)).toEqual({ transcript: "edited text" });
@@ -124,8 +138,7 @@ describe("ReviewCard", () => {
   it("segment edits accumulate into the PATCHed transcript", async () => {
     const onConfirm = vi.fn();
     const onTranscriptChange = vi.fn();
-    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    fetchMock.mockResolvedValueOnce({
+    apiFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true, transcript: "alpha edited", segments: [] }),
     });
@@ -153,16 +166,47 @@ describe("ReviewCard", () => {
     });
     fireEvent.click(screen.getByTestId("review-continue"));
     await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    const [, init] = apiFetch.mock.calls[0] as [string, RequestInit];
     expect(JSON.parse(init.body as string)).toEqual({ transcript: "alpha edited" });
+  });
+
+  it("disables segment play buttons and shows a hint when the voiceover HEAD returns 404", async () => {
+    // Reinstall fetch with a failing HEAD response.
+    vi.unstubAllGlobals();
+    installFetch(false);
+    const segmented = {
+      ...baseTranscript,
+      segments: [
+        { start: 0, end: 1, text: "a" },
+        { start: 1, end: 2, text: "b" },
+      ],
+    };
+    render(
+      <ReviewCard
+        jobId="job-abc"
+        transcriptData={segmented}
+        tileState="active"
+        phase="reviewing"
+        onTranscriptChange={() => {}}
+        onConfirm={() => {}}
+        onError={() => {}}
+      />,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("review-audio-missing")).toBeTruthy(),
+    );
+    expect((screen.getByTestId("review-segment-play-0") as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByTestId("review-segment-play-1") as HTMLButtonElement).disabled).toBe(true);
+    // Editing the text still works — only playback is gated.
+    fireEvent.change(screen.getByTestId("review-segment-text-0"), { target: { value: "edited a" } });
+    expect((screen.getByTestId("review-segment-text-0") as HTMLTextAreaElement).value).toBe("edited a");
   });
 
   it("surfaces errors via onError when PATCH fails", async () => {
     const onConfirm = vi.fn();
     const onError = vi.fn();
-    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    fetchMock.mockResolvedValueOnce({
+    apiFetch.mockResolvedValueOnce({
       ok: false,
       status: 500,
       json: async () => ({ success: false, error: "boom" }),
