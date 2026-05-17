@@ -63,4 +63,5 @@ next-env.d.ts
 CLAUDE.local.md
 .claude/ISSUES.local.md
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 runtime/jobs.json
