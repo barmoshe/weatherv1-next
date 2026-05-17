@@ -180,6 +180,22 @@ The Premiere file format is UTF-8-clean for Hebrew `title_he` in `<marker>` name
 4. Export route + `assertDesktopAuth()` + `isDesktopMode()` gate (web returns 501).
 5. UI button (desktop-only, hidden on web) + smoke test in Electron.
 6. Manual Premiere import verification on Windows and macOS — confirm markers, notes, Hebrew captions render with Text Engine set to South Asian/Middle Eastern.
+7. **(if MOGRT companion greenlit — see below)** Validate Hebrew MOGRT rendering with real V1 captions; ship `.mogrt` + `place-mogrts.jsx` helper in the bundle.
+
+## Optional MOGRT companion (additive)
+
+Research into AE↔Premiere graphics interchange (full write-up in the sibling task at [`../after-effects-graphics/PLAN.md#cross-task-bridge`](../after-effects-graphics/PLAN.md)) surfaced a small additive that improves the editor's Premiere UX without changing the FCP7 XML side:
+
+- **MOGRT (`.mogrt`)** is the only file-handoff graphics-layer interchange Premiere supports. Authored in AE's Essential Graphics Panel; rendered by Premiere via an embedded AE engine — **editor does not need AE installed.**
+- **FCP7 XML cannot reference a MOGRT** — it's a `.prproj`-only construct. So the editor's workflow would be: (a) install the `.mogrt` into their Essential Graphics library on first use, (b) run a bundled JSX helper that calls `sequence.importMGT(path, time, vTrack, aTrack)` to auto-place the lower-third at every scene boundary with the Hebrew `title_he` filled in.
+
+If we ship this companion, the export zip grows from `{xml, srt, README}` to `{xml, srt, README, *.mogrt, place-mogrts.jsx}`. The MOGRT itself comes from the AE-graphics task's "dual export from AE master" (the same comp exports both ProRes 4444 for the in-app renderer and `.mogrt` for this bundle), so V1's designer authors once.
+
+**Live risks:**
+- **Hebrew MOGRT bug** — community reports of incorrect RTL with punctuation (2024+). Validate against real V1 captions before promising parametric Hebrew text. If it fails, ship the `.mogrt` with generic shapes and the editor types the city manually — the auto-placement at scene timecodes still works.
+- **One-time install step** — editors install the `.mogrt` into Essential Graphics on first use. Document in the bundled README.
+
+This stays optional: if V1's designer doesn't deliver MOGRTs, the v1 FCP7 XML + SRT bundle still meets every "Done means" criterion in TASK.md.
 
 ## Forward path (v2 — not v1)
 
