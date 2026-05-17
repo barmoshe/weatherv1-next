@@ -11,7 +11,12 @@ export default defineConfig({
     // `next build` with `output: "standalone"` copies the entire source tree
     // (including `src/test/**`) into `.next/standalone/`. Without this
     // exclude, vitest discovers and runs every test twice.
-    exclude: ["**/node_modules/**", "**/dist/**", "**/.next/**"],
+    //
+    // `.claude/worktrees/**` is Claude Code's per-agent worktree directory.
+    // Each worktree is a full checkout of the repo (including src/test) so
+    // pre-existing worktrees would otherwise re-run every test under their
+    // own paths — masking real failures in the host repo.
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.next/**", "**/.claude/worktrees/**"],
   },
   resolve: {
     alias: {
