@@ -7,7 +7,7 @@ import {
   clothingClimateMismatch,
 } from "./beat-tagger";
 import { PLACE_ALIASES } from "./hebrew-places";
-import { targetContradictsSegment } from "@/server/catalog/hebrew-taxonomy";
+import { inferConcepts, targetContradictsSegment } from "@/server/catalog/hebrew-taxonomy";
 import type { SegmentConcepts } from "@/shared/types";
 
 // ---------------------------------------------------------------------------
@@ -29,6 +29,36 @@ const SAME_CLIP_DESC_TOKEN_JACCARD_MAX = 0.55;
 const MIN_SEGMENT_CONCEPT_DESC_LEN = 8;
 /** Min tag-word hits between beat/scene text and candidate tags for validator swaps/fills (primary segment path). */
 const MIN_SWAP_TAG_OVERLAP = 2;
+
+// ---------------------------------------------------------------------------
+// Ranking constants (BM25 + mood + swap-margin)
+// ---------------------------------------------------------------------------
+
+/** BM25 term-frequency saturation. Standard Elastic default. */
+const BM25_K1 = 1.2;
+/** BM25 length-normalization. 0.75 penalizes over-tagged ("junk-tag") clips. */
+const BM25_B = 0.75;
+/**
+ * Wholesale-swap margin for enforceCoverage Strategy 1: the new candidate must
+ * exceed the original pick's BM25 score by at least this fraction of the
+ * original to justify discarding the upstream LLM's narrative intent. Below
+ * the margin, fall through to Strategy 2 (split + residual). Per SBERT's
+ * retrieve-and-rerank guidance, ~25% is the working threshold for whole
+ * replacement (as opposed to ~10–15% for in-place rerank).
+ */
+const SWAP_MARGIN_FRACTION = 0.25;
+
+/**
+ * Mood mismatch hard floor: scene `mood` → segment tag/description words that
+ * disqualify a candidate *before* scoring. Loose by design — only the obvious
+ * opposites. Catalog vocabulary is closed (see `hebrew-taxonomy.ts`), so this
+ * stays small.
+ */
+const MOOD_INCOMPATIBLE: Record<string, ReadonlyArray<string>> = {
+  calm: ["סופה", "ברד", "שיטפון", "דרמטי", "שטף", "דרמה", "אסון"],
+  cheerful: ["סופה", "ברד", "שיטפון", "קודר", "אבל"],
+  dramatic: ["רגוע"],
+};
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -231,6 +261,213 @@ function aliasedOverlap(targetLower: string, tagWord: string): number {
   return 0;
 }
 
+// ---------------------------------------------------------------------------
+// BM25 + mood helpers
+// ---------------------------------------------------------------------------
+
+interface Bm25Cache {
+  docs: Map<string, string[]>;
+  avgDl: number;
+  idf: Map<string, number>;
+}
+
+/**
+ * Build a BM25 index over the candidate set. O(N) over ~200 catalog entries.
+ * Memoized by the `candidates` array identity — `segmentCandidates(segmentMap)`
+ * returns the same instance across all enforce-* passes of one validator
+ * run, so we pay the build cost once per render instead of ~10×.
+ */
+const _bm25CacheByCandidates = new WeakMap<Candidate[], Bm25Cache>();
+
+function buildBm25Cache(candidates: Candidate[]): Bm25Cache {
+  const cached = _bm25CacheByCandidates.get(candidates);
+  if (cached) return cached;
+  const built = _buildBm25CacheUncached(candidates);
+  _bm25CacheByCandidates.set(candidates, built);
+  return built;
+}
+
+function _buildBm25CacheUncached(candidates: Candidate[]): Bm25Cache {
+  const docs = new Map<string, string[]>();
+  const df = new Map<string, number>();
+  let totalLen = 0;
+  for (const [id, seg, vid] of candidates) {
+    const words = entryTagWords(seg, vid).map((w) => String(w).toLowerCase()).filter(Boolean);
+    docs.set(id, words);
+    totalLen += words.length;
+    for (const w of new Set(words)) df.set(w, (df.get(w) ?? 0) + 1);
+  }
+  const n = candidates.length || 1;
+  const idf = new Map<string, number>();
+  for (const [w, f] of df) idf.set(w, Math.log(1 + (n - f + 0.5) / (f + 0.5)));
+  return { docs, avgDl: totalLen / n, idf };
+}
+
+/**
+ * BM25 relevance of `candidateId` to `targetLower`. Score 0 means no matching
+ * tag; higher = better fit. Length-normalized (`BM25_B=0.75`) so junk-tag
+ * clips don't win by sheer tag count.
+ */
+function bm25Score(targetLower: string, candidateId: string, cache: Bm25Cache): number {
+  const words = cache.docs.get(candidateId);
+  if (!words || !words.length) return 0;
+  const dl = words.length;
+  const avg = cache.avgDl || 1;
+  const seen = new Set<string>();
+  let score = 0;
+  for (const w of words) {
+    if (!w || seen.has(w)) continue;
+    seen.add(w);
+    if (!(targetLower.includes(w) || aliasedOverlap(targetLower, w) > 0)) continue;
+    const tf = words.reduce((n, x) => (x === w ? n + 1 : n), 0);
+    const idf = cache.idf.get(w) ?? 0;
+    const norm = tf + BM25_K1 * (1 - BM25_B + BM25_B * (dl / avg));
+    score += idf * ((BM25_K1 + 1) * tf) / norm;
+  }
+  return score;
+}
+
+/**
+ * Tag-word hit count (the legacy raw-overlap metric). Kept as the integer
+ * threshold for `requireMinOverlap` and for the Hebrew swap message
+ * (`חפיפת תגיות=N`); BM25 is used only for ranking among the passing set.
+ */
+function rawOverlapCount(targetLower: string, candidateId: string, cache: Bm25Cache): number {
+  const words = cache.docs.get(candidateId) ?? [];
+  if (!targetLower) return 0;
+  const seen = new Set<string>();
+  let n = 0;
+  for (const w of words) {
+    if (!w || seen.has(w)) continue;
+    seen.add(w);
+    if (targetLower.includes(w) || aliasedOverlap(targetLower, w) > 0) n++;
+  }
+  return n;
+}
+
+/**
+ * Mood floor: reject a candidate when the scene mood is set and the candidate's
+ * tags or description contain a tonal opposite. Loose — only fires on the
+ * obvious mismatches listed in `MOOD_INCOMPATIBLE`.
+ */
+// Visual-text per segment is reused across many candidate-scoring passes; the
+// concat + lowercase isn't cheap when called 200× per loop. Memoize by the
+// segment object identity (segmentCandidates returns the same instances).
+const _segmentVisualLowerCache = new WeakMap<SegmentEntry, string>();
+function segmentVisualLower(segment: SegmentEntry, video: CatalogClip): string {
+  const cached = _segmentVisualLowerCache.get(segment);
+  if (cached !== undefined) return cached;
+  const text = segmentVisualText(segment, video).toLowerCase();
+  _segmentVisualLowerCache.set(segment, text);
+  return text;
+}
+
+function moodIsIncompatible(
+  mood: string | undefined | null,
+  segment: SegmentEntry,
+  video: CatalogClip,
+): boolean {
+  if (!mood) return false;
+  const banned = MOOD_INCOMPATIBLE[String(mood).toLowerCase()];
+  if (!banned) return false;
+  const visual = segmentVisualLower(segment, video);
+  if (!visual) return false;
+  return banned.some((bad) => visual.includes(bad.toLowerCase()));
+}
+
+/**
+ * Lookup helper: read the scene mood for a given pick, returning null when the
+ * scene isn't known or carries no mood. Centralised so the field plumbs to all
+ * callers of `bestCandidateByOverlap`.
+ */
+function moodForClip(
+  clip: MutablePick,
+  scenesByIdx: Record<number, SceneDict> | undefined,
+): string | null {
+  if (!scenesByIdx || clip.scene_idx == null) return null;
+  return scenesByIdx[clip.scene_idx]?.mood ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Structural semantic floor (avoid_for ∩ scene concepts)
+// ---------------------------------------------------------------------------
+
+// Polarity / transition narrations — the scene mentions a weather state but
+// is announcing its *end* or a *return to normal*. Tagging by literal word
+// match is unreliable here (a heat-wave-is-ending scene reads as "heat" to
+// inferConcepts), so the structural floor must NOT fire and reject the
+// calm/normal candidates that actually belong on screen. The picker prompt
+// rule A4 covers this on the upstream side; this check just disengages the
+// downstream filter so it doesn't override the picker.
+const POLARITY_ENDING_RE = /(מסתיים|מסתיימת|סיום|ירידה|נחזור\s*ל|חזרה\s*ל|חזרה\s*לעונה|התקררות|רגוע\s*יותר|פחות\s*חם)/;
+
+function narrationIsTransitional(text: string | null | undefined): boolean {
+  if (!text) return false;
+  return POLARITY_ENDING_RE.test(text);
+}
+
+/**
+ * Compute the scene's inferred concepts for the avoid_for floor. Returns null
+ * when the narration is transitional (announcing a weather state ending) —
+ * in that case the literal heat/cold word in the text doesn't reflect what
+ * should be on screen, so the structural floor should not fire.
+ */
+function inferSceneConcepts(scene: SceneDict | undefined): SegmentConcepts | null {
+  if (!scene) return null;
+  const description = String(scene.narration ?? "").trim();
+  const keywords = (scene.keywords ?? []).map((k) => String(k).trim()).filter(Boolean);
+  if (!description && !keywords.length) return null;
+  if (narrationIsTransitional(description)) return null;
+  return inferConcepts({ description, tags: keywords });
+}
+
+/**
+ * Convenience: build the `{mood, sceneConcepts}` slice every swap call site
+ * wants. Spread into a `bestCandidateByOverlap` / `bestLegacyCandidate` opts
+ * bag to apply the same structural floor everywhere.
+ *
+ * `inferSceneConcepts` is non-trivial; we memoize by scene-object identity
+ * via WeakMap so a job with 5 scenes pays the cost 5 times across all
+ * validator passes, not 5 × N-call-sites.
+ */
+const _sceneConceptsCache = new WeakMap<SceneDict, SegmentConcepts | null>();
+
+function semanticFloorFor(
+  clip: MutablePick,
+  scenesByIdx: Record<number, SceneDict> | undefined,
+): { mood: string | null; sceneConcepts: SegmentConcepts | null } {
+  const scene = scenesByIdx && clip.scene_idx != null ? scenesByIdx[clip.scene_idx] : undefined;
+  if (!scene) return { mood: null, sceneConcepts: null };
+  let sceneConcepts = _sceneConceptsCache.get(scene);
+  if (sceneConcepts === undefined) {
+    sceneConcepts = inferSceneConcepts(scene);
+    _sceneConceptsCache.set(scene, sceneConcepts);
+  }
+  return { mood: scene.mood ?? null, sceneConcepts };
+}
+
+/**
+ * Structural reject: returns true if the candidate carries an `avoid_for`
+ * value that intersects the scene's concept set. Used in addition to (not in
+ * place of) `targetContradictsSegment`, since the structural data is curated
+ * per-segment by the indexer and avoids the keyword-blacklist trap.
+ */
+function sceneAvoidsSegment(
+  sceneConcepts: SegmentConcepts | null,
+  source: { concepts?: SegmentConcepts } | null | undefined,
+): boolean {
+  if (!sceneConcepts) return false;
+  const avoid = source?.concepts?.avoid_for ?? [];
+  if (!avoid.length) return false;
+  const sceneBag = new Set<string>([
+    ...(sceneConcepts.weather ?? []),
+    ...(sceneConcepts.season_mood ?? []),
+    ...(sceneConcepts.scene_fit ?? []),
+  ]);
+  if (!sceneBag.size) return false;
+  return avoid.some((a) => sceneBag.has(a));
+}
+
 function segmentVisualText(segment: SegmentEntry | null | undefined, video: CatalogClip | null | undefined): string {
   const parts: string[] = [];
   const desc = segment?.description;
@@ -301,9 +538,17 @@ function targetText(
 
 type Candidate = [string, SegmentEntry, CatalogClip];
 
+// Memoize the candidate array by the segmentMap identity so every enforce*
+// pass within a single validateAndSwap call gets the same array reference;
+// downstream caches (BM25, visual text) can then key by that identity.
+const _candidatesBySegmentMap = new WeakMap<Record<string, SegmentMapEntry>, Candidate[]>();
 function segmentCandidates(segmentMap: Record<string, SegmentMapEntry>): Candidate[] {
   if (!segmentMap) return [];
-  return Object.entries(segmentMap).map(([sid, e]) => [sid, e.segment, e.clip]);
+  const cached = _candidatesBySegmentMap.get(segmentMap);
+  if (cached) return cached;
+  const built: Candidate[] = Object.entries(segmentMap).map(([sid, e]) => [sid, e.segment, e.clip]);
+  _candidatesBySegmentMap.set(segmentMap, built);
+  return built;
 }
 
 // ---------------------------------------------------------------------------
@@ -381,6 +626,15 @@ function bestCandidateByOverlap(
     requireMinOverlap?: number;
     rejectClimateMismatch?: boolean;
     rejectCloudsIntent?: "decorative" | "overcast" | null;
+    /** Scene mood (`calm` / `cheerful` / `dramatic` / …). When set, candidates
+     * whose tags or description contain a tonal opposite from
+     * `MOOD_INCOMPATIBLE` are rejected before scoring. */
+    mood?: string | null;
+    /** Scene's inferred concepts (weather / season_mood / scene_fit). When
+     * set, candidates whose `concepts.avoid_for` intersects the scene's
+     * concept bag are rejected. Structural — uses the catalog's authored
+     * "do not use for X" annotations instead of keyword heuristics. */
+    sceneConcepts?: SegmentConcepts | null;
   },
 ): [Candidate | null, number] {
   const {
@@ -393,11 +647,15 @@ function bestCandidateByOverlap(
     requireMinOverlap = 0,
     rejectClimateMismatch = false,
     rejectCloudsIntent = null,
+    mood = null,
+    sceneConcepts = null,
   } = opts;
 
   const targetLower = (tText ?? "").toLowerCase();
+  const cache = buildBm25Cache(candidates);
   let best: Candidate | null = null;
-  let bestOverlap = -1;
+  let bestScore = -1;
+  let bestOverlap = 0;
   let bestUsed: number | null = null;
 
   for (const [candId, candSeg, candClip] of candidates) {
@@ -418,25 +676,26 @@ function bestCandidateByOverlap(
       if (intent === rejectCloudsIntent) continue;
     }
     if (targetContradictsSegment(tText ?? "", candSeg)) continue;
-    const overlap = targetLower
-      ? candWords.reduce(
-          (sum, w) =>
-            w && (targetLower.includes(w.toLowerCase()) || aliasedOverlap(targetLower, w))
-              ? sum + 1
-              : sum,
-          0,
-        )
-      : 0;
-    if (overlap < requireMinOverlap) continue;
+    if (sceneAvoidsSegment(sceneConcepts, candSeg)) continue;
+    if (moodIsIncompatible(mood, candSeg, candClip)) continue;
+    // Gating threshold stays the *integer* tag-hit count so the existing
+    // `MIN_SWAP_TAG_OVERLAP=2` semantics carry over. Ranking among the
+    // passing set uses BM25 to fix junk-tag amplification.
+    const overlapCount = rawOverlapCount(targetLower, candId, cache);
+    if (overlapCount < requireMinOverlap) continue;
+    const score = bm25Score(targetLower, candId, cache);
     const better =
-      overlap > bestOverlap || (overlap === bestOverlap && (bestUsed === null || used < bestUsed));
+      score > bestScore || (score === bestScore && (bestUsed === null || used < bestUsed));
     if (better) {
-      bestOverlap = overlap;
+      bestScore = score;
+      bestOverlap = overlapCount;
       bestUsed = used;
       best = [candId, candSeg, candClip];
     }
   }
-  return [best, bestOverlap];
+  // Return the integer overlap (not the BM25 score) so callers keep formatting
+  // `חפיפת תגיות=N` messages correctly.
+  return [best, best ? bestOverlap : -1];
 }
 
 function bestLegacyCandidate(
@@ -448,12 +707,38 @@ function bestLegacyCandidate(
     excludedVideoIds?: Set<string>;
     allowClothing: boolean;
     requireMinOverlap?: number;
+    /** Scene mood for the legacy whole-clip path. Honoured by the same
+     * `MOOD_INCOMPATIBLE` table as the segment path. */
+    mood?: string | null;
+    /** Scene's inferred concepts; reject candidates whose `avoid_for`
+     * intersects the scene bag. The legacy path has clip-level concepts
+     * only when the catalog put them on the parent clip; that's rare but
+     * still worth honouring when present. */
+    sceneConcepts?: SegmentConcepts | null;
   },
 ): [CatalogClip | null, number] {
-  const { targetText: tText, usedCounts, excludedIds, excludedVideoIds, allowClothing, requireMinOverlap = 0 } = opts;
+  const {
+    targetText: tText,
+    usedCounts,
+    excludedIds,
+    excludedVideoIds,
+    allowClothing,
+    requireMinOverlap = 0,
+    mood = null,
+    sceneConcepts = null,
+  } = opts;
   const targetLower = (tText ?? "").toLowerCase();
+  // Build a BM25 cache over whole-clip catalog rows so junk-tag clips don't
+  // dominate the legacy path either. Treat each row as a candidate keyed by
+  // its video id with an empty SegmentEntry — `entryTagWords` falls through
+  // to `videoTagWords` when the segment is null.
+  const candidates: Candidate[] = catalog
+    .filter((c) => !!c.id)
+    .map((c) => [String(c.id), {} as SegmentEntry, c]);
+  const cache = buildBm25Cache(candidates);
   let best: CatalogClip | null = null;
-  let bestOverlap = -1;
+  let bestScore = -1;
+  let bestOverlap = 0;
   let bestUsed: number | null = null;
 
   for (const cand of catalog) {
@@ -465,20 +750,22 @@ function bestLegacyCandidate(
     const tags = (cand.tags as Record<string, string>) ?? {};
     const main = tags.main ?? "";
     if (!allowClothing && isClothingTag(main)) continue;
-    const words = videoTagWords(cand);
-    const overlap = targetLower
-      ? words.reduce((sum, w) => (w && targetLower.includes(w.toLowerCase()) ? sum + 1 : sum), 0)
-      : 0;
-    if (overlap < requireMinOverlap) continue;
+    if (moodIsIncompatible(mood, {} as SegmentEntry, cand)) continue;
+    // Whole-clip catalogs rarely carry concepts; honour them when present.
+    if (sceneAvoidsSegment(sceneConcepts, cand as { concepts?: SegmentConcepts })) continue;
+    const overlapCount = rawOverlapCount(targetLower, String(cid), cache);
+    if (overlapCount < requireMinOverlap) continue;
+    const score = bm25Score(targetLower, String(cid), cache);
     const better =
-      overlap > bestOverlap || (overlap === bestOverlap && (bestUsed === null || used < bestUsed));
+      score > bestScore || (score === bestScore && (bestUsed === null || used < bestUsed));
     if (better) {
-      bestOverlap = overlap;
+      bestScore = score;
+      bestOverlap = overlapCount;
       bestUsed = used;
       best = cand;
     }
   }
-  return [best, bestOverlap];
+  return [best, best ? bestOverlap : -1];
 }
 
 // ---------------------------------------------------------------------------
@@ -626,6 +913,7 @@ function enforceClothingRule(
         rejectClimateMismatch: true,
         requireMinDuration: aLen,
         requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
+        ...semanticFloorFor(clip, scenesByIdx),
       });
     } else {
       const [legacyBest, legacyOverlap] = bestLegacyCandidate(catalog, {
@@ -634,6 +922,7 @@ function enforceClothingRule(
         excludedIds: new Set([clip.video_id ?? ""]),
         allowClothing: false,
         requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
+        ...semanticFloorFor(clip, scenesByIdx),
       });
       if (legacyBest) {
         applyLegacySwap(clip, legacyBest, `${swapReasonPrefix} — הוחלף מ-${segId ?? clip.video_id} (חפיפת תגיות=${legacyOverlap})`);
@@ -689,6 +978,7 @@ function enforceSemanticFit(
       allowClothing: isClothingText(target),
       requireMinDuration: aLen,
       requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
+      ...semanticFloorFor(clip, scenesByIdx),
     });
 
     if (!best) {
@@ -787,7 +1077,6 @@ function enforceAntiClipReuse(
     const beatIsClothing = isClothingText(target);
     const aLen = audioLen(clip);
     const counts = tally(timeline.map((c) => pickKey(c)));
-
     let didSwap = false;
     if (candidates.length) {
       const [best, bestOverlap] = bestCandidateByOverlap(candidates, {
@@ -798,6 +1087,7 @@ function enforceAntiClipReuse(
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
         requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
+        ...semanticFloorFor(clip, scenesByIdx),
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -826,6 +1116,7 @@ function enforceAntiClipReuse(
         excludedVideoIds: new Set([swapVideoId]),
         allowClothing: beatIsClothing,
         requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
+        ...semanticFloorFor(clip, scenesByIdx),
       });
       if (legacyBest) {
         applyLegacySwap(
@@ -897,6 +1188,7 @@ function enforceAntiRepeat(
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
         requireMinOverlap: candidates.length ? MIN_SWAP_TAG_OVERLAP : 0,
+        ...semanticFloorFor(clip, scenesByIdx),
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -913,6 +1205,7 @@ function enforceAntiRepeat(
         excludedIds: new Set([key]),
         allowClothing: beatIsClothing,
         requireMinOverlap: 0,
+        ...semanticFloorFor(clip, scenesByIdx),
       });
       if (legacyBest) {
         applyLegacySwap(clip, legacyBest, `validator: חזרה — הוחלף מ-${key} (חפיפת תגיות=${legacyOverlap})`);
@@ -959,6 +1252,7 @@ function enforceAntiConsecutive(
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
         requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
+        ...semanticFloorFor(timeline[i], scenesByIdx),
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -974,6 +1268,7 @@ function enforceAntiConsecutive(
         excludedIds: new Set([prev]),
         allowClothing: beatIsClothing,
         requireMinOverlap: 0,
+        ...semanticFloorFor(timeline[i], scenesByIdx),
       });
       if (legacyBest) {
         applyLegacySwap(timeline[i], legacyBest, `validator: רצף — הוחלף מ-${prev} (חפיפת תגיות=${legacyOverlap})`);
@@ -1040,6 +1335,7 @@ function enforceRecency(
         allowClothing: beatIsClothing,
         requireMinDuration: aLen,
         requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
+        ...semanticFloorFor(clip, scenesByIdx),
       });
       if (best) {
         const [newSegId, newSeg, newClip] = best;
@@ -1058,6 +1354,7 @@ function enforceRecency(
         excludedIds: new Set([key]),
         allowClothing: beatIsClothing,
         requireMinOverlap: 0,
+        ...semanticFloorFor(clip, scenesByIdx),
       });
       if (legacyBest) {
         applyLegacySwap(clip, legacyBest, `validator: שימוש חוזר קרוב — הוחלף מ-${key} (סצנה ${prevScene}→${sidx}, חפיפת תגיות=${legacyOverlap})`);
@@ -1104,6 +1401,7 @@ function enforceCoverage(
 
     const segId = clip.segment_id;
     const target = targetText(clip, beatsByIdx, scenesByIdx);
+    const targetLower = target.toLowerCase();
     const beatIsClothing = isClothingText(target);
     const rejectClimate = beatIsClothing && (isHotWeatherNarration(target) || isColdWeatherNarration(target));
     const rejectClouds: "decorative" | "overcast" | null = isOvercastNarration(target)
@@ -1112,8 +1410,12 @@ function enforceCoverage(
         ? "overcast"
         : null;
     const usedCounts = tally(timeline.map((c) => pickKey(c)));
+    const floor = semanticFloorFor(clip, scenesByIdx);
 
-    // Strategy 1: swap to longer same-theme segment
+    // Strategy 1: swap to a longer same-theme segment — but only when the
+    // swap candidate's BM25 score beats the original picker's pick by
+    // SWAP_MARGIN_FRACTION. A tag-only re-rank that barely improves on the
+    // LLM's narrative pick isn't worth discarding it.
     const [best, overlap] = bestCandidateByOverlap(candidates, {
       targetText: target,
       usedCounts,
@@ -1123,17 +1425,39 @@ function enforceCoverage(
       requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
       rejectClimateMismatch: rejectClimate,
       rejectCloudsIntent: rejectClouds,
+      ...floor,
     });
 
     if (best) {
       const [newSegId, newSeg, newClip] = best;
-      const original = segId;
-      swapPickToSegment(clip, newSegId, newSeg, newClip, `validator: כיסוי — הוחלף מ-${original} (${gap.toFixed(1)}s חוסר, חפיפת תגיות=${overlap})`);
-      fixes.push({ issue: "coverage gap", original, swapped_to: newSegId, swap_reason: `longer segment; gap=${gap.toFixed(2)}s, tag overlap=${overlap}`, fixed: true });
-      continue;
+      // Compute both scores against a unified BM25 index so the comparison is
+      // apples-to-apples. We include the original pick so its score is
+      // present even if it sat outside the candidate set above.
+      const coverageCandidates: Candidate[] = (() => {
+        if (!segId || segId === newSegId) return [...candidates, best];
+        const origEntry = segmentMap[segId];
+        if (!origEntry) return [...candidates, best];
+        return [...candidates, best, [segId, origEntry.segment, origEntry.clip] as Candidate];
+      })();
+      const scoreCache = buildBm25Cache(coverageCandidates);
+      const originalScore = segId ? bm25Score(targetLower, segId, scoreCache) : 0;
+      const swapScore = bm25Score(targetLower, newSegId, scoreCache);
+      const meetsMargin =
+        originalScore <= 0
+          ? true
+          : swapScore >= originalScore * (1 + SWAP_MARGIN_FRACTION);
+
+      if (meetsMargin) {
+        swapPickToSegment(clip, newSegId, newSeg, newClip, `validator: כיסוי — הוחלף מ-${segId} (${gap.toFixed(1)}s חוסר, חפיפת תגיות=${overlap})`);
+        fixes.push({ issue: "coverage gap", original: segId, swapped_to: newSegId, swap_reason: `longer segment; gap=${gap.toFixed(2)}s, tag overlap=${overlap}, bm25=${swapScore.toFixed(2)}>${originalScore.toFixed(2)}`, fixed: true });
+        continue;
+      }
+      // Margin not met → fall through to split. The original pick stays as
+      // the head of the scene, a residual covers the remainder.
     }
 
-    // Strategy 2: split
+    // Strategy 2: split — keep the original (semantically vetted) pick and
+    // add a residual segment for the uncovered tail.
     const residualAudioStart = safeFloat(clip.audio_start) + vLen;
     const residualAudioEnd = safeFloat(clip.audio_end);
     const residualLen = residualAudioEnd - residualAudioStart;
@@ -1149,6 +1473,7 @@ function enforceCoverage(
       requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
       rejectClimateMismatch: rejectClimate,
       rejectCloudsIntent: rejectClouds,
+      ...floor,
     });
 
     if (!residualBest) {
@@ -1160,6 +1485,7 @@ function enforceCoverage(
         rejectClimateMismatch: rejectClimate,
         rejectCloudsIntent: rejectClouds,
         requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
+        ...floor,
       });
     }
 
@@ -1376,6 +1702,8 @@ function fillSceneGaps(
       rejectClimateMismatch: sceneIsClothing && sceneHasClimate,
       requireMinDuration: end - start,
       requireMinOverlap: MIN_SWAP_TAG_OVERLAP,
+      mood: scene.mood ?? null,
+      sceneConcepts: inferSceneConcepts(scene),
     });
 
     if (!best) {

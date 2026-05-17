@@ -235,8 +235,16 @@ export function inferConcepts(input: {
   if (tags.includes("שמיים בהירים") || tags.includes("שמש") || includesAny(text, ["שמש", "בהיר", "כחולים", "שטוף שמש"])) {
     addUnique(weather, "בהיר");
   }
-  if (tags.includes("חם") || includesAny(text, ["חם", "קיץ", "קיצי", "מדבר", "צחיח", "יבש", "שרב"])) {
-    addUnique(weather, includesAny(text, ["שרב", "עומס חום"]) ? "שרב" : "חם");
+  if (
+    tags.includes("חם")
+    || includesAny(text, ["חם", "חום", "חמים", "קיץ", "קיצי", "מדבר", "צחיח", "יבש", "שרב", "חמסין"])
+    || /\bטמפרטורות\s*(גבוהות|חמות)\b/.test(text)
+    || /(\d{2,3})\s*מעלות/.test(text)
+  ) {
+    addUnique(
+      weather,
+      includesAny(text, ["שרב", "עומס חום", "חמסין", "גל החום", "גל חום"]) ? "שרב" : "חם",
+    );
   }
 
   if (tags.includes("קיץ") || tags.includes("חם") || includesAny(text, ["קיץ", "קיצי", "חם", "מדבר", "צחיח"])) addUnique(season, "קיצי");
@@ -307,7 +315,7 @@ export function targetContradictsSegment(targetText: string, segment: { tags?: s
   const terms = segmentSearchTerms(segment).map(norm);
   const has = (value: string) => terms.some((term) => term.includes(norm(value)));
 
-  const targetHot = includesAny(target, ["שרב", "חם", "חמסין", "עומס חום", "קרינת שמש", "heat", "hot"]);
+  const targetHot = includesAny(target, ["שרב", "חם", "חום", "חמסין", "עומס חום", "קרינת שמש", "heat", "hot"]);
   const targetRain = includesAny(target, ["גשם", "טפטוף", "ממטר", "rain", "drizzle"]);
   const targetNice = includesAny(target, ["נעים", "נוחות", "הקלה", "comfortable", "mild"]);
 

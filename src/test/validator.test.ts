@@ -244,14 +244,20 @@ describe("enforceClothingRule", () => {
 // ---------------------------------------------------------------------------
 
 describe("enforceCoverage", () => {
-  it("swaps short clip for longer same-theme candidate", () => {
-    const short = segClip("SHORT", [seg("SHORT-s0", 0, 8, ["clouds", "blue"])], 8);
-    const long_ = segClip("LONG", [seg("LONG-s0", 0, 20, ["clouds", "blue"])], 20);
+  it("swaps short clip for a materially-better longer candidate", () => {
+    // LONG has strictly more topical overlap than SHORT — clearly beats the
+    // 25% swap-margin gate, so wholesale swap fires.
+    const short = segClip("SHORT", [seg("SHORT-s0", 0, 8, ["clouds"])], 8);
+    const long_ = segClip(
+      "LONG",
+      [seg("LONG-s0", 0, 20, ["clouds", "blue", "sky", "forecast"])],
+      20,
+    );
     const sm = segmentMapFrom([short, long_]);
     const timeline: MutablePick[] = [{ ...tSeg("SHORT-s0", 0, 0, 12), scene_idx: 0 }];
 
     const out = validateAndSwap(timeline, {
-      beats: [{ idx: 0, start: 0, end: 12, text: "blue clouds forecast today" }],
+      beats: [{ idx: 0, start: 0, end: 12, text: "blue clouds sky forecast today" }],
       segmentMap: sm,
       videoMap: { SHORT: short, LONG: long_ },
     });
@@ -261,6 +267,31 @@ describe("enforceCoverage", () => {
     const covFixes = out.hard_violations_fixed.filter((f) => f.issue === "coverage gap");
     expect(covFixes).toHaveLength(1);
     expect(covFixes[0].swapped_to).toBe("LONG-s0");
+  });
+
+  it("prefers split over swap when candidate is not materially better", () => {
+    // SHORT and LONG have identical tags → BM25 scores tie → swap margin
+    // (>=25%) is not met. Validator must fall through to Strategy 2 (split):
+    // keep SHORT-s0 as the head and add LONG-s0 as a residual covering the
+    // 4-second tail. Discards the upstream LLM's narrative intent only when
+    // the new candidate is meaningfully better.
+    const short = segClip("SHORT", [seg("SHORT-s0", 0, 8, ["clouds", "blue"])], 8);
+    const long_ = segClip("LONG", [seg("LONG-s0", 0, 20, ["clouds", "blue"])], 20);
+    const sm = segmentMapFrom([short, long_]);
+    const timeline: MutablePick[] = [{ ...tSeg("SHORT-s0", 0, 0, 12), scene_idx: 0 }];
+
+    validateAndSwap(timeline, {
+      beats: [{ idx: 0, start: 0, end: 12, text: "blue clouds forecast today" }],
+      segmentMap: sm,
+      videoMap: { SHORT: short, LONG: long_ },
+    });
+
+    expect(timeline).toHaveLength(2);
+    expect(timeline[0].segment_id).toBe("SHORT-s0");
+    expect(timeline[0].audio_end).toBeCloseTo(8);
+    expect(timeline[1].segment_id).toBe("LONG-s0");
+    expect(timeline[1].audio_start).toBeCloseTo(8);
+    expect(timeline[1].audio_end).toBeCloseTo(12);
   });
 
   it("splits pick into two when no longer candidate exists", () => {

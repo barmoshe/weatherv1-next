@@ -73,6 +73,7 @@ A. **Holistic interpretation, not literal keyword match.** Read the scene's narr
 A1. **Weather state outranks geography.** When the narration mentions a weather state (גשם / עננים / שמש / שלג / סופה / ערפל / רוח / חם / קר / שרב / חמסין), the picked segment's weather/concept signal MUST match. Wrong-weather + right-place is worse than right-weather + generic-place.
 A2. **When no candidate scores high on the dominant signal, fall back to a generic AMBIENT shot that fits the weather mood** — a wide sky shot, calm city skyline, generic seasonal landscape — rather than a thematically-off specific shot.
 A3. **Sky-state tags.** Match \`מעונן\` / \`חורפי\` / wet concepts to overcast or rainy narration (מעונן / טפטוף / חורפי); match \`שמיים בהירים\`, \`בהיר\`, \`שמש\`, \`קיצי\`, or \`חם\` to sunny narration (יום בהיר / שמשי / חם). Don't pick a partly-cloudy summer-looking clip for an overcast scene.
+A4. **Polarity — ending vs ongoing.** When the narration says a weather state is *ending* (\`מסתיים\`, \`סיום\`, \`ירידה\`, \`נחזור ל…\`, \`התקררות\`, \`חזרה לעונה\`), pick a segment that illustrates the **new** state (the calm/cool/regular one), not the state that is ending. Example: "גל החום מסתיים" → calm urban/landscape under mild sky, **not** a heat-wave or שרב segment. The narration mentions the ending state to *contrast* with relief; matching the contrast loses the meaning.
 B. **Anti-repeat (\`segment_id\`)**: a \`segment_id\` appears at most twice across the whole timeline; never within 2 scenes of its previous use. Independent of B2 (parent file).
 B2. **Parent file diversity (\`clip_id\`) — default once per file, rare exception**
    - **Default**: each \`clip_id\` appears **at most once** in \`timeline\` (deal from the deck; do not “double-dip” the same file without strong cause).
@@ -86,6 +87,7 @@ F. **\`reason\`** — one short Hebrew sentence: what in this segment supports t
 G. **Sub-range picking**: by default, set \`video_start\` = the segment's \`start_sec\` and \`video_end\` = \`start_sec\` + (audio_end - audio_start). Only use a different sub-range if you specifically want a portion of the segment.
 H. **Variety across renders**: when several rows tie on fit, prefer the less-obvious row and an unused \`clip_id\` over recycling the same file. Two runs of the same forecast should not return identical timelines if the catalog allows alternatives.
 I. **Time-of-day vs narration.** When the narration clearly refers to daytime (\`היום\`, \`מחר בבוקר\`, \`צהריים\`) prefer segments whose tags imply matching light state (\`יום\`, \`צהריים\`, \`שמיים בהירים\`). Do not pick \`לילה\` / \`בין ערביים\` / glamour coastal dusk unless the narration is about evening or tags explicitly match. **Geography alone** (\`מרכז\`, \`צפון\`) is a weak tie-breaker—wet/cloud/drizzle (\`טפטוף\`, \`מעונן\`) and sky state must align first.
+J. **Mood guard.** Honour the scene's \`mood\` field as a tonal floor (not a precise filter): if mood is \`calm\` / \`רגוע\`, avoid dramatic / disaster / flood / storm segments (\`סופה\`, \`ברד\`, \`שיטפון\`) even if tags overlap on weather words. If mood is \`dramatic\` / \`קודר\`, prefer \`concepts.weather\` in {שרב, סופה, ברד} when narration supports it. A wrong mood is a worse error than a slightly less-specific topical match.
 
 OUTPUT — Return only a valid JSON object with \`timeline\`: an array of picks in narrative/time order, each with \`scene_idx\`, \`segment_id\`, \`audio_start\`, \`audio_end\`, optional \`video_start\`/\`video_end\` (default = segment span; system may adjust), and \`reason\`. Cover **every** scene; no omitted scenes.`;
 
@@ -102,19 +104,35 @@ export const PICKER_FALLBACK_PROMPT = `**RETRY MODE** — a previous attempt fai
 // Zod schema for LLM response (Risk A5 mitigation)
 // ---------------------------------------------------------------------------
 
-const PickResponseSchema = z.object({
-  timeline: z.array(
-    z.object({
-      scene_idx: z.number().optional(),
-      segment_id: z.string(),
-      audio_start: z.number(),
-      audio_end: z.number(),
-      video_start: z.number().optional(),
-      video_end: z.number().optional(),
-      reason: z.string().optional().default(""),
-    })
-  ),
-});
+/**
+ * Build the timeline-pick response schema with `segment_id` constrained to the
+ * exact catalog IDs the model can see. Eliminates the "model invented a
+ * segment_id" failure mode mechanically — the provider rejects malformed
+ * outputs at sampling time, so the picker can run hotter (temp 0.6) for
+ * cross-render variety without risking fabricated picks.
+ *
+ * When the catalog is empty (no clips available at all) fall back to a free
+ * string — providers reject zero-length enums.
+ */
+function buildPickResponseSchema(catalogIds: readonly string[]) {
+  const idSchema =
+    catalogIds.length > 0
+      ? z.enum(catalogIds as [string, ...string[]])
+      : z.string();
+  return z.object({
+    timeline: z.array(
+      z.object({
+        scene_idx: z.number().optional(),
+        segment_id: idSchema,
+        audio_start: z.number(),
+        audio_end: z.number(),
+        video_start: z.number().optional(),
+        video_end: z.number().optional(),
+        reason: z.string().optional().default(""),
+      }),
+    ),
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Catalog preparation
@@ -455,15 +473,19 @@ async function invokePickerLlmOnce(args: {
   // the caller didn't override the system prompt.
   const useCache = !customPrompt;
 
+  // segment_id is enum-locked to the catalog rows the model actually sees,
+  // so we can run hotter for variety without risking fabricated picks.
+  const schema = buildPickResponseSchema(effectiveCatalog.map((r) => r.segment_id));
+
   try {
     const { data, usage } = await provider.completeJson({
       systemPrompt,
       userPayload,
-      schema: PickResponseSchema,
+      schema,
       schemaName: "timeline_pick_response",
       schemaDescription: TIMELINE_PICK_SCHEMA_DESCRIPTION,
       options: {
-        temperature: 0.7,
+        temperature: 0.6,
         cacheSystemPrompt: useCache,
       },
     });
