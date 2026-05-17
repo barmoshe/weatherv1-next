@@ -784,16 +784,16 @@
       grid-template-columns: 1fr auto;
       gap: 10px;
       align-items: center;
-      padding: 8px 12px 8px 10px;
+      padding: 6px 12px 6px 8px;
       border-radius: 10px;
       border: 1px solid rgb(0 0 0 / 0.07);
       background: rgb(255 255 255 / 0.86);
       box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
-      font-size: clamp(0.76rem, 0.95vw, 0.86rem);
+      font-size: clamp(0.72rem, 0.88vw, 0.8rem);
       font-weight: 740;
-      line-height: 1.36;
+      line-height: 1.3;
       color: rgb(66 68 78 / 1);
-      min-height: 38px;
+      min-height: 34px;
       min-width: 0;
       transition:
         border-color 0.22s ease,
@@ -813,8 +813,10 @@
       display: block;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
+      text-overflow: clip;
       letter-spacing: 0.005em;
+      -webkit-mask-image: linear-gradient(to left, transparent 0, #000 28px);
+              mask-image: linear-gradient(to left, transparent 0, #000 28px);
     }
 
     [data-pitch-layout="product-app"] .bullets--studio-wizard li:hover {
@@ -1693,8 +1695,13 @@
       height: 100%;
     }
 
+    /* Keep the placeholder in flow (just hidden visually) so it continues
+       to drive the device-screen size; the absolute-positioned
+       .pitch-output-ready video overlays it at identical dimensions. This
+       prevents the bento from reflowing between phase 4 (render) and
+       phase 5 (output). */
     #studio .pitch-app-shell[data-studio-phase="output"] .pitch-output-placeholder {
-      display: none !important;
+      visibility: hidden;
     }
 
     #studio .pitch-app-shell[data-studio-phase="output"] .pitch-output-ready {
@@ -1742,7 +1749,11 @@
       color: rgb(42 48 56 / 1);
     }
 
-    #studio .pitch-app-shell:not([data-studio-phase="output"]) .pitch-when-render {
+    /* The action-row + footnote inside the studio mock only have meaning in
+       the output phase. Showing them only there forces the bento to reflow
+       between render and output, so keep them hidden in this mock — the
+       playing video is already a strong enough "rendered" signal. */
+    #studio .pitch-when-render {
       display: none !important;
     }
 
@@ -2172,7 +2183,7 @@
     .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-pending {
       display: none;
     }
-    .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-active {
+    #studio .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-active {
       min-height: 32px;
       margin: 0;
     }
@@ -7202,11 +7213,8 @@
         const phases = ["upload", "transcript", "planning", "render", "output"];
         const studioLi = (item, i) => {
           const ph = phases[i] || "upload";
-          const colonIdx = item.indexOf(":");
-          const label = colonIdx === -1 ? item : item.slice(0, colonIdx).trim();
           const fullText = escapeHtml(item);
-          const labelHtml = escapeHtml(label);
-          return `<li role="button" tabindex="0" class="pitch-studio-phase-pick" data-studio-phase-bullet="${ph}" aria-label="${fullText}" title="${fullText}"><span class="pitch-studio-phase-label">${labelHtml}</span></li>`;
+          return `<li role="button" tabindex="0" class="pitch-studio-phase-pick" data-studio-phase-bullet="${ph}" title="${fullText}"><span class="pitch-studio-phase-label">${fullText}</span></li>`;
         };
         const wizardItems = section.bullets.map(studioLi).join("");
         if (hasMobileBullets) {
