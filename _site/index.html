@@ -2122,10 +2122,30 @@
     .pitch-bento__right-stack > .pitch-bento__cell--output {
       padding: 22px 9px 11px;
       min-height: 0;
-      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto;
       align-content: stretch;
       justify-items: center;
       overflow: hidden;
+      gap: 7px;
+    }
+    /* In the narrow right-stack, the long footnote sentence is unreadable —
+       hide it. The action row gets compressed to a single tight pill. */
+    .pitch-bento__right-stack .pitch-output-footnote {
+      display: none;
+    }
+    .pitch-bento__right-stack .pitch-output-actions {
+      gap: 6px;
+      width: 100%;
+      flex-wrap: nowrap;
+      justify-content: center;
+    }
+    .pitch-bento__right-stack .pitch-output-btn {
+      min-height: 26px;
+      padding: 0 9px;
+      font-size: 0.56rem;
+      border-radius: 7px;
+      flex: 1 1 0;
+      min-width: 0;
     }
     /* Drive the phone size by AVAILABLE HEIGHT so the 9:16 aspect
        doesn't overflow the narrow column. Explicit height triggers
