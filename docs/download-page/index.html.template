@@ -886,9 +886,8 @@
     }
 
     [data-pitch-layout="product-app"] .panel-visual {
-      place-items: stretch;
-      justify-items: stretch;
-      align-content: stretch;
+      place-items: center stretch;
+      align-content: center;
     }
 
     @media (min-width: 861px) {
