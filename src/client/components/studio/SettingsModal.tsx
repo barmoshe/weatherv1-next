@@ -273,6 +273,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (!r.ok || !data.success) throw new Error(data.error ?? `HTTP ${r.status}`);
       await loadDesktopStatus();
       await loadHealth();
+      // Cloud is now authoritative for the jobs list — kick useLocalHistory
+      // to re-pull /api/jobs and drop any localStorage rows that R2 no
+      // longer has. Without this, deleting jobs in R2 leaves stale rows
+      // in the Active/History tabs until the user reloads.
+      window.dispatchEvent(new CustomEvent("weatherv1-refetch-jobs"));
     } catch (e) {
       setDesktopError(e instanceof Error ? e.message : String(e));
     } finally {

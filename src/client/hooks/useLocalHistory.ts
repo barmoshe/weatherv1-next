@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { JobUsageSummary, UsageCallRecord } from "@/shared/usage";
 
 export interface HistoryEntry {
@@ -63,7 +63,6 @@ export function mergeHistoryEntries(local: HistoryEntry[], persisted: HistoryEnt
 
 export function useLocalHistory() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const historyRef = useRef<HistoryEntry[]>(history);
 
   const syncFromServer = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -83,10 +82,6 @@ export function useLocalHistory() {
   }, []);
 
   useEffect(() => {
-    historyRef.current = history;
-  }, [history]);
-
-  useEffect(() => {
     const ac = new AbortController();
     setHistory(load());
     void syncFromServer(ac.signal);
@@ -99,20 +94,27 @@ export function useLocalHistory() {
     return () => window.removeEventListener("weatherv1-refetch-jobs", onRefetch);
   }, [syncFromServer]);
 
-  // Jobs list updates from many places (worker, APIs). Studio only polls `/api/status`
-  // for the current transcript job — keep dashboard rows (Active/History tabs) aligned.
+  // Adaptive cadence (per polling research): 2s when something is processing,
+  // 30s otherwise. The fast tick is for live progress; the slow tick keeps
+  // the list in sync with cloud-side state (e.g. another machine deleted a
+  // job, or `Pull from R2` truncated jobs.json) without hammering the gateway.
+  // We skip the fetch when the tab is hidden — visibilitychange will catch
+  // us up immediately on return.
   useEffect(() => {
     const hasActive = history.some((j) => ACTIVE_JOB_STATUSES.has(j.status));
-    if (!hasActive) return;
-    const id = window.setInterval(() => void syncFromServer(), 2000);
+    const intervalMs = hasActive ? 2_000 : 30_000;
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      void syncFromServer();
+    }, intervalMs);
     return () => window.clearInterval(id);
   }, [history, syncFromServer]);
 
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState !== "visible") return;
-      const h = historyRef.current;
-      if (!h.some((j) => ACTIVE_JOB_STATUSES.has(j.status))) return;
+      // Always catch up on return — the slow ambient tick may have missed
+      // cloud-side mutations while the tab was backgrounded.
       void syncFromServer();
     };
     document.addEventListener("visibilitychange", onVisibility);

@@ -6,7 +6,18 @@ import { randomBytes } from "node:crypto";
 // which seeds this set at module load so quit+relaunch keeps the
 // editor signed in. Web mode: no persistence — a server restart logs
 // everyone out, which is acceptable for dev.
-const TOKENS = new Set<string>();
+//
+// Backed by globalThis: Next 16 bundles `proxy.ts` (middleware) and
+// route handlers as separate module graphs even in the Node runtime,
+// so this file is instantiated twice. Without a shared bin, tokens
+// issued by /api/auth/editor-login (route bundle) would be invisible
+// to the proxy's auth check, and the cookie would round-trip but
+// every subsequent /api/* call would 401. globalThis is the only
+// shared surface across module graphs in the same Node process.
+const SHARED_KEY = "__weatherv1EditorSessionTokens__";
+type GlobalWithTokens = typeof globalThis & { [SHARED_KEY]?: Set<string> };
+const g = globalThis as GlobalWithTokens;
+const TOKENS: Set<string> = g[SHARED_KEY] ?? (g[SHARED_KEY] = new Set<string>());
 
 const TOKEN_HEX_LENGTH = 64;
 
