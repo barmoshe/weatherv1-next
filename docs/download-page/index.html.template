@@ -756,17 +756,17 @@
     }
 
     [data-pitch-layout="product-app"] .bullets {
-      gap: 6px;
+      gap: 4px;
       position: relative;
     }
     /* Vertical connector line tying the numbered chips together into a
        visible stepper — sits behind the bullets, anchored to the chip
-       column (which lives on the inline-end side under RTL). */
+       column (inline-end side under RTL). */
     [data-pitch-layout="product-app"] .bullets--studio-wizard::before {
       content: "";
       position: absolute;
-      inset-block: 18px;
-      inset-inline-end: 17px;
+      inset-block: 14px;
+      inset-inline-end: 14px;
       width: 2px;
       border-radius: 2px;
       background: linear-gradient(180deg,
@@ -782,17 +782,18 @@
       z-index: 1;
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
-      padding: 7px 10px 7px 12px;
-      border-radius: 10px;
+      padding: 5px 8px 5px 10px;
+      border-radius: 9px;
       border: 1px solid rgb(0 0 0 / 0.07);
       background: rgb(255 255 255 / 0.86);
       box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
-      font-size: clamp(0.74rem, 0.94vw, 0.86rem);
-      font-weight: 750;
-      line-height: 1.42;
+      font-size: clamp(0.72rem, 0.88vw, 0.82rem);
+      font-weight: 730;
+      line-height: 1.32;
       color: rgb(66 68 78 / 1);
+      min-height: 30px;
       transition:
         border-color 0.22s ease,
         box-shadow 0.22s ease,
@@ -807,12 +808,12 @@
     [data-pitch-layout="product-app"] .bullets li::before {
       content: counter(pitch-step, decimal-leading-zero);
       grid-column: 2;
-      width: 26px;
-      height: 26px;
+      width: 22px;
+      height: 22px;
       margin: 0;
       padding: 0;
       border-radius: 999px;
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       font-weight: 950;
       font-variant-numeric: tabular-nums;
       background: rgb(252 236 232 / 1);
