@@ -269,6 +269,13 @@ export default {
   },
 };
 
+// Hot-path regexes — compile once at module load. validateObjectKey runs on
+// every authenticated request (4× for a multipart upload), so re-allocating
+// these per call adds measurable startup cost under load.
+const TENANT_KEY_RE = /^tenants\/[a-zA-Z0-9_-]{1,80}\//;
+const FORBIDDEN_OUTPUTS_RE = /(^|\/)outputs\//;
+const RANGE_RE = /^bytes=(\d+)-(\d*)$/;
+
 /**
  * Reject any key that isn't tenant-scoped or that touches the forbidden
  * `outputs/` prefix (where local-only forecast renders live in cache —
@@ -279,8 +286,8 @@ function validateObjectKey(key) {
   if (typeof key !== "string" || key.length === 0) return "missing key";
   if (key.length > 1024) return "key too long";
   if (key.includes("..") || key.includes("//")) return "invalid key";
-  if (!/^tenants\/[a-zA-Z0-9_-]{1,80}\//.test(key)) return "key must start with tenants/<id>/";
-  if (/(^|\/)outputs\//.test(key)) return "outputs/ prefix is forbidden";
+  if (!TENANT_KEY_RE.test(key)) return "key must start with tenants/<id>/";
+  if (FORBIDDEN_OUTPUTS_RE.test(key)) return "outputs/ prefix is forbidden";
   return null;
 }
 
@@ -288,7 +295,7 @@ function validateObjectKey(key) {
 function parseRange(header) {
   // Only `bytes=start-end` and `bytes=start-` are supported. `suffix-length`
   // is uncommon for the app's use case (downloading a known-size object).
-  const m = /^bytes=(\d+)-(\d*)$/.exec(header.trim());
+  const m = RANGE_RE.exec(header.trim());
   if (!m) return undefined;
   const offset = Number(m[1]);
   if (m[2] === "") return { offset };

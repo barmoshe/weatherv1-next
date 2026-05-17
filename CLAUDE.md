@@ -14,6 +14,7 @@ This repo runs **Next.js 16** with React 19. APIs, conventions, and file structu
 4. For R2/Worker/Pulumi: `docs/R2_PULUMI_HANDOFF.md` + `infra/cloudflare/README.md`.
 5. For releases: `docs/RELEASE_CONVENTION.md` (or `/weatherv1-release`).
 6. For goal-driven sessions: `/weatherv1-goal`.
+7. For handoff format + agent workflow conventions: `docs/CLAUDE_PRACTICES.md`. Write `.claude/HANDOFF-YYYY-MM-DD-<topic>.md` when pausing multi-phase work mid-flight.
 
 ## Queued and historical work
 
