@@ -42,11 +42,11 @@ Everything Premiere needs to reconstruct a sequence is already in memory at that
 - Multi-job batch export.
 - Re-implementing graphics/effects from the AE side (covered by the sibling [`../after-effects-graphics/`](../after-effects-graphics/) research).
 
-## Open Questions
+## Resolved (research pass)
 
-- Clip path strategy: absolute paths (simplest, machine-locked), relative paths (portable, requires a "media root" decision), or symlinks into a sidecar media folder?
-- Web users do not have local filesystem access to the workspace — should the export route also bundle the source clips as a zip, or is this feature desktop-only at v1?
-- Frame rate: assume 30 fps universally, or detect from the most common source clip?
+- **Clip path strategy** → absolute `file://` paths in v1; workspace root stamped as an XML comment so a future "relativise" mode can opt in without breaking earlier exports. Evidence: `src/server/catalog/parser.ts:104` already produces absolute paths from `WEATHER_WORKSPACE_DIR` (`src/server/runtime/config.ts:59-67`).
+- **Web vs desktop** → desktop-only in v1. Web returns `501 Not Implemented`; the UI button is hidden on web. Reason: clip files have no public HTTP route (`src/proxy.ts:28-49`), so `file://` paths emitted on web would be unresolvable, and bundling source clips into a zip would ship multi-GB media redundantly to desktop users who already have them locally. Gate the route with both `assertDesktopAuth()` and `isDesktopMode()` (`src/server/runtime/auth.ts:18-25`).
+- **Frame rate** → hard-code 30 fps in the FCP7 sequence; convert seconds → frames as `Math.round(sec * 30)`. The catalog does not record per-clip fps (`ParsedVideo` has no fps field; `ProbeResult` doesn't extract it), and the renderer itself doesn't pass `-r`. Editors routinely conform mixed-rate sources to a sequence rate. Leave a `TODO(premiere-fps-detect)` for a future "ffprobe the first clip" enhancement.
 
 ## Plan
 
