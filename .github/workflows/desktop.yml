@@ -35,6 +35,11 @@ jobs:
       # derived from them.
       EDITOR_PASSWORD: ${{ secrets.EDITOR_PASSWORD }}
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      # Baked into auth-passwords.generated.ts alongside the hashes. The
+      # packaged client uses the editor's typed password + this username
+      # as Cloudflare R2 Worker Basic Auth, so the user only ever sees
+      # one login screen.
+      R2_APP_USERNAME: ${{ secrets.R2_APP_USERNAME }}
       npm_config_arch: ${{ matrix.arch }}
 
     steps:
@@ -60,7 +65,7 @@ jobs:
         shell: pwsh
         run: |
           $missing = @()
-          foreach ($name in 'EDITOR_PASSWORD','ADMIN_PASSWORD') {
+          foreach ($name in 'EDITOR_PASSWORD','ADMIN_PASSWORD','R2_APP_USERNAME') {
             if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
               $missing += $name
             }

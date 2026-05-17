@@ -64,3 +64,4 @@ jobs:
           build-args: |
             EDITOR_PASSWORD=${{ secrets.EDITOR_PASSWORD }}
             ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+            R2_APP_USERNAME=${{ secrets.R2_APP_USERNAME }}
