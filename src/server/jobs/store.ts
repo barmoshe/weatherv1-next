@@ -150,12 +150,18 @@ function sweepStaleDraftsWithoutPlan(): boolean {
   return changed;
 }
 
-/** On boot: flip any lingering "processing" jobs to "failed" (crash recovery). */
+/**
+ * On boot: flip any "processing" jobs to "failed" (crash recovery).
+ *
+ * Queued jobs are intentionally left alone — `worker.startWorker()` re-enqueues
+ * them on the next drain loop. Flipping them to "failed" here would silently
+ * drop user work on every restart.
+ */
 export function crashRecoverySweep(): void {
   load();
   let changed = false;
   for (const job of store.values()) {
-    if (job.status === "processing" || job.status === "queued") {
+    if (job.status === "processing") {
       job.status = "failed";
       job.error = "Server restarted while job was running";
       changed = true;
