@@ -2432,11 +2432,35 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      cursor: default;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
     }
-    .pitch-review-seg.is-active .pitch-review-seg__play {
+    .pitch-review-seg__play:hover {
+      background: color-mix(in srgb, rgb(249 84 62 / 1) 12%, rgb(255 255 255 / 1));
+    }
+    .pitch-review-seg__play:active {
+      transform: scale(0.92);
+    }
+    .pitch-review-seg__play:focus-visible {
+      outline: 2px solid rgb(249 84 62 / 1);
+      outline-offset: 2px;
+    }
+    .pitch-review-seg.is-active .pitch-review-seg__play,
+    .pitch-review-seg__play[aria-pressed="true"] {
       background: rgb(249 84 62 / 1);
       color: #fff;
+    }
+    .pitch-review-seg__play[aria-pressed="true"] .pitch-review-seg__play-glyph {
+      animation: pitchReviewPulse 1s ease-in-out infinite;
+    }
+    @keyframes pitchReviewPulse {
+      0%, 100% { transform: scale(1);   opacity: 1; }
+      50%      { transform: scale(0.78); opacity: 0.7; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pitch-review-seg__play[aria-pressed="true"] .pitch-review-seg__play-glyph {
+        animation: none;
+      }
     }
 
     .pitch-review-seg__main {
@@ -6549,7 +6573,9 @@
           const range = `${fmtSec(seg.start)}–${fmtSec(seg.end)}`;
           const isActive = idx === 0 ? " is-active" : "";
           return `<div class="pitch-review-seg${isActive}">
-              <button type="button" class="pitch-review-seg__play" aria-label="השמע משפט" tabindex="-1">▶</button>
+              <button type="button" class="pitch-review-seg__play" aria-label="השמע משפט" aria-pressed="false" data-pitch-speak="${escapeHtml(seg.text)}" data-pitch-speak-lang="he-IL">
+                <span class="pitch-review-seg__play-glyph" aria-hidden="true">▶</span>
+              </button>
               <div class="pitch-review-seg__main">
                 <span class="pitch-review-seg__time mixed-ltr" lang="en" dir="ltr">${range}</span>
                 <p class="pitch-review-seg__text">${escapeHtml(seg.text)}</p>
@@ -7960,12 +7986,87 @@
       };
     }
 
+    /* —— Studio review: per-segment play buttons speak via Web Speech API ——
+       Hands the deck a tiny taste of the real app's per-sentence playback.
+       The real app plays Whisper-aligned audio segments; here, since the
+       deck has no audio file, we use the browser's speech synthesis to read
+       each Hebrew segment aloud. One utterance at a time; clicking the
+       same button cancels; clicking a different one cancels + restarts. */
+    let studioSpeechCleanup = null;
+
+    function teardownStudioReviewSpeech() {
+      if (typeof studioSpeechCleanup === "function") {
+        studioSpeechCleanup();
+        studioSpeechCleanup = null;
+      }
+      try {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      } catch (_e) { /* noop */ }
+    }
+
+    function initStudioReviewSpeech() {
+      teardownStudioReviewSpeech();
+      const root = document.getElementById("studio");
+      if (!root) return;
+      if (typeof window.speechSynthesis === "undefined" || typeof window.SpeechSynthesisUtterance === "undefined") {
+        // Browser without speech synthesis: leave the buttons as visual-only.
+        return;
+      }
+      const synth = window.speechSynthesis;
+      let activeBtn = null;
+
+      const stopActive = () => {
+        try { synth.cancel(); } catch (_e) { /* noop */ }
+        if (activeBtn) {
+          activeBtn.setAttribute("aria-pressed", "false");
+          activeBtn = null;
+        }
+      };
+
+      const onClick = event => {
+        const btn = event.target.closest("#studio .pitch-review-seg__play[data-pitch-speak]");
+        if (!btn || !root.contains(btn)) return;
+        event.preventDefault();
+        const wasActive = btn === activeBtn;
+        stopActive();
+        if (wasActive) return; // toggle off
+        const text = btn.getAttribute("data-pitch-speak") || "";
+        if (!text) return;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = btn.getAttribute("data-pitch-speak-lang") || "he-IL";
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+        utter.onend = () => {
+          if (btn === activeBtn) {
+            btn.setAttribute("aria-pressed", "false");
+            activeBtn = null;
+          }
+        };
+        utter.onerror = utter.onend;
+        try {
+          synth.speak(utter);
+          btn.setAttribute("aria-pressed", "true");
+          activeBtn = btn;
+        } catch (_e) {
+          btn.setAttribute("aria-pressed", "false");
+          activeBtn = null;
+        }
+      };
+
+      root.addEventListener("click", onClick);
+      studioSpeechCleanup = () => {
+        stopActive();
+        root.removeEventListener("click", onClick);
+      };
+    }
+
     function setProgress(value) {
       const clamped = Math.max(0, Math.min(1, value));
       progressFill.style.transform = `scaleX(${clamped})`;
     }
 
     function teardownHorizontalStory() {
+      teardownStudioReviewSpeech();
       teardownStudioWizardHighlight();
       teardownVerticalClusterWheelCaptures();
       teardownHorizontalPanelReveals();
@@ -8208,6 +8309,7 @@
       if (!hasGsap || reduceMotion) {
         addPassiveProgress();
         initStudioWizardHighlight();
+        initStudioReviewSpeech();
         refreshPitchStepNavUi();
         return;
       }
@@ -8218,6 +8320,7 @@
         addPassiveProgress();
         initVerticalPanelReveals();
         initStudioWizardHighlight();
+        initStudioReviewSpeech();
         refreshPitchStepNavUi();
         return;
       }
@@ -8225,6 +8328,7 @@
       if (!isDesktop) {
         addPassiveProgress();
         initStudioWizardHighlight();
+        initStudioReviewSpeech();
         refreshPitchStepNavUi();
         return;
       }
