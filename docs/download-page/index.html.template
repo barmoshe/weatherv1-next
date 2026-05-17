@@ -6678,8 +6678,8 @@
         : "";
       return `<div class="pitch-app-shell" data-studio-phase="idle" data-highlight="idle">
           <div class="pitch-app-main">
-            <div class="pitch-app-header" aria-hidden="true">
-              <span class="pitch-app-header__title">Weather V1 Studio</span>
+            <div class="pitch-app-header">
+              <span class="pitch-app-header__title" aria-hidden="true">Weather V1 Studio</span>
               <p class="pitch-app-header__hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ, ללא הפעלה אוטומטית. בשלב הרביעי: אמולטור אייפון משמאל, לידו תמלול ותוכנית סצנות.</p>
             </div>
             <div class="pitch-job-row" aria-hidden="true">
