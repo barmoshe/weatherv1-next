@@ -38,13 +38,11 @@ function deriveTileStates(phase: StudioPhase): Record<string, TileState> {
     case "transcribing":
       return { audio: "active", review: "waiting", plan: "waiting", render: "waiting", output: "waiting", diag: "is-skeleton" };
     case "transcribed":
-      return { audio: "completed", review: "active", plan: "waiting", render: "waiting", output: "waiting", diag: "is-skeleton" };
     case "reviewing":
       return { audio: "completed", review: "active", plan: "waiting", render: "waiting", output: "waiting", diag: "is-skeleton" };
     case "planning":
       return { audio: "completed", review: "completed", plan: "active", render: "waiting", output: "waiting", diag: "is-skeleton" };
     case "planned":
-      return { audio: "completed", review: "completed", plan: "completed", render: "active", output: "waiting", diag: "is-skeleton" };
     case "rendering":
       return { audio: "completed", review: "completed", plan: "completed", render: "active", output: "waiting", diag: "is-skeleton" };
     case "done":

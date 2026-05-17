@@ -264,6 +264,20 @@ async function uploadMultipart(
   return { etag: normalizeEtag(data.etag), size };
 }
 
+/**
+ * Remove a single object from R2 via the gateway. Treats 404 as success
+ * so callers can be idempotent. Throws on any other non-2xx.
+ */
+export async function deleteR2Object(key: string): Promise<void> {
+  const res = await fetch(objectUrl(key), {
+    method: "DELETE",
+    headers: { authorization: authHeader() },
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`deleteR2Object(${key}): ${await readErrorMessage(res)}`);
+  }
+}
+
 export async function downloadR2File(
   key: string,
   targetPath: string,

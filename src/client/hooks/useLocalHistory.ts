@@ -19,6 +19,17 @@ const MAX_ENTRIES = 50;
 export const ACTIVE_JOB_STATUSES = new Set(["draft", "queued", "processing"]);
 export const HISTORY_JOB_STATUSES = new Set(["completed", "failed", "lost"]);
 
+/** Cross-component cue (catalog pull, R2 bootstrap, settings actions) to refresh /api/jobs. */
+export const REFETCH_JOBS_EVENT = "weatherv1-refetch-jobs";
+export function dispatchRefetchJobs(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(REFETCH_JOBS_EVENT));
+}
+
+/** Poll cadences (per polling research): fast during processing, slow when idle. */
+const ACTIVE_POLL_MS = 2_000;
+const IDLE_POLL_MS = 30_000;
+
 interface JobsResponse {
   success?: boolean;
   jobs?: HistoryEntry[];
@@ -90,25 +101,24 @@ export function useLocalHistory() {
 
   useEffect(() => {
     const onRefetch = () => void syncFromServer();
-    window.addEventListener("weatherv1-refetch-jobs", onRefetch);
-    return () => window.removeEventListener("weatherv1-refetch-jobs", onRefetch);
+    window.addEventListener(REFETCH_JOBS_EVENT, onRefetch);
+    return () => window.removeEventListener(REFETCH_JOBS_EVENT, onRefetch);
   }, [syncFromServer]);
 
-  // Adaptive cadence (per polling research): 2s when something is processing,
-  // 30s otherwise. The fast tick is for live progress; the slow tick keeps
-  // the list in sync with cloud-side state (e.g. another machine deleted a
-  // job, or `Pull from R2` truncated jobs.json) without hammering the gateway.
-  // We skip the fetch when the tab is hidden — visibilitychange will catch
-  // us up immediately on return.
+  // Adaptive cadence: fast while something is processing, slow when idle.
+  // The slow tick keeps the list in sync with cloud-side state (another
+  // machine deleting a job, `Pull from R2` truncating jobs.json) without
+  // hammering the gateway. Skip the fetch when the tab is hidden —
+  // visibilitychange catches us up on return. Depending on `hasActive`
+  // (not `history`) means the interval only resets when the cadence flips.
+  const hasActive = history.some((j) => ACTIVE_JOB_STATUSES.has(j.status));
   useEffect(() => {
-    const hasActive = history.some((j) => ACTIVE_JOB_STATUSES.has(j.status));
-    const intervalMs = hasActive ? 2_000 : 30_000;
     const id = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
       void syncFromServer();
-    }, intervalMs);
+    }, hasActive ? ACTIVE_POLL_MS : IDLE_POLL_MS);
     return () => window.clearInterval(id);
-  }, [history, syncFromServer]);
+  }, [hasActive, syncFromServer]);
 
   useEffect(() => {
     const onVisibility = () => {

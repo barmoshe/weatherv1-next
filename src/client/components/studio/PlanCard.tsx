@@ -5,6 +5,7 @@ import { SceneCard } from "./SceneCard";
 import type { Scene } from "@/shared/types";
 import { formatTime } from "@/client/lib/format-time";
 import { pickDisplayReason } from "@/client/lib/plan-pick-display";
+import { STATUS_LABELS } from "./status-labels";
 
 interface TranscriptData {
   job_id: string;
@@ -31,14 +32,6 @@ interface PlanCardProps {
   onPhaseChange: (phase: StudioPhase) => void;
   onError: (msg: string) => void;
 }
-
-const STATUS_LABELS: Record<TileState, string> = {
-  "is-skeleton": "ממתין",
-  waiting: "בתור",
-  active: "מעבד",
-  completed: "הושלם",
-  failed: "נכשל",
-};
 
 export function PlanCard({
   jobId,

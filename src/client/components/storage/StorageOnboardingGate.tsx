@@ -6,6 +6,7 @@ import { desktop } from "@/client/lib/desktop";
 import { useStorageStatus } from "@/client/hooks/useStorageStatus";
 import type { DesktopAppInfo } from "@/shared/desktop";
 import { AppBootstrapShell } from "@/client/components/storage/AppBootstrapShell";
+import { dispatchRefetchJobs } from "@/client/hooks/useLocalHistory";
 
 // `cloud-connect` was a second-screen R2 sign-in form. Editor login now
 // persists the same (username, password) as R2 Worker creds, so we no
@@ -72,7 +73,7 @@ export function StorageOnboardingGate() {
       qc.invalidateQueries({ queryKey: ["r2-sync-status"] }),
     ]);
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("weatherv1-refetch-jobs"));
+      dispatchRefetchJobs();
     }
   }, [refetch, qc]);
 

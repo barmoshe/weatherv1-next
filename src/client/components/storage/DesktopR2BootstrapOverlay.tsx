@@ -6,6 +6,7 @@ import { desktop } from "@/client/lib/desktop";
 import { useStorageStatus } from "@/client/hooks/useStorageStatus";
 import { postFullR2Pull } from "@/client/lib/r2FullPull";
 import { AppBootstrapShell } from "./AppBootstrapShell";
+import { dispatchRefetchJobs } from "@/client/hooks/useLocalHistory";
 
 /**
  * After cloud credentials + local cache are ready, run one authoritative R2 pull
@@ -48,7 +49,7 @@ export function DesktopR2BootstrapOverlay() {
         ]);
         if (cancelled || runTokenRef.current !== token) return;
         if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("weatherv1-refetch-jobs"));
+          dispatchRefetchJobs();
         }
       } catch (e) {
         if (!cancelled) {

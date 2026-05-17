@@ -120,7 +120,6 @@ export function ReviewCard({
                 preload="metadata"
                 src={audioSrc}
                 data-testid="review-audio"
-                style={{ width: "100%" }}
               />
             </div>
           )}

@@ -1,5 +1,6 @@
 "use client";
 import type { TileState } from "./StudioPanel";
+import { STATUS_LABELS } from "./status-labels";
 
 interface TranscriptData {
   transcript: string;
@@ -12,14 +13,6 @@ interface TranscribeCardProps {
   phase: string;
   tileState: TileState;
 }
-
-const STATUS_LABELS: Record<TileState, string> = {
-  "is-skeleton": "ממתין",
-  waiting: "בתור",
-  active: "מעבד",
-  completed: "הושלם",
-  failed: "נכשל",
-};
 
 export function TranscribeCard({ transcriptData, phase, tileState }: TranscribeCardProps) {
   return (

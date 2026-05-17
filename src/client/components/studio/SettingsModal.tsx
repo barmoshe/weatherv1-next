@@ -9,6 +9,7 @@ import type {
   LlmProviderPreference,
 } from "@/shared/desktop";
 import { downloadJsonFile } from "@/client/lib/download-json-file";
+import { dispatchRefetchJobs } from "@/client/hooks/useLocalHistory";
 
 import type { CatalogHealth, DesktopStatus, DotVariant } from "./settings/settingsTypes";
 import { AdminTabPanel } from "./settings/AdminTabPanel";
@@ -277,7 +278,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       // to re-pull /api/jobs and drop any localStorage rows that R2 no
       // longer has. Without this, deleting jobs in R2 leaves stale rows
       // in the Active/History tabs until the user reloads.
-      window.dispatchEvent(new CustomEvent("weatherv1-refetch-jobs"));
+      dispatchRefetchJobs();
     } catch (e) {
       setDesktopError(e instanceof Error ? e.message : String(e));
     } finally {

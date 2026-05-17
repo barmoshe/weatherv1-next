@@ -1,6 +1,7 @@
 "use client";
 import type { TileState } from "./StudioPanel";
 import type { JobStatus } from "@/client/hooks/useJobStatus";
+import { STATUS_LABELS } from "./status-labels";
 
 interface OutputCardProps {
   phase: string;
@@ -8,14 +9,6 @@ interface OutputCardProps {
   jobStatus: JobStatus | null;
   outputFilename: string | null;
 }
-
-const STATUS_LABELS: Record<TileState, string> = {
-  "is-skeleton": "ממתין",
-  waiting: "בתור",
-  active: "מעבד",
-  completed: "הושלם",
-  failed: "נכשל",
-};
 
 export function OutputCard({ phase, tileState, jobStatus, outputFilename }: OutputCardProps) {
   const isDone = phase === "done" && !!outputFilename;

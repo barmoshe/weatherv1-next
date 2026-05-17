@@ -38,27 +38,10 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { loadDotenvFiles } from "./_lib/load-env";
 
 const repoRoot = process.cwd();
-
-// Load .env.local then .env (first wins per key) so the script picks up R2
-// creds the same way the dev server does.
-for (const envFile of [".env.local", ".env"]) {
-  const p = path.resolve(repoRoot, envFile);
-  if (!fs.existsSync(p)) continue;
-  for (const line of fs.readFileSync(p, "utf8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq < 1) continue;
-    const k = trimmed.slice(0, eq).trim();
-    let v = trimmed.slice(eq + 1).trim();
-    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-      v = v.slice(1, -1);
-    }
-    if (process.env[k] === undefined) process.env[k] = v;
-  }
-}
+loadDotenvFiles(repoRoot);
 
 // Hardcoded production gateway/tenant/bucket fall-backs, mirroring
 // electron/config.cjs's PRODUCTION_R2 so the script Just Works on a
@@ -75,6 +58,7 @@ process.env.R2_BUCKET_NAME ??= PROD.bucketName;
 process.env.R2_APP_PASSWORD ??= process.env.EDITOR_PASSWORD;
 
 import {
+  deleteR2Object,
   getR2Text,
   headR2Object,
   putR2Text,
@@ -120,23 +104,6 @@ if (!r2Configured()) {
 const STAMP = new Date().toISOString().slice(0, 10);
 const ARCHIVE_DIR = path.join(repoRoot, "runtime", "archive", `r2-jobs-${STAMP}`);
 fs.mkdirSync(ARCHIVE_DIR, { recursive: true });
-
-function gatewayBase(): string {
-  return process.env.R2_GATEWAY_URL!.replace(/\/+$/, "");
-}
-function basicAuth(): string {
-  const u = process.env.R2_APP_USERNAME ?? "";
-  const p = process.env.R2_APP_PASSWORD ?? "";
-  return `Basic ${Buffer.from(`${u}:${p}`).toString("base64")}`;
-}
-async function deleteR2Object(key: string): Promise<void> {
-  const url = `${gatewayBase()}/v1/objects?key=${encodeURIComponent(key)}`;
-  const res = await fetch(url, { method: "DELETE", headers: { authorization: basicAuth() } });
-  if (!res.ok && res.status !== 404) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`DELETE ${key} -> ${res.status} ${body.slice(0, 200)}`);
-  }
-}
 
 async function main(): Promise<void> {
   console.log(`Mode: ${DELETE ? "ARCHIVE + DELETE" : DOWNLOAD ? "ARCHIVE (no delete)" : "DRY RUN (no fetch, no delete)"}`);

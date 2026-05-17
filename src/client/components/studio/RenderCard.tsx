@@ -1,5 +1,6 @@
 "use client";
 import type { StudioPhase, TileState } from "./StudioPanel";
+import { STATUS_LABELS } from "./status-labels";
 
 interface PlanData {
   timeline: Record<string, unknown>[];
@@ -13,14 +14,6 @@ interface RenderCardProps {
   planData: PlanData | null;
   onRenderStart: () => void;
 }
-
-const STATUS_LABELS: Record<TileState, string> = {
-  "is-skeleton": "ממתין",
-  waiting: "בתור",
-  active: "מעבד",
-  completed: "הושלם",
-  failed: "נכשל",
-};
 
 function RenderGlyph() {
   return (
