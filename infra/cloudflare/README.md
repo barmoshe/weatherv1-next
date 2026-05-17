@@ -88,30 +88,18 @@ Practical implications:
 - The `cloudflare:apiToken` entry is the **provider's** auth token, not
   the Worker's runtime token — see the section below.
 
-### Passphrase + access token in CI
+### Passphrase ownership
 
-`.github/workflows/infra.yml` runs `pulumi preview` on PRs that touch
-`infra/cloudflare/**` and `pulumi up --yes` on the same paths when they
-land on `main`. Two secrets are required (they do different things):
-
-- **`PULUMI_ACCESS_TOKEN`** — logs the runner into Pulumi Cloud (the
-  project's state backend). Create at
-  <https://app.pulumi.com/account/tokens>. Without it the CLI errors with
-  `PULUMI_ACCESS_TOKEN must be set for login during non-interactive CLI
-  sessions`.
-- **`PULUMI_CONFIG_PASSPHRASE`** — decrypts the `secure:` values inside
-  `Pulumi.dev.yaml`. Same value the operator types locally.
-
-Both are exported at the job env level using the standard Pulumi
-env-var names.
-
-Operator-local `pulumi up` still works the same way and uses the
-operator's local passphrase. The CI workflow is additive.
+The decryption passphrase for `Pulumi.dev.yaml` is **operator-local
+today** — held by the repo maintainer in a password manager. There is
+no CI workflow that runs `pulumi up`; the operator runs it from their
+machine. (An earlier audit phase proposed a CI workflow for `pulumi
+preview` / `pulumi up`; it was removed in favor of keeping infra
+changes operator-driven.)
 
 Rotation: `pulumi --cwd infra/cloudflare stack change-secrets-provider
-passphrase` re-encrypts every `secure:` value under a new salt. Update
-the GitHub Secret with the new value and commit the resulting
-`Pulumi.<stack>.yaml` diff.
+passphrase` re-encrypts every `secure:` value under a new salt. Commit
+the resulting `Pulumi.<stack>.yaml` diff.
 
 ## `cloudflare:apiToken` vs `cloudflareApiToken`
 
@@ -183,8 +171,7 @@ YAML), and **runtime user** (Electron `safeStorage`, never in repo).
 | `CLOUDFLARE_ACCOUNT_ID` | GitHub Secrets | Both workflows above | Identifier, not a secret in the credential sense |
 | `EDITOR_PASSWORD`, `ADMIN_PASSWORD` | GitHub Secrets | `.github/workflows/desktop.yml` env → `scripts/emit-auth-hashes.cjs` (Argon2id at prebuild) → gitignored `auth-passwords.generated.ts` | App-level gate credentials baked into the installer |
 | `GITHUB_TOKEN` | Auto-injected per run | All workflows | Repo-scoped; nothing to rotate |
-| `PULUMI_ACCESS_TOKEN` | GitHub Secrets | `.github/workflows/infra.yml` | Logs the runner into Pulumi Cloud (state backend); minted at <https://app.pulumi.com/account/tokens> |
-| `PULUMI_CONFIG_PASSPHRASE` | GitHub Secrets | `.github/workflows/infra.yml` | Decrypts every `secure:` value in `Pulumi.dev.yaml` — full Worker/R2 credential exposure |
+| Pulumi passphrase | Operator-local (password manager) | `pulumi` CLI when the operator runs it locally | Decrypts every `secure:` value in `Pulumi.dev.yaml` — full Worker/R2 credential exposure. **Not in GitHub Secrets**; CI does not run `pulumi`. |
 | `cloudflare:apiToken` | `Pulumi.dev.yaml` (encrypted) | Pulumi Cloudflare provider during `pulumi up` | Mutates Cloudflare resources |
 | `weatherv1-cloudflare:cloudflareApiToken` | `Pulumi.dev.yaml` (encrypted) | Worker runtime — mints temp R2 creds | Scoped to `r2/temp-access-credentials` |
 | `weatherv1-cloudflare:r2ParentAccessKeyId` | `Pulumi.dev.yaml` (encrypted) | Worker runtime — parent R2 key | R2 read/write parent |
@@ -231,14 +218,14 @@ pulumi --cwd infra/cloudflare up
 
 **`r2ParentAccessKeyId` (+ paired secret):** in Cloudflare dashboard → R2 → "Manage R2 API Tokens", issue a new parent key, update the Pulumi secret, `pulumi up`, then revoke the old key.
 
-**`PULUMI_CONFIG_PASSPHRASE`:**
+**Pulumi passphrase (operator-local):**
 
 ```bash
 pulumi --cwd infra/cloudflare stack change-secrets-provider passphrase
 # Pulumi prompts for the OLD passphrase, then the NEW one. Every `secure:`
 # value in Pulumi.<stack>.yaml gets re-encrypted under the new salt.
 git commit -am "chore(infra): rotate Pulumi passphrase"
-gh secret set PULUMI_CONFIG_PASSPHRASE
+# Update the operator's password manager. No GitHub Secret to update.
 ```
 
 **Runtime user secrets** (Electron `safeStorage`-stored API keys, R2 Basic-Auth): out of scope — the end user rotates them from inside the Settings UI. The repo holds no copy.

@@ -1,6 +1,8 @@
 # Archived: Secrets-Management Audit & GitHub-Secrets Migration
 
-> **All phases shipped.** See [`../../infra/cloudflare/README.md`](../../infra/cloudflare/README.md#secrets-ownership--rotation)
+> **Phases 0, 1, 2, 4 shipped. Phase 3 (CI `pulumi up`) deliberately
+> reverted** — see the Phase 3 section below. See
+> [`../../infra/cloudflare/README.md`](../../infra/cloudflare/README.md#secrets-ownership--rotation)
 > for the live secret inventory and rotation playbook. This file is kept
 > for the design rationale behind the current model.
 
@@ -214,24 +216,20 @@ confirm `WeatherV1-Setup.exe` is signed (right-click → Properties →
 Digital Signatures on Windows, or `osslsigncode verify` from a Linux
 runner).
 
-### Phase 3 — Pulumi passphrase via GitHub Secrets (enables CI `pulumi up`)
+### Phase 3 — Pulumi passphrase via GitHub Secrets (NOT shipped — reverted)
 
-Optional but unblocks "infrastructure changes via PR".
+This phase proposed an `.github/workflows/infra.yml` that would run
+`pulumi preview` on PRs and `pulumi up --yes` on `main`, reading the
+passphrase from `secrets.PULUMI_CONFIG_PASSPHRASE`. It was briefly
+landed and then removed: the project's Pulumi backend is Pulumi Cloud
+(also requires `PULUMI_ACCESS_TOKEN`), and the maintainer decided
+operator-driven `pulumi up` is preferable for this single-operator
+project.
 
-| File | Change |
-| --- | --- |
-| `.github/workflows/infra.yml` | New workflow. Triggers on `push` to `main` when `infra/cloudflare/**` changes. Steps: checkout, install Pulumi, `pulumi --cwd infra/cloudflare preview` (for PRs) or `pulumi up --yes` (for `main`). Reads `PULUMI_CONFIG_PASSPHRASE` from `secrets.PULUMI_CONFIG_PASSPHRASE`. |
-| `infra/cloudflare/README.md` | Document the passphrase as a GitHub Secret and the new workflow. Note that operator-local `pulumi up` still works the same way. |
-
-**GitHub Secrets to add:**
-
-```bash
-gh secret set PULUMI_CONFIG_PASSPHRASE --app actions
-```
-
-**Verification:** open a docs-only PR that touches `infra/cloudflare/README.md`
-to confirm `infra.yml` doesn't fire; then a real infra-touching PR to
-confirm `pulumi preview` runs green.
+The passphrase remains operator-local — see
+[`../../infra/cloudflare/README.md`](../../infra/cloudflare/README.md#passphrase-ownership).
+Revisit this phase only if multi-operator infra changes via PR become a
+real need.
 
 ### Phase 4 — Cleanup
 
@@ -276,7 +274,7 @@ See the per-phase tables. The new files introduced across the whole task:
 | `src/server/runtime/auth-passwords.ts` | new — Phase 1 |
 | `src/server/runtime/auth-passwords.generated.ts` | new (generated, gitignored) — Phase 1 |
 | `src/test/auth-passwords.test.ts` | new — Phase 1 |
-| `.github/workflows/infra.yml` | new — Phase 3 |
+| `.github/workflows/infra.yml` | ~~new — Phase 3~~ (reverted; never landed permanently) |
 | `package.json` | edit (`argon2`, `prebuild`) — Phase 1 |
 | `.env.example` | edit — Phase 1 |
 | `.gitignore` | edit — Phase 1 |
