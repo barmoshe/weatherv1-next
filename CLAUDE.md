@@ -93,6 +93,8 @@ Required: `OPENAI_API_KEY` (Whisper + GPT picker). Optional: `GEMINI_API_KEY` (v
 - `.github/workflows/desktop.yml` — Windows-only `electron-forge make --arch=x64` on `v*` tags; uploads `desktop-windows-latest` and a tiny `release-ref` artifact carrying the tag name. macOS is **not** built in CI (see `docs/RELEASE_CONVENTION.md` for the local Mac build).
 - `.github/workflows/desktop-publish-release.yml` ("Desktop publish to R2") — `workflow_run`-triggered after Desktop; uploads `WeatherV1-Setup.exe` to R2 via the S3 API at `tenants/<tenantId>/downloads/windows/{latest,<tag>}/`. Nothing is attached to the GitHub Release. Public URLs are served by the Worker at `https://<worker-host>/downloads/windows/{latest,<tag>}/WeatherV1-Setup.exe`.
 - `.github/workflows/pitch-deck.yml` — deploys the download/pitch-deck page (`docs/download-page/`) to Cloudflare Pages (`weatherv1-download.pages.dev`).
+- `.github/workflows/worker-deploy.yml` — deploys the R2 gateway Worker via `wrangler`. PRs touching `infra/cloudflare/worker/**` get a `--dry-run` so reviewers see binding diffs; pushes to `main` or manual dispatches push a real deploy. Secrets are **not** set here. See `docs/RUNBOOK_WORKER_ROTATION.md` for the Pulumi → wrangler cutover history.
+- `.github/workflows/rotate-worker-secrets.yml` — manual dispatch only. Pushes the current `EDITOR_PASSWORD` + `R2_APP_USERNAME` GitHub secrets into the Worker as `WEATHERV1_APP_PASSWORD` / `WEATHERV1_APP_USERNAME`. Run after rotating `EDITOR_PASSWORD`. Idempotent.
 - `.github/workflows/ci.yml` — standard CI.
 
 For a release, prefer the `weatherv1-release` skill, which drives preflight → version bump → tag/push → workflow watch → asset verification end-to-end.
