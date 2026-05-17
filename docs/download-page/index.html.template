@@ -1432,7 +1432,8 @@
     #studio .pitch-app-shell[data-studio-phase="upload"] .pitch-job-state--upload,
     #studio .pitch-app-shell[data-studio-phase="transcript"] .pitch-job-state--transcript,
     #studio .pitch-app-shell[data-studio-phase="planning"] .pitch-job-state--planning,
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-job-state--render {
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-job-state--render,
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-job-state--output {
       display: inline;
     }
 
@@ -1470,15 +1471,20 @@
       display: none;
     }
 
-    #studio .pitch-app-shell:not([data-studio-phase="render"]) .pitch-cell-badge-render-done {
+    #studio .pitch-app-shell:not([data-studio-phase="output"]) .pitch-cell-badge-render-done {
       display: none;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-cell-badge-render-wait {
+    #studio .pitch-app-shell:is([data-studio-phase="render"], [data-studio-phase="output"]) .pitch-cell-badge-render-wait {
       display: none;
     }
 
-    #studio .pitch-app-shell:is([data-studio-phase="planning"], [data-studio-phase="render"]) .pitch-cell-badge-timeline-wait {
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-cell-badge-render-wait::after {
+      content: " · מרנדר";
+      color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 80%, rgb(0 0 0));
+    }
+
+    #studio .pitch-app-shell:is([data-studio-phase="planning"], [data-studio-phase="render"], [data-studio-phase="output"]) .pitch-cell-badge-timeline-wait {
       display: none;
     }
 
@@ -1486,11 +1492,11 @@
       display: none;
     }
 
-    #studio .pitch-app-shell:not([data-studio-phase="render"]) .pitch-cell-badge-output-done {
+    #studio .pitch-app-shell:not([data-studio-phase="output"]) .pitch-cell-badge-output-done {
       display: none;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-cell-badge-output-wait {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-cell-badge-output-wait {
       display: none;
     }
 
@@ -1502,7 +1508,7 @@
       display: none !important;
     }
 
-    #studio .pitch-app-shell:is([data-studio-phase="planning"], [data-studio-phase="render"]) .pitch-timeline-skel {
+    #studio .pitch-app-shell:is([data-studio-phase="planning"], [data-studio-phase="render"], [data-studio-phase="output"]) .pitch-timeline-skel {
       display: none !important;
     }
 
@@ -1537,12 +1543,58 @@
       background: rgb(255 255 255 / 0.85);
     }
 
-    #studio .pitch-app-shell:not([data-studio-phase="render"]) .pitch-render-done {
+    #studio .pitch-app-shell:not([data-studio-phase="output"]) .pitch-render-done {
       display: none !important;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-render-pending {
+    #studio .pitch-app-shell:is([data-studio-phase="render"], [data-studio-phase="output"]) .pitch-render-pending {
       display: none !important;
+    }
+
+    /* Render in-progress: animated pulse + label, shown only in render phase */
+    #studio .pitch-render-active {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 56px;
+      border-radius: 8px;
+      border: 1px dashed color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 55%, rgb(0 0 0 / 0.12));
+      background:
+        linear-gradient(90deg,
+          color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 8%, rgb(255 255 255)) 0%,
+          color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 18%, rgb(255 255 255)) 50%,
+          color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 8%, rgb(255 255 255)) 100%);
+      background-size: 220% 100%;
+      animation: pitchRenderShimmer 1.8s ease-in-out infinite;
+    }
+    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-render-active {
+      display: flex;
+    }
+    #studio .pitch-render-active__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 80%, rgb(0 0 0));
+      animation: pitchRenderPulse 1.1s ease-in-out infinite;
+    }
+    #studio .pitch-render-active__txt {
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 70%, rgb(40 40 40));
+      letter-spacing: 0.02em;
+    }
+    @keyframes pitchRenderShimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    @keyframes pitchRenderPulse {
+      0%, 100% { opacity: 0.35; transform: scale(0.85); }
+      50%      { opacity: 1;    transform: scale(1.15); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #studio .pitch-render-active { animation: none; }
+      #studio .pitch-render-active__dot { animation: none; opacity: 0.85; }
     }
 
     #studio .pitch-device-screen--preview {
@@ -1577,11 +1629,11 @@
       height: 100%;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-output-placeholder {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-output-placeholder {
       display: none !important;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-output-ready {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-output-ready {
       display: block;
     }
 
@@ -1626,7 +1678,7 @@
       color: rgb(42 48 56 / 1);
     }
 
-    #studio .pitch-app-shell:not([data-studio-phase="render"]) .pitch-when-render {
+    #studio .pitch-app-shell:not([data-studio-phase="output"]) .pitch-when-render {
       display: none !important;
     }
 
@@ -1645,16 +1697,16 @@
       transition: opacity 0.2s ease;
     }
 
-    #studio .pitch-app-shell:is([data-studio-phase="transcript"], [data-studio-phase="planning"], [data-studio-phase="render"]) .pitch-bento {
+    #studio .pitch-app-shell:is([data-studio-phase="transcript"], [data-studio-phase="planning"], [data-studio-phase="render"], [data-studio-phase="output"]) .pitch-bento {
       opacity: 1;
       pointer-events: auto;
     }
 
     /*
-     * שלב 4 (רינדור): פריסה אופקית — אמולטור אייפון משמאל (פיזית), ריל תמלול + תוכנית סצנות מימין.
+     * שלב 5 (וידאו סופי): פריסה אופקית, אמולטור אייפון משמאל, ריל תמלול + תוכנית סצנות מימין.
      * `direction: ltr` + עמודה ראשונה צרה = אייפון משמאל במסך.
      */
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento {
       direction: ltr;
       unicode-bidi: isolate;
       grid-template-columns: minmax(120px, 152px) minmax(0, 1fr) minmax(0, 1.05fr);
@@ -1662,7 +1714,7 @@
       align-items: stretch;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--output {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output {
       grid-column: 1;
       grid-row: 1;
       align-self: stretch;
@@ -1672,26 +1724,26 @@
       border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 22%, rgb(0 0 0 / 0.1));
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__rail {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__rail {
       grid-column: 2;
       grid-row: 1;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--timeline {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--timeline {
       grid-column: 3;
       grid-row: 1;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--output .pitch-cell-label {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output .pitch-cell-label {
       text-align: center;
       justify-content: center;
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-device {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-device {
       width: min(136px, 24vw);
     }
 
-    #studio .pitch-app-shell[data-studio-phase="render"] .pitch-output-footnote {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-output-footnote {
       max-width: 10.5rem;
       font-size: 0.5rem;
     }
@@ -6130,20 +6182,22 @@
         kicker: "סטודיו",
         title: "המקום שבו נבנה הסרטון בפועל",
         lead:
-          "הסטודיו הוא מסך העבודה המרכזי של האפליקציה: מעלים קריינות, המערכת מתמללת אותה באמצעות OpenAI, מודל ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, ואז מתבצע רינדור על המחשב והורדה של הסרטון.",
+          "הסטודיו הוא מסך העבודה המרכזי של האפליקציה: מעלים קריינות, המערכת מתמללת ומציגה את התמלול לפי משפטים עם נגן לכל משפט לבדיקה ועריכה מהירה, מודל ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, ואז מתבצע רינדור על המחשב וצפייה והורדה של הסרטון.",
         mobileSummary:
-          "הסטודיו הוא המקום שבו נבנה הסרטון בפועל: מקריינות לתמלול, מתכנון סצנות לבחירת סגמנטים, ואז רינדור והורדה.",
+          "הסטודיו הוא המקום שבו נבנה הסרטון בפועל: מקריינות לתמלול שאפשר לבדוק ולערוך משפט־משפט, מתכנון סצנות לבחירת סגמנטים, רינדור על המחשב, וצפייה והורדה של הסרטון הסופי.",
         bullets: [
           "העלאת קריינות: מתחילים מקובץ תחזית אחד.",
-          "תמלול: המערכת הופכת את הקריינות לטקסט.",
-          "תכנון AI: חלוקה לסצנות ובחירת סגמנטים מתויגים מהקטלוג לפי משמעות וחזותיות.",
-          "רינדור והורדה: יצירת בסיס לסרטון תחזית והורדה שלו."
+          "תמלול וסקירה: כל משפט מוצג בנפרד עם נגן ותיבת עריכה, לתיקון מהיר מול ההקלטה.",
+          "תכנון סצנות: ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג.",
+          "רינדור: המערכת מרכיבה את הסרטון על המחשב.",
+          "וידאו סופי: צפייה בתוצאה במסך טלפון והורדה כקובץ MP4."
         ],
         mobileBullets: [
           "העלאת קריינות",
-          "תמלול לטקסט",
+          "תמלול וסקירה לפי משפטים",
           "תכנון סצנות",
-          "רינדור והורדה"
+          "רינדור",
+          "וידאו סופי והורדה"
         ],
         visual: "studioDashboard",
         transition: "ttb",
@@ -6496,7 +6550,8 @@
                 <span class="pitch-job-state-txt pitch-job-state--upload">ממתין להעלאה</span>
                 <span class="pitch-job-state-txt pitch-job-state--transcript">מעבד תמלול…</span>
                 <span class="pitch-job-state-txt pitch-job-state--planning">מתכנן סצנות והתאמות מהקטלוג…</span>
-                <span class="pitch-job-state-txt pitch-job-state--render">הרינדור הושלם</span>
+                <span class="pitch-job-state-txt pitch-job-state--render">מרנדר וידאו…</span>
+                <span class="pitch-job-state-txt pitch-job-state--output">הסרטון מוכן</span>
               </span>
             </div>
             <section class="pitch-drop-card studio-phase-panel" aria-hidden="true">
@@ -6537,6 +6592,10 @@
                   <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-render-done">הושלם</span>
                   <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">⚙️</span> רינדור</div>
                   <div class="pitch-render-zone pitch-render-pending" aria-hidden="true"></div>
+                  <div class="pitch-render-active" aria-hidden="true">
+                    <span class="pitch-render-active__dot"></span>
+                    <span class="pitch-render-active__txt">מרנדר וידאו…</span>
+                  </div>
                   <div class="pitch-render-zone pitch-render-zone--done pitch-render-done"><span class="pitch-render-done-label mixed-ltr" lang="en" dir="ltr">MP4 · 9:16</span></div>
                 </section>
               </div>
@@ -6997,7 +7056,7 @@
       const hasMobileBullets = mobileList && mobileList.length > 0;
 
       if (section.id === "studio" && section.bullets.length > 0) {
-        const phases = ["upload", "transcript", "planning", "render"];
+        const phases = ["upload", "transcript", "planning", "render", "output"];
         const studioLi = (item, i) => {
           const ph = phases[i] || "upload";
           return `<li role="button" tabindex="0" class="pitch-studio-phase-pick" data-studio-phase-bullet="${ph}">${escapeHtml(item)}</li>`;
@@ -7728,7 +7787,7 @@
     }
 
     /** Studio wizard: four explicit phases, click + keyboard; no GSAP/RAF tour. */
-    const STUDIO_PHASES = ["upload", "transcript", "planning", "render"];
+    const STUDIO_PHASES = ["upload", "transcript", "planning", "render", "output"];
     const STUDIO_HIGHLIGHT_FOR_PHASE = {
       upload: "upload",
       transcript: "transcript",
