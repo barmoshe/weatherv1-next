@@ -88,15 +88,22 @@ Practical implications:
 - The `cloudflare:apiToken` entry is the **provider's** auth token, not
   the Worker's runtime token — see the section below.
 
-### Passphrase in CI
+### Passphrase + access token in CI
 
 `.github/workflows/infra.yml` runs `pulumi preview` on PRs that touch
 `infra/cloudflare/**` and `pulumi up --yes` on the same paths when they
-land on `main`. Both modes need the passphrase to decrypt the `secure:`
-values in `Pulumi.dev.yaml`; the workflow reads it from
-`secrets.PULUMI_CONFIG_PASSPHRASE` and exports it as
-`PULUMI_CONFIG_PASSPHRASE` at the job env level (the standard Pulumi
-env-var name).
+land on `main`. Two secrets are required (they do different things):
+
+- **`PULUMI_ACCESS_TOKEN`** — logs the runner into Pulumi Cloud (the
+  project's state backend). Create at
+  <https://app.pulumi.com/account/tokens>. Without it the CLI errors with
+  `PULUMI_ACCESS_TOKEN must be set for login during non-interactive CLI
+  sessions`.
+- **`PULUMI_CONFIG_PASSPHRASE`** — decrypts the `secure:` values inside
+  `Pulumi.dev.yaml`. Same value the operator types locally.
+
+Both are exported at the job env level using the standard Pulumi
+env-var names.
 
 Operator-local `pulumi up` still works the same way and uses the
 operator's local passphrase. The CI workflow is additive.
@@ -171,10 +178,13 @@ YAML), and **runtime user** (Electron `safeStorage`, never in repo).
 | `WIN_CERT_PASSWORD` | GitHub Secrets | `.github/workflows/desktop.yml` → `forge.config.cjs` | Paired with the cert above |
 | `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`, `OSX_SIGN_IDENTITY` | GitHub Secrets | Defined for future use; not currently exported into any workflow (macOS is local-build per [`docs/RELEASE_CONVENTION.md`](../../docs/RELEASE_CONVENTION.md)). Local builds export from a shell `.env`. | Notarization identity; revocable in Apple Developer portal |
 | `MAC_CERTIFICATE_BASE64`, `MAC_CERTIFICATE_PASSWORD`, `KEYCHAIN_PASSWORD` | Not set anywhere today | Referenced only in `forge.config.cjs` header comments; reserved for future macOS-in-CI revival | n/a until wired |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | GitHub Secrets | `.github/workflows/pitch-deck.yml` and `.github/workflows/desktop-publish-release.yml` (R2 `object put` via `cloudflare/wrangler-action`) | Cloudflare account-scoped: Pages deploy + R2 write |
+| `CLOUDFLARE_API_TOKEN` | GitHub Secrets | `.github/workflows/pitch-deck.yml` (Pages deploy via `cloudflare/wrangler-action`) | Cloudflare Pages:Edit on the account |
+| `CLOUDFLARE_R2_TOKEN` | GitHub Secrets | `.github/workflows/desktop-publish-release.yml` (`wrangler r2 object put` of the Windows installer) | Workers R2 Storage:Edit, scoped to bucket `weatherv1-media` |
+| `CLOUDFLARE_ACCOUNT_ID` | GitHub Secrets | Both workflows above | Identifier, not a secret in the credential sense |
 | `EDITOR_PASSWORD`, `ADMIN_PASSWORD` | GitHub Secrets | `.github/workflows/desktop.yml` env → `scripts/emit-auth-hashes.cjs` (Argon2id at prebuild) → gitignored `auth-passwords.generated.ts` | App-level gate credentials baked into the installer |
 | `GITHUB_TOKEN` | Auto-injected per run | All workflows | Repo-scoped; nothing to rotate |
-| `PULUMI_CONFIG_PASSPHRASE` | GitHub Secrets (see [`docs/archive/SECRETS_MANAGEMENT_AUDIT.md`](../../docs/archive/SECRETS_MANAGEMENT_AUDIT.md)) | `.github/workflows/infra.yml` | Decrypts every `secure:` value in `Pulumi.dev.yaml` — full Worker/R2 credential exposure |
+| `PULUMI_ACCESS_TOKEN` | GitHub Secrets | `.github/workflows/infra.yml` | Logs the runner into Pulumi Cloud (state backend); minted at <https://app.pulumi.com/account/tokens> |
+| `PULUMI_CONFIG_PASSPHRASE` | GitHub Secrets | `.github/workflows/infra.yml` | Decrypts every `secure:` value in `Pulumi.dev.yaml` — full Worker/R2 credential exposure |
 | `cloudflare:apiToken` | `Pulumi.dev.yaml` (encrypted) | Pulumi Cloudflare provider during `pulumi up` | Mutates Cloudflare resources |
 | `weatherv1-cloudflare:cloudflareApiToken` | `Pulumi.dev.yaml` (encrypted) | Worker runtime — mints temp R2 creds | Scoped to `r2/temp-access-credentials` |
 | `weatherv1-cloudflare:r2ParentAccessKeyId` | `Pulumi.dev.yaml` (encrypted) | Worker runtime — parent R2 key | R2 read/write parent |
@@ -209,7 +219,7 @@ gh secret set WIN_CERT_PASSWORD
 
 **Apple signing secrets:** rotate the app-specific password at <https://appleid.apple.com> → Sign-In and Security → App-Specific Passwords. Update the GitHub Secret. `APPLE_TEAM_ID` and `APPLE_ID` rarely change.
 
-**Cloudflare tokens** (`CLOUDFLARE_API_TOKEN`, `cloudflare:apiToken`, `weatherv1-cloudflare:cloudflareApiToken`): issue replacement tokens at <https://dash.cloudflare.com/profile/api-tokens>. For Pulumi-stored tokens, re-encrypt and apply:
+**Cloudflare tokens** (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_R2_TOKEN`, `cloudflare:apiToken`, `weatherv1-cloudflare:cloudflareApiToken`): issue replacement tokens at <https://dash.cloudflare.com/profile/api-tokens>. The GitHub Actions secrets (`CLOUDFLARE_API_TOKEN` for Pages, `CLOUDFLARE_R2_TOKEN` for R2 uploads) are set with `gh secret set <NAME>` and roll independently — neither needs Pulumi reapply. For Pulumi-stored tokens, re-encrypt and apply:
 
 ```bash
 pulumi --cwd infra/cloudflare config set --secret cloudflareApiToken <new-token>

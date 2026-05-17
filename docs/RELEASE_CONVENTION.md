@@ -65,7 +65,7 @@ rotation procedure for each is documented in
 | `WIN_CERTIFICATE_BASE64` | `desktop.yml` decode step | Code-signing the Windows installer |
 | `WIN_CERT_PASSWORD` | `desktop.yml` → `forge.config.cjs` | Paired with the cert above |
 | `EDITOR_PASSWORD`, `ADMIN_PASSWORD` | `desktop.yml` → `scripts/emit-auth-hashes.cjs` | Argon2id hashing at prebuild — build fails loud if unset |
-| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | `desktop-publish-release.yml` | Uploading `WeatherV1-Setup.exe` to R2 |
+| `CLOUDFLARE_R2_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | `desktop-publish-release.yml` | Uploading `WeatherV1-Setup.exe` to R2 (R2-only token; pitch-deck.yml uses a separate `CLOUDFLARE_API_TOKEN` for Pages) |
 | `GITHUB_TOKEN` | Auto-injected | Cross-run artifact download in the publish workflow |
 
 A tag build with any of `WIN_CERTIFICATE_BASE64`, `WIN_CERT_PASSWORD`,
