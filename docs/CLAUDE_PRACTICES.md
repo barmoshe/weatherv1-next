@@ -34,8 +34,10 @@ trivial cleanup). Most sessions end cleanly without one.
   `refactor`.
 - Lives under `.claude/` (transient, not shipped to users). `.claude/`
   is **not** wholesale gitignored — these files are part of the repo so
-  the next agent on a fresh clone finds them. Delete a handoff once its
-  open items are resolved.
+  the next agent on a fresh clone finds them. Once all blocking items
+  are resolved, move it to `.claude/archive/` with a `[COMPLETED]`
+  prefix in the title — preserves the historical record without
+  cluttering `ls .claude/` for the next session.
 
 ### What it must contain
 
