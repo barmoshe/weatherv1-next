@@ -1714,6 +1714,17 @@
       align-items: stretch;
     }
 
+    /* In the final state, unstack the right column so Output can be hoisted
+       to its own grid cell (left) and the Render mini card is hidden — it
+       is already represented by the "MP4 · 9:16" badge sitting next to the
+       phone preview, and the rendering animation is no longer relevant. */
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__right-stack {
+      display: contents;
+    }
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-mini-card--render {
+      display: none;
+    }
+
     #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output {
       grid-column: 1;
       grid-row: 1;
@@ -1724,7 +1735,7 @@
       border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 22%, rgb(0 0 0 / 0.1));
     }
 
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__rail {
+    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--review {
       grid-column: 2;
       grid-row: 1;
     }
@@ -2091,16 +2102,28 @@
     .pitch-bento {
       display: grid;
       gap: 10px;
-      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr) minmax(0, 0.88fr);
+      grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.05fr) minmax(0, 0.92fr);
       align-items: stretch;
       min-height: 196px;
     }
 
-    .pitch-bento__rail {
+    /* Matches the live app: a slim right column (visually-left under RTL flow)
+       with Render on top of Output, while Review takes the wide column on the
+       reading-start side. */
+    .pitch-bento__right-stack {
       display: grid;
-      grid-template-rows: 1fr 1fr;
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 9px;
       min-height: 0;
+    }
+    .pitch-bento__right-stack > .pitch-mini-card--render {
+      align-self: start;
+      padding-block: 12px 10px;
+      min-height: 0;
+    }
+    .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-zone,
+    .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-active {
+      min-height: 36px;
     }
 
     .pitch-mini-card {
@@ -2562,25 +2585,25 @@
         width: min(58vw, 188px);
       }
 
-      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento {
+      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento {
         direction: ltr;
         grid-template-columns: 1fr;
         min-height: 0;
       }
 
-      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__rail,
-      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--timeline,
-      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--output {
+      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--review,
+      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--timeline,
+      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output {
         grid-column: 1;
         grid-row: auto;
       }
 
-      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-bento__cell--output {
+      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output {
         order: -1;
         padding: 12px 10px;
       }
 
-      #studio .pitch-app-shell[data-studio-phase="render"] .pitch-device {
+      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-device {
         width: min(58vw, 168px);
       }
 
@@ -6574,19 +6597,26 @@
               <span class="pitch-drop-cta pitch-drop-cta--idle" role="presentation">בחרו שלב כדי להתחיל</span>
             </section>
             <div class="pitch-bento" aria-hidden="true">
-              <div class="pitch-bento__rail">
-                <section class="pitch-mini-card pitch-mini-card--transcript studio-phase-panel">
-                  <span class="pitch-cell-badge pitch-cell-badge-trans-wait">ממתין</span>
-                  <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-trans-done">סקירה מוכנה</span>
-                  <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📝</span> תמלול וסקירה</div>
-                  <div class="pitch-transcript-skel pitch-skel-lines" aria-hidden="true">
-                    <div class="pitch-skel-line"></div>
-                    <div class="pitch-skel-line"></div>
-                    <div class="pitch-skel-line"></div>
-                    <div class="pitch-skel-line"></div>
-                  </div>
-                  <div class="pitch-review-segments pitch-transcript-filled">${transcriptHtml}</div>
-                </section>
+              <section class="pitch-mini-card pitch-mini-card--transcript pitch-bento__cell--review studio-phase-panel">
+                <span class="pitch-cell-badge pitch-cell-badge-trans-wait">ממתין</span>
+                <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-trans-done">סקירה מוכנה</span>
+                <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📝</span> תמלול וסקירה</div>
+                <div class="pitch-transcript-skel pitch-skel-lines" aria-hidden="true">
+                  <div class="pitch-skel-line"></div>
+                  <div class="pitch-skel-line"></div>
+                  <div class="pitch-skel-line"></div>
+                  <div class="pitch-skel-line"></div>
+                </div>
+                <div class="pitch-review-segments pitch-transcript-filled">${transcriptHtml}</div>
+              </section>
+              <section class="pitch-bento__cell--timeline studio-phase-panel">
+                <span class="pitch-cell-badge pitch-cell-badge-timeline-wait">ממתין</span>
+                <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-timeline-done">הושלם</span>
+                <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">🎚️</span> תוכנית סצנות</div>
+                <div class="pitch-timeline-lanes pitch-timeline-skel">${timelineSkelHtml}</div>
+                <div class="pitch-timeline-lanes pitch-timeline-filled">${timelineHtml}</div>
+              </section>
+              <div class="pitch-bento__right-stack">
                 <section class="pitch-mini-card pitch-mini-card--render studio-phase-panel">
                   <span class="pitch-cell-badge pitch-cell-badge-render-wait">ממתין</span>
                   <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-render-done">הושלם</span>
@@ -6598,35 +6628,28 @@
                   </div>
                   <div class="pitch-render-zone pitch-render-zone--done pitch-render-done"><span class="pitch-render-done-label mixed-ltr" lang="en" dir="ltr">MP4 · 9:16</span></div>
                 </section>
+                <section class="pitch-bento__cell--output studio-phase-panel">
+                  <span class="pitch-cell-badge pitch-cell-badge-output-wait">ממתין</span>
+                  <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-output-done">הושלם</span>
+                  <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📱</span> וידאו סופי</div>
+                  <div class="pitch-device">
+                    <div class="pitch-device-screen pitch-device-screen--preview pitch-output-placeholder">
+                      <span class="pitch-output-placeholder-txt">כאן תופיע תצוגה ורטיקלית אחרי הרינדור</span>
+                    </div>
+                    <div class="pitch-device-screen pitch-device-screen--preview pitch-output-ready">
+                      <video class="pitch-device-video" poster="${escapeHtml(firstPosterSrc)}" width="180" height="320" muted playsinline loop autoplay preload="metadata" aria-hidden="true">
+                        <source src="download-page/assets/mock-video-example.mp4" type="video/mp4" />
+                      </video>
+                      <span class="pitch-device-play" aria-hidden="true">▶</span>
+                    </div>
+                  </div>
+                  <div class="pitch-output-footnote pitch-when-render" aria-hidden="true">בשלב הזה זה בסיס לסרטון תחזית, לא חבילה גרפית מלאה (לוגואים, כותרות ושכבות מיתוג מלאות).</div>
+                  <div class="pitch-output-actions pitch-when-render" role="presentation">
+                    <span class="pitch-output-btn pitch-output-btn--primary">צפייה</span>
+                    <span class="pitch-output-btn pitch-output-btn--ghost mixed-ltr" lang="en" dir="ltr">הורדה</span>
+                  </div>
+                </section>
               </div>
-              <section class="pitch-bento__cell--timeline studio-phase-panel">
-                <span class="pitch-cell-badge pitch-cell-badge-timeline-wait">ממתין</span>
-                <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-timeline-done">הושלם</span>
-                <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">🎚️</span> תוכנית סצנות</div>
-                <div class="pitch-timeline-lanes pitch-timeline-skel">${timelineSkelHtml}</div>
-                <div class="pitch-timeline-lanes pitch-timeline-filled">${timelineHtml}</div>
-              </section>
-              <section class="pitch-bento__cell--output studio-phase-panel">
-                <span class="pitch-cell-badge pitch-cell-badge-output-wait">ממתין</span>
-                <span class="pitch-cell-badge pitch-cell-badge--done pitch-cell-badge-output-done">הושלם</span>
-                <div class="pitch-cell-label"><span class="pitch-cell-ico" aria-hidden="true">📱</span> צפייה בתוצאה</div>
-                <div class="pitch-device">
-                  <div class="pitch-device-screen pitch-device-screen--preview pitch-output-placeholder">
-                    <span class="pitch-output-placeholder-txt">כאן תופיע תצוגה ורטיקלית אחרי הרינדור</span>
-                  </div>
-                  <div class="pitch-device-screen pitch-device-screen--preview pitch-output-ready">
-                    <video class="pitch-device-video" poster="${escapeHtml(firstPosterSrc)}" width="180" height="320" muted playsinline loop autoplay preload="metadata" aria-hidden="true">
-                      <source src="download-page/assets/mock-video-example.mp4" type="video/mp4" />
-                    </video>
-                    <span class="pitch-device-play" aria-hidden="true">▶</span>
-                  </div>
-                </div>
-                <div class="pitch-output-footnote pitch-when-render" aria-hidden="true">בשלב הזה זה בסיס לסרטון תחזית, לא חבילה גרפית מלאה (לוגואים, כותרות ושכבות מיתוג מלאות).</div>
-                <div class="pitch-output-actions pitch-when-render" role="presentation">
-                  <span class="pitch-output-btn pitch-output-btn--primary">צפייה</span>
-                  <span class="pitch-output-btn pitch-output-btn--ghost mixed-ltr" lang="en" dir="ltr">הורדה</span>
-                </div>
-              </section>
             </div>
           </div>
         </div>`;
