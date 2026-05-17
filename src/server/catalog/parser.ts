@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { createHash } from "node:crypto";
 import type {
   Catalog,
   CatalogEntry,
@@ -9,7 +8,8 @@ import type {
   SegmentMapEntry,
   CatalogFileHealth,
 } from "@/shared/types";
-import { getCatalogPath, getVideosDir, readCatalog } from "./storage";
+import { getVideosDir, readCatalog } from "./storage";
+import { getCatalogStore } from "./stores";
 
 // Module-level health state (mirrors Python's LAST_HEALTH)
 export let lastHealth: CatalogFileHealth = {
@@ -78,13 +78,10 @@ export function parseCatalog(
 ): ParsedVideo[] {
   const cat = catalog ?? readCatalog();
 
-  let version = "unknown";
-  try {
-    const raw = fs.readFileSync(getCatalogPath(), "utf8");
-    version = createHash("sha1").update(raw).digest("hex").slice(0, 8);
-  } catch {
-    // ignore
-  }
+  // Reuse the store's mtime-cached version. Repeated parseCatalog() calls
+  // in the same request (and across the worker hot path) used to re-read
+  // and SHA1 the whole catalog file every time.
+  const version = getCatalogStore().version();
 
   // One readdir instead of N existsSync (called on every /api/catalog,
   // /api/plan, and per render-worker tick). Falls back to existsSync for

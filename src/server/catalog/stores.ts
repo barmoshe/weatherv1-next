@@ -43,6 +43,7 @@ function shaVersion(raw: string): string {
 
 export class LocalCatalogStore implements CatalogStore {
   readonly kind = "local" as const;
+  private versionCache: { mtimeMs: number; version: string } | null = null;
 
   getCatalogPath(): string {
     return getAssetSource().getCatalogPath();
@@ -73,11 +74,24 @@ export class LocalCatalogStore implements CatalogStore {
     } finally {
       if (release) await release();
     }
+    this.versionCache = null;
   }
 
   version(): string {
+    const catalogPath = this.getCatalogPath();
+    let mtimeMs: number;
     try {
-      return shaVersion(fs.readFileSync(this.getCatalogPath(), "utf8"));
+      mtimeMs = fs.statSync(catalogPath).mtimeMs;
+    } catch {
+      return "unknown";
+    }
+    if (this.versionCache && this.versionCache.mtimeMs === mtimeMs) {
+      return this.versionCache.version;
+    }
+    try {
+      const version = shaVersion(fs.readFileSync(catalogPath, "utf8"));
+      this.versionCache = { mtimeMs, version };
+      return version;
     } catch {
       return "unknown";
     }
