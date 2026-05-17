@@ -1,15 +1,5 @@
 export type R2Availability = "local" | "cloud_only" | "syncing" | "error";
 
-export interface R2TemporaryCredentials {
-  accountId: string;
-  bucketName: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  sessionToken?: string;
-  expiresAt: string;
-  tenantPrefix?: string;
-}
-
 export interface R2ObjectProgress {
   key: string;
   status: "uploading" | "downloading" | "synced" | "error";

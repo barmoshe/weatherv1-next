@@ -1,15 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { desktop } from "@/client/lib/desktop";
 import { useStorageStatus } from "@/client/hooks/useStorageStatus";
 import type { DesktopAppInfo } from "@/shared/desktop";
 import { AppBootstrapShell } from "@/client/components/storage/AppBootstrapShell";
 
-type Phase = "loading" | "cloud-connect" | "cloud-ready" | "local-cache" | "ready" | "hidden";
-
-const LAST_USERNAME_KEY = "weatherv1.r2.lastUsername";
+// `cloud-connect` was a second-screen R2 sign-in form. Editor login now
+// persists the same (username, password) as R2 Worker creds, so we no
+// longer need a dedicated screen for it. If R2 stays unready after that
+// (e.g. Worker rejected the password), we surface a "reconnect" overlay
+// with a sign-out fallback instead of asking for the password twice.
+type Phase = "loading" | "cloud-reconnect" | "local-cache" | "ready" | "hidden";
 
 function RtlTechnicalLine({
   className,
@@ -36,13 +39,7 @@ export function StorageOnboardingGate() {
   const [appInfo, setAppInfo] = useState<DesktopAppInfo | null>(null);
   const [appInfoReady, setAppInfoReady] = useState(false);
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [signInError, setSignInError] = useState<string | null>(null);
-  const [signInOk, setSignInOk] = useState(false);
-
+  const [signingOut, setSigningOut] = useState(false);
   const [pickingCache, setPickingCache] = useState(false);
   const [cacheError, setCacheError] = useState<string | null>(null);
 
@@ -68,21 +65,6 @@ export function StorageOnboardingGate() {
     };
   }, []);
 
-  // Pre-fill username from (a) the saved value the server already knows,
-  // or (b) localStorage cache from a prior session, or (c) blank.
-  useEffect(() => {
-    if (username) return;
-    const fromServer = storage?.cloud.appUsername?.trim();
-    if (fromServer) {
-      setUsername(fromServer);
-      return;
-    }
-    if (typeof window !== "undefined") {
-      const cached = window.localStorage.getItem(LAST_USERNAME_KEY);
-      if (cached) setUsername(cached);
-    }
-  }, [storage?.cloud.appUsername, username]);
-
   const refreshEverything = useCallback(async () => {
     await Promise.all([
       refetch(),
@@ -94,31 +76,29 @@ export function StorageOnboardingGate() {
     }
   }, [refetch, qc]);
 
-  const handleSignIn = useCallback(async () => {
-    if (!desktop) return;
-    const trimmedUser = username.trim();
-    const trimmedPass = password;
-    if (!trimmedUser || !trimmedPass) return;
-    setSubmitting(true);
-    setSignInOk(false);
-    setSignInError(null);
+  // Recovery path when R2 stays unready after the editor login propagated
+  // creds (e.g. Worker rejected the password). Clearing the editor session
+  // forces the user back through EditorLoginGate, which will re-save the
+  // creds. The hard reload guarantees a fresh probe.
+  const handleSignOutToRetry = useCallback(async () => {
+    if (signingOut) return;
+    setSigningOut(true);
     try {
-      await desktop.saveSettings({
-        r2AppUsername: trimmedUser,
-        r2AppPassword: trimmedPass,
-      });
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(LAST_USERNAME_KEY, trimmedUser);
+      await fetch("/api/auth/sign-out", { method: "POST" });
+      if (desktop?.clearEditorSession) {
+        try {
+          await desktop.clearEditorSession();
+        } catch {
+          // Non-fatal: cookie is gone either way.
+        }
       }
-      setPassword("");
-      setSignInOk(true);
-      await refreshEverything();
-    } catch (err) {
-      setSignInError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setSubmitting(false);
+      if (typeof window !== "undefined") {
+        window.location.reload();
+      }
+    } catch {
+      setSigningOut(false);
     }
-  }, [username, password, refreshEverything]);
+  }, [signingOut]);
 
   const handleUseDefaultCache = useCallback(async () => {
     if (!desktop) return;
@@ -156,11 +136,6 @@ export function StorageOnboardingGate() {
 
   const phase = derivePhase({ desktopAvailable: Boolean(desktop), appInfo, appInfoReady, storage });
 
-  const canSubmit = useMemo(
-    () => Boolean(username.trim() && password && !submitting),
-    [username, password, submitting],
-  );
-
   if (phase === "loading") {
     return (
       <AppBootstrapShell
@@ -172,7 +147,7 @@ export function StorageOnboardingGate() {
 
   if (phase === "hidden" || phase === "ready") return null;
 
-  if (phase === "cloud-connect") {
+  if (phase === "cloud-reconnect") {
     const versionLine = appInfo
       ? `WeatherV1 · גרסה ${appInfo.appVersion}`
       : "WeatherV1";
@@ -183,117 +158,45 @@ export function StorageOnboardingGate() {
         lang="he"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="login-title"
+        aria-labelledby="cloud-reconnect-title"
       >
         <div className="login-screen__backdrop" aria-hidden="true" />
         <div className="login-card">
           <div className="login-card__brand" aria-hidden="true">
             <span className="login-card__brand-mark">WV1</span>
           </div>
-          <h1 className="login-card__title" id="login-title">
-            כניסה ל־WeatherV1
+          <h1 className="login-card__title" id="cloud-reconnect-title">
+            לא ניתן להתחבר לענן
           </h1>
           <p className="login-card__subtitle">
-            חברו את אפליקציית השולחן לקטלוג Cloudflare R2. פרטי ההתחברות נשמרים במחסנית המפתחות של
-            מערכת ההפעלה ונשלחים רק ל־Worker של WeatherV1.
+            פרטי החיבור ל־Cloudflare R2 נשמרו בעת הכניסה לעורך אך השרת דחה אותם. התנתקו והיכנסו
+            שוב כדי לנסות מחדש.
           </p>
 
-          <form
-            className="login-card__form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleSignIn();
-            }}
-          >
-            <label className="login-field">
-              <span className="login-field__label">שם משתמש</span>
-              <input
-                className="login-field__input"
-                type="text"
-                value={username}
-                autoComplete="username"
-                spellCheck={false}
-                autoCapitalize="none"
-                autoCorrect="off"
-                onChange={(event) => {
-                  setUsername(event.target.value);
-                  setSignInOk(false);
-                }}
-                placeholder="weatherv1"
-                disabled={submitting}
-                aria-required="true"
-              />
-            </label>
+          {storage?.cloud.error && (
+            <RtlTechnicalLine
+              className="login-card__error"
+              role="alert"
+              prefix="פרטים טכניים:"
+              message={storage.cloud.error}
+            />
+          )}
 
-            <label className="login-field">
-              <span className="login-field__label">סיסמה</span>
-              <div className="login-field__password">
-                <input
-                  className="login-field__input"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  autoComplete="current-password"
-                  onChange={(event) => {
-                    setPassword(event.target.value);
-                    setSignInOk(false);
-                  }}
-                  placeholder="••••••••"
-                  disabled={submitting}
-                  aria-required="true"
-                />
-                <button
-                  type="button"
-                  className="login-field__toggle"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "הסתרת סיסמה" : "הצגת סיסמה"}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? "הסתר" : "הצג"}
-                </button>
-              </div>
-            </label>
-
-            {storage?.cloud.gatewayUrl && (
-              <p className="login-card__hint">
-                שער (URL): <code dir="ltr">{storage.cloud.gatewayUrl}</code>
-              </p>
-            )}
-
-            {storage?.cloud.error && !signInError && !signInOk && (
-              <RtlTechnicalLine
-                className="login-card__error"
-                role="alert"
-                prefix="לא ניתן להתחבר:"
-                message={storage.cloud.error}
-              />
-            )}
-            {signInError && (
-              <RtlTechnicalLine
-                className="login-card__error"
-                role="alert"
-                prefix="לא ניתן להתחבר:"
-                message={signInError}
-              />
-            )}
-            {signInOk && (
-              <p className="login-card__ok" role="status">
-                מחובר. טוען את הקטלוג…
-              </p>
-            )}
-
+          <div className="login-card__form">
             <button
-              type="submit"
+              type="button"
               className="btn btn--primary login-card__submit"
-              disabled={!canSubmit}
+              onClick={() => void handleSignOutToRetry()}
+              disabled={signingOut}
             >
-              {submitting ? "מתחבר…" : "התחברות"}
+              {signingOut ? "מתנתק…" : "התנתק והיכנס מחדש"}
             </button>
-          </form>
+          </div>
 
           <footer className="login-card__footer">
             <span>{versionLine}</span>
             <span aria-hidden="true">·</span>
-            <span>Cloudflare R2 · אימות בסיסי</span>
+            <span>Cloudflare R2</span>
           </footer>
         </div>
       </div>
@@ -380,7 +283,11 @@ function derivePhase(args: {
 
   if (storage.mode !== "cloud") return "hidden";
 
-  if (!storage.cloud.ready) return "cloud-connect";
+  // Cloud creds come from the editor login (same username/password); a
+  // mismatch surfaces here as cloud.ready === false. Show the recovery
+  // overlay only when the Worker actually reported an error — a transient
+  // not-yet-probed state shouldn't block the app.
+  if (!storage.cloud.ready && storage.cloud.error) return "cloud-reconnect";
   if (!storage.localCache.ready) return "local-cache";
   return "ready";
 }

@@ -28,6 +28,7 @@ A local-first weather-video production app: narration → Whisper transcript →
 | Change desktop UI flows | [CSS_CONVENTIONS.md](CSS_CONVENTIONS.md) (renderer styling source of truth); [ELECTRON.md](ELECTRON.md) (process model) | `src/client/components/**`, `src/client/lib/desktop.ts`, `src/app/globals.css` |
 | Edit Hebrew pitch-deck slide content | [SLIDES.md](SLIDES.md), [`download-page/slides-content.md`](download-page/slides-content.md) | `docs/download-page/index.html.template` |
 | Work on R2, Worker, or Pulumi infra | [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md), [CLOUDFLARE_INTEGRATION.md](CLOUDFLARE_INTEGRATION.md), [../infra/cloudflare/README.md](../infra/cloudflare/README.md) | `src/server/sync/r2/`, `src/app/api/sync/r2/`, `infra/cloudflare/` |
+| Rotate Worker secrets after EDITOR_PASSWORD changes | [RUNBOOK_WORKER_ROTATION.md](RUNBOOK_WORKER_ROTATION.md) | `.github/workflows/rotate-worker-secrets.yml`, `infra/cloudflare/wrangler.toml` |
 | Package or ship a desktop release | [RELEASE_CONVENTION.md](RELEASE_CONVENTION.md), or invoke `/weatherv1-release` | `.github/workflows/desktop*.yml`, `forge.config.cjs` |
 | Add CSS class names to renderer components | [CSS_CONVENTIONS.md](CSS_CONVENTIONS.md) | `src/app/globals.css` (source of truth) |
 | Deploy the web/server version | [DESIGN_DEPLOYMENT.md](DESIGN_DEPLOYMENT.md) | `Dockerfile`, `docker-compose.yml`, `src/server/**` |

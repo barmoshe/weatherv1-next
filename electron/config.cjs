@@ -15,6 +15,18 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 
+// Optional build-time-baked R2 worker creds. Emitted by
+// scripts/emit-r2-defaults.cjs at prebuild from .env / CI secrets.
+// Falls back to {username:null,password:null} if the generator hasn't run
+// (e.g. fresh checkout without an `npm run build`).
+let R2_DEFAULTS = { username: null, password: null };
+try {
+  // eslint-disable-next-line global-require
+  R2_DEFAULTS = require("./r2-defaults.generated.cjs");
+} catch (_e) {
+  /* file absent — use nulls */
+}
+
 const SETTINGS_FILE = "settings.json";
 /** Repo root (parent of `electron/`) — stable regardless of process cwd. */
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -181,7 +193,15 @@ function buildChildEnv(args) {
   const openai = decryptSecret(settings.keys.openai, { safeStorage: args.safeStorage });
   const anthropic = decryptSecret(settings.keys.anthropic, { safeStorage: args.safeStorage });
   const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
-  const r2AppPassword = decryptSecret(settings.keys.r2AppPassword, { safeStorage: args.safeStorage });
+  // Fall back to build-time-baked R2 creds (emitted by
+  // scripts/emit-r2-defaults.cjs from .env) so a fresh packaged install
+  // can sync before the user signs in via the onboarding gate. Stored
+  // settings still win if present.
+  const r2AppPassword =
+    decryptSecret(settings.keys.r2AppPassword, { safeStorage: args.safeStorage }) ||
+    process.env.R2_APP_PASSWORD ||
+    R2_DEFAULTS.password ||
+    null;
 
   const editorSessionToken = loadEditorSessionToken({ safeStorage: args.safeStorage });
 
@@ -248,7 +268,13 @@ function buildChildEnv(args) {
   if (args.productionMode && process.resourcesPath) {
     env.WEATHER_RESOURCES_DIR = process.resourcesPath;
   }
-  const fromSettings = settings.r2 || {};
+  const fromSettings = { ...(settings.r2 || {}) };
+  // Same fall-back for the username so a fresh install matches the env-provided
+  // password (otherwise the gateway sees user=null and 401s).
+  if (!fromSettings.appUsername) {
+    fromSettings.appUsername =
+      process.env.R2_APP_USERNAME || R2_DEFAULTS.username || null;
+  }
   const r2 = args.productionMode
     ? { ...fromSettings, ...PRODUCTION_R2, enabled: true }
     : {

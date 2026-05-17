@@ -25,5 +25,6 @@ fs.writeFileSync(
   '// STUB — overwritten by scripts/emit-auth-hashes.cjs during `npm run prebuild`.\n' +
     '// Tests mock this module via vi.mock; these values are never read at runtime.\n' +
     'export const EDITOR_HASH = "";\n' +
-    'export const ADMIN_HASH = "";\n',
+    'export const ADMIN_HASH = "";\n' +
+    'export const R2_APP_USERNAME = "";\n',
 );

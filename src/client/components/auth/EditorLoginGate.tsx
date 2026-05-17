@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { desktop } from "@/client/lib/desktop";
 
-const EDITOR_USERNAME = "v1editor";
+// Fallback used only until /api/auth/me responds with the canonical
+// build-time username. The disabled username field is informational; the
+// server validates against its own constant regardless of what we display.
+const FALLBACK_USERNAME = "v1editor";
 
 type Phase = "probing" | "needs-login" | "authenticated";
 
@@ -14,6 +17,7 @@ interface EditorLoginGateProps {
 
 export function EditorLoginGate({ children }: EditorLoginGateProps) {
   const [phase, setPhase] = useState<Phase>("probing");
+  const [username, setUsername] = useState<string>(FALLBACK_USERNAME);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -24,8 +28,11 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
     (async () => {
       try {
         const res = await fetch("/api/auth/me", { cache: "no-store" });
-        const data = (await res.json()) as { ok?: boolean };
+        const data = (await res.json()) as { ok?: boolean; username?: string };
         if (cancelled) return;
+        if (typeof data.username === "string" && data.username) {
+          setUsername(data.username);
+        }
         setPhase(data.ok ? "authenticated" : "needs-login");
       } catch {
         if (cancelled) return;
@@ -45,11 +52,12 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
       const res = await fetch("/api/auth/editor-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: EDITOR_USERNAME, password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = (await res.json()) as {
         success?: boolean;
         token?: string;
+        username?: string;
         error?: string;
       };
       if (!data.success || !data.token) {
@@ -57,13 +65,31 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
         setSubmitting(false);
         return;
       }
-      if (desktop?.setEditorSession) {
+      const canonicalUsername =
+        typeof data.username === "string" && data.username
+          ? data.username
+          : username;
+      // Desktop only: persist the same (username, password) pair as R2
+      // Worker Basic Auth credentials. This collapses the second cloud
+      // sign-in screen into the editor login. If saveSettings fails the
+      // user can still recover via Settings → Cloud.
+      if (desktop) {
         try {
-          await desktop.setEditorSession({ token: data.token });
+          await desktop.saveSettings({
+            r2AppUsername: canonicalUsername,
+            r2AppPassword: password,
+          });
         } catch {
-          // Persistence failure is non-fatal — the cookie still
-          // authenticates this session. Worst case: relaunch shows the
-          // gate again.
+          // Non-fatal. Cloud sync will show a banner if R2 stays unready.
+        }
+        if (desktop.setEditorSession) {
+          try {
+            await desktop.setEditorSession({ token: data.token });
+          } catch {
+            // Persistence failure is non-fatal — the cookie still
+            // authenticates this session. Worst case: relaunch shows the
+            // gate again.
+          }
         }
       }
       setPhase("authenticated");
@@ -72,7 +98,7 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
       setError("שגיאת רשת");
       setSubmitting(false);
     }
-  }, [password, submitting]);
+  }, [username, password, submitting]);
 
   if (phase === "probing") {
     return (
@@ -117,7 +143,7 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
             <input
               className="login-field__input"
               type="text"
-              value={EDITOR_USERNAME}
+              value={username}
               autoComplete="username"
               spellCheck={false}
               disabled

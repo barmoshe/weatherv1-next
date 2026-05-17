@@ -21,8 +21,10 @@ const r2StorageClass = config.get("r2StorageClass") ?? "Standard";
 // `pulumi up` from breaking on existing stacks during the migration.
 const appUsername = config.get("appUsername") ?? "weatherv1";
 const appPassword = config.requireSecret("appPassword");
-const cloudflareApiToken = config.requireSecret("cloudflareApiToken");
-const r2ParentAccessKeyId = config.requireSecret("r2ParentAccessKeyId");
+// cloudflareApiToken / r2ParentAccessKeyId were used by the legacy
+// temp-S3-creds endpoint. Both bindings + config entries can be deleted
+// from Pulumi.dev.yaml once a `pulumi up` runs that drops them from the
+// live Worker. The worker source no longer reads either.
 
 const workerPath = path.join(process.cwd(), "worker", "r2-gateway.js");
 const workerContent = fs.readFileSync(workerPath, "utf8");
@@ -73,6 +75,12 @@ const script = new cloudflare.WorkersScript("r2-gateway", {
   contentType: "application/javascript+module",
   compatibilityDate: "2026-05-12",
   mainModule: "worker.js",
+  // Phase 2 of the proxy migration removed the temp-S3-creds endpoint, so
+  // the Worker no longer needs CLOUDFLARE_API_TOKEN or R2_PARENT_ACCESS_KEY_ID.
+  // All object I/O flows through the R2 binding directly. If a Pulumi
+  // operator ever runs `pulumi up` after this point, these bindings will
+  // be deleted from the live Worker — make sure to coordinate with the
+  // wrangler-managed deploy at .github/workflows/worker-deploy.yml.
   bindings: [
     { name: "WEATHERV1_MEDIA", type: "r2_bucket", bucketName: bucket.name },
     { name: "CLOUDFLARE_ACCOUNT_ID", type: "plain_text", text: accountId },
@@ -81,8 +89,6 @@ const script = new cloudflare.WorkersScript("r2-gateway", {
     { name: "ALLOWED_ORIGIN", type: "plain_text", text: allowedOrigin },
     { name: "WEATHERV1_APP_USERNAME", type: "secret_text", text: appUsername },
     { name: "WEATHERV1_APP_PASSWORD", type: "secret_text", text: appPassword },
-    { name: "CLOUDFLARE_API_TOKEN", type: "secret_text", text: cloudflareApiToken },
-    { name: "R2_PARENT_ACCESS_KEY_ID", type: "secret_text", text: r2ParentAccessKeyId },
   ],
 }, { dependsOn: [bucket] });
 

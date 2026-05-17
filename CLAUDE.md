@@ -65,7 +65,7 @@ Code map and per-folder roles: [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md). Elect
 - **Tests**: Vitest + jsdom + `@testing-library/react`. Setup file `src/test/setup.ts`. The `**/.next/**` exclude in `vitest.config.ts` is load-bearing — the standalone copy of `src/test/**` would otherwise run every test twice.
 - **CSS source of truth**: `src/app/globals.css`. Grep for an existing canonical class before adding a new BEM `__`-style name; unmatched classes render unstyled. See `docs/CSS_CONVENTIONS.md`.
 - **IPC pattern**: Promise-based `ipcMain.handle` + `ipcRenderer.invoke` only. No legacy `ipcMain.on` / `ipcRenderer.send`. One narrow `window.desktop.<channel>` wrapper per channel — never expose `ipcRenderer` itself.
-- **Catalog/R2 mental model**: `readCatalog()` / `writeCatalog()` are always local. R2 is a sidecar; the Worker mints short-lived S3 creds; the app stores no permanent R2 API keys.
+- **Catalog/R2 mental model**: `readCatalog()` / `writeCatalog()` are always local. R2 is a sidecar; the app talks to the R2 gateway Worker (`/v1/objects` for single PUTs/GETs, `/v1/multipart/*` for files >90 MB) via HTTP Basic auth using the unified `EDITOR_PASSWORD`. No S3 SDK in the app, no temp credentials in flight, no permanent R2 keys on disk. Rotate Worker secrets via [`docs/RUNBOOK_WORKER_ROTATION.md`](docs/RUNBOOK_WORKER_ROTATION.md).
 - **Commits**: `type(scope): subject` in imperative mood (`fix`, `feat`, `chore`, `docs`, `refactor`, `test`). Release commits bump `package.json` and `package-lock.json` together and push branch + tag together (see `docs/RELEASE_CONVENTION.md`). Never auto-commit — draft a message and let the user invoke it.
 - **Doc-only** changes → `docs(scope): subject`. Pure refactors → `refactor(scope): subject`.
 

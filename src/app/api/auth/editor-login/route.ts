@@ -1,7 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { verifyEditorLogin } from "@/server/runtime/auth-passwords";
+import {
+  EDITOR_USERNAME,
+  verifyEditorLogin,
+} from "@/server/runtime/auth-passwords";
 import { EDITOR_COOKIE_NAME } from "@/server/runtime/auth";
 import { issueToken } from "@/server/runtime/editor-session";
 
@@ -33,7 +36,13 @@ export async function POST(req: NextRequest) {
   }
 
   const token = issueToken();
-  const res = NextResponse.json({ success: true, token });
+  // Return the canonical username so the client can persist the same
+  // (username, password) pair as R2 Worker credentials on desktop.
+  const res = NextResponse.json({
+    success: true,
+    token,
+    username: EDITOR_USERNAME,
+  });
   res.cookies.set(EDITOR_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",

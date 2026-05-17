@@ -59,6 +59,10 @@ next-env.d.ts
 # committed. The companion .d.ts ships alongside source for tsc.
 /src/server/runtime/auth-passwords.generated.ts
 
+# Build-time-baked R2 worker creds (emitted by scripts/emit-r2-defaults.cjs).
+# Plaintext lives in .env locally; never committed.
+/electron/r2-defaults.generated.cjs
+
 # Claude Code personal scratch / per-checkout working memory
 CLAUDE.local.md
 .claude/ISSUES.local.md

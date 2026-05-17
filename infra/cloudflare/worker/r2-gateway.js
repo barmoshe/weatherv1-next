@@ -14,6 +14,10 @@
 //     would only serve to pop a login dialog if someone visits the worker URL
 //     in a browser.
 //   - Decoding uses `atob` so we don't require the `nodejs_compat` flag.
+//
+// All R2 reads/writes go through this Worker — the desktop app never holds
+// S3 credentials. The previous /v1/r2/temporary-credentials endpoint and
+// its Cloudflare-API-bound secrets were removed in the Phase-2 cleanup.
 
 const encoder = new TextEncoder();
 
@@ -51,11 +55,9 @@ function checkBasicAuth(request, env) {
   if (sep < 0) return { ok: false, status: 400, error: "malformed authorization header" };
   const user = decoded.slice(0, sep);
   const pass = decoded.slice(sep + 1);
-  // Always run both compares so timing doesn't leak which field was wrong.
   const userOk = timingSafeEqualStr(user, expectedUser);
   const passOk = timingSafeEqualStr(pass, expectedPass);
-  if (!userOk || !passOk) return { ok: false, status: 401, error: "unauthorized" };
-  return { ok: true };
+  return userOk && passOk ? { ok: true } : { ok: false, status: 401, error: "unauthorized" };
 }
 
 export default {
@@ -72,9 +74,10 @@ export default {
     }
 
     // Public installer downloads. Served unauthenticated from R2 under the
-    // `downloads/` key prefix. Strict path whitelist prevents traversal; temp
-    // creds minted by /v1/r2/temporary-credentials scope to `tenants/...` only,
-    // so they can never read or overwrite anything under `downloads/`.
+    // `downloads/` key prefix. Strict path whitelist prevents traversal.
+    // The /v1/objects/* gate below rejects anything that doesn't start with
+    // `tenants/`, so these public keys can never be read or overwritten via
+    // the authenticated path either.
     if (
       (request.method === "GET" || request.method === "HEAD") &&
       url.pathname.startsWith("/downloads/")
@@ -97,14 +100,9 @@ export default {
       if (!object) return json({ success: false, error: "not found" }, cors, 404);
 
       const filename = rawKey.split("/").pop() || "download.bin";
-      // Anchor the pointer match: include the trailing `/<filename>` so that
-      // e.g. `downloads/archive/latest/v1/foo.exe` does NOT get the 5-min
-      // cache policy meant only for `…/latest/<file>` (or latest-stable).
       const isMutablePointer = /\/(latest|latest-stable)\/[^/]+$/.test(rawKey);
       const headers = {
         ...cors,
-        // The whitelist regex above (`[A-Za-z0-9._/-]+`) excludes `"` and `\`,
-        // so interpolating filename directly into content-disposition is safe.
         "content-type": "application/octet-stream",
         "content-disposition": `attachment; filename="${filename}"`,
         etag: object.httpEtag,
@@ -137,68 +135,180 @@ export default {
       return json({ success: false, error: auth.error }, cors, auth.status);
     }
 
-    if (url.pathname === "/v1/r2/temporary-credentials" && request.method === "POST") {
-      const body = await request.json().catch(() => ({}));
-      const tenantId = sanitizeTenant(body.tenantId || env.DEFAULT_TENANT_ID);
-      const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/r2/temp-access-credentials`, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          bucket: env.R2_BUCKET_NAME,
-          parentAccessKeyId: env.R2_PARENT_ACCESS_KEY_ID,
-          permission: "object-read-write",
-          ttlSeconds: 900,
-          prefixes: [`tenants/${tenantId}/`],
-        }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || payload.success === false) {
-        return json({ success: false, error: payload.errors?.[0]?.message || `Cloudflare API HTTP ${response.status}` }, cors, 502);
+    // --- Authenticated object proxy --------------------------------------
+    //
+    // Every R2 object the desktop app touches flows through these routes.
+    // Key is passed as ?key=tenants/<tenant>/<rest>; validated to keep
+    // callers inside their tenant prefix and out of any forbidden namespaces
+    // (currently just `outputs/`, which holds local-only forecast renders).
+    //
+    // Streaming: GET pipes object.body straight to the client; PUT pipes
+    // request.body straight to R2.put. Workers cap request bodies at 100 MB
+    // on Free/Pro plans; videos larger than that use the multipart API below.
+
+    if (url.pathname === "/v1/objects") {
+      const key = url.searchParams.get("key") || "";
+      const keyError = validateObjectKey(key);
+      if (keyError) return json({ success: false, error: keyError }, cors, 400);
+
+      if (request.method === "HEAD") {
+        const obj = await env.WEATHERV1_MEDIA.head(key);
+        if (!obj) return new Response(null, { status: 404, headers: cors });
+        return new Response(null, {
+          status: 200,
+          headers: objectMetaHeaders(obj, cors),
+        });
       }
-      const result = payload.result || payload;
-      return json({
-        accountId: env.CLOUDFLARE_ACCOUNT_ID,
-        bucketName: env.R2_BUCKET_NAME,
-        accessKeyId: result.accessKeyId,
-        secretAccessKey: result.secretAccessKey,
-        sessionToken: result.sessionToken,
-        expiresAt: new Date(Date.now() + 900_000).toISOString(),
-        tenantPrefix: `tenants/${tenantId}/`,
-      }, cors);
+
+      if (request.method === "GET") {
+        const rangeHeader = request.headers.get("range") || undefined;
+        const obj = await env.WEATHERV1_MEDIA.get(
+          key,
+          rangeHeader ? { range: parseRange(rangeHeader) } : undefined,
+        );
+        if (!obj) return json({ success: false, error: "not found" }, cors, 404);
+        const headers = objectMetaHeaders(obj, cors);
+        let status = 200;
+        if (rangeHeader && obj.range) {
+          status = 206;
+          const start = obj.range.offset ?? 0;
+          const length = obj.range.length ?? 0;
+          headers["content-range"] = `bytes ${start}-${start + length - 1}/${obj.size ?? "*"}`;
+          headers["content-length"] = String(length);
+        }
+        return new Response(obj.body, { status, headers });
+      }
+
+      if (request.method === "PUT") {
+        if (!request.body) {
+          return json({ success: false, error: "missing body" }, cors, 400);
+        }
+        const contentType = request.headers.get("content-type") || "application/octet-stream";
+        const cacheControl = request.headers.get("x-cache-control") || undefined;
+        const obj = await env.WEATHERV1_MEDIA.put(key, request.body, {
+          httpMetadata: { contentType, ...(cacheControl ? { cacheControl } : {}) },
+        });
+        return json(
+          { success: true, etag: obj?.httpEtag, size: obj?.size, key },
+          cors,
+        );
+      }
+
+      if (request.method === "DELETE") {
+        await env.WEATHERV1_MEDIA.delete(key);
+        return json({ success: true, key }, cors);
+      }
+
+      return json({ success: false, error: "method not allowed" }, cors, 405);
     }
 
-    if (url.pathname === "/v1/catalog" && request.method === "GET") {
-      const tenantId = sanitizeTenant(url.searchParams.get("tenantId") || env.DEFAULT_TENANT_ID);
-      const object = await env.WEATHERV1_MEDIA.get(`tenants/${tenantId}/catalog/catalog.json`);
-      if (!object) return json({ success: false, error: "catalog not found" }, cors, 404);
-      return new Response(await object.text(), {
-        headers: {
-          ...cors,
-          "content-type": "application/json; charset=utf-8",
-          etag: object.httpEtag,
-          "cache-control": "no-cache",
-        },
+    // --- Multipart uploads -----------------------------------------------
+    //
+    // Used by uploadR2File when file size > MAX_SINGLE_PUT (~90 MB). The
+    // R2 binding handles the actual multipart accounting; this Worker just
+    // exposes it as four small HTTP routes.
+
+    if (url.pathname === "/v1/multipart" && request.method === "POST") {
+      const key = url.searchParams.get("key") || "";
+      const keyError = validateObjectKey(key);
+      if (keyError) return json({ success: false, error: keyError }, cors, 400);
+      const contentType = url.searchParams.get("contentType") || "application/octet-stream";
+      const upload = await env.WEATHERV1_MEDIA.createMultipartUpload(key, {
+        httpMetadata: { contentType },
       });
+      return json({ success: true, key, uploadId: upload.uploadId }, cors);
     }
 
-    if (url.pathname === "/v1/catalog" && request.method === "PUT") {
-      const tenantId = sanitizeTenant(url.searchParams.get("tenantId") || env.DEFAULT_TENANT_ID);
-      const text = await request.text();
-      JSON.parse(text);
-      const key = `tenants/${tenantId}/catalog/catalog.json`;
-      await env.WEATHERV1_MEDIA.put(key, text, {
-        httpMetadata: { contentType: "application/json; charset=utf-8", cacheControl: "no-cache" },
-      });
-      const object = await env.WEATHERV1_MEDIA.head(key);
-      return json({ success: true, etag: object?.httpEtag }, cors);
+    if (url.pathname === "/v1/multipart" && request.method === "PUT") {
+      const key = url.searchParams.get("key") || "";
+      const keyError = validateObjectKey(key);
+      if (keyError) return json({ success: false, error: keyError }, cors, 400);
+      const uploadId = url.searchParams.get("uploadId");
+      const partNumberRaw = url.searchParams.get("partNumber");
+      const partNumber = Number(partNumberRaw);
+      if (!uploadId || !Number.isInteger(partNumber) || partNumber < 1) {
+        return json({ success: false, error: "missing uploadId or partNumber" }, cors, 400);
+      }
+      if (!request.body) {
+        return json({ success: false, error: "missing body" }, cors, 400);
+      }
+      const upload = env.WEATHERV1_MEDIA.resumeMultipartUpload(key, uploadId);
+      const part = await upload.uploadPart(partNumber, request.body);
+      return json({ success: true, partNumber, etag: part.etag }, cors);
+    }
+
+    if (url.pathname === "/v1/multipart/complete" && request.method === "POST") {
+      const key = url.searchParams.get("key") || "";
+      const keyError = validateObjectKey(key);
+      if (keyError) return json({ success: false, error: keyError }, cors, 400);
+      const uploadId = url.searchParams.get("uploadId");
+      if (!uploadId) return json({ success: false, error: "missing uploadId" }, cors, 400);
+      const body = await request.json().catch(() => ({}));
+      const parts = Array.isArray(body?.parts) ? body.parts : null;
+      if (!parts) return json({ success: false, error: "missing parts[]" }, cors, 400);
+      const upload = env.WEATHERV1_MEDIA.resumeMultipartUpload(key, uploadId);
+      const obj = await upload.complete(parts);
+      return json(
+        { success: true, etag: obj?.httpEtag, size: obj?.size, key },
+        cors,
+      );
+    }
+
+    if (url.pathname === "/v1/multipart" && request.method === "DELETE") {
+      const key = url.searchParams.get("key") || "";
+      const keyError = validateObjectKey(key);
+      if (keyError) return json({ success: false, error: keyError }, cors, 400);
+      const uploadId = url.searchParams.get("uploadId");
+      if (!uploadId) return json({ success: false, error: "missing uploadId" }, cors, 400);
+      const upload = env.WEATHERV1_MEDIA.resumeMultipartUpload(key, uploadId);
+      await upload.abort();
+      return json({ success: true }, cors);
     }
 
     return json({ success: false, error: "not found" }, cors, 404);
   },
 };
+
+/**
+ * Reject any key that isn't tenant-scoped or that touches the forbidden
+ * `outputs/` prefix (where local-only forecast renders live in cache —
+ * uploading them would waste R2 storage and is blocked client-side too).
+ * Returns null on success or a human-readable string on failure.
+ */
+function validateObjectKey(key) {
+  if (typeof key !== "string" || key.length === 0) return "missing key";
+  if (key.length > 1024) return "key too long";
+  if (key.includes("..") || key.includes("//")) return "invalid key";
+  if (!/^tenants\/[a-zA-Z0-9_-]{1,80}\//.test(key)) return "key must start with tenants/<id>/";
+  if (/(^|\/)outputs\//.test(key)) return "outputs/ prefix is forbidden";
+  return null;
+}
+
+/** Parse a single-range Range header into the form R2 expects. */
+function parseRange(header) {
+  // Only `bytes=start-end` and `bytes=start-` are supported. `suffix-length`
+  // is uncommon for the app's use case (downloading a known-size object).
+  const m = /^bytes=(\d+)-(\d*)$/.exec(header.trim());
+  if (!m) return undefined;
+  const offset = Number(m[1]);
+  if (m[2] === "") return { offset };
+  const end = Number(m[2]);
+  return { offset, length: end - offset + 1 };
+}
+
+function objectMetaHeaders(obj, cors) {
+  const headers = {
+    ...cors,
+    etag: obj.httpEtag,
+    "accept-ranges": "bytes",
+  };
+  if (obj.size !== undefined) headers["content-length"] = String(obj.size);
+  if (obj.uploaded) headers["last-modified"] = new Date(obj.uploaded).toUTCString();
+  const meta = obj.httpMetadata || {};
+  if (meta.contentType) headers["content-type"] = meta.contentType;
+  if (meta.cacheControl) headers["cache-control"] = meta.cacheControl;
+  return headers;
+}
 
 function json(data, cors, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -211,13 +321,7 @@ function corsHeaders(env) {
   const origin = env.ALLOWED_ORIGIN || "*";
   return {
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET,POST,PUT,OPTIONS",
-    "access-control-allow-headers": "authorization,content-type",
+    "access-control-allow-methods": "GET,POST,PUT,DELETE,HEAD,OPTIONS",
+    "access-control-allow-headers": "authorization,content-type,range,x-cache-control",
   };
-}
-
-function sanitizeTenant(value) {
-  const tenant = String(value || "default").trim();
-  if (!/^[a-zA-Z0-9_-]{1,80}$/.test(tenant)) throw new Error("invalid tenant id");
-  return tenant;
 }

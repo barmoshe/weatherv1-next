@@ -1,0 +1,26 @@
+# Wrangler config for the R2 gateway Worker.
+#
+# This Worker is the single point of contact between the WeatherV1 desktop
+# app and the R2 bucket. After Phase 2 it also proxies all object I/O
+# (catalog, plan bundles, videos, posters, voiceovers) via /v1/objects/*
+# routes so the app never needs S3-style temp credentials.
+#
+# Pulumi previously deployed this script; it now lives entirely under
+# wrangler. R2 bucket + Pages project remain in Pulumi for the moment.
+# Rotate secrets via `.github/workflows/rotate-worker-secrets.yml`.
+
+name = "weatherv1-r2-gateway"
+main = "worker/r2-gateway.js"
+compatibility_date = "2026-05-12"
+account_id = "f73ae3550198c571ad20f9fd06632200"
+workers_dev = true
+
+[vars]
+DEFAULT_TENANT_ID = "default"
+ALLOWED_ORIGIN = "*"
+CLOUDFLARE_ACCOUNT_ID = "f73ae3550198c571ad20f9fd06632200"
+R2_BUCKET_NAME = "weatherv1-media"
+
+[[r2_buckets]]
+binding = "WEATHERV1_MEDIA"
+bucket_name = "weatherv1-media"

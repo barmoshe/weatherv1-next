@@ -1,18 +1,24 @@
-import {
-  GetObjectCommand,
-  HeadObjectCommand,
-  PutObjectCommand,
-  S3Client,
-  type GetObjectCommandOutput,
-} from "@aws-sdk/client-s3";
-import { Upload } from "@aws-sdk/lib-storage";
+// R2 client — talks only to the gateway Worker, never to S3 directly.
+//
+// Phase 2 of the proxy migration: the desktop app no longer mints temporary
+// S3 credentials. Every read/write goes through `/v1/objects` (single-shot)
+// or `/v1/multipart/*` (chunked uploads for files larger than the Worker
+// request body limit). Authentication is HTTP Basic with the unified
+// editor credential.
+
 import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
-import { getRuntimeConfig } from "@/server/runtime/config";
-import type { R2TemporaryCredentials } from "./types";
 
-let cachedCredentials: R2TemporaryCredentials | null = null;
+import { getRuntimeConfig } from "@/server/runtime/config";
+
+// Single-PUT cap. Workers Free/Pro accept up to 100 MB; we leave 10 MB of
+// headroom for Worker-side accounting before falling back to multipart.
+const MAX_SINGLE_PUT_BYTES = 90 * 1024 * 1024;
+// Multipart part size. R2 requires each part except the last to be at
+// least 5 MiB. 8 MiB keeps part counts low for typical multi-hundred-MB
+// renders while staying well under any Worker subrequest cap.
+const MULTIPART_PART_BYTES = 8 * 1024 * 1024;
 
 function trimSlash(value: string): string {
   return value.replace(/\/+$/, "");
@@ -23,46 +29,8 @@ function configuredTenantPrefix(): string {
   return `tenants/${tenantId}`;
 }
 
-function normalizeEtag(etag: string | undefined): string | undefined {
-  return etag?.replace(/^"|"$/g, "");
-}
-
-async function streamToString(body: GetObjectCommandOutput["Body"]): Promise<string> {
-  if (!body) return "";
-  if (typeof body === "string") return body;
-  if (body instanceof Uint8Array) return Buffer.from(body).toString("utf8");
-  if (body instanceof Readable) {
-    const chunks: Buffer[] = [];
-    for await (const chunk of body) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    return Buffer.concat(chunks).toString("utf8");
-  }
-  const webStream = body as ReadableStream<Uint8Array>;
-  const reader = webStream.getReader?.();
-  if (!reader) return String(body);
-  const chunks: Uint8Array[] = [];
-  while (true) {
-    const next = await reader.read();
-    if (next.done) break;
-    chunks.push(next.value);
-  }
-  return Buffer.concat(chunks.map((c) => Buffer.from(c))).toString("utf8");
-}
-
-async function streamToFile(body: GetObjectCommandOutput["Body"], targetPath: string): Promise<void> {
-  if (!body) throw new Error("R2 returned an empty object body");
-  await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
-  if (body instanceof Readable) {
-    await new Promise<void>((resolve, reject) => {
-      const out = fs.createWriteStream(targetPath);
-      body.pipe(out);
-      body.on("error", reject);
-      out.on("error", reject);
-      out.on("finish", resolve);
-    });
-    return;
-  }
-  const text = await streamToString(body);
-  await fs.promises.writeFile(targetPath, text);
+function normalizeEtag(etag: string | null | undefined): string | undefined {
+  return etag ? etag.replace(/^"|"$/g, "") : undefined;
 }
 
 export function tenantKey(relativeKey: string): string {
@@ -81,77 +49,92 @@ function basicAuthHeader(user: string, pass: string): string {
   return `Basic ${Buffer.from(`${user}:${pass}`).toString("base64")}`;
 }
 
-export async function fetchTemporaryCredentials(force = false): Promise<R2TemporaryCredentials> {
+function gatewayBase(): string {
   const cfg = getRuntimeConfig().r2;
-  if (!r2Configured()) {
-    throw new Error("R2 sync is not configured");
-  }
-  if (!force && cachedCredentials && Date.parse(cachedCredentials.expiresAt) - Date.now() > 60_000) {
-    return cachedCredentials;
-  }
-  const res = await fetch(`${trimSlash(cfg.gatewayUrl!)}/v1/r2/temporary-credentials`, {
-    method: "POST",
-    headers: {
-      authorization: basicAuthHeader(cfg.appUsername!, cfg.appPassword!),
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ tenantId: cfg.tenantId }),
-  });
-  const data = (await res.json().catch(() => ({}))) as Partial<R2TemporaryCredentials> & { error?: string };
-  if (!res.ok) throw new Error(data.error ?? `R2 gateway returned HTTP ${res.status}`);
-  if (!data.accountId || !data.bucketName || !data.accessKeyId || !data.secretAccessKey || !data.expiresAt) {
-    throw new Error("R2 gateway returned incomplete temporary credentials");
-  }
-  cachedCredentials = data as R2TemporaryCredentials;
-  return cachedCredentials;
+  if (!r2Configured()) throw new Error("R2 sync is not configured");
+  return trimSlash(cfg.gatewayUrl!);
 }
 
-async function makeS3Client(): Promise<{ client: S3Client; credentials: R2TemporaryCredentials }> {
-  const credentials = await fetchTemporaryCredentials();
-  const client = new S3Client({
-    region: "auto",
-    endpoint: `https://${credentials.accountId}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: credentials.accessKeyId,
-      secretAccessKey: credentials.secretAccessKey,
-      sessionToken: credentials.sessionToken,
-    },
-  });
-  return { client, credentials };
+function authHeader(): string {
+  const cfg = getRuntimeConfig().r2;
+  return basicAuthHeader(cfg.appUsername!, cfg.appPassword!);
 }
 
-export async function headR2Object(key: string): Promise<{ etag?: string; size?: number; updatedAt?: string } | null> {
-  const { client, credentials } = await makeS3Client();
-  try {
-    const result = await client.send(new HeadObjectCommand({ Bucket: credentials.bucketName, Key: key }));
-    return {
-      etag: normalizeEtag(result.ETag),
-      size: result.ContentLength,
-      updatedAt: result.LastModified?.toISOString(),
-    };
-  } catch (err: any) {
-    const status = err?.$metadata?.httpStatusCode;
-    if (status === 404 || err?.name === "NotFound") return null;
-    throw err;
-  }
+function objectUrl(key: string): string {
+  return `${gatewayBase()}/v1/objects?key=${encodeURIComponent(key)}`;
+}
+
+function multipartUrl(key: string, extra: Record<string, string | number> = {}): string {
+  const params = new URLSearchParams({ key });
+  for (const [k, v] of Object.entries(extra)) params.set(k, String(v));
+  return `${gatewayBase()}/v1/multipart?${params.toString()}`;
+}
+
+function multipartCompleteUrl(key: string, uploadId: string): string {
+  const params = new URLSearchParams({ key, uploadId });
+  return `${gatewayBase()}/v1/multipart/complete?${params.toString()}`;
+}
+
+async function readErrorMessage(res: Response): Promise<string> {
+  const data = (await res.json().catch(() => null)) as { error?: string } | null;
+  return data?.error || `HTTP ${res.status}`;
+}
+
+async function streamToFile(body: ReadableStream<Uint8Array>, targetPath: string): Promise<void> {
+  await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+  const nodeStream = Readable.fromWeb(body as never);
+  await new Promise<void>((resolve, reject) => {
+    const out = fs.createWriteStream(targetPath);
+    nodeStream.pipe(out);
+    nodeStream.on("error", reject);
+    out.on("error", reject);
+    out.on("finish", resolve);
+  });
+}
+
+export async function headR2Object(
+  key: string,
+): Promise<{ etag?: string; size?: number; updatedAt?: string } | null> {
+  const res = await fetch(objectUrl(key), {
+    method: "HEAD",
+    headers: { authorization: authHeader() },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`headR2Object(${key}): HTTP ${res.status}`);
+  const sizeHeader = res.headers.get("content-length");
+  const updatedHeader = res.headers.get("last-modified");
+  return {
+    etag: normalizeEtag(res.headers.get("etag")),
+    size: sizeHeader ? Number(sizeHeader) : undefined,
+    updatedAt: updatedHeader ? new Date(updatedHeader).toISOString() : undefined,
+  };
 }
 
 export async function getR2Text(key: string): Promise<{ text: string; etag?: string }> {
-  const { client, credentials } = await makeS3Client();
-  const result = await client.send(new GetObjectCommand({ Bucket: credentials.bucketName, Key: key }));
-  return { text: await streamToString(result.Body), etag: normalizeEtag(result.ETag) };
+  const res = await fetch(objectUrl(key), {
+    method: "GET",
+    headers: { authorization: authHeader() },
+  });
+  if (!res.ok) throw new Error(`getR2Text(${key}): ${await readErrorMessage(res)}`);
+  return { text: await res.text(), etag: normalizeEtag(res.headers.get("etag")) };
 }
 
 export async function putR2Text(key: string, text: string): Promise<{ etag?: string }> {
-  const { client, credentials } = await makeS3Client();
-  const result = await client.send(new PutObjectCommand({
-    Bucket: credentials.bucketName,
-    Key: key,
-    Body: text,
-    ContentType: "application/json; charset=utf-8",
-    CacheControl: "no-cache",
-  }));
-  return { etag: normalizeEtag(result.ETag) };
+  if (/(^|\/)outputs\//.test(key)) {
+    throw new Error(`putR2Text: refusing to upload to outputs/ prefix (key=${key})`);
+  }
+  const res = await fetch(objectUrl(key), {
+    method: "PUT",
+    headers: {
+      authorization: authHeader(),
+      "content-type": "application/json; charset=utf-8",
+      "x-cache-control": "no-cache",
+    },
+    body: text,
+  });
+  if (!res.ok) throw new Error(`putR2Text(${key}): ${await readErrorMessage(res)}`);
+  const data = (await res.json().catch(() => ({}))) as { etag?: string };
+  return { etag: normalizeEtag(data.etag) };
 }
 
 export async function uploadR2File(
@@ -160,40 +143,144 @@ export async function uploadR2File(
   contentType: string,
   onProgress?: (loaded?: number, total?: number) => void,
 ): Promise<{ etag?: string; size: number }> {
-  // Rendered forecast MP4s must stay local — they are large, regenerable from
-  // the plan bundle, and their previous R2 home (`tenants/<id>/outputs/<jobId>/forecast.mp4`)
-  // was removed in 826a79b. Reject any attempt to revive that path.
+  // Rendered forecast MP4s must stay local — they're regenerable from the
+  // plan bundle and their previous R2 home (`tenants/<id>/outputs/<jobId>/forecast.mp4`)
+  // was removed in 826a79b. Defense-in-depth: the Worker rejects this too.
   if (/(^|\/)outputs\//.test(key)) {
     throw new Error(`uploadR2File: refusing to upload to outputs/ prefix (key=${key})`);
   }
-  const { client, credentials } = await makeS3Client();
-  const stat = fs.statSync(filePath);
-  const upload = new Upload({
-    client,
-    params: {
-      Bucket: credentials.bucketName,
-      Key: key,
-      Body: fs.createReadStream(filePath),
-      ContentType: contentType,
-      CacheControl: "private, max-age=31536000, immutable",
-    },
+  const stat = await fs.promises.stat(filePath);
+  if (stat.size <= MAX_SINGLE_PUT_BYTES) {
+    return uploadSinglePut(key, filePath, contentType, stat.size, onProgress);
+  }
+  return uploadMultipart(key, filePath, contentType, stat.size, onProgress);
+}
+
+async function uploadSinglePut(
+  key: string,
+  filePath: string,
+  contentType: string,
+  size: number,
+  onProgress?: (loaded?: number, total?: number) => void,
+): Promise<{ etag?: string; size: number }> {
+  onProgress?.(0, size);
+  // Node fetch can stream a file via Readable.toWeb + duplex:'half'.
+  const nodeStream = fs.createReadStream(filePath);
+  let sent = 0;
+  nodeStream.on("data", (chunk) => {
+    sent += chunk.length;
+    onProgress?.(sent, size);
   });
-  upload.on("httpUploadProgress", (progress) => onProgress?.(progress.loaded, progress.total ?? stat.size));
-  const result = await upload.done();
-  return { etag: normalizeEtag(result.ETag), size: stat.size };
+  const body = Readable.toWeb(nodeStream) as unknown as BodyInit;
+  const res = await fetch(objectUrl(key), {
+    method: "PUT",
+    headers: {
+      authorization: authHeader(),
+      "content-type": contentType,
+      "content-length": String(size),
+      "x-cache-control": "private, max-age=31536000, immutable",
+    },
+    body,
+    // Node-only fetch option for streaming request bodies.
+    // @ts-expect-error: 'duplex' is a Node fetch option not in lib.dom.d.ts.
+    duplex: "half",
+  });
+  if (!res.ok) throw new Error(`uploadR2File(${key}): ${await readErrorMessage(res)}`);
+  const data = (await res.json().catch(() => ({}))) as { etag?: string; size?: number };
+  onProgress?.(size, size);
+  return { etag: normalizeEtag(data.etag), size };
+}
+
+async function uploadMultipart(
+  key: string,
+  filePath: string,
+  contentType: string,
+  size: number,
+  onProgress?: (loaded?: number, total?: number) => void,
+): Promise<{ etag?: string; size: number }> {
+  // 1. Initiate
+  const initRes = await fetch(
+    multipartUrl(key, { contentType }),
+    { method: "POST", headers: { authorization: authHeader() } },
+  );
+  if (!initRes.ok) throw new Error(`uploadMultipart init(${key}): ${await readErrorMessage(initRes)}`);
+  const { uploadId } = (await initRes.json()) as { uploadId: string };
+  if (!uploadId) throw new Error(`uploadMultipart init(${key}): missing uploadId`);
+
+  const parts: { partNumber: number; etag: string }[] = [];
+  let partNumber = 0;
+  let sent = 0;
+  const fh = await fs.promises.open(filePath, "r");
+  try {
+    onProgress?.(0, size);
+    while (sent < size) {
+      partNumber += 1;
+      const remaining = size - sent;
+      const partSize = Math.min(MULTIPART_PART_BYTES, remaining);
+      const buf = Buffer.alloc(partSize);
+      await fh.read(buf, 0, partSize, sent);
+      const res = await fetch(
+        multipartUrl(key, { uploadId, partNumber }),
+        {
+          method: "PUT",
+          headers: {
+            authorization: authHeader(),
+            "content-type": "application/octet-stream",
+            "content-length": String(partSize),
+          },
+          body: buf,
+        },
+      );
+      if (!res.ok) {
+        // Best-effort abort so we don't leak storage on the R2 side.
+        await fetch(multipartUrl(key, { uploadId }), {
+          method: "DELETE",
+          headers: { authorization: authHeader() },
+        }).catch(() => {});
+        throw new Error(`uploadMultipart part ${partNumber}(${key}): ${await readErrorMessage(res)}`);
+      }
+      const data = (await res.json()) as { etag: string };
+      parts.push({ partNumber, etag: data.etag });
+      sent += partSize;
+      onProgress?.(sent, size);
+    }
+  } finally {
+    await fh.close();
+  }
+
+  // 2. Complete
+  const completeRes = await fetch(multipartCompleteUrl(key, uploadId), {
+    method: "POST",
+    headers: {
+      authorization: authHeader(),
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ parts }),
+  });
+  if (!completeRes.ok) {
+    throw new Error(`uploadMultipart complete(${key}): ${await readErrorMessage(completeRes)}`);
+  }
+  const data = (await completeRes.json()) as { etag?: string; size?: number };
+  return { etag: normalizeEtag(data.etag), size };
 }
 
 export async function downloadR2File(
   key: string,
   targetPath: string,
 ): Promise<{ etag?: string; size?: number; updatedAt?: string }> {
-  const { client, credentials } = await makeS3Client();
-  const result = await client.send(new GetObjectCommand({ Bucket: credentials.bucketName, Key: key }));
-  await streamToFile(result.Body, targetPath);
+  const res = await fetch(objectUrl(key), {
+    method: "GET",
+    headers: { authorization: authHeader() },
+  });
+  if (!res.ok) throw new Error(`downloadR2File(${key}): ${await readErrorMessage(res)}`);
+  if (!res.body) throw new Error(`downloadR2File(${key}): empty body`);
+  await streamToFile(res.body, targetPath);
+  const sizeHeader = res.headers.get("content-length");
+  const updatedHeader = res.headers.get("last-modified");
   return {
-    etag: normalizeEtag(result.ETag),
-    size: result.ContentLength,
-    updatedAt: result.LastModified?.toISOString(),
+    etag: normalizeEtag(res.headers.get("etag")),
+    size: sizeHeader ? Number(sizeHeader) : undefined,
+    updatedAt: updatedHeader ? new Date(updatedHeader).toISOString() : undefined,
   };
 }
 
@@ -211,34 +298,20 @@ export interface R2Stream {
  * failure so callers can decide whether to retry or fall through.
  */
 export async function getR2Stream(key: string): Promise<R2Stream | null> {
-  const { client, credentials } = await makeS3Client();
-  try {
-    const result = await client.send(new GetObjectCommand({ Bucket: credentials.bucketName, Key: key }));
-    if (!result.Body) return null;
-    let body: ReadableStream<Uint8Array>;
-    if (result.Body instanceof Readable) {
-      body = Readable.toWeb(result.Body) as unknown as ReadableStream<Uint8Array>;
-    } else if (result.Body instanceof Uint8Array) {
-      const bytes = result.Body;
-      body = new ReadableStream<Uint8Array>({
-        start(controller) {
-          controller.enqueue(bytes);
-          controller.close();
-        },
-      });
-    } else {
-      body = result.Body as unknown as ReadableStream<Uint8Array>;
-    }
-    return {
-      body,
-      contentType: result.ContentType,
-      contentLength: result.ContentLength,
-      etag: normalizeEtag(result.ETag),
-      updatedAt: result.LastModified?.toISOString(),
-    };
-  } catch (err: any) {
-    const status = err?.$metadata?.httpStatusCode;
-    if (status === 404 || err?.name === "NoSuchKey" || err?.name === "NotFound") return null;
-    throw err;
-  }
+  const res = await fetch(objectUrl(key), {
+    method: "GET",
+    headers: { authorization: authHeader() },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`getR2Stream(${key}): ${await readErrorMessage(res)}`);
+  if (!res.body) return null;
+  const sizeHeader = res.headers.get("content-length");
+  const updatedHeader = res.headers.get("last-modified");
+  return {
+    body: res.body,
+    contentType: res.headers.get("content-type") ?? undefined,
+    contentLength: sizeHeader ? Number(sizeHeader) : undefined,
+    etag: normalizeEtag(res.headers.get("etag")),
+    updatedAt: updatedHeader ? new Date(updatedHeader).toISOString() : undefined,
+  };
 }

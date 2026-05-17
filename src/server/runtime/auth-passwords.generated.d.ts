@@ -4,3 +4,4 @@
 // in a fresh checkout before the prebuild step has run.
 export declare const EDITOR_HASH: string;
 export declare const ADMIN_HASH: string;
+export declare const R2_APP_USERNAME: string;

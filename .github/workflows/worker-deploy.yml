@@ -1,0 +1,53 @@
+name: Worker deploy
+
+# Deploys the R2 gateway Worker via wrangler. Pulumi previously owned this
+# resource; the cutover plan is at docs/RUNBOOK_WORKER_ROTATION.md.
+#
+# - PRs that touch the worker run `wrangler deploy --dry-run` so reviewers
+#   see binding diffs before merging.
+# - Pushes to main and manual dispatches push a real deploy.
+# - Secrets are NOT set here. Rotate them via rotate-worker-secrets.yml.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - infra/cloudflare/worker/**
+      - infra/cloudflare/wrangler.toml
+      - .github/workflows/worker-deploy.yml
+  pull_request:
+    paths:
+      - infra/cloudflare/worker/**
+      - infra/cloudflare/wrangler.toml
+      - .github/workflows/worker-deploy.yml
+  workflow_dispatch: {}
+
+concurrency:
+  group: worker-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wrangler ${{ github.event_name == 'pull_request' && 'dry-run' || 'deploy' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: infra/cloudflare
+          command: >-
+            ${{ github.event_name == 'pull_request' && 'deploy --dry-run --outdir /tmp/wrangler-out' || 'deploy' }}
+      - name: Verify Worker health
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          CODE=$(curl -sS -o /tmp/health.json -w '%{http_code}' \
+            https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev/v1/health)
+          echo "/v1/health -> $CODE"
+          jq . /tmp/health.json || cat /tmp/health.json
+          test "$CODE" = "200"

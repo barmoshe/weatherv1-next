@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 /*
- * Reads EDITOR_PASSWORD / ADMIN_PASSWORD (plaintext) from process.env and
- * emits src/server/runtime/auth-passwords.generated.ts with Argon2id hashes.
+ * Reads EDITOR_PASSWORD / ADMIN_PASSWORD (plaintext) and R2_APP_USERNAME
+ * from process.env and emits src/server/runtime/auth-passwords.generated.ts
+ * with Argon2id hashes plus the canonical username.
  *
- * Hard-fails (exit 1) if either env var is missing or empty, in all
+ * The same R2_APP_USERNAME + EDITOR_PASSWORD pair is what packaged builds
+ * present to the Cloudflare R2 Worker as HTTP Basic Auth. Keeping a single
+ * source of truth (GH secrets) avoids the user being asked for cloud creds
+ * after the editor login.
+ *
+ * Hard-fails (exit 1) if any required env var is missing or empty, in all
  * environments. Never logs the plaintext or the derived hash — GitHub
  * masks raw secrets but not values derived from them.
  */
@@ -47,6 +53,7 @@ function requireEnv(name) {
 async function main() {
   const editor = requireEnv("EDITOR_PASSWORD");
   const admin = requireEnv("ADMIN_PASSWORD");
+  const r2Username = requireEnv("R2_APP_USERNAME");
 
   const editorHash = await argon2.hash(editor, ARGON2_OPTS);
   const adminHash = await argon2.hash(admin, ARGON2_OPTS);
@@ -56,7 +63,8 @@ async function main() {
     "// This file is gitignored; hashes are minted from plaintext env vars\n" +
     "// at build time and never committed.\n" +
     `export const EDITOR_HASH = ${JSON.stringify(editorHash)};\n` +
-    `export const ADMIN_HASH = ${JSON.stringify(adminHash)};\n`;
+    `export const ADMIN_HASH = ${JSON.stringify(adminHash)};\n` +
+    `export const R2_APP_USERNAME = ${JSON.stringify(r2Username)};\n`;
 
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, body, "utf8");
