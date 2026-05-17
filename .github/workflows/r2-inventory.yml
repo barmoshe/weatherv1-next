@@ -32,4 +32,27 @@ jobs:
           #   /accounts/{id}/r2/buckets/{name}/objects
           curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets/weatherv1-media/objects?per_page=1000${PREFIX:+&prefix=$PREFIX}" \
-            | python3 -m json.tool | head -200
+            > /tmp/r2.json
+          echo "## summary by top-3 prefix segments (count, bytes)"
+          python3 - <<'PY'
+          import json, collections
+          data = json.load(open('/tmp/r2.json'))
+          objs = data.get('result') or []
+          print(f"total objects: {len(objs)}")
+          print(f"total bytes:   {sum(o['size'] for o in objs):,}")
+          print(f"truncated?     {data.get('result_info', {}).get('is_truncated')}")
+          print(f"cursor:        {data.get('result_info', {}).get('cursor')!r}")
+          by_pref = collections.defaultdict(lambda: [0,0])
+          for o in objs:
+              p = '/'.join(o['key'].split('/')[:3])
+              by_pref[p][0] += 1
+              by_pref[p][1] += o['size']
+          print()
+          print(f"{'prefix':<40} {'count':>6} {'bytes':>14}")
+          for p, (c, b) in sorted(by_pref.items()):
+              print(f"{p:<40} {c:>6} {b:>14,}")
+          print()
+          print("## full key list")
+          for o in sorted(objs, key=lambda x: x['key']):
+              print(f"{o['size']:>12,}  {o['last_modified']}  {o['key']}")
+          PY
