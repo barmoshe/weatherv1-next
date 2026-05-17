@@ -113,6 +113,10 @@ jobs:
           # The action's default wrangler 3.x caps `r2 object put` at 300 MiB;
           # wrangler 4.x auto-uses multipart upload for larger files, which
           # the WeatherV1 installer exceeds (Electron + ffmpeg ≈ 350-400 MiB).
+          # Wrangler 4 also added a local R2 simulator that becomes the
+          # default target — `--remote` on each command (below) is required
+          # to actually hit the real bucket. Without it, every put "succeeds"
+          # by writing to .wrangler/state/v3/r2/... on the runner.
           wranglerVersion: "4"
           # wrangler-action runs `command:` via exec() (no shell), so shell
           # variable expansions like ${BUCKET}/${TAG} never resolve and become
@@ -120,5 +124,5 @@ jobs:
           # so the runner substitutes before the action sees the string.
           # Each line is one wrangler invocation; no backslash continuations.
           command: |
-            r2 object put weatherv1-media/downloads/windows/${{ steps.reltag.outputs.tag }}/WeatherV1-Setup.exe --file=dist/WeatherV1-Setup.exe --content-type=application/octet-stream
-            r2 object put weatherv1-media/downloads/windows/latest/WeatherV1-Setup.exe --file=dist/WeatherV1-Setup.exe --content-type=application/octet-stream
+            r2 object put weatherv1-media/downloads/windows/${{ steps.reltag.outputs.tag }}/WeatherV1-Setup.exe --file=dist/WeatherV1-Setup.exe --content-type=application/octet-stream --remote
+            r2 object put weatherv1-media/downloads/windows/latest/WeatherV1-Setup.exe --file=dist/WeatherV1-Setup.exe --content-type=application/octet-stream --remote
