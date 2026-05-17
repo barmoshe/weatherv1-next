@@ -1,0 +1,40 @@
+name: temp-rotate-worker-creds
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: pulumi/actions@v5
+      - name: Update Pulumi secrets and deploy
+        working-directory: infra/cloudflare
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+          NEW_CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          NEW_R2_PARENT: ${{ secrets.R2_ACCESS_KEY_ID }}
+        run: |
+          npm ci --no-audit --no-fund
+          pulumi login --local
+          pulumi stack select dev --create
+          pulumi config set --secret cloudflareApiToken "$NEW_CF_TOKEN"
+          pulumi config set --secret r2ParentAccessKeyId "$NEW_R2_PARENT"
+          pulumi up --yes --skip-preview
+      - name: Commit updated Pulumi.dev.yaml
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git diff --quiet infra/cloudflare/Pulumi.dev.yaml; then
+            echo "no changes to Pulumi.dev.yaml"
+            exit 0
+          fi
+          git add infra/cloudflare/Pulumi.dev.yaml
+          git commit -m "chore(infra): rotate Worker CF/R2 creds via CI"
+          git push origin HEAD:main
