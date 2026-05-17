@@ -162,10 +162,7 @@ YAML), and **runtime user** (Electron `safeStorage`, never in repo).
 
 | Secret | Store | Consumer | Blast radius |
 | --- | --- | --- | --- |
-| `WIN_CERTIFICATE_BASE64` | GitHub Secrets | `.github/workflows/desktop.yml` decode step → `WIN_CERT_FILE` → `forge.config.cjs` | Lets an attacker sign installers as WeatherV1 |
-| `WIN_CERT_PASSWORD` | GitHub Secrets | `.github/workflows/desktop.yml` → `forge.config.cjs` | Paired with the cert above |
-| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`, `OSX_SIGN_IDENTITY` | GitHub Secrets | Defined for future use; not currently exported into any workflow (macOS is local-build per [`docs/RELEASE_CONVENTION.md`](../../docs/RELEASE_CONVENTION.md)). Local builds export from a shell `.env`. | Notarization identity; revocable in Apple Developer portal |
-| `MAC_CERTIFICATE_BASE64`, `MAC_CERTIFICATE_PASSWORD`, `KEYCHAIN_PASSWORD` | Not set anywhere today | Referenced only in `forge.config.cjs` header comments; reserved for future macOS-in-CI revival | n/a until wired |
+| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`, `OSX_SIGN_IDENTITY` | Operator-local (`.env` for `npm run electron:make` on a developer Mac) | Notarization for the locally-built macOS zip per [`docs/RELEASE_CONVENTION.md`](../../docs/RELEASE_CONVENTION.md). Not used in CI. | Notarization identity; revocable in Apple Developer portal |
 | `CLOUDFLARE_API_TOKEN` | GitHub Secrets | `.github/workflows/pitch-deck.yml` (Pages deploy via `cloudflare/wrangler-action`) | Cloudflare Pages:Edit on the account |
 | `CLOUDFLARE_R2_TOKEN` | GitHub Secrets | `.github/workflows/desktop-publish-release.yml` (`wrangler r2 object put` of the Windows installer) | Workers R2 Storage:Edit, scoped to bucket `weatherv1-media` |
 | `CLOUDFLARE_ACCOUNT_ID` | GitHub Secrets | Both workflows above | Identifier, not a secret in the credential sense |
@@ -194,13 +191,6 @@ gh secret set <NAME>
 to pick it up. Do not paste a `# comment` after the command — interactive
 zsh treats `#` as a literal argument unless `setopt interactive_comments`
 is set, and `gh secret set` will reject the extra words.
-
-**`WIN_CERTIFICATE_BASE64` (+ password):**
-
-```bash
-base64 -i path/to/new-cert.pfx | gh secret set WIN_CERTIFICATE_BASE64
-gh secret set WIN_CERT_PASSWORD
-```
 
 **`EDITOR_PASSWORD` / `ADMIN_PASSWORD`:** rotation is `gh secret set <NAME>` followed by a fresh tag build. The Argon2id hash is re-minted on every build; nothing to clean up in the source tree.
 

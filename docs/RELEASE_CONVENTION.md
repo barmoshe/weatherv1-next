@@ -62,15 +62,14 @@ rotation procedure for each is documented in
 
 | Secret | Used by | Required for |
 | --- | --- | --- |
-| `WIN_CERTIFICATE_BASE64` | `desktop.yml` decode step | Code-signing the Windows installer |
-| `WIN_CERT_PASSWORD` | `desktop.yml` → `forge.config.cjs` | Paired with the cert above |
 | `EDITOR_PASSWORD`, `ADMIN_PASSWORD` | `desktop.yml` → `scripts/emit-auth-hashes.cjs` | Argon2id hashing at prebuild — build fails loud if unset |
 | `CLOUDFLARE_R2_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | `desktop-publish-release.yml` | Uploading `WeatherV1-Setup.exe` to R2 (R2-only token; pitch-deck.yml uses a separate `CLOUDFLARE_API_TOKEN` for Pages) |
 | `GITHUB_TOKEN` | Auto-injected | Cross-run artifact download in the publish workflow |
 
-A tag build with any of `WIN_CERTIFICATE_BASE64`, `WIN_CERT_PASSWORD`,
-`EDITOR_PASSWORD`, or `ADMIN_PASSWORD` unset fails loud at the guard step in
-`desktop.yml`. Non-tag builds skip code-signing and skip the guard.
+A tag build with either `EDITOR_PASSWORD` or `ADMIN_PASSWORD` unset
+fails loud at the guard step in `desktop.yml`. Windows installers ship
+unsigned by design — users see a one-time SmartScreen "unknown
+publisher" warning on first install. Non-tag builds skip the guard.
 
 ## Preflight Checklist
 

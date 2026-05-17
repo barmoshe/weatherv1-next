@@ -14,15 +14,14 @@
 //     `asarUnpack` entries on top of the plugin.
 //   - macOS hardened runtime with `com.apple.security.cs.allow-jit`.
 //     NOT `allow-unsigned-executable-memory` (Electron 12+ doesn't need it).
-//   - Signing + notarization are driven entirely by env vars so release CI
-//     can flip them on with secrets while local dev never accidentally tries
-//     to notarize (which would block on missing Apple credentials).
-//
-// Required GitHub Secrets for a tag release: see docs/RELEASE_CONVENTION.md
-//   ("Required GitHub Secrets") and infra/cloudflare/README.md
-//   ("Secrets ownership & rotation"). WIN_CERT_FILE specifically is set
-//   by the desktop.yml decode step from WIN_CERTIFICATE_BASE64 — not a
-//   secret on its own.
+//   - macOS signing + notarization are driven entirely by env vars so a
+//     local make on a developer Mac can flip them on while CI (Windows
+//     only today) never accidentally tries to notarize.
+//   - Windows installers are unsigned by design until a code-signing
+//     cert is purchased. Users see a one-time SmartScreen "unknown
+//     publisher" warning on first install. Re-introduce Windows signing
+//     by wiring `certificateFile` + `certificatePassword` into the
+//     maker-squirrel config below.
 
 "use strict";
 
@@ -32,8 +31,6 @@ const APPLE_ID = process.env.APPLE_ID;
 const APPLE_APP_SPECIFIC_PASSWORD = process.env.APPLE_APP_SPECIFIC_PASSWORD;
 const APPLE_TEAM_ID = process.env.APPLE_TEAM_ID;
 const OSX_SIGN_IDENTITY = process.env.OSX_SIGN_IDENTITY;
-const WIN_CERT_FILE = process.env.WIN_CERT_FILE;
-const WIN_CERT_PASSWORD = process.env.WIN_CERT_PASSWORD;
 
 const haveMacSigning = Boolean(
   APPLE_ID &&
@@ -41,7 +38,6 @@ const haveMacSigning = Boolean(
     APPLE_TEAM_ID &&
     (process.env.MAC_CERTIFICATE_IMPORTED === "1" || !process.env.GITHUB_ACTIONS)
 );
-const haveWinSigning = Boolean(WIN_CERT_FILE && WIN_CERT_PASSWORD);
 
 /** @type {import('@electron-forge/shared-types').ForgeConfig} */
 module.exports = {
@@ -120,15 +116,12 @@ module.exports = {
     },
     {
       // Windows: Squirrel. `update-electron-app` needs Squirrel.Windows
-      // semantics on the feed side.
+      // semantics on the feed side. Installers ship unsigned today.
       name: "@electron-forge/maker-squirrel",
       config: {
         name: "weatherv1",
         setupExe: "WeatherV1-Setup.exe",
         setupIcon: path.join(__dirname, "build", "icon.ico"),
-        ...(haveWinSigning
-          ? { certificateFile: WIN_CERT_FILE, certificatePassword: WIN_CERT_PASSWORD }
-          : {}),
       },
     },
   ],
