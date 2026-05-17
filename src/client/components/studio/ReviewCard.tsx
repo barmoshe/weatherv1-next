@@ -251,20 +251,18 @@ export function ReviewCard({
                     >
                       {isPlaying ? <PauseIcon /> : <PlayIcon />}
                     </button>
-                    <div className="review-segment__main">
-                      <span className="review-segment__time" dir="ltr">
-                        {formatTime(seg.start)}–{formatTime(seg.end)}
-                      </span>
-                      <textarea
-                        className="review-segment__text"
-                        value={drafts[idx] ?? ""}
-                        onChange={(e) => handleDraftChange(idx, e.target.value)}
-                        rows={Math.max(1, Math.ceil((drafts[idx]?.length ?? 0) / 60))}
-                        spellCheck={false}
-                        readOnly={readOnly || saving}
-                        data-testid={`review-segment-text-${idx}`}
-                      />
-                    </div>
+                    <span className="review-segment__time" dir="ltr">
+                      {formatTime(seg.start)}
+                    </span>
+                    <textarea
+                      className="review-segment__text"
+                      value={drafts[idx] ?? ""}
+                      onChange={(e) => handleDraftChange(idx, e.target.value)}
+                      rows={Math.max(1, Math.ceil((drafts[idx]?.length ?? 0) / 60))}
+                      spellCheck={false}
+                      readOnly={readOnly || saving}
+                      data-testid={`review-segment-text-${idx}`}
+                    />
                   </div>
                 );
               })}
