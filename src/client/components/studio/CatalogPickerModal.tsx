@@ -167,18 +167,21 @@ export function CatalogPickerModal({
     setSaving(true);
     setError(null);
     try {
-      const targetPickIndex = pickIndex ?? 0;
+      // pick_index is omitted for scene-fill (append a new pick). Coercing to
+      // 0 here was the long-standing bug — it either errored ("not found") when
+      // the scene was empty, or silently overwrote pick #0 instead of adding.
+      const body: Record<string, unknown> = {
+        job_id: jobId,
+        scenes,
+        timeline,
+        scene_idx: scene.idx,
+        new_segment_id: selected.segment.id,
+      };
+      if (pickIndex != null) body.pick_index = pickIndex;
       const res = await fetch("/api/pick_segment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          job_id: jobId,
-          scenes,
-          timeline,
-          scene_idx: scene.idx,
-          pick_index: targetPickIndex,
-          new_segment_id: selected.segment.id,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json() as {
         success: boolean;
