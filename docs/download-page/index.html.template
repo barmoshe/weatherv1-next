@@ -2102,28 +2102,49 @@
     .pitch-bento {
       display: grid;
       gap: 10px;
-      grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.05fr) minmax(0, 0.92fr);
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.05fr) minmax(0, 1fr);
       align-items: stretch;
-      min-height: 196px;
+      min-height: 240px;
     }
 
-    /* Matches the live app: a slim right column (visually-left under RTL flow)
-       with Render on top of Output, while Review takes the wide column on the
-       reading-start side. */
+    /* Matches the live app: a slim trailing column with a tight Render pill
+       on top of the Output preview, while Review takes the wide column on
+       the reading-start side. */
     .pitch-bento__right-stack {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
-      gap: 9px;
+      gap: 10px;
       min-height: 0;
     }
     .pitch-bento__right-stack > .pitch-mini-card--render {
       align-self: start;
-      padding-block: 12px 10px;
+      padding: 8px 12px 10px;
       min-height: 0;
+      gap: 6px;
+    }
+    .pitch-bento__right-stack > .pitch-mini-card--render .pitch-cell-badge {
+      inset-block-start: 6px;
+      inset-inline-start: 7px;
+      font-size: 0.5rem;
+      padding: 2px 6px;
+    }
+    .pitch-bento__right-stack > .pitch-mini-card--render .pitch-cell-label {
+      padding-inline-start: 52px;
+      font-size: 0.66rem;
+      white-space: nowrap;
     }
     .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-zone,
     .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-active {
-      min-height: 36px;
+      min-height: 28px;
+      margin: 0;
+    }
+    .pitch-bento__right-stack > .pitch-bento__cell--output {
+      padding: 20px 9px 11px;
+      min-height: 0;
+      align-content: center;
+    }
+    .pitch-bento__right-stack .pitch-device {
+      width: min(100%, 122px);
     }
 
     .pitch-mini-card {
@@ -2353,38 +2374,37 @@
 
     .pitch-review-segments {
       display: grid;
-      gap: 6px;
+      gap: 7px;
       padding-top: 4px;
-      max-height: 6.8rem;
-      overflow: auto;
       min-height: 0;
     }
 
     .pitch-review-seg {
       display: grid;
-      grid-template-columns: 18px minmax(0, 1fr);
-      gap: 7px;
-      padding: 5px 6px;
-      border-radius: 6px;
-      background: rgb(255 255 255 / 0.65);
-      border: 1px solid color-mix(in srgb, rgb(249 84 62 / 1) 22%, rgb(0 0 0 / 0.04));
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+      padding: 7px 9px;
+      border-radius: 8px;
+      background: rgb(255 255 255 / 0.75);
+      border: 1px solid color-mix(in srgb, rgb(249 84 62 / 1) 20%, rgb(0 0 0 / 0.05));
       transition: border-color 0.18s ease, background 0.18s ease;
     }
     .pitch-review-seg.is-active {
       border-color: rgb(249 84 62 / 1);
-      background: color-mix(in srgb, rgb(249 84 62 / 1) 6%, rgb(255 255 255 / 1));
+      background: color-mix(in srgb, rgb(249 84 62 / 1) 7%, rgb(255 255 255 / 1));
+      box-shadow: 0 1px 3px rgb(249 84 62 / 0.12);
     }
 
     .pitch-review-seg__play {
-      align-self: start;
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       padding: 0;
       border-radius: 999px;
       border: 1px solid rgb(249 84 62 / 1);
       background: rgb(255 255 255 / 1);
       color: rgb(249 84 62 / 1);
-      font-size: 0.5rem;
+      font-size: 0.58rem;
       line-height: 1;
       display: inline-flex;
       align-items: center;
@@ -2398,7 +2418,7 @@
 
     .pitch-review-seg__main {
       display: grid;
-      gap: 2px;
+      gap: 3px;
       min-width: 0;
     }
 
@@ -2407,13 +2427,14 @@
       font-weight: 700;
       color: rgb(120 122 135 / 1);
       font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
     }
 
     .pitch-review-seg__text {
       margin: 0;
-      font-size: 0.62rem;
+      font-size: 0.66rem;
       font-weight: 650;
-      line-height: 1.38;
+      line-height: 1.42;
       color: rgb(52 54 64 / 1);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -6514,6 +6535,7 @@
         return `${mm}:${ss}`;
       };
       const transcriptHtml = (plan.transcript_segments || [])
+        .slice(0, 3)
         .map((seg, idx) => {
           const range = `${fmtSec(seg.start)}–${fmtSec(seg.end)}`;
           const isActive = idx === 0 ? " is-active" : "";
