@@ -17,16 +17,17 @@ interface RenderCardProps {
 
 function RenderGlyph() {
   return (
-    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="2" y="5" width="14" height="14" rx="2" ry="2" />
-      <path d="M17 9l6 3-6 3V9z" />
+    <svg className="icon render-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 8.5l3-4.2 3 2.4 3-3 3 2.4 3-3 3 2.4v3H3z" />
+      <rect x="3" y="10.5" width="18" height="10" rx="2" />
+      <path d="M11 13.5l4 2.5-4 2.5z" fill="currentColor" stroke="none" />
     </svg>
   );
 }
 
 function RerenderGlyph() {
   return (
-    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="icon render-btn__icon render-btn__icon--spin" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
       <path d="M3 3v5h5" />
       <path d="M3 12a9 9 0 0 0 9 9 9 9 0 0 0 6.64-2.87L21 16" />
@@ -83,16 +84,21 @@ export function RenderCard({ phase, tileState, planData, onRenderStart }: Render
               className="btn btn--primary render-btn"
               type="button"
               onClick={onRenderStart}
+              data-variant={isDone ? "rerender" : "render"}
             >
+              <span className="render-btn__shine" aria-hidden="true" />
+              <span className="render-btn__sparkle render-btn__sparkle--a" aria-hidden="true" />
+              <span className="render-btn__sparkle render-btn__sparkle--b" aria-hidden="true" />
+              <span className="render-btn__sparkle render-btn__sparkle--c" aria-hidden="true" />
               {isDone ? (
                 <>
                   <RerenderGlyph />
-                  רנדר מחדש
+                  <span className="render-btn__label">רנדר מחדש</span>
                 </>
               ) : (
                 <>
                   <RenderGlyph />
-                  רנדר
+                  <span className="render-btn__label">רנדר</span>
                 </>
               )}
             </button>

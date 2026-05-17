@@ -78,14 +78,6 @@ export function OutputCard({ phase, tileState, jobStatus, outputFilename }: Outp
                     </svg>
                     הורדת הוידאו
                   </a>
-                  <a
-                    className="output-link-secondary"
-                    href={`/api/outputs/${outputFilename}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    פתח בלשונית חדשה ↗
-                  </a>
                 </div>
               </div>
             ) : isRendering ? (
