@@ -237,7 +237,7 @@ real need.
 | --- | --- |
 | `docs/future/SECRETS_MANAGEMENT_AUDIT.md` | Move to `docs/archive/` when all phases above are merged. |
 | `docs/future/README.md` | Remove this file's row. |
-| `docs/future/EDITOR_AND_ADMIN_GATES.md` | Trim the Phase 1 (Shared password infrastructure) section down to a one-paragraph cross-reference to `docs/archive/SECRETS_MANAGEMENT_AUDIT.md`. The Editor Gates UI plan stays intact. |
+| `docs/archive/EDITOR_AND_ADMIN_GATES.md` (then in `docs/future/`) | Trim the Phase 1 (Shared password infrastructure) section down to a one-paragraph cross-reference to `docs/archive/SECRETS_MANAGEMENT_AUDIT.md`. The Editor Gates UI plan stays intact. (Since archived itself — all phases shipped.) |
 
 ## Verification (cross-phase)
 
