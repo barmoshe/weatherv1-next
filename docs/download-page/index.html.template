@@ -2118,24 +2118,33 @@
     }
     .pitch-bento__right-stack > .pitch-mini-card--render {
       align-self: start;
-      padding: 8px 12px 10px;
+      padding: 24px 10px 10px;
       min-height: 0;
       gap: 6px;
     }
     .pitch-bento__right-stack > .pitch-mini-card--render .pitch-cell-badge {
-      inset-block-start: 6px;
-      inset-inline-start: 7px;
+      inset-block-start: 7px;
+      inset-inline-start: 9px;
       font-size: 0.5rem;
-      padding: 2px 6px;
+      padding: 2px 7px;
     }
     .pitch-bento__right-stack > .pitch-mini-card--render .pitch-cell-label {
-      padding-inline-start: 52px;
-      font-size: 0.66rem;
-      white-space: nowrap;
+      font-size: 0.7rem;
+      padding-top: 2px;
     }
-    .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-zone,
+    /* In the right-stack the empty dashed pending pill reads as a broken
+       placeholder, the "ממתין" badge already conveys state. Hide it in
+       pre-render phases; the active shimmer overlay is the only zone
+       that should ever take screen space here. */
+    .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-pending {
+      display: none;
+    }
     .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-active {
-      min-height: 28px;
+      min-height: 32px;
+      margin: 0;
+    }
+    .pitch-bento__right-stack > .pitch-mini-card--render .pitch-render-zone--done {
+      min-height: 32px;
       margin: 0;
     }
     .pitch-bento__right-stack > .pitch-bento__cell--output {
