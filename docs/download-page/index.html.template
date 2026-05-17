@@ -782,18 +782,19 @@
       z-index: 1;
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
-      padding: 6px 9px 6px 11px;
-      border-radius: 9px;
+      padding: 8px 12px 8px 10px;
+      border-radius: 10px;
       border: 1px solid rgb(0 0 0 / 0.07);
       background: rgb(255 255 255 / 0.86);
       box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
-      font-size: clamp(0.74rem, 0.92vw, 0.84rem);
+      font-size: clamp(0.76rem, 0.95vw, 0.86rem);
       font-weight: 740;
       line-height: 1.36;
       color: rgb(66 68 78 / 1);
-      min-height: 32px;
+      min-height: 38px;
+      min-width: 0;
       transition:
         border-color 0.22s ease,
         box-shadow 0.22s ease,
@@ -801,8 +802,26 @@
         color 0.22s ease,
         transform 0.18s ease;
     }
+
+    [data-pitch-layout="product-app"] .bullets--studio-wizard li {
+      cursor: pointer;
+    }
+
+    [data-pitch-layout="product-app"] .pitch-studio-phase-label {
+      grid-column: 1;
+      min-width: 0;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.005em;
+    }
+
     [data-pitch-layout="product-app"] .bullets--studio-wizard li:hover {
-      transform: translateX(-2px);
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 28%, rgb(0 0 0 / 0.1));
+      box-shadow: 0 4px 14px rgb(15 23 42 / 0.08);
+      background: rgb(255 255 255 / 0.98);
     }
 
     [data-pitch-layout="product-app"] .bullets li::before {
@@ -823,24 +842,28 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 0 0 2px rgb(255 255 255 / 1);
+      transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease,
+        transform 0.18s ease;
     }
 
     [data-pitch-layout="product-app"] .bullets li.is-wizard-active {
-      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 42%, rgb(0 0 0 / 0.14));
-      background: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 9%, rgb(255 255 255 / 0.96));
+      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 48%, rgb(0 0 0 / 0.14));
+      background: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 11%, rgb(255 255 255 / 0.96));
       color: var(--v1-ink);
       font-weight: 830;
-      box-shadow: 0 2px 10px rgb(200 32 43 / 0.08);
+      box-shadow:
+        0 4px 14px color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 18%, transparent),
+        inset 3px 0 0 var(--panel-accent, var(--v1-coral));
     }
 
     [data-pitch-layout="product-app"] .bullets--studio-wizard li.is-wizard-active::before {
       background: var(--panel-accent, var(--v1-coral));
       color: #fff;
       border-color: rgb(0 0 0 / 0.12);
-    }
-
-    #studio .bullets--studio-wizard li[data-studio-phase-bullet] {
-      cursor: pointer;
+      transform: scale(1.06);
     }
 
     #studio .bullets--studio-wizard li[data-studio-phase-bullet]:focus-visible {
@@ -1424,7 +1447,6 @@
       unicode-bidi: isolate;
     }
 
-    [data-pitch-layout="product-app"] .pitch-studio-wiz-controls-wrap,
     [data-pitch-layout="product-app"] .pitch-catalog-wiz-controls-wrap {
       margin-top: 10px;
       padding: 10px 12px;
@@ -1435,14 +1457,6 @@
       display: grid;
       gap: 6px;
       max-width: 100%;
-    }
-
-    .pitch-studio-wiz-hint {
-      margin: 0;
-      font-size: 0.68rem;
-      font-weight: 760;
-      line-height: 1.48;
-      color: rgb(68 72 84 / 1);
     }
 
     /* —— Studio wizard: phased disclosure (#studio mock) —— */
@@ -1970,9 +1984,23 @@
     .pitch-app-header {
       padding: 12px 16px;
       border-bottom: 1px solid rgb(0 0 0 / 0.08);
+      color: var(--v1-ink);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pitch-app-header__title {
       font-size: 0.85rem;
       font-weight: 800;
-      color: var(--v1-ink);
+    }
+
+    .pitch-app-header__hint {
+      margin: 0;
+      font-size: 0.66rem;
+      font-weight: 650;
+      line-height: 1.45;
+      color: rgb(82 84 94 / 1);
     }
 
     .pitch-app-tabs {
@@ -5630,7 +5658,6 @@
         display: none !important;
       }
 
-      #studio .pitch-studio-wiz-controls-wrap,
       .story-panel:not(#catalog) .pitch-catalog-wiz-controls-wrap,
       .pitch-pricing-quote {
         display: none !important;
@@ -6651,7 +6678,10 @@
         : "";
       return `<div class="pitch-app-shell" data-studio-phase="idle" data-highlight="idle">
           <div class="pitch-app-main">
-            <div class="pitch-app-header" aria-hidden="true">Weather V1 Studio</div>
+            <div class="pitch-app-header" aria-hidden="true">
+              <span class="pitch-app-header__title">Weather V1 Studio</span>
+              <p class="pitch-app-header__hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ, ללא הפעלה אוטומטית. בשלב הרביעי: אמולטור אייפון משמאל, לידו תמלול ותוכנית סצנות.</p>
+            </div>
             <div class="pitch-job-row" aria-hidden="true">
               <span class="pitch-job-chip mixed-ltr" lang="en" dir="ltr">
                 <span class="pitch-job-chip-txt pitch-job-chip-idle">הדגמה אינטראקטיבית</span>
@@ -7172,7 +7202,11 @@
         const phases = ["upload", "transcript", "planning", "render", "output"];
         const studioLi = (item, i) => {
           const ph = phases[i] || "upload";
-          return `<li role="button" tabindex="0" class="pitch-studio-phase-pick" data-studio-phase-bullet="${ph}">${escapeHtml(item)}</li>`;
+          const colonIdx = item.indexOf(":");
+          const label = colonIdx === -1 ? item : item.slice(0, colonIdx).trim();
+          const fullText = escapeHtml(item);
+          const labelHtml = escapeHtml(label);
+          return `<li role="button" tabindex="0" class="pitch-studio-phase-pick" data-studio-phase-bullet="${ph}" aria-label="${fullText}" title="${fullText}"><span class="pitch-studio-phase-label">${labelHtml}</span></li>`;
         };
         const wizardItems = section.bullets.map(studioLi).join("");
         if (hasMobileBullets) {
@@ -7238,12 +7272,6 @@
               </p>
             </aside>`
           : "";
-      const studioWizardToolbar =
-        section.id === "studio"
-          ? `<div class="pitch-studio-wiz-controls-wrap" role="note" aria-labelledby="pitch-studio-wiz-legend">
-            <p id="pitch-studio-wiz-legend" class="pitch-studio-wiz-hint">בחרו שלב מהרשימה כדי לראות אותו שלב במוקאפ, ללא הפעלה אוטומטית. בשלב הרביעי: אמולטור אייפון משמאל, לידו תמלול ותוכנית סצנות.</p>
-          </div>`
-          : "";
       const pitchLayoutAttr = pitchProductLayout ? ` data-pitch-layout="product-app"` : "";
       const panelLayoutAttr =
         section.id === "intro" || section.id === "v1-next"
@@ -7266,7 +7294,6 @@
             ${leadBlock}
             ${bulletsBlock}
             ${closingOptionsBlock}
-            ${studioWizardToolbar}
             ${heroDownloads}
           </div>
           ${visualBlock}
