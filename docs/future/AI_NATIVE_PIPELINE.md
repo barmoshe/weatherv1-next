@@ -1,6 +1,6 @@
 # Vision: AI-native pipeline and the product rename
 
-> Status: vision / discovery. No code changes proposed in this doc — only the direction and the open questions to chew on before we entrench the current shape. Sibling doc: [`TEMPLATES.md`](TEMPLATES.md) (templates as the user's unit of choice; WeatherV1 as the inaugural template). Downstream of [`CATALOG_TAGGING_REDESIGN.md`](CATALOG_TAGGING_REDESIGN.md); not blocking it.
+> Status: vision / discovery. No code changes proposed in this doc — only the direction and the open questions to chew on before we entrench the current shape. Sibling docs: [`TEMPLATES.md`](TEMPLATES.md), [`UX_DIRECTION.md`](UX_DIRECTION.md), [`PRODUCT_DIRECTION.md`](PRODUCT_DIRECTION.md). Downstream of [`CATALOG_TAGGING_REDESIGN.md`](CATALOG_TAGGING_REDESIGN.md); not blocking it.
 
 ## Why this exists
 
@@ -82,6 +82,8 @@ Patterns and principles from public guidance (Anthropic's *Building effective ag
 ## Relationship to other future work
 
 - [`TEMPLATES.md`](TEMPLATES.md) — sibling vision doc. Templates are the *what the user picks*; this doc is *how the app runs the pick*. The two reinforce each other but can be pursued independently.
+- [`UX_DIRECTION.md`](UX_DIRECTION.md) — what the agent loop and the rename look like from the user's seat.
+- [`PRODUCT_DIRECTION.md`](PRODUCT_DIRECTION.md) — the product-level weight of the rename and the positioning shift that goes with it.
 - [`CATALOG_TAGGING_REDESIGN.md`](CATALOG_TAGGING_REDESIGN.md) — the most upstream piece. The natural place to let the tag schema *travel with the catalogue* rather than live in source. A small framing change there keeps both the templates and the agentic options open without committing to either.
 - `temporal/` research line — an agentic pipeline that loops and re-plans benefits from a workflow engine underneath; the durability, idempotency, and observability questions raised there become more pressing once orchestration moves out of straight-line TypeScript.
 

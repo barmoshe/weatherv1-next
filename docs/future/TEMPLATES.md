@@ -1,6 +1,6 @@
 # Vision: Templates as the unit of choice
 
-> Status: vision / discovery. No code changes proposed in this doc — only the framing and the open questions to chew on before we entrench the current shape. Sibling doc: [`AI_NATIVE_PIPELINE.md`](AI_NATIVE_PIPELINE.md) (agentic pipeline + product rename). Downstream of [`CATALOG_TAGGING_REDESIGN.md`](CATALOG_TAGGING_REDESIGN.md); not blocking it.
+> Status: vision / discovery. No code changes proposed in this doc — only the framing and the open questions to chew on before we entrench the current shape. Sibling docs: [`AI_NATIVE_PIPELINE.md`](AI_NATIVE_PIPELINE.md), [`UX_DIRECTION.md`](UX_DIRECTION.md), [`PRODUCT_DIRECTION.md`](PRODUCT_DIRECTION.md). Downstream of [`CATALOG_TAGGING_REDESIGN.md`](CATALOG_TAGGING_REDESIGN.md); not blocking it.
 
 ## Why this exists
 
@@ -50,6 +50,8 @@ How fat that bundle is allowed to be — pure data vs. data + code — is itself
 ## Relationship to other future work
 
 - [`AI_NATIVE_PIPELINE.md`](AI_NATIVE_PIPELINE.md) — sibling vision doc on the agentic pipeline and the "WeatherV1 → V1 AI Portal" rename. Templates are the *what the user picks*; that doc is *how the app runs the pick*. Each can be pursued independently, but together they reinforce each other (an agent that reads a template's brief is more flexible than one with the brief hard-coded).
+- [`UX_DIRECTION.md`](UX_DIRECTION.md) — what the templates concept looks like from the user's seat: template picker as home, agent-trace UI, intervene-any-time.
+- [`PRODUCT_DIRECTION.md`](PRODUCT_DIRECTION.md) — who buys / installs templates, how they're distributed, and what the rename means as positioning rather than just a name.
 - [`CATALOG_TAGGING_REDESIGN.md`](CATALOG_TAGGING_REDESIGN.md) — the most upstream piece. The natural place to let the tag schema *travel with the catalogue* rather than live in source. A small framing change there keeps the templates option open without committing to it.
 
 ## Non-goals for this doc
