@@ -110,6 +110,10 @@ jobs:
           # secret's blast radius matches its purpose.
           apiToken: ${{ secrets.CLOUDFLARE_R2_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # The action's default wrangler 3.x caps `r2 object put` at 300 MiB;
+          # wrangler 4.x auto-uses multipart upload for larger files, which
+          # the WeatherV1 installer exceeds (Electron + ffmpeg ≈ 350-400 MiB).
+          wranglerVersion: "4"
           # wrangler-action runs `command:` via exec() (no shell), so shell
           # variable expansions like ${BUCKET}/${TAG} never resolve and become
           # part of the path. Use GitHub Actions ${{ … }} expression syntax
