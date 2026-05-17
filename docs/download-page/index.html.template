@@ -2104,7 +2104,7 @@
       gap: 10px;
       grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.05fr) minmax(0, 1fr);
       align-items: stretch;
-      min-height: 240px;
+      min-height: 290px;
     }
 
     /* Matches the live app: a slim trailing column with a tight Render pill
@@ -2148,12 +2148,34 @@
       margin: 0;
     }
     .pitch-bento__right-stack > .pitch-bento__cell--output {
-      padding: 20px 9px 11px;
+      padding: 22px 9px 11px;
       min-height: 0;
-      align-content: center;
+      grid-template-rows: auto minmax(0, 1fr);
+      align-content: stretch;
+      justify-items: center;
+      overflow: hidden;
     }
+    /* Drive the phone size by AVAILABLE HEIGHT so the 9:16 aspect
+       doesn't overflow the narrow column. Explicit height triggers
+       aspect-ratio to derive width; max-width 100% guards against
+       the column being narrower than the derived width. */
     .pitch-bento__right-stack .pitch-device {
-      width: min(100%, 122px);
+      width: auto;
+      height: 100%;
+      max-height: 100%;
+      max-width: 100%;
+      padding: 7px;
+      align-self: stretch;
+    }
+    .pitch-bento__right-stack .pitch-output-placeholder {
+      min-height: 0;
+      padding: 8px;
+    }
+    .pitch-bento__right-stack .pitch-output-placeholder-txt {
+      font-size: 0.55rem;
+      max-width: 14ch;
+      line-height: 1.3;
+      color: rgb(255 255 255 / 0.52);
     }
 
     .pitch-mini-card {
