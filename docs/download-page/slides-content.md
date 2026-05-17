@@ -67,8 +67,8 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 - **`introPipeline`**: CSS/SVG curved-path flow diagram with 5 nodes (**Narration -> Transcription -> Scene Planning -> Video Match -> Render**) and a one-time `stroke-dashoffset` line draw on scroll-in. Symbolic glyphs (microphone, transcript lines, scene cards, film strip, vertical phone) at each node. No image files. No copy inside the diagram.
 - **`studioDashboard`**: Interactive mockup of the Studio tab in the actual app:
   - Top tab strip: Studio / Active / History / Catalog / Analytics.
-  - Audio drop zone with status indicators.
-  - 4-cell bento grid: **Transcript / Render / Scene Planning / Output Preview**.
+  - Compact topbar pairing the Studio status hero with the audio drop zone on one row.
+  - Three-column grid: **Transcript + Review (per-segment editor) / Scene Planning / Render + Output Preview (stacked in one column)**. The dashboard fits the viewport on desktop, each card scrolls internally.
   - Clicking a bullet in the copy column highlights a different phase of the mockup. No autoplay.
   - Fixture: `PITCH_STUDIO_DEMO`, a sample weather forecast (center / north / coast), inline in the template.
   - Posters live under `docs/download-page/assets/posters/` (IB001-s0, IB002-s0, IB003-s0, ...).
@@ -124,26 +124,26 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 **title:** המקום שבו נבנה הסרטון בפועל
 
 **lead:**
-> הסטודיו הוא מסך העבודה המרכזי של האפליקציה: מעלים קריינות, המערכת מתמללת אותה באמצעות OpenAI, מודל ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, ואז מתבצע רינדור על המחשב והורדה של הסרטון.
+> הסטודיו הוא מסך העבודה המרכזי של האפליקציה: מעלים קריינות, המערכת מתמללת ומציגה את התמלול לפי משפטים עם נגן לכל משפט לבדיקה ועריכה מהירה, מודל ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, ואז מתבצע רינדור על המחשב והורדה של הסרטון.
 
 **bullets:**
 - העלאת קריינות: מתחילים מקובץ תחזית אחד.
-- תמלול: המערכת הופכת את הקריינות לטקסט.
+- תמלול וסקירה: כל משפט מוצג בנפרד עם נגן ותיבת עריכה, לתיקון מהיר מול ההקלטה.
 - תכנון AI: חלוקה לסצנות ובחירת סגמנטים מהקטלוג.
 - רינדור והורדה: יצירת בסיס לסרטון תחזית והורדה שלו.
 
 **mobile_bullets:**
 - העלאת קריינות
-- תמלול לטקסט
+- תמלול וסקירה לפי משפטים
 - תכנון סצנות
 - רינדור והורדה
 
 **mobile_summary:**
-> הסטודיו הוא המקום שבו נבנה הסרטון בפועל: מקריינות לתמלול, מתכנון סצנות לבחירת סגמנטים, ואז רינדור והורדה.
+> הסטודיו הוא המקום שבו נבנה הסרטון בפועל: מקריינות לתמלול שאפשר לבדוק ולערוך משפט־משפט, מתכנון סצנות לבחירת סגמנטים, ואז רינדור והורדה.
 
-**graphics:** `studioDashboard`, interactive mockup of the Studio tab. Tab strip on top, audio drop zone, 4-cell bento (Transcript / Render / Scene Planning / Output Preview). Each bullet is clickable and highlights its matching phase in the mockup; phase 4 shows an iPhone-frame preview on the left with transcript + scene plan on the right.
+**graphics:** `studioDashboard`, interactive mockup of the Studio tab. Tab strip on top, compact topbar with status + audio drop zone, three-column grid: a wide Transcript + Review card with per-segment editor on the right, Scene Planning in the middle, and a stacked Render + Output Preview column on the left. Each bullet is clickable and highlights its matching phase in the mockup; phase 4 shows an iPhone-frame preview in the Output cell with transcript + scene plan visible alongside.
 
-**notes:** Bullets here are an **interactive index** to the mockup, not just decoration. The slide opens in an **idle (00) state** — no bullet is highlighted and the drop card shows a calm "הדגמה אינטראקטיבית" welcome with a soft breathing border inviting interaction. Clicking bullet #1 advances to phase 1 (upload); #2 to transcription; #3 to planning; #4 to render. Re-entering the slide via scroll-in resets it back to the idle state. Keep order and meaning aligned with the phases. If you change the bullet count or reorder, the mapping breaks.
+**notes:** Bullets here are an **interactive index** to the mockup, not just decoration. The slide opens in an **idle (00) state**, no bullet is highlighted and the drop card shows a calm "הדגמה אינטראקטיבית" welcome with a soft breathing border inviting interaction. Clicking bullet #1 advances to phase 1 (upload); #2 to transcription + review (the merged "תמלול וסקירה" step with the per-segment editor and per-sentence play buttons); #3 to planning; #4 to render. Re-entering the slide via scroll-in resets it back to the idle state. Keep order and meaning aligned with the phases. If you change the bullet count or reorder, the mapping breaks.
 
 ---
 
