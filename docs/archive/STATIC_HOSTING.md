@@ -1,6 +1,13 @@
-# Static Hosting Migration — Handoff
+# Archived: Static Hosting Migration — Handoff
 
-**Status:** plan only, not implemented. Created on branch `claude/static-hosting-research-UDU5h` during a cloud session. Execute from a local agent session (needs Pulumi state access + Cloudflare/GitHub credentials).
+> **Shipped.** The pitch-deck site deploys to Cloudflare Pages via
+> [`.github/workflows/pitch-deck.yml`](../../.github/workflows/pitch-deck.yml)
+> using `cloudflare/wrangler-action`. The Pulumi `PagesProject` resource
+> lives in [`infra/cloudflare/index.ts`](../../infra/cloudflare/index.ts).
+> Project name shipped as `weatherv1-download` (not the plan's
+> `weatherv1-pitch` — config choice, not a regression).
+
+**Status:** archived. Originally created on branch `claude/static-hosting-research-UDU5h` during a cloud session.
 
 **Related docs:** [`R2_PULUMI_HANDOFF.md`](./R2_PULUMI_HANDOFF.md) (sibling Cloudflare infra) · [`CLOUDFLARE_INTEGRATION.md`](./CLOUDFLARE_INTEGRATION.md) · [`infra/cloudflare/README.md`](../infra/cloudflare/README.md).
 

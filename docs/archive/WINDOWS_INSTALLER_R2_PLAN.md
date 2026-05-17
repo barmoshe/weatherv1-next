@@ -1,4 +1,8 @@
-# Plan: Host Windows installer in R2, drop macOS from CI
+# Archived: Plan — Host Windows installer in R2, drop macOS from CI
+
+> **Shipped.** See [`WINDOWS_INSTALLER_R2_TASK.md`](./WINDOWS_INSTALLER_R2_TASK.md)
+> for the shipped-state pointers. This file is the implementation plan
+> kept for historical rationale.
 
 **Task brief:** [`WINDOWS_INSTALLER_R2_TASK.md`](./WINDOWS_INSTALLER_R2_TASK.md).
 

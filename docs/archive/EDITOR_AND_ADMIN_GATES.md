@@ -1,4 +1,16 @@
-# Future Task: Editor & Admin Gates (Login + Settings Redesign)
+# Archived: Editor & Admin Gates (Login + Settings Redesign)
+
+> **All phases shipped.** Build-time Argon2id hashing
+> ([`scripts/emit-auth-hashes.cjs`](../../scripts/emit-auth-hashes.cjs),
+> [`src/server/runtime/auth-passwords.ts`](../../src/server/runtime/auth-passwords.ts)),
+> editor login route + gate
+> ([`src/app/api/auth/editor-login/route.ts`](../../src/app/api/auth/editor-login/route.ts),
+> [`src/client/components/auth/EditorLoginGate.tsx`](../../src/client/components/auth/EditorLoginGate.tsx)),
+> two-tab Settings modal
+> ([`src/client/components/studio/settings/EditorTabPanel.tsx`](../../src/client/components/studio/settings/EditorTabPanel.tsx),
+> [`src/client/components/studio/settings/AdminTabPanel.tsx`](../../src/client/components/studio/settings/AdminTabPanel.tsx)),
+> and the full test suite (`src/test/{auth-passwords,editor-session,editor-login-gate,editor-login-route,admin-verify-route,admin-password-prompt,proxy-editor-cookie}.test.*`)
+> are all live.
 
 ## Goal
 

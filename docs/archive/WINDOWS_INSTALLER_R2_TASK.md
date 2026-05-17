@@ -1,6 +1,13 @@
-# Task: Host Windows installer in R2, drop macOS from CI
+# Archived: Host Windows installer in R2, drop macOS from CI
 
-**Status:** planned. Implementation plan in
+> **Shipped.** The Windows installer lands on R2 via
+> [`.github/workflows/desktop-publish-release.yml`](../../.github/workflows/desktop-publish-release.yml)
+> and is served by the public `/downloads/*` Worker route
+> ([`infra/cloudflare/worker/r2-gateway.js`](../../infra/cloudflare/worker/r2-gateway.js)).
+> macOS is a local-build path. Live operator runbook:
+> [`../RELEASE_CONVENTION.md`](../RELEASE_CONVENTION.md).
+
+**Status:** archived. Implementation plan in
 [`WINDOWS_INSTALLER_R2_PLAN.md`](./WINDOWS_INSTALLER_R2_PLAN.md).
 
 **Related:** [`RELEASE_ASSET_STORAGE.md`](./RELEASE_ASSET_STORAGE.md)
