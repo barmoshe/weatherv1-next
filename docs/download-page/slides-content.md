@@ -124,12 +124,12 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 **title:** המקום שבו נבנה הסרטון בפועל
 
 **lead:**
-> הסטודיו הוא מסך העבודה המרכזי של האפליקציה: מעלים קריינות, המערכת מתמללת ומציגה את התמלול לפי משפטים עם נגן לכל משפט לבדיקה ועריכה מהירה, מודל ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, ואז מתבצע רינדור על המחשב וצפייה והורדה של הסרטון.
+> הסטודיו הוא מסך העבודה המרכזי של האפליקציה: מעלים קריינות, המערכת מתמללת ומציגה את התמלול לפי משפטים עם נגן לכל משפט לבדיקה ועריכה מהירה, מודל ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, ואפשר להחליף כל קליפ עם AI או לבחור ידנית מהקטלוג, ואז מתבצע רינדור על המחשב וצפייה והורדה של הסרטון.
 
 **bullets:**
 - העלאת קריינות: מתחילים מקובץ תחזית אחד.
 - תמלול וסקירה: כל משפט מוצג בנפרד עם נגן ותיבת עריכה, ואפשר לתקן ידנית כל מילה או משפט בתמלול לפני ההמשך.
-- תכנון סצנות: ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג.
+- תכנון סצנות: ה־AI מחלק את הטקסט לסצנות ובוחר סגמנטים מהקטלוג, וניתן להחליף כל קליפ עם AI או לבחור ידנית מהקטלוג.
 - רינדור: המערכת מרכיבה את הסרטון על המחשב.
 - וידאו סופי: צפייה בתוצאה במסך טלפון והורדה כקובץ MP4.
 
@@ -141,7 +141,7 @@ What's on-screen next to each slide's copy. Use this to keep copy consistent wit
 - וידאו סופי והורדה
 
 **mobile_summary:**
-> הסטודיו הוא המקום שבו נבנה הסרטון בפועל: מקריינות לתמלול שאפשר לבדוק ולערוך משפט־משפט, מתכנון סצנות לבחירת סגמנטים, רינדור על המחשב, וצפייה והורדה של הסרטון הסופי.
+> הסטודיו הוא המקום שבו נבנה הסרטון בפועל: מקריינות לתמלול שאפשר לבדוק ולערוך משפט־משפט, מתכנון סצנות אוטומטי עם אפשרות להחליף כל קליפ עם AI או לבחור ידנית מהקטלוג, רינדור על המחשב, וצפייה והורדה של הסרטון הסופי.
 
 **graphics:** `studioDashboard`, interactive mockup of the Studio tab. Tab strip on top, compact topbar with status + audio drop zone, three-column grid: a wide Transcript + Review card with per-segment editor on the right, Scene Planning in the middle, and a stacked Render + Output Preview column on the left. Each bullet is clickable and highlights its matching phase in the mockup; phase 4 shows an iPhone-frame preview in the Output cell with transcript + scene plan visible alongside.
 

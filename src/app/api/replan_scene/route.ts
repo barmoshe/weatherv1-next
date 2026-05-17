@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
   const jobId = data.job_id as string | undefined;
   const sceneIdxRaw = data.scene_idx;
   const pickerPrompt = data.picker_prompt as string | undefined;
+  const pickIndexRaw = data.pick_index;
 
   if (sceneIdxRaw == null || isNaN(Number(sceneIdxRaw))) {
     return NextResponse.json({ success: false, error: "Missing scene_idx" }, { status: 400 });
@@ -89,23 +90,49 @@ export async function POST(req: NextRequest) {
   const otherPicks = fullTimeline.filter((c) => c.scene_idx != null && Number(c.scene_idx) !== sceneIdx);
   const oldPicksForScene = fullTimeline.filter((c) => c.scene_idx != null && Number(c.scene_idx) === sceneIdx);
 
+  // Per-pick AI swap mode: narrow the scene's audio window to just the targeted pick's slot
+  // and keep its sibling picks untouched. Returned response shape is identical to scene-wide replan.
+  const pickIndex = pickIndexRaw != null && !isNaN(Number(pickIndexRaw)) ? Number(pickIndexRaw) : null;
+  const singlePickMode = pickIndex != null;
+  if (singlePickMode && (pickIndex < 0 || pickIndex >= oldPicksForScene.length)) {
+    return NextResponse.json(
+      { success: false, error: `Pick index ${pickIndex} not found in scene ${sceneIdx}` },
+      { status: 400 },
+    );
+  }
+  const targetedPick = singlePickMode ? oldPicksForScene[pickIndex] : null;
+  const siblingPicksInScene = singlePickMode
+    ? oldPicksForScene.filter((_, i) => i !== pickIndex)
+    : [];
+
   try {
     const catalog = readCatalog();
     const videos = parseCatalog(catalog);
     const segmentMap = buildSegmentMap(videos);
     const videoMap = buildVideoMap(videos);
 
+    // In per-pick mode, sibling picks stay; only the targeted pick's segment_id is excluded
+    // (plus the always-excluded cross-scene picks). In full-scene mode, all in-scene old picks
+    // are excluded so the picker can't reuse them.
     const avoidSet = buildReplanAvoidSet(
-      otherPicks as Record<string, unknown>[],
-      oldPicksForScene as Record<string, unknown>[],
+      [...otherPicks, ...siblingPicksInScene] as Record<string, unknown>[],
+      (singlePickMode ? (targetedPick ? [targetedPick] : []) : oldPicksForScene) as Record<string, unknown>[],
       segmentMap as unknown as Record<string, { clip: Record<string, unknown>; segment: Record<string, unknown> }>,
     );
 
-    const audioDuration = Number(target.end_sec ?? 0) - Number(target.start_sec ?? 0);
+    // In per-pick mode, narrow the scene clone's audio window to the single targeted pick.
+    const sceneForPicker = singlePickMode && targetedPick
+      ? {
+          ...target,
+          start_sec: Number(targetedPick.audio_start ?? target.start_sec ?? 0),
+          end_sec: Number(targetedPick.audio_end ?? target.end_sec ?? 0),
+        }
+      : target;
+    const audioDuration = Number(sceneForPicker.end_sec ?? 0) - Number(sceneForPicker.start_sec ?? 0);
     const pickerResult = await pickSegmentsDetailed("", videos, audioDuration, {
       customPrompt: pickerPrompt,
       transcriptSegments: [],
-      scenes: [target as unknown as Scene],
+      scenes: [sceneForPicker as unknown as Scene],
       avoidSegmentIds: avoidSet,
       maxLlmAttempts: 3,
       usageAttemptPrefix: "replan_picker_attempt",
@@ -122,21 +149,42 @@ export async function POST(req: NextRequest) {
       return m;
     });
 
-    const merged: MutablePick[] = [
-      ...(otherPicks as unknown as MutablePick[]),
-      ...newPicks,
-    ].sort((a, b) => {
-      const as_ = a.audio_start ?? 0;
-      const bs_ = b.audio_start ?? 0;
-      return as_ !== bs_ ? as_ - bs_ : (a.scene_idx ?? 0) - (b.scene_idx ?? 0);
-    });
+    // Merge into the full timeline.
+    // - Per-pick mode: overwrite only the targeted slot (n-th pick of the scene) by absolute index.
+    // - Full-scene mode: drop all in-scene picks, append the new ones, then sort.
+    let merged: MutablePick[];
+    if (singlePickMode) {
+      const replacement: MutablePick = { ...newPicks[0], scene_idx: sceneIdx };
+      const result = [...(fullTimeline as unknown as MutablePick[])];
+      let seen = 0;
+      for (let i = 0; i < result.length; i += 1) {
+        if (Number(result[i]?.scene_idx) === sceneIdx) {
+          if (seen === pickIndex) {
+            result[i] = replacement;
+            break;
+          }
+          seen += 1;
+        }
+      }
+      merged = result;
+    } else {
+      merged = [
+        ...(otherPicks as unknown as MutablePick[]),
+        ...newPicks,
+      ].sort((a, b) => {
+        const as_ = a.audio_start ?? 0;
+        const bs_ = b.audio_start ?? 0;
+        return as_ !== bs_ ? as_ - bs_ : (a.scene_idx ?? 0) - (b.scene_idx ?? 0);
+      });
+    }
 
     const validatorResult = validateAndSwap(merged, {
       beats: [],
       videoMap,
       segmentMap,
       scenes: scenes as unknown as Scene[],
-      allowSceneGapFill: newPicksRaw.length > 0,
+      // Per-pick swaps shouldn't trigger gap fills across other scenes — the user is editing one slot.
+      allowSceneGapFill: !singlePickMode && newPicksRaw.length > 0,
     });
 
     await updatePlanBundle(jobId, { timeline: merged, validator: validatorResult, picker_status: pickerResult.picker_status });
