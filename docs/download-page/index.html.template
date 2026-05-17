@@ -3867,9 +3867,9 @@
       align-items: center;
       justify-items: center;
       padding:
-        calc(env(safe-area-inset-top, 0px) + 96px)
+        calc(env(safe-area-inset-top, 0px) + clamp(40px, 9svh, 80px))
         clamp(20px, 4vw, 56px)
-        clamp(28px, 5vh, 56px);
+        clamp(20px, 4svh, 48px);
       background:
         radial-gradient(circle at 18% 22%, rgb(249 84 62 / 0.18), transparent 36rem),
         radial-gradient(circle at 84% 78%, rgb(242 194 49 / 0.22), transparent 38rem),
@@ -3951,7 +3951,7 @@
 
     .download-landing__copy {
       display: grid;
-      gap: clamp(18px, 2.4vw, 28px);
+      gap: clamp(12px, min(2vw, 2.2svh), 22px);
       max-width: 36rem;
       justify-self: start;
     }
@@ -4076,7 +4076,7 @@
 
     .download-landing__title {
       margin: 0;
-      font-size: clamp(2.4rem, 3.6vw + 0.6rem, 4.6rem);
+      font-size: clamp(2rem, min(2.8vw + 0.5rem, 5.6svh), 3.6rem);
       font-weight: 950;
       line-height: 1.02;
       letter-spacing: -0.035em;
@@ -4100,8 +4100,8 @@
 
     .download-landing__lead {
       margin: 0;
-      font-size: clamp(1rem, 0.4vw + 0.95rem, 1.18rem);
-      line-height: 1.55;
+      font-size: clamp(0.88rem, min(0.3vw + 0.82rem, 1.9svh), 1.05rem);
+      line-height: 1.5;
       color: var(--v1-muted);
       max-width: 32rem;
     }
@@ -4117,8 +4117,8 @@
       position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 14px;
-      padding: 14px 22px;
+      gap: 12px;
+      padding: 11px 18px;
       border: 2px solid var(--v1-ink);
       border-radius: 18px;
       background: linear-gradient(135deg, var(--v1-red) 0%, #f9543e 60%, #f97a3e 100%);
@@ -4171,17 +4171,17 @@
     .download-landing__download-icon {
       display: grid;
       place-items: center;
-      width: 42px;
-      height: 42px;
-      flex: 0 0 42px;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
       border: 1.5px solid rgb(255 255 255 / 0.55);
       border-radius: 12px;
       background: rgb(255 255 255 / 0.18);
     }
 
     .download-landing__download-icon svg {
-      width: 22px;
-      height: 22px;
+      width: 18px;
+      height: 18px;
       color: #fff;
     }
 
@@ -4193,14 +4193,14 @@
     }
 
     .download-landing__download-text small {
-      font-size: 0.72rem;
+      font-size: 0.66rem;
       font-weight: 800;
       opacity: 0.85;
       letter-spacing: 0.04em;
     }
 
     .download-landing__download-text strong {
-      font-size: 1.06rem;
+      font-size: 0.95rem;
       font-weight: 950;
       letter-spacing: -0.005em;
     }
@@ -4325,7 +4325,7 @@
 
     .download-landing__phone {
       position: relative;
-      width: min(320px, 100%);
+      width: min(260px, 32svh, 100%);
       aspect-ratio: 9 / 19;
       padding: 14px;
       border: 3px solid var(--v1-ink);
