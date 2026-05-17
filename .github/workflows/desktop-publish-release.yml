@@ -113,12 +113,9 @@ jobs:
           # secret's blast radius matches its purpose.
           apiToken: ${{ secrets.CLOUDFLARE_R2_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # wrangler-action parses `command:` as newline-separated wrangler
+          # commands, not as a shell script — backslash line-continuations are
+          # passed as literal arguments. Keep each command on a single line.
           command: |
-            r2 object put \
-              ${R2_BUCKET}/downloads/windows/${TAG}/WeatherV1-Setup.exe \
-              --file=dist/WeatherV1-Setup.exe \
-              --content-type=application/octet-stream
-            r2 object put \
-              ${R2_BUCKET}/downloads/windows/latest/WeatherV1-Setup.exe \
-              --file=dist/WeatherV1-Setup.exe \
-              --content-type=application/octet-stream
+            r2 object put ${R2_BUCKET}/downloads/windows/${TAG}/WeatherV1-Setup.exe --file=dist/WeatherV1-Setup.exe --content-type=application/octet-stream
+            r2 object put ${R2_BUCKET}/downloads/windows/latest/WeatherV1-Setup.exe --file=dist/WeatherV1-Setup.exe --content-type=application/octet-stream
