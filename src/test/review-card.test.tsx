@@ -135,7 +135,7 @@ describe("ReviewCard", () => {
     expect(screen.queryByTestId("review-textarea")).toBeNull();
   });
 
-  it("segment edits accumulate into the PATCHed transcript", async () => {
+  it("segment edits accumulate into the PATCHed transcript AND segments", async () => {
     const onConfirm = vi.fn();
     const onTranscriptChange = vi.fn();
     apiFetch.mockResolvedValueOnce({
@@ -168,7 +168,42 @@ describe("ReviewCard", () => {
     await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
     expect(apiFetch).toHaveBeenCalledTimes(1);
     const [, init] = apiFetch.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(init.body as string)).toEqual({ transcript: "alpha edited" });
+    // Critical: the segments array must also be sent so the server overwrites
+    // transcript_segments — otherwise on reload the original Whisper text is
+    // shown and the edit appears to have been lost.
+    expect(JSON.parse(init.body as string)).toEqual({
+      transcript: "alpha edited",
+      segments: [
+        { start: 0, end: 1, text: "alpha" },
+        { start: 1, end: 2, text: "edited" },
+      ],
+    });
+  });
+
+  it("non-segmented edits still send only transcript (no synthetic segments)", async () => {
+    const onConfirm = vi.fn();
+    apiFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, transcript: "edited" }),
+    });
+    render(
+      <ReviewCard
+        jobId="job-abc"
+        transcriptData={baseTranscript}
+        tileState="active"
+        phase="reviewing"
+        onTranscriptChange={() => {}}
+        onConfirm={onConfirm}
+        onError={() => {}}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("review-textarea"), { target: { value: "edited" } });
+    fireEvent.click(screen.getByTestId("review-continue"));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalled());
+    const [, init] = apiFetch.mock.calls[0] as [string, RequestInit];
+    const sent = JSON.parse(init.body as string);
+    expect(sent.transcript).toBe("edited");
+    expect(sent.segments).toBeUndefined();
   });
 
   it("disables segment play buttons and shows a hint when the voiceover HEAD returns 404", async () => {

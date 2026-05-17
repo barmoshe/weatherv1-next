@@ -160,10 +160,23 @@ export function ReviewCard({
     setSaving(true);
     try {
       if (dirty) {
+        // When the user edited per-segment textareas we also have to send the
+        // rebuilt segments — the PATCH route persists transcript AND
+        // transcript_segments. Without segments, the joined transcript would
+        // save but the segmented review reloads from transcript_segments
+        // (whisper original) and the edits would look lost.
+        const body: { transcript: string; segments?: Segment[] } = { transcript: joined };
+        if (hasSegments) {
+          body.segments = segments.map((s, idx) => ({
+            start: s.start,
+            end: s.end,
+            text: (drafts[idx] ?? s.text).trim(),
+          }));
+        }
         const res = await fetch(`/api/transcript/${jobId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transcript: joined }),
+          body: JSON.stringify(body),
         });
         const data = (await res.json().catch(() => ({}))) as {
           success?: boolean;
