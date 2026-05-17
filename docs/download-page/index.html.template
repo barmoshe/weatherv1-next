@@ -1463,6 +1463,23 @@
       box-sizing: border-box;
     }
 
+    /* Hide all "ממתין" pills entirely — the active phase + the done pill
+       already carry the state; the waiting badges added clutter without
+       conveying anything actionable. */
+    #studio .pitch-cell-badge-trans-wait,
+    #studio .pitch-cell-badge-render-wait,
+    #studio .pitch-cell-badge-timeline-wait,
+    #studio .pitch-cell-badge-output-wait {
+      display: none !important;
+    }
+
+    /* Match the real app: the upload drop card only exists in the upload /
+       idle phases. Once a file is "uploaded" (any later phase), it's gone
+       so the dashboard takes the full top area, exactly like the live UI. */
+    #studio .pitch-app-shell:not([data-studio-phase="upload"]):not([data-studio-phase="idle"]) .pitch-drop-card {
+      display: none;
+    }
+
     #studio .pitch-app-shell:not([data-studio-phase="upload"]) .pitch-cell-badge-trans-wait {
       display: none;
     }
@@ -1703,60 +1720,15 @@
     }
 
     /*
-     * שלב 5 (וידאו סופי): פריסה אופקית, אמולטור אייפון משמאל, ריל תמלול + תוכנית סצנות מימין.
-     * `direction: ltr` + עמודה ראשונה צרה = אייפון משמאל במסך.
+     * שלב 5 (וידאו סופי): keep the SAME 3-column layout from earlier
+     * phases (matches the real app, where the dashboard never reshuffles).
+     * Only the output cell upgrades visually — the phone now plays the
+     * rendered video, and the cell gets a subtle accent border + tint.
      */
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento {
-      direction: ltr;
-      unicode-bidi: isolate;
-      grid-template-columns: minmax(120px, 152px) minmax(0, 1fr) minmax(0, 1.05fr);
-      min-height: 218px;
-      align-items: stretch;
-    }
-
-    /* In the final state, unstack the right column so Output can be hoisted
-       to its own grid cell (left) and the Render mini card is hidden — it
-       is already represented by the "MP4 · 9:16" badge sitting next to the
-       phone preview, and the rendering animation is no longer relevant. */
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__right-stack {
-      display: contents;
-    }
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-mini-card--render {
-      display: none;
-    }
-
     #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output {
-      grid-column: 1;
-      grid-row: 1;
-      align-self: stretch;
-      justify-items: center;
-      padding: 16px 8px 10px;
       background: linear-gradient(200deg, rgb(252 250 247 / 1), rgb(255 255 255 / 1));
-      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 22%, rgb(0 0 0 / 0.1));
-    }
-
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--review {
-      grid-column: 2;
-      grid-row: 1;
-    }
-
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--timeline {
-      grid-column: 3;
-      grid-row: 1;
-    }
-
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output .pitch-cell-label {
-      text-align: center;
-      justify-content: center;
-    }
-
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-device {
-      width: min(136px, 24vw);
-    }
-
-    #studio .pitch-app-shell[data-studio-phase="output"] .pitch-output-footnote {
-      max-width: 10.5rem;
-      font-size: 0.5rem;
+      border-color: color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 28%, rgb(0 0 0 / 0.1));
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 18%, transparent);
     }
 
     /* —— Studio wizard: idle (00) state — pre-interaction welcome —— */
@@ -2637,26 +2609,12 @@
         width: min(58vw, 188px);
       }
 
-      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento {
-        direction: ltr;
+      /* Tablet / mobile: bento collapses to a single column for all phases. */
+      #studio .pitch-bento {
         grid-template-columns: 1fr;
-        min-height: 0;
       }
-
-      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--review,
-      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--timeline,
-      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output {
-        grid-column: 1;
-        grid-row: auto;
-      }
-
-      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-bento__cell--output {
-        order: -1;
-        padding: 12px 10px;
-      }
-
-      #studio .pitch-app-shell[data-studio-phase="output"] .pitch-device {
-        width: min(58vw, 168px);
+      #studio .pitch-bento__right-stack {
+        grid-template-rows: auto auto;
       }
 
       .pitch-catalog-workspace {
