@@ -709,7 +709,7 @@
       Hooks: [data-pitch-layout="product-app"], .pitch-app-shell, .pitch-bento, .pitch-drop-card
     */
     [data-pitch-layout="product-app"] .panel-copy {
-      gap: clamp(12px, 2vw, 18px);
+      gap: clamp(10px, 1.5vw, 14px);
     }
 
     [data-pitch-layout="product-app"] .kicker {
@@ -729,9 +729,9 @@
     }
 
     [data-pitch-layout="product-app"] .pitch-lead-well {
-      margin: 2px 0 0;
-      padding: 12px 14px;
-      border-radius: 14px;
+      margin: 0;
+      padding: 10px 13px;
+      border-radius: 12px;
       border: 1px solid rgb(0 0 0 / 0.08);
       background: linear-gradient(145deg, rgb(255 255 255 / 0.96), rgb(252 241 238 / 0.65));
       box-shadow: 0 1px 0 rgb(255 255 255 / 0.85) inset;
@@ -740,9 +740,9 @@
     [data-pitch-layout="product-app"] .pitch-lead-well .lead {
       margin: 0;
       max-width: none;
-      font-size: clamp(0.84rem, 1.12vw + 0.22rem, 1.02rem);
-      line-height: 1.52;
-      font-weight: 620;
+      font-size: clamp(0.78rem, 0.95vw + 0.2rem, 0.94rem);
+      line-height: 1.5;
+      font-weight: 600;
       color: rgb(55 58 68 / 1);
     }
 
@@ -755,41 +755,73 @@
       counter-reset: pitch-step;
     }
 
+    [data-pitch-layout="product-app"] .bullets {
+      gap: 6px;
+      position: relative;
+    }
+    /* Vertical connector line tying the numbered chips together into a
+       visible stepper — sits behind the bullets, anchored to the chip
+       column (which lives on the inline-end side under RTL). */
+    [data-pitch-layout="product-app"] .bullets--studio-wizard::before {
+      content: "";
+      position: absolute;
+      inset-block: 18px;
+      inset-inline-end: 17px;
+      width: 2px;
+      border-radius: 2px;
+      background: linear-gradient(180deg,
+        color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 18%, transparent) 0%,
+        color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 8%, transparent) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
     [data-pitch-layout="product-app"] .bullets li {
       counter-increment: pitch-step;
+      position: relative;
+      z-index: 1;
       display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 11px;
-      align-items: start;
-      padding: 10px 12px;
-      border-radius: 12px;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 7px 10px 7px 12px;
+      border-radius: 10px;
       border: 1px solid rgb(0 0 0 / 0.07);
-      background: rgb(255 255 255 / 0.78);
+      background: rgb(255 255 255 / 0.86);
       box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
-      font-size: clamp(0.76rem, 1vw, 0.9rem);
-      font-weight: 760;
+      font-size: clamp(0.74rem, 0.94vw, 0.86rem);
+      font-weight: 750;
+      line-height: 1.42;
       color: rgb(66 68 78 / 1);
       transition:
         border-color 0.22s ease,
         box-shadow 0.22s ease,
         background 0.22s ease,
-        color 0.22s ease;
+        color 0.22s ease,
+        transform 0.18s ease;
+    }
+    [data-pitch-layout="product-app"] .bullets--studio-wizard li:hover {
+      transform: translateX(-2px);
     }
 
     [data-pitch-layout="product-app"] .bullets li::before {
       content: counter(pitch-step, decimal-leading-zero);
-      width: auto;
-      height: auto;
+      grid-column: 2;
+      width: 26px;
+      height: 26px;
       margin: 0;
-      padding: 4px 8px;
-      border-radius: 8px;
-      font-size: 0.59rem;
+      padding: 0;
+      border-radius: 999px;
+      font-size: 0.6rem;
       font-weight: 950;
       font-variant-numeric: tabular-nums;
       background: rgb(252 236 232 / 1);
       color: var(--panel-accent, var(--v1-coral));
-      border: 1px solid rgb(0 0 0 / 0.08);
-      box-shadow: none;
+      border: 1.5px solid color-mix(in srgb, var(--panel-accent, var(--v1-coral)) 18%, rgb(0 0 0 / 0.06));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 2px rgb(255 255 255 / 1);
     }
 
     [data-pitch-layout="product-app"] .bullets li.is-wizard-active {
