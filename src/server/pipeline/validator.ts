@@ -7,7 +7,7 @@ import {
   clothingClimateMismatch,
 } from "./beat-tagger";
 import { PLACE_ALIASES } from "./hebrew-places";
-import { inferConcepts, targetContradictsSegment } from "@/server/catalog/hebrew-taxonomy";
+import { inferConcepts, targetContradictsSegment, weatherClassMismatch } from "@/server/catalog/hebrew-taxonomy";
 import type { SegmentConcepts } from "@/shared/types";
 
 // ---------------------------------------------------------------------------
@@ -123,6 +123,15 @@ type SceneDict = {
 
 export interface ValidatorBundle {
   score: number;
+  /**
+   * Categorical advisory for downstream workers / UI. Computed from kept-hard-
+   * violations and failed gap fills, NOT from `score` (which under-penalised
+   * unfixed mismatches and made 77/100 plans look ship-ready).
+   *   - ship    : no kept hard violations, no failed gap fills
+   *   - review  : 1 kept hard violation OR 1 failed gap fill — surface to user
+   *   - replan  : 2+ kept hard violations OR 2+ failed gap fills — auto-retry
+   */
+  quality: "ship" | "review" | "replan";
   hard_violations_fixed: Record<string, unknown>[];
   hard_violations_kept: Record<string, unknown>[];
   warnings: Record<string, unknown>[];
@@ -676,6 +685,10 @@ function bestCandidateByOverlap(
       if (intent === rejectCloudsIntent) continue;
     }
     if (targetContradictsSegment(tText ?? "", candSeg)) continue;
+    // Hard categorical polarity check — tag-first, English+Hebrew aware. Stops
+    // snow-for-heat and calm-sunset-for-dangerous-waves regressions that the
+    // description-based check above misses when tags are English-only.
+    if (weatherClassMismatch(tText ?? "", candSeg)) continue;
     if (sceneAvoidsSegment(sceneConcepts, candSeg)) continue;
     if (moodIsIncompatible(mood, candSeg, candClip)) continue;
     // Gating threshold stays the *integer* tag-hit count so the existing
@@ -753,6 +766,8 @@ function bestLegacyCandidate(
     if (moodIsIncompatible(mood, {} as SegmentEntry, cand)) continue;
     // Whole-clip catalogs rarely carry concepts; honour them when present.
     if (sceneAvoidsSegment(sceneConcepts, cand as { concepts?: SegmentConcepts })) continue;
+    // Same categorical polarity gate as the segment path.
+    if (weatherClassMismatch(tText ?? "", cand as { tags?: string[] | Record<string, string>; concepts?: SegmentConcepts; description?: string })) continue;
     const overlapCount = rawOverlapCount(targetLower, String(cid), cache);
     if (overlapCount < requireMinOverlap) continue;
     const score = bm25Score(targetLower, String(cid), cache);
@@ -968,7 +983,13 @@ function enforceSemanticFit(
     if (!segId || !segmentMap[segId]) continue;
 
     const target = targetText(clip, beatsByIdx, scenesByIdx);
-    if (!target || !targetContradictsSegment(target, segmentMap[segId].segment)) continue;
+    if (!target) continue;
+    // Trigger a swap on EITHER the description-based contradict signal OR the
+    // tag-first categorical polarity check (weatherClassMismatch). Without
+    // the latter, snow-for-heat and dusk-for-midday picks slip through
+    // because targetContradictsSegment misses English-tagged segments.
+    const seg = segmentMap[segId].segment;
+    if (!targetContradictsSegment(target, seg) && !weatherClassMismatch(target, seg)) continue;
 
     const aLen = audioLen(clip);
     const [best, bestOverlap] = bestCandidateByOverlap(candidates, {
@@ -1618,6 +1639,19 @@ function mergeShortClips(
 // _flagThematicAdjacency
 // ---------------------------------------------------------------------------
 
+// Tags that are too generic to drive a useful "thematic adjacency" warning.
+// A forecast where every clip is `יום` / `בהיר` / `טבע` is not a thematic
+// adjacency problem — it's just daytime weather B-roll. These stopwords
+// caused 9-deep false positives on every analysed plan; filtering them out
+// keeps the rule honest about real repetition (e.g. 4 sea shots in a row).
+const ADJACENCY_STOPWORDS = new Set<string>([
+  // Hebrew generic
+  "יום", "לילה", "בהיר", "טבע", "עיר", "עירוני", "ים", "מזג אוויר",
+  "רקע כללי", "טמפרטורות", "calm",
+  // English equivalents
+  "day", "night", "clear_sky", "nature", "urban", "sea", "weather", "general",
+]);
+
 function flagThematicAdjacency(
   timeline: MutablePick[],
   videoMap: Record<string, CatalogClip>,
@@ -1628,7 +1662,12 @@ function flagThematicAdjacency(
 
   const tagSets: Set<string>[] = timeline.map((c) => {
     const words = entryTagWordsForPick(c, segmentMap, videoMap);
-    return new Set(words.map((w) => w.toLowerCase()).filter(Boolean));
+    return new Set(
+      words
+        .map((w) => w.toLowerCase().trim())
+        .filter(Boolean)
+        .filter((w) => !ADJACENCY_STOPWORDS.has(w)),
+    );
   });
 
   let i = 0;
@@ -1903,8 +1942,14 @@ export function validateAndSwap(
     0,
     100 - 10 * hardViolationsKept.length - 3 * warnings.length - 8 * fixedGapCount - 12 * failedGapCount,
   );
+  // Quality: ignore `score` (under-penalises unfixed hard violations) and
+  // categorise on the count of things the validator could not fix at all.
+  const unfixed = hardViolationsKept.length + failedGapCount;
+  const quality: "ship" | "review" | "replan" =
+    unfixed === 0 ? "ship" : unfixed === 1 ? "review" : "replan";
   const out: ValidatorBundle = {
     score,
+    quality,
     hard_violations_fixed: hardViolationsFixed,
     hard_violations_kept: hardViolationsKept,
     warnings,

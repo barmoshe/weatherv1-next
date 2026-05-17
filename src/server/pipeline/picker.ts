@@ -391,8 +391,20 @@ function feedbackDigestFromValidator(validator: ValidatorBundle): string {
 function stampPickerReasons(timeline: TimelinePick[]): MutablePick[] {
   return timeline.map((p) => {
     const m: MutablePick = { ...p };
-    const trimmed = String(p.reason ?? "").trim();
-    if (trimmed) m.picker_reason = trimmed;
+    // Preserve picker_reason if already set (e.g. by validator with deletion +
+    // fallback_reason set). When syncing from `reason`, skip technical
+    // validator messages (starts with "validator:") and prefer fallback_reason
+    // — otherwise the UI shows "validator: same source file — swapped from …"
+    // instead of the editorial Hebrew copy.
+    if (m.picker_reason && String(m.picker_reason).trim()) return m;
+    const reasonText = String(p.reason ?? "").trim();
+    const isValidatorMsg = reasonText.startsWith("validator:");
+    if (isValidatorMsg) {
+      const fb = String((p as { fallback_reason?: string }).fallback_reason ?? "").trim();
+      if (fb) m.picker_reason = fb;
+      return m;
+    }
+    if (reasonText) m.picker_reason = reasonText;
     return m;
   });
 }

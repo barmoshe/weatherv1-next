@@ -509,4 +509,15 @@ describe("timeline render order", () => {
     expect(timeline[0]!.audio_start).toBe(0);
     expect(timeline[1]!.audio_start).toBe(5);
   });
+
+  describe("quality categorisation (advisory; not based on score)", () => {
+    it("returns quality='ship' for a clean timeline with no kept hard violations", () => {
+      const c = clip("A", "weather");
+      const beats = [{ idx: 0, start: 0, end: 5, text: "מזג אוויר" }];
+      const timeline: MutablePick[] = [t("A", 0, 0, 5)];
+      const out = validateAndSwap(timeline, { beats, videoMap: { A: c } });
+      expect(out.quality).toBe("ship");
+      expect(out.hard_violations_kept).toHaveLength(0);
+    });
+  });
 });

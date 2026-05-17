@@ -99,6 +99,7 @@ export async function POST(req: NextRequest) {
     if (!validatorResult) {
       validatorResult = {
         score: 100,
+        quality: "ship",
         hard_violations_fixed: [],
         hard_violations_kept: [],
         warnings: [],

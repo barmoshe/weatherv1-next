@@ -324,3 +324,74 @@ export function targetContradictsSegment(targetText: string, segment: { tags?: s
   if (targetNice && (has("שרב") || has("סופה") || has("ברד") || has("שלג"))) return true;
   return false;
 }
+
+/**
+ * Stronger, **tag-first** categorical weather check. `targetContradictsSegment`
+ * above relies on Hebrew terms appearing in the segment's text bag; many of our
+ * tagged segments carry **English** tags (snow, winter, heat, sunny, dusk, …)
+ * and a Hebrew description that may or may not contain the exact word the rule
+ * looks for. Real failure observed: a heat-wave scene got swapped to a snow
+ * clip because the contradict-check missed the categorical mismatch.
+ *
+ * This helper maps the scene narration into a coarse class
+ * (`hot|cold_wet|calm_clear|stormy_dangerous`) and rejects candidates whose
+ * tag/description set carries any signal from a categorically incompatible
+ * class. Cheap, deterministic, English+Hebrew aware. Returns true if the
+ * candidate is categorically wrong for the target.
+ */
+export function weatherClassMismatch(
+  targetText: string,
+  segment: { tags?: string[] | Record<string, string>; concepts?: SegmentConcepts; description?: string },
+): boolean {
+  const target = norm(targetText);
+  if (!target) return false;
+  const tagList = tagArray(segment.tags).map(norm);
+  const concepts = flattenConcepts(segment.concepts).map(norm);
+  // Split description into whitespace-separated tokens so we can do
+  // word-boundary matches rather than substring. Earlier substring approach
+  // hit false positives like "קר" matching "קרינת".
+  const descTokens = norm(segment.description ?? "").split(/\s+/).filter(Boolean);
+  const tokens = new Set<string>([...tagList, ...concepts, ...descTokens]);
+  const hasToken = (needle: string): boolean => {
+    if (tokens.has(needle)) return true;
+    // For longer Hebrew stems (≥4 chars), also accept token-prefix matches to
+    // cover morphology like "מעונן" → "מעוננים". For short needles we require
+    // exact match to avoid 2- and 3-char substring noise.
+    if (needle.length < 4) return false;
+    for (const t of tokens) {
+      if (t.startsWith(needle)) return true;
+    }
+    return false;
+  };
+
+  const SCENE_HOT = ["שרב", "חם", "חום", "חמסין", "עומס חום", "heat", "hot", "heatwave"];
+  const SCENE_COLD_WET = ["קור", "גשם", "טפטוף", "שלג", "ברד", "מעונן", "ערפל", "rain", "snow", "drizzle", "overcast", "fog"];
+  const SCENE_DANGEROUS = ["גלים גבוהים", "סכנת רחצה", "מסוכן לרחצה", "סופה", "סערה", "high waves", "dangerous", "storm"];
+  // Narration cues that *justify* an evening / sunset / dusk visual. When ANY
+  // of these are present in the target, glamour-dusk clips are allowed even
+  // for otherwise-daytime scenes.
+  const SCENE_EVENING_OK = [
+    "ערב", "ערבים", "בין ערביים", "לילה", "שקיעה", "שעת זהב",
+    "evening", "night", "sunset", "dusk", "twilight",
+  ];
+  const sceneHot = includesAny(target, SCENE_HOT);
+  const sceneCoolWet = includesAny(target, SCENE_COLD_WET);
+  const sceneDangerous = includesAny(target, SCENE_DANGEROUS);
+  const sceneEveningOk = includesAny(target, SCENE_EVENING_OK);
+
+  // SEG_* lists are matched with word-boundary semantics (see hasToken above).
+  // Drop 2-3 char Hebrew sub-tokens like "קר" because they collide with
+  // unrelated stems (קרינה, קריאה, קרוב…).
+  const SEG_COLD = ["snow", "winter", "rain", "drizzle", "overcast", "שלג", "חורפי", "סתווי", "גשם", "ברד", "מעונן", "קור"];
+  const SEG_HOT = ["heat", "summer", "heatwave", "שרב", "חמסין", "קיצי", "עומס חום"];
+  const SEG_CALM_GLAMOUR = ["sunset", "dusk", "שקיעה", "שעת זהב"];
+
+  if (sceneHot && SEG_COLD.some(hasToken)) return true;
+  if (sceneCoolWet && SEG_HOT.some(hasToken)) return true;
+  if (sceneDangerous && SEG_CALM_GLAMOUR.some(hasToken)) return true;
+  // Phase D: reject explicitly-dusk/sunset glamour clips when the scene
+  // narration gives no evening cue. Stops the recurring "Eilat sunset for a
+  // clear-weekday-morning forecast" pattern observed across plans.
+  if (!sceneEveningOk && SEG_CALM_GLAMOUR.some(hasToken)) return true;
+  return false;
+}
