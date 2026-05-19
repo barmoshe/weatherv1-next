@@ -78,7 +78,7 @@ the Worker; auth is unified behind a single GH secret.
    Not destructive, just noisy.
 3. **`rotate-worker-secrets.yml`** has never been dispatched. The
    Worker still holds the secrets Pulumi originally set, which happen
-   to match `EDITOR_PASSWORD` (`yallabeitar`). Run it once next time
+   to match `EDITOR_PASSWORD` (value redacted 2026-05-19 after leak; see `.claude/archive/HANDOFF-2026-05-17-rotate-leaked-editor-password.md`). Run it once next time
    you change `EDITOR_PASSWORD` to canonicalize. Optional now.
 
 ## Reference
