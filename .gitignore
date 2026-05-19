@@ -53,6 +53,7 @@ next-env.d.ts
 /runtime/jobs.json
 /runtime/uploads/
 /runtime/outputs/
+/runtime/tmp/
 
 # Build-time-generated auth hashes (emitted by scripts/emit-auth-hashes.cjs).
 # Plaintext lives in .env / GitHub Secrets; the runtime .ts file is never
@@ -68,4 +69,5 @@ CLAUDE.local.md
 .claude/ISSUES.local.md
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+.claude/worktrees/
 runtime/jobs.json
