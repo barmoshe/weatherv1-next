@@ -8,7 +8,7 @@ Planned but un-shipped docs. Each is self-contained (Goal / Plan / Verification)
 | [MINIMIZE_AI_INPUT_TOKENS.md](MINIMIZE_AI_INPUT_TOKENS.md) | Cut scene-planner + picker input tokens via Anthropic cache plumbing. Bit-identical outputs. |
 | [CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md) | Worker hardening (structured logs, rate limit, version stamp), Pulumi cleanup, MCP producer Worker. |
 | [RELEASE_ASSET_STORAGE.md](RELEASE_ASSET_STORAGE.md) | _(Concluded — stub)_ Research found no infra change needed; installers ship via R2/Worker. |
-| [premiere/](premiere/) | Export the planned timeline to an Adobe Premiere–importable project (FCP7 XML) + sidecar SRT, so editors can polish and render in Premiere. |
+| [premiere/](premiere/) | _(Discovery)_ Export the planned timeline to an Adobe Premiere–importable project (FCP7 XML) + sidecar SRT, so editors can polish and render in Premiere. Research compares FCP7 XML vs. CEP/UXP panel vs. OTIO vs. EDL/AAF. |
 | [after-effects-graphics/](after-effects-graphics/) | _(Discovery)_ Bring V1's existing After Effects graphic layer (overlays, lower-thirds, intro/outro cards, animated weather icons) into this app. |
 | [temporal/](temporal/) | _(Research)_ Integrate Temporal.io for durability, observability, and scale. Architecture, pipeline mapping, embedded-in-Electron research, idempotency convention, versioning tradeoffs, UI integration, and a Phase 1 proposal to replace the R2 mirror queue. |
 | [CATALOG_TAGGING_REDESIGN.md](CATALOG_TAGGING_REDESIGN.md) | _(Research)_ Catalog tagging redesign. Failure-mode evidence, root causes (Hebrew/English split, missing subject/polarity axes), four candidate approaches, success criteria. |
