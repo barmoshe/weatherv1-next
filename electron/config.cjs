@@ -84,6 +84,10 @@ function defaultSettings() {
     keys: { openai: null, anthropic: null, gemini: null, r2AppPassword: null },
     // Plain-text user preference. "auto" lets the server pick from configured keys.
     llmProvider: "auto", // "auto" | "anthropic" | "openai"
+    // /api/plan pipeline selection. false = original validator-based ver1
+    // (default), true = retrieve-then-pick ver2. Injected as
+    // PLAN_PIPELINE_VER2=1 for the Next child when true.
+    planPipelineVer2: false,
     encryption: "none", // "safe-storage" | "none"
     r2: {
       enabled: false,
@@ -303,6 +307,13 @@ function buildChildEnv(args) {
   // and selected entirely by OPENAI_API_KEY presence.
   if (settings.llmProvider && settings.llmProvider !== "auto") {
     env.LLM_PROVIDER = settings.llmProvider;
+  }
+
+  // Plan-pipeline preference. Default (ver1) leaves the env unset; the
+  // Next route checks `process.env.PLAN_PIPELINE_VER2 === "1"` to opt into
+  // the retrieve-then-pick path.
+  if (settings.planPipelineVer2) {
+    env.PLAN_PIPELINE_VER2 = "1";
   }
 
   return env;

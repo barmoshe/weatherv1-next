@@ -33,6 +33,8 @@ export interface DesktopStatus {
   };
   providers?: {
     llm_pref: LlmProviderPreference;
+    /** Effective /api/plan pipeline — controlled by PLAN_PIPELINE_VER2. */
+    plan_pipeline?: "ver1" | "ver2";
   };
   ffmpeg: {
     ffmpeg_path: string | null;

@@ -63,6 +63,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [r2AppPassword, setR2AppPassword] = useState("");
   const [showR2Password, setShowR2Password] = useState(false);
   const [llmProvider, setLlmProvider] = useState<LlmProviderPreference>("auto");
+  const [planPipeline, setPlanPipeline] = useState<"ver1" | "ver2">("ver1");
   const [saving, setSaving] = useState(false);
   const [syncingR2, setSyncingR2] = useState(false);
   const [exportR2JobsLoading, setExportR2JobsLoading] = useState(false);
@@ -107,6 +108,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setFfprobePath(status.ffmpeg.ffprobe_path ?? "");
       if (status.providers) {
         setLlmProvider(status.providers.llm_pref);
+        if (status.providers.plan_pipeline) {
+          setPlanPipeline(status.providers.plan_pipeline);
+        }
       }
       setR2Enabled(Boolean(status.r2?.enabled));
       setR2GatewayUrl(status.r2?.gatewayUrl ?? "");
@@ -198,6 +202,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       update.r2AppUsername = r2AppUsername.trim();
       if (r2AppPassword) update.r2AppPassword = r2AppPassword;
       update.llmProvider = llmProvider;
+      update.planPipelineVer2 = planPipeline === "ver2";
 
       await desktop.saveSettings(update);
       setOpenaiKey("");
@@ -219,6 +224,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     ffprobePath,
     geminiKey,
     llmProvider,
+    planPipeline,
     loadDesktopStatus,
     loadHealth,
     openaiKey,
@@ -619,6 +625,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       llmProvider,
                       onLlmProviderChange: (pref) => {
                         setLlmProvider(pref);
+                        setSaved(false);
+                      },
+                    }}
+                    pipeline={{
+                      pipeline: planPipeline,
+                      saving,
+                      onPipelineChange: (next) => {
+                        setPlanPipeline(next);
                         setSaved(false);
                       },
                     }}

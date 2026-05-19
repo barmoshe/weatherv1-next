@@ -7,11 +7,13 @@ import { SettingsAiPanel } from "./SettingsAiPanel";
 import { SettingsCatalogPanel } from "./SettingsCatalogPanel";
 import { SettingsCloudPanel } from "./SettingsCloudPanel";
 import { SettingsDesktopPanel } from "./SettingsDesktopPanel";
+import { SettingsPipelinePanel } from "./SettingsPipelinePanel";
 
 type CatalogProps = ComponentProps<typeof SettingsCatalogPanel>;
 type DesktopProps = ComponentProps<typeof SettingsDesktopPanel>;
 type AiProps = ComponentProps<typeof SettingsAiPanel>;
 type CloudProps = ComponentProps<typeof SettingsCloudPanel>;
+type PipelineProps = ComponentProps<typeof SettingsPipelinePanel>;
 
 interface AdminTabPanelProps {
   unlocked: boolean;
@@ -21,6 +23,7 @@ interface AdminTabPanelProps {
   desktop: DesktopProps;
   ai: AiProps;
   cloud: CloudProps;
+  pipeline: PipelineProps;
 }
 
 export function AdminTabPanel({
@@ -31,6 +34,7 @@ export function AdminTabPanel({
   desktop,
   ai,
   cloud,
+  pipeline,
 }: AdminTabPanelProps) {
   if (!unlocked) {
     return <AdminPasswordPrompt onUnlocked={onUnlocked} />;
@@ -60,6 +64,7 @@ export function AdminTabPanel({
       <section className="settings-admin-section">
         <h3 className="settings-admin-section-heading">AI ומודלים</h3>
         <SettingsAiPanel {...ai} />
+        <SettingsPipelinePanel {...pipeline} />
       </section>
 
       <section className="settings-admin-section">

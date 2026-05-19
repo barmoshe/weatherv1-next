@@ -122,6 +122,7 @@ export async function GET(req: NextRequest) {
     },
     providers: {
       llm_pref: process.env.LLM_PROVIDER ?? "auto",
+      plan_pipeline: process.env.PLAN_PIPELINE_VER2 === "1" ? "ver2" : "ver1",
       llm_active: pickActiveLlm(),
       llm_model: pickActiveLlmModel(),
       // Transcription is OpenAI cloud Whisper only. The active provider is

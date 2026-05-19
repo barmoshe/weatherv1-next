@@ -43,6 +43,13 @@ export interface DesktopSettingsUpdate {
   ffmpegPath?: string;
   ffprobePath?: string;
   llmProvider?: LlmProviderPreference;
+  /**
+   * Plan-pipeline selection. `false` (default) uses the original
+   * validator-based pipeline; `true` enables the retrieve-then-pick ver2
+   * pipeline. Persisted in `settings.json` and injected as
+   * `PLAN_PIPELINE_VER2=1` for the Next child on save.
+   */
+  planPipelineVer2?: boolean;
   r2Enabled?: boolean;
   r2GatewayUrl?: string;
   r2TenantId?: string;

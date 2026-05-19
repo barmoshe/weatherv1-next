@@ -556,6 +556,9 @@ ipcMain.handle("desktop:saveSettings", async (_e, update) => {
   if (update && typeof update.llmProvider === "string" && llmProviders.has(update.llmProvider)) {
     patch.llmProvider = update.llmProvider;
   }
+  if (update && typeof update.planPipelineVer2 === "boolean") {
+    patch.planPipelineVer2 = update.planPipelineVer2;
+  }
   if (update && typeof update.r2Enabled === "boolean") {
     patch.r2 = { ...(patch.r2 || {}), enabled: update.r2Enabled };
   }
