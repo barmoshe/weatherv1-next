@@ -35,7 +35,7 @@ function pickerFailureResponse(pickerStatus: PickerRunStatus, status = 502) {
 }
 
 function isVer2Enabled(): boolean {
-  return process.env.PLAN_PIPELINE_Ver2 === "1";
+  return process.env.PLAN_PIPELINE_VER2 === "1";
 }
 
 function generateRenderSeed(): number {

@@ -317,7 +317,7 @@ const ScenePlanResponseSchema = z.object({
  * season_mood / visual_role / scene_fit / avoid_for) per scene so the
  * downstream retrieval step can build a relevant shortlist for the picker.
  */
-export const DEFAULT_SCENE_PROMPT_Ver2 = `You are a narrative editor for short Hebrew weather-forecast videos. Given a transcript and Whisper sentence segments, split the narration into ordered SCENES — editorial beats the picker will illustrate — and for each scene, emit the catalog-concept query that should retrieve relevant clips.
+export const DEFAULT_SCENE_PROMPT_VER2 = `You are a narrative editor for short Hebrew weather-forecast videos. Given a transcript and Whisper sentence segments, split the narration into ordered SCENES — editorial beats the picker will illustrate — and for each scene, emit the catalog-concept query that should retrieve relevant clips.
 
 A scene is one visual moment. Scene boundaries MUST come from the provided Whisper segment boundaries (never invent mid-sentence cuts).
 
@@ -396,7 +396,7 @@ export async function planScenesVer2(
   if (!transcriptText?.trim() || !durationSec) return { scenes: [] };
 
   const provider = getLlmProvider();
-  const systemPrompt = customPrompt?.trim() ? customPrompt.trim() : DEFAULT_SCENE_PROMPT_Ver2;
+  const systemPrompt = customPrompt?.trim() ? customPrompt.trim() : DEFAULT_SCENE_PROMPT_VER2;
 
   const indexedSegments = whisperSegments.map((seg, i) => {
     const text = String(seg.text ?? "").trim();

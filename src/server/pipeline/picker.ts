@@ -693,7 +693,7 @@ export async function pickSegmentsDetailed(
  * `self_audit.concerns` so any tradeoffs it made (e.g. reusing a clip from a
  * thin shortlist) surface to the UI without forcing a re-pick loop.
  */
-export const SCENE_AWARE_SYSTEM_PROMPT_Ver2 = `You are a video editor for short Hebrew weather forecasts. Each scene already has a relevance-scored shortlist of catalog candidates (top-K=15). Your job: pick 1–2 segments per scene from its shortlist (\`pick_count_hint\` is the planner's suggestion).
+export const SCENE_AWARE_SYSTEM_PROMPT_VER2 = `You are a video editor for short Hebrew weather forecasts. Each scene already has a relevance-scored shortlist of catalog candidates (top-K=15). Your job: pick 1–2 segments per scene from its shortlist (\`pick_count_hint\` is the planner's suggestion).
 
 DECIDE TIMELINE-WIDE, NOT SCENE-BY-SCENE. Read every scene and every shortlist before committing any pick. Anti-repeat, parent-file diversity, mood arc, and weather coherence are global properties of THIS timeline — not per-scene rules.
 
@@ -723,7 +723,7 @@ OUTPUT — return a JSON object with:
 
 Every \`segment_id\` MUST come from that scene's shortlist; segments not in the shortlist are not in the catalog as far as this turn is concerned.`;
 
-const TIMELINE_PICK_Ver2_SCHEMA_DESCRIPTION =
+const TIMELINE_PICK_VER2_SCHEMA_DESCRIPTION =
   "Hebrew weather edit: ordered timeline picks chosen from per-scene shortlists, with timeline-wide diversity decided by the model. No downstream validator — the model owns editorial judgment, surfacing tradeoffs in self_audit.concerns.";
 
 function buildShortlistPickResponseSchema(shortlistSegmentIds: readonly string[]) {
@@ -774,7 +774,7 @@ export async function pickWithShortlists(
   const provider = getLlmProvider();
   const systemPrompt = opts.customPrompt?.trim()
     ? opts.customPrompt.trim()
-    : SCENE_AWARE_SYSTEM_PROMPT_Ver2;
+    : SCENE_AWARE_SYSTEM_PROMPT_VER2;
 
   // Slim shortlists for the payload — keep the fields the picker reasons over,
   // drop server-side metadata.
@@ -845,7 +845,7 @@ export async function pickWithShortlists(
       userPayload,
       schema,
       schemaName: "timeline_pick_ver2_response",
-      schemaDescription: TIMELINE_PICK_Ver2_SCHEMA_DESCRIPTION,
+      schemaDescription: TIMELINE_PICK_VER2_SCHEMA_DESCRIPTION,
       options: {
         temperature: 0.8,
         cacheSystemPrompt: !opts.customPrompt,
