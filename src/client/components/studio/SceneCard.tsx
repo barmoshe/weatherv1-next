@@ -24,64 +24,26 @@ const KIND_LABEL_HE: Record<string, string> = {
 
 type PickerState = { mode: PickerMode; pickIndex?: number };
 
+function FolderIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+    </svg>
+  );
+}
+
 export function SceneCard({ scene, picks, jobId, fullTimeline, fullScenes, validator, onReplan }: SceneCardProps) {
-  const [loading, setLoading] = useState(false);
-  const [busyPickIndex, setBusyPickIndex] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState<PickerState | null>(null);
-
-  async function postReplan(body: Record<string, unknown>) {
-    const res = await fetch("/api/replan_scene", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json() as {
-      success: boolean;
-      error?: string;
-      scenes?: Scene[];
-      timeline?: Record<string, unknown>[];
-      validator?: Record<string, unknown>;
-    };
-    if (!data.success) throw new Error(data.error ?? "Failed");
-    onReplan({
-      scenes: data.scenes ?? fullScenes,
-      timeline: data.timeline ?? fullTimeline,
-      validator: data.validator ?? {},
-    });
-  }
-
-  const handleReplan = async () => {
-    if (!jobId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await postReplan({ job_id: jobId, scenes: fullScenes, timeline: fullTimeline, scene_idx: scene.idx });
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePickAI = async (pickIndex: number) => {
-    if (!jobId) return;
-    setBusyPickIndex(pickIndex);
-    setError(null);
-    try {
-      await postReplan({
-        job_id: jobId,
-        scenes: fullScenes,
-        timeline: fullTimeline,
-        scene_idx: scene.idx,
-        pick_index: pickIndex,
-      });
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setBusyPickIndex(null);
-    }
-  };
 
   const kind = String(scene.kind || "prose");
   const kindClass = kind === "list" ? "is-list" : kind === "transition" ? "is-transition" : "";
@@ -100,7 +62,6 @@ export function SceneCard({ scene, picks, jobId, fullTimeline, fullScenes, valid
   ].filter(Boolean).join(" ");
 
   const keywords = (scene.keywords ?? []).map((k) => labelFor(String(k).toLowerCase()));
-  const sceneBusy = loading || busyPickIndex !== null;
   const excludeForScenePicker = picks.map((p) => String(p.segment_id ?? "")).filter(Boolean);
 
   return (
@@ -113,22 +74,13 @@ export function SceneCard({ scene, picks, jobId, fullTimeline, fullScenes, valid
         <div className="scene-actions">
           <button
             type="button"
-            className="scene-actions__btn scene-actions__btn--ai"
-            data-reroll-scene={scene.idx}
-            disabled={sceneBusy || !jobId}
-            onClick={handleReplan}
-            title="החלף את כל הקליפים בסצינה באמצעות AI"
-          >
-            {loading ? "⟳ מחפש…" : "✨ החלף עם AI"}
-          </button>
-          <button
-            type="button"
-            className="scene-actions__btn scene-actions__btn--manual"
-            disabled={sceneBusy || !jobId}
+            className="scene-actions__btn"
+            disabled={!jobId}
             onClick={() => setPickerOpen({ mode: "scene-fill" })}
             title="בחר קליפ מהקטלוג ידנית"
           >
-            📁 בחר ידנית
+            <FolderIcon />
+            בחר ידנית
           </button>
         </div>
       </div>
@@ -141,17 +93,15 @@ export function SceneCard({ scene, picks, jobId, fullTimeline, fullScenes, valid
           ))}
         </div>
       )}
-      {error && <div className="scene-error">{error}</div>}
       <div className="scene-picks">
         {picks.length === 0 ? (
-          <div className="scene-empty-msg">אין קליפים — לחץ &quot;✨ החלף עם AI&quot; או &quot;📁 בחר ידנית&quot;</div>
+          <div className="scene-empty-msg">אין קליפים — לחץ &quot;בחר ידנית&quot; להוספת קליפ</div>
         ) : (
           picks.map((p, i) => {
             const id = String(p.segment_id ?? p.video_id ?? "?");
             const pickRange = `${formatTime(Number(p.video_start ?? 0), 1)}–${formatTime(Number(p.video_end ?? 0), 1)}`;
             const poster = segmentPosterUrl(p as { segment_id?: unknown; video_id?: unknown });
             const why = pickDisplayReason(p);
-            const isBusy = busyPickIndex === i;
             return (
               <div key={i} className="scene-pick">
                 {poster ? (
@@ -172,23 +122,13 @@ export function SceneCard({ scene, picks, jobId, fullTimeline, fullScenes, valid
                 <div className="scene-pick__actions">
                   <button
                     type="button"
-                    className="scene-pick__action scene-pick__action--ai"
-                    aria-label="החלף קליפ זה עם AI"
-                    title="החלף קליפ זה עם AI"
-                    disabled={sceneBusy || !jobId}
-                    onClick={() => handlePickAI(i)}
-                  >
-                    {isBusy ? "⟳" : "✨"}
-                  </button>
-                  <button
-                    type="button"
-                    className="scene-pick__action scene-pick__action--manual"
+                    className="scene-pick__action"
                     aria-label="בחר קליפ זה ידנית"
                     title="בחר קליפ זה ידנית"
-                    disabled={sceneBusy || !jobId}
+                    disabled={!jobId}
                     onClick={() => setPickerOpen({ mode: "pick-swap", pickIndex: i })}
                   >
-                    📁
+                    <FolderIcon />
                   </button>
                 </div>
               </div>

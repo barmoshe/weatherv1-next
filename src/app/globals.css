@@ -3744,7 +3744,7 @@
             padding: 0.5rem;
             font-style: italic;
         }
-        /* ── Scene-level decide actions (AI / Manual) ───────────────── */
+        /* ── Scene-level manual pick action ─────────────────────────── */
         .scene-actions {
             display: flex;
             gap: 0.35rem;
@@ -3754,30 +3754,21 @@
             font: inherit;
             font-size: 0.78rem;
             line-height: 1.1;
-            padding: 0.22rem 0.6rem;
+            padding: 0.28rem 0.7rem;
             border-radius: 6px;
             cursor: pointer;
-            border: 1.5px solid transparent;
-            transition: filter 0.15s ease, transform 0.05s ease;
-        }
-        .scene-actions__btn[disabled] { opacity: 0.5; cursor: progress; }
-        .scene-actions__btn:not([disabled]):hover { filter: brightness(0.95); }
-        .scene-actions__btn:not([disabled]):active { transform: translateY(1px); }
-        .scene-actions__btn--ai {
-            background: var(--v1-danger, #d23f3f);
-            color: #fff;
-        }
-        .scene-actions__btn--manual {
-            background: var(--v1-paper, #fff);
-            color: var(--v1-ink, #000);
-            border-color: var(--v1-ink, #000);
-        }
-        .scene-actions__btn--manual:not([disabled]):hover {
+            border: 1.5px solid var(--v1-ink, #000);
             background: var(--v1-ink, #000);
             color: var(--v1-paper, #fff);
-            filter: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: filter 0.15s ease, transform 0.05s ease;
         }
-        /* ── Per-pick swap actions (small icon buttons inside .scene-pick) ── */
+        .scene-actions__btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+        .scene-actions__btn:not([disabled]):hover { filter: brightness(1.15); }
+        .scene-actions__btn:not([disabled]):active { transform: translateY(1px); }
+        /* ── Per-pick manual swap action (icon button inside .scene-pick) ── */
         .scene-pick { grid-template-columns: 4.5rem 1fr auto; }
         .scene-pick__actions {
             display: flex;
@@ -3790,33 +3781,20 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.95rem;
             line-height: 1;
             border-radius: 6px;
             cursor: pointer;
-            border: 1px solid transparent;
+            border: 1px solid rgba(0, 0, 0, 0.2);
             background: transparent;
+            color: var(--v1-ink, #000);
             transition: background 0.15s ease, color 0.15s ease, transform 0.05s ease;
         }
-        .scene-pick__action[disabled] { opacity: 0.4; cursor: progress; }
-        .scene-pick__action:not([disabled]):hover { transform: translateY(-1px); }
-        .scene-pick__action--ai {
-            color: var(--v1-danger, #d23f3f);
-            border-color: rgba(210, 63, 63, 0.35);
-        }
-        .scene-pick__action--ai:not([disabled]):hover {
-            background: var(--v1-danger, #d23f3f);
-            color: #fff;
-            border-color: var(--v1-danger, #d23f3f);
-        }
-        .scene-pick__action--manual {
-            color: var(--v1-ink, #000);
-            border-color: rgba(0, 0, 0, 0.2);
-        }
-        .scene-pick__action--manual:not([disabled]):hover {
+        .scene-pick__action[disabled] { opacity: 0.4; cursor: not-allowed; }
+        .scene-pick__action:not([disabled]):hover {
             background: var(--v1-ink, #000);
             color: var(--v1-paper, #fff);
             border-color: var(--v1-ink, #000);
+            transform: translateY(-1px);
         }
         /* ── Catalog picker modal ───────────────────────────────────── */
         .catalog-picker { display: flex; flex-direction: column; gap: 0.85rem; padding: 0; }
