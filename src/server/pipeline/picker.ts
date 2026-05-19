@@ -12,6 +12,7 @@ import type {
   ParsedVideo,
   SegmentConcepts,
   SegmentMapEntry,
+  ShortlistEntry,
 } from "@/shared/types";
 import type { UsageCallRecord, LlmCallUsage } from "@/shared/usage";
 import { validateAndSwap, type MutablePick, type ValidatorBundle } from "@/server/pipeline/validator";
@@ -675,6 +676,240 @@ export async function pickSegmentsDetailed(
   }
 
   throw new Error("pickSegmentsDetailed: retry loop exited without return");
+}
+
+// ---------------------------------------------------------------------------
+// V2 — shortlist-driven picker (single LLM call, full timeline in view)
+// ---------------------------------------------------------------------------
+
+/**
+ * V2 system prompt — assumes the picker sees a per-scene shortlist (≤12
+ * candidates, tier-annotated) instead of the full catalog. Editorial
+ * judgement (weather > geography, polarity, parent-file diversity, sub-range
+ * picking) stays here; structural gates (mood, clothing, min duration) are
+ * already enforced by retrieval, so they're dropped from the prompt.
+ *
+ * No retries. No fallback prompt. One call. The model also emits
+ * `self_audit.concerns` so any tradeoffs it made (e.g. reusing a clip from a
+ * thin shortlist) surface to the UI without forcing a re-pick loop.
+ */
+export const SCENE_AWARE_SYSTEM_PROMPT_V2 = `You are a video editor for short Hebrew weather forecasts. Each scene already has a relevance-scored shortlist of catalog candidates (top-K=12). Your job: pick 1–2 segments per scene from its shortlist (\`pick_count_hint\` is the planner's suggestion).
+
+DECIDE TIMELINE-WIDE, NOT SCENE-BY-SCENE. Read every scene and every shortlist before committing any pick. Anti-repeat, parent-file diversity, mood arc, and weather coherence are global properties of THIS timeline — not per-scene rules.
+
+SHORTLIST ANATOMY — each row has: \`segment_id\`, \`clip_id\` (parent file), \`duration\`, \`tags\`, \`description\`, \`concepts\` (weather / season_mood / visual_role / scene_fit / avoid_for), \`score\` (relevance), \`tier\` (1=best 20%, 5=bottom 20%). Lower tier = more relevant. Treat candidates in the same tier as roughly interchangeable on relevance; break ties on diversity and the scene's \`variety_intent\`.
+
+EDITORIAL RULES
+
+1. **Pick count.** Follow \`pick_count_hint\` unless you have a strong editorial reason to deviate. Heterogeneous list-scenes (≥2 regions with different weather) typically want 2 picks; transitions and short ambient scenes want 1.
+
+2. **Coverage.** For each pick, set \`audio_start\`/\`audio_end\` to the audio sub-range it covers (split the scene's range when picking 2). Each picked segment's \`duration\` should ideally cover its sub-range; if it doesn't, a downstream mechanical step will fill the residual from the shortlist — don't worry about it here.
+
+3. **Weather > geography.** When narration mentions a weather state (גשם / שמש / שלג / סופה / חם / קר / שרב), the picked segment's \`concepts.weather\` MUST match. Wrong-weather + right-place is worse than right-weather + generic-place.
+
+4. **Polarity (ending vs ongoing).** If narration says a weather state is *ending* (\`מסתיים\`, \`ירידה\`, \`חזרה\`, \`התקררות\`), pick a segment illustrating the **new** state (the calm/cool one), not the ending state. The planner usually sets \`desired_concepts.avoid_for\` correctly — trust the shortlist scoring.
+
+5. **Anti-repeat (timeline-wide).** A \`segment_id\` should not appear twice across the timeline unless the shortlist clearly forces it. A \`clip_id\` (parent file) should default to once per timeline; appear twice only when two distinct \`segment_id\` rows on the same file read as visibly different shots (different tags + description). Three picks from one \`clip_id\` is never correct.
+
+6. **Mood arc.** Honour \`scene.mood\`. The shortlist already gates obviously incompatible candidates, but a calm scene should still avoid the most dramatic remaining option, and vice versa.
+
+7. **Sub-range.** Default \`video_start\` = the picked segment's \`start_sec\`, \`video_end\` = \`start_sec\` + (audio_end - audio_start). Only deviate if you specifically want a tail of the segment.
+
+8. **Variety honesty.** When a scene's shortlist offers genuinely different visual ideas at the same tier, prefer the less-obvious one — the planner's \`variety_intent\` tells you what feel this scene wants.
+
+OUTPUT — return a JSON object with:
+  - \`timeline\`: ordered picks across all scenes. Each pick: \`{ scene_idx, segment_id, audio_start, audio_end, video_start?, video_end?, reason }\` where \`reason\` is one short Hebrew sentence explaining what in this segment supports the scene.
+  - \`self_audit\`: \`{ concerns: string[] }\` — your own flags about this plan (anything you'd want a human reviewer to know — e.g. "scene 3 reused IB109 because alternatives were lower-tier heat duplicates"). Empty array is fine when the plan is clean.
+
+Every \`segment_id\` MUST come from that scene's shortlist; segments not in the shortlist are not in the catalog as far as this turn is concerned.`;
+
+const TIMELINE_PICK_V2_SCHEMA_DESCRIPTION =
+  "Hebrew weather edit: ordered timeline picks chosen from per-scene shortlists, with timeline-wide diversity decided by the model. No downstream validator — the model owns editorial judgment, surfacing tradeoffs in self_audit.concerns.";
+
+function buildShortlistPickResponseSchema(shortlistSegmentIds: readonly string[]) {
+  const idSchema =
+    shortlistSegmentIds.length > 0
+      ? z.enum(shortlistSegmentIds as [string, ...string[]])
+      : z.string();
+  return z.object({
+    timeline: z.array(
+      z.object({
+        scene_idx: z.number(),
+        segment_id: idSchema,
+        audio_start: z.number(),
+        audio_end: z.number(),
+        video_start: z.number().optional(),
+        video_end: z.number().optional(),
+        reason: z.string().optional().default(""),
+      }),
+    ),
+    self_audit: z
+      .object({
+        concerns: z.array(z.string()).default([]),
+      })
+      .optional(),
+  });
+}
+
+export interface PickV2Options {
+  customPrompt?: string;
+  renderSeed: number;
+  shortlistsByScene: Record<number, ShortlistEntry[]>;
+  thinScenes?: number[];
+  usageAttemptPrefix?: string;
+}
+
+export interface PickV2Result {
+  timeline: TimelinePick[];
+  picker_status: PickerRunStatus;
+  picker_usages: UsageCallRecord[];
+  self_audit: { concerns: string[] };
+}
+
+export async function pickWithShortlists(
+  scenes: Scene[],
+  durationSec: number,
+  opts: PickV2Options,
+): Promise<PickV2Result> {
+  const provider = getLlmProvider();
+  const systemPrompt = opts.customPrompt?.trim()
+    ? opts.customPrompt.trim()
+    : SCENE_AWARE_SYSTEM_PROMPT_V2;
+
+  // Slim shortlists for the payload — keep the fields the picker reasons over,
+  // drop server-side metadata.
+  const shortlistsForLlm: Record<number, Array<Record<string, unknown>>> = {};
+  const allShortlistIds = new Set<string>();
+  for (const scene of scenes) {
+    const list = opts.shortlistsByScene[scene.idx] ?? [];
+    shortlistsForLlm[scene.idx] = list.map((s) => {
+      allShortlistIds.add(s.segment_id);
+      const row: Record<string, unknown> = {
+        segment_id: s.segment_id,
+        clip_id: s.clip_id,
+        duration: s.duration,
+        orientation: s.orientation,
+        tier: s.tier,
+        score: s.score,
+      };
+      if (s.source) row.source = s.source;
+      if (s.tags.length) row.tags = s.tags;
+      if (s.description) row.description = s.description;
+      if (s.concepts) row.concepts = s.concepts;
+      return row;
+    });
+  }
+
+  const userPayload = JSON.stringify(
+    {
+      render_seed: opts.renderSeed,
+      duration_sec: durationSec,
+      scenes: scenes.map((s) => ({
+        idx: s.idx,
+        start_sec: s.start_sec,
+        end_sec: s.end_sec,
+        duration_sec: Math.round(Math.max(0, s.end_sec - s.start_sec) * 100) / 100,
+        title_he: s.title_he ?? "",
+        narration: s.narration ?? "",
+        keywords: s.keywords ?? [],
+        mood: s.mood ?? null,
+        kind: s.kind ?? "prose",
+        heterogeneous: s.heterogeneous ?? false,
+        desired_concepts: s.desired_concepts,
+        desired_keywords: s.desired_keywords ?? [],
+        pick_count_hint: s.pick_count_hint ?? 1,
+        variety_intent: s.variety_intent ?? "",
+        shortlist_thin: (opts.thinScenes ?? []).includes(s.idx),
+      })),
+      shortlists: shortlistsForLlm,
+    },
+    null,
+    2,
+  );
+
+  const prefix = opts.usageAttemptPrefix ?? "picker_v2";
+  const usageStep = `${prefix}_1`;
+  const baseStatus = (): Omit<PickerRunStatus, "state" | "usable_picks"> => ({
+    provider: provider.id,
+    model: provider.model,
+    catalog_rows: allShortlistIds.size,
+    scenes_requested: scenes.length,
+    payload_bytes: Buffer.byteLength(userPayload, "utf8"),
+  });
+
+  const schema = buildShortlistPickResponseSchema([...allShortlistIds]);
+
+  try {
+    const { data, usage } = await provider.completeJson({
+      systemPrompt,
+      userPayload,
+      schema,
+      schemaName: "timeline_pick_v2_response",
+      schemaDescription: TIMELINE_PICK_V2_SCHEMA_DESCRIPTION,
+      options: {
+        temperature: 0.8,
+        cacheSystemPrompt: !opts.customPrompt,
+      },
+    });
+
+    const rawTimeline = (data.timeline as TimelinePick[]) ?? [];
+    backfillSceneIdx(rawTimeline, scenes);
+    const usageRecord: UsageCallRecord = { step: usageStep, ...usage };
+    const selfAudit: { concerns: string[] } = {
+      concerns: data.self_audit?.concerns ?? [],
+    };
+
+    if (!rawTimeline.length) {
+      return {
+        timeline: [],
+        picker_usages: [usageRecord],
+        self_audit: selfAudit,
+        picker_status: {
+          ...baseStatus(),
+          state: "empty",
+          usable_picks: 0,
+          error_code: "picker_empty",
+          error: "The v2 picker returned an empty timeline.",
+          llm_attempts_used: 1,
+        },
+      };
+    }
+
+    return {
+      timeline: rawTimeline,
+      picker_usages: [usageRecord],
+      self_audit: selfAudit,
+      picker_status: {
+        ...baseStatus(),
+        state: "ok",
+        usable_picks: rawTimeline.length,
+        llm_attempts_used: 1,
+      },
+    };
+  } catch (err) {
+    if (err instanceof LlmProviderError) {
+      if (err.code === "llm_invalid_key" || err.code === "llm_quota_exceeded") throw err;
+      const status: PickerRunStatus = {
+        ...baseStatus(),
+        state: "failed",
+        usable_picks: 0,
+        error_code: err.code,
+        error: sanitizePickerError(err.message),
+        llm_attempts_used: 1,
+      };
+      throw new PickerFailureError("Picker v2 LLM call failed", status, err);
+    }
+    const msg = err instanceof Error ? err.message : String(err);
+    const status: PickerRunStatus = {
+      ...baseStatus(),
+      state: "failed",
+      usable_picks: 0,
+      error_code: "llm_unknown",
+      error: sanitizePickerError(msg),
+      llm_attempts_used: 1,
+    };
+    throw new PickerFailureError("Picker v2 LLM call failed", status, err);
+  }
 }
 
 // ---------------------------------------------------------------------------

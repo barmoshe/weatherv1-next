@@ -306,6 +306,162 @@ const ScenePlanResponseSchema = z.object({
   scenes: z.array(z.record(z.unknown())).default([]),
 });
 
+// ---------------------------------------------------------------------------
+// V2 — concept-forecasting planner (no prescriptive scene-count table, no seed)
+// ---------------------------------------------------------------------------
+
+/**
+ * V2 prompt: editorial intent only — no duration→scene-count table, no
+ * multi-region forced-split rule. The model decides the count from the
+ * narration's natural beats and emits `desired_concepts` (weather /
+ * season_mood / visual_role / scene_fit / avoid_for) per scene so the
+ * downstream retrieval step can build a relevant shortlist for the picker.
+ */
+export const DEFAULT_SCENE_PROMPT_V2 = `You are a narrative editor for short Hebrew weather-forecast videos. Given a transcript and Whisper sentence segments, split the narration into ordered SCENES — editorial beats the picker will illustrate — and for each scene, emit the catalog-concept query that should retrieve relevant clips.
+
+A scene is one visual moment. Scene boundaries MUST come from the provided Whisper segment boundaries (never invent mid-sentence cuts).
+
+GUIDING INTENT (no arithmetic):
+  - Cut where the narration's beat shifts — a new region, a new weather state, a new time-of-day, a change in tone. Merge brief connectives (≤2s) into a neighbour.
+  - Pick the number of scenes that feels like cutting a film. A homogeneous forecast can be 2–3 scenes; a multi-region day with shifting weather can be 6–8. Do not undersplit a multi-region narration into one super-scene.
+  - Each scene should feel like one shot's worth of content. If two regions are mentioned with simultaneously different weather, prefer two scenes (or \`kind: "list"\` with \`heterogeneous: true\`) rather than one ambient catch-all.
+
+Per scene return:
+  - idx: 0-based integer in narration order
+  - start_sec / end_sec: floats from Whisper segment boundaries
+  - title_he: ≤8 Hebrew words summarizing the visual moment
+  - narration: merged Hebrew text from the included Whisper segments
+  - keywords: 2–4 visual hints (Hebrew/English)
+  - mood: cheerful / calm / dramatic / gloomy (optional)
+  - kind: "prose" | "list" | "transition"
+  - heterogeneous: true ONLY when \`kind: "list"\` AND the scene enumerates ≥2 geographic regions
+  - whisper_beat_indices: integer indices into the input Whisper segments
+  - desired_concepts: object with optional arrays \`weather\`, \`season_mood\`, \`visual_role\`, \`scene_fit\`, \`avoid_for\` — drawn from the Hebrew concept vocab (e.g. weather: שרב, חם, בהיר, מעונן, גשם, רוח, ברד, שלג). These are the retrieval keys for this scene's clip shortlist; be specific. Use \`avoid_for\` to anchor negative space (e.g. when narration says a heat wave is *ending*, set \`avoid_for: ["שרב","חם"]\` so heat clips are penalised in retrieval).
+  - desired_keywords: 3–6 free-form Hebrew/English visual descriptors complementing \`desired_concepts\` (these feed BM25 on the catalog's descriptions).
+  - pick_count_hint: 1 or 2 — your editorial call on how many clips this scene wants (longer scenes and heterogeneous scenes typically want 2).
+  - variety_intent: one short Hebrew sentence describing the feel/angle this scene wants (e.g. "פתיחה רגועה — נוף עירוני שקט מתחת לשמיים אפורים"). The downstream picker uses this to break ties.
+
+OUTPUT: a single JSON object with key \`scenes\` containing an ordered array. Scenes cover the full duration with no gaps and no overlap.`;
+
+const ScenePlanResponseV2Schema = z.object({
+  scenes: z.array(z.record(z.unknown())).default([]),
+});
+
+function coerceStringList(value: unknown, max = 8): string[] {
+  if (!value) return [];
+  const out: string[] = [];
+  const items = Array.isArray(value) ? value : [value];
+  for (const item of items) {
+    const s = String(item ?? "").trim();
+    if (s) out.push(s);
+  }
+  return [...new Set(out)].slice(0, max);
+}
+
+function coerceDesiredConcepts(value: unknown): Scene["desired_concepts"] | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const v = value as Record<string, unknown>;
+  const out: Record<string, string[]> = {};
+  for (const key of ["weather", "season_mood", "visual_role", "scene_fit", "avoid_for"] as const) {
+    const list = coerceStringList(v[key], 8);
+    if (list.length) out[key] = list;
+  }
+  return Object.keys(out).length ? (out as Scene["desired_concepts"]) : undefined;
+}
+
+function coercePickCountHint(value: unknown): 1 | 2 | undefined {
+  const n = parseInt(String(value), 10);
+  if (n === 1 || n === 2) return n;
+  return undefined;
+}
+
+function applyV2Fields(scene: Scene, raw: Record<string, unknown>): Scene {
+  const desired = coerceDesiredConcepts(raw.desired_concepts);
+  if (desired) scene.desired_concepts = desired;
+  const keywords = coerceStringList(raw.desired_keywords, 6);
+  if (keywords.length) scene.desired_keywords = keywords;
+  const hint = coercePickCountHint(raw.pick_count_hint);
+  if (hint) scene.pick_count_hint = hint;
+  const variety = String(raw.variety_intent ?? "").trim();
+  if (variety) scene.variety_intent = variety.length > 200 ? `${variety.slice(0, 197)}…` : variety;
+  return scene;
+}
+
+export async function planScenesV2(
+  transcriptText: string,
+  whisperSegments: WhisperSegment[],
+  durationSec: number,
+  customPrompt?: string,
+): Promise<{ scenes: Scene[]; usage?: LlmCallUsage }> {
+  if (!transcriptText?.trim() || !durationSec) return { scenes: [] };
+
+  const provider = getLlmProvider();
+  const systemPrompt = customPrompt?.trim() ? customPrompt.trim() : DEFAULT_SCENE_PROMPT_V2;
+
+  const indexedSegments = whisperSegments.map((seg, i) => {
+    const text = String(seg.text ?? "").trim();
+    const regions = detectRegions(text);
+    const distinct = [...new Set(regions.map((r) => r.slug))].sort();
+    const entry: Record<string, unknown> = {
+      idx: i,
+      start: safeFloat(seg.start),
+      end: safeFloat(seg.end),
+      text,
+    };
+    if (distinct.length) {
+      entry.regions = distinct;
+      if (distinct.length >= 2) entry.multi_region = true;
+    }
+    return entry;
+  });
+
+  const payload = {
+    duration_sec: safeFloat(durationSec),
+    transcript: transcriptText,
+    whisper_segments: indexedSegments,
+  };
+
+  try {
+    const { data, usage } = await provider.completeJson({
+      systemPrompt,
+      userPayload: JSON.stringify(payload, null, 2),
+      schema: ScenePlanResponseV2Schema,
+      schemaName: "scene_plan_response_v2",
+      schemaDescription:
+        "Hebrew weather narration → ordered scenes with retrieval keys (desired_concepts, desired_keywords) for the downstream catalog-shortlist step.",
+      options: {
+        temperature: 0.5,
+        // intentionally no seed — variety across renders is a first-class requirement
+        cacheSystemPrompt: !customPrompt,
+      },
+    });
+
+    const rawScenes = data.scenes ?? [];
+    const validated = validateScenes(rawScenes, whisperSegments, durationSec);
+    // Re-attach V2 fields by matching idx in the raw response back onto validated scenes.
+    for (const scene of validated) {
+      const raw = rawScenes.find(
+        (r) => parseInt(String((r as Record<string, unknown>).idx ?? -1), 10) === scene.idx,
+      ) as Record<string, unknown> | undefined;
+      if (raw) applyV2Fields(scene, raw);
+    }
+    return { scenes: validated, usage };
+  } catch (err) {
+    if (err instanceof LlmProviderError) {
+      if (err.code === "llm_invalid_key" || err.code === "llm_quota_exceeded") throw err;
+      console.warn(`planScenesV2: LLM call failed: ${err.message}`);
+      return { scenes: [] };
+    }
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`planScenesV2: LLM call failed: ${msg}`);
+    return { scenes: [] };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// V1 — original planner
+// ---------------------------------------------------------------------------
+
 export async function planScenes(
   transcriptText: string,
   whisperSegments: WhisperSegment[],
