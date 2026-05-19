@@ -22,7 +22,7 @@ import type {
 import { buildBm25Index, bm25Score, tokenize, type Bm25Doc } from "./bm25";
 import { isClothingText, isClothingTag } from "./beat-tagger";
 
-const SHORTLIST_K_DEFAULT = 12;
+const SHORTLIST_K_DEFAULT = 15;
 const MIN_CLIP_DURATION = 3.0;
 const THIN_SHORTLIST_CLIP_THRESHOLD = 4;
 

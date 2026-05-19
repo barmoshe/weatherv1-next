@@ -107,10 +107,10 @@ describe("retrieveCandidates — variety", () => {
     expect(distinct.size).toBeGreaterThanOrEqual(3);
   });
 
-  it("top-K=12 default; relevance preserved across tiers", () => {
+  it("top-K=15 default; relevance preserved across tiers", () => {
     const videos = buildCatalog();
     const { shortlist } = retrieveCandidates(baseScene, videos, { renderSeed: 1 });
-    expect(shortlist.length).toBeLessThanOrEqual(12);
+    expect(shortlist.length).toBeLessThanOrEqual(15);
     expect(shortlist.length).toBeGreaterThan(0);
     // Tiers must be monotonic in the returned order (1, 1, 2, 2, ...) since
     // we flatten buckets in tier order.

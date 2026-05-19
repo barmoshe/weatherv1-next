@@ -693,7 +693,7 @@ export async function pickSegmentsDetailed(
  * `self_audit.concerns` so any tradeoffs it made (e.g. reusing a clip from a
  * thin shortlist) surface to the UI without forcing a re-pick loop.
  */
-export const SCENE_AWARE_SYSTEM_PROMPT_V2 = `You are a video editor for short Hebrew weather forecasts. Each scene already has a relevance-scored shortlist of catalog candidates (top-K=12). Your job: pick 1–2 segments per scene from its shortlist (\`pick_count_hint\` is the planner's suggestion).
+export const SCENE_AWARE_SYSTEM_PROMPT_V2 = `You are a video editor for short Hebrew weather forecasts. Each scene already has a relevance-scored shortlist of catalog candidates (top-K=15). Your job: pick 1–2 segments per scene from its shortlist (\`pick_count_hint\` is the planner's suggestion).
 
 DECIDE TIMELINE-WIDE, NOT SCENE-BY-SCENE. Read every scene and every shortlist before committing any pick. Anti-repeat, parent-file diversity, mood arc, and weather coherence are global properties of THIS timeline — not per-scene rules.
 
