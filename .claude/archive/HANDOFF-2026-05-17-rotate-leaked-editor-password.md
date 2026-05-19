@@ -1,8 +1,18 @@
-# Handoff — rotate leaked `EDITOR_PASSWORD` + scrub in-tree references
+# [COMPLETED] Handoff — rotate leaked `EDITOR_PASSWORD` + scrub in-tree references
 
-**Date:** 2026-05-17
+**Date:** 2026-05-17 (completed 2026-05-19)
 **Owner:** next local agent (rotation must happen from a trusted machine)
 **Severity:** medium — secret exposure, no signs of misuse yet
+
+> **Resolution (2026-05-19):** `EDITOR_PASSWORD` rotated in GH secret + Worker
+> binding; in-tree reference scrubbed via [PR #9](https://github.com/barmoshe/weatherv1-next/pull/9);
+> `rotate-worker-secrets.yml` verify step hardened in the same PR; desktop
+> `v0.3.15` released with the new Argon2id hash (Desktop + publish-to-R2 both green;
+> `/downloads/windows/{latest,v0.3.15}/WeatherV1-Setup.exe` → 200). Leaked branch
+> `claude/premiere-render-integration-research-YWttn` left in place — its commits
+> are ancestors of `main` so deletion would be a no-op; history purge skipped
+> per handoff guidance (rotation makes the value worthless). User to mark
+> GitGuardian alert as revoked.
 **Trigger:** GitGuardian alert "Curl Username Password" on
 `barmoshe/weatherv1-next`, commit `632b9af`, detected 2026-05-17 09:48 UTC.
 **Runbook to follow:** [`docs/RUNBOOK_WORKER_ROTATION.md`](../docs/RUNBOOK_WORKER_ROTATION.md)
