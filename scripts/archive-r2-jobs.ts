@@ -33,7 +33,7 @@
  *   R2_GATEWAY_URL=https://…
  *   R2_TENANT_ID=…
  *   R2_APP_USERNAME=v1editor
- *   R2_APP_PASSWORD=<unified editor password>
+ *   EDITOR_PASSWORD=<unified editor + R2 Basic-auth password>
  */
 
 import fs from "node:fs";
@@ -55,7 +55,6 @@ process.env.R2_SYNC_ENABLED ??= "1";
 process.env.R2_GATEWAY_URL ??= PROD.gatewayUrl;
 process.env.R2_TENANT_ID ??= PROD.tenantId;
 process.env.R2_BUCKET_NAME ??= PROD.bucketName;
-process.env.R2_APP_PASSWORD ??= process.env.EDITOR_PASSWORD;
 
 import {
   deleteR2Object,

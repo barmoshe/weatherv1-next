@@ -9,7 +9,7 @@
  *   R2_GATEWAY_URL=…
  *   R2_TENANT_ID=default
  *   R2_BUCKET_NAME=…
- *   R2_APP_USERNAME / R2_APP_PASSWORD
+ *   R2_APP_USERNAME / EDITOR_PASSWORD
  *
  * Usage:
  *   ./node_modules/.bin/vite-node --config vitest.config.ts scripts/pull-fixture-posters-from-r2.ts

@@ -232,7 +232,7 @@ async function main(): Promise<void> {
   }
 
   if (!r2Configured()) {
-    throw new Error("R2 is not configured in this process; set R2_SYNC_ENABLED, R2_GATEWAY_URL, R2_TENANT_ID, R2_APP_USERNAME, and R2_APP_PASSWORD before --push-r2");
+    throw new Error("R2 is not configured in this process; set R2_SYNC_ENABLED, R2_GATEWAY_URL, R2_TENANT_ID, R2_APP_USERNAME, and EDITOR_PASSWORD before --push-r2");
   }
 
   try {

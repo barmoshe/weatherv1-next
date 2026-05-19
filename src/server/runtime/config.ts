@@ -93,7 +93,7 @@ export function getRuntimeConfig(): WeatherRuntimeConfig {
       gatewayUrl: normalizeOptional(process.env.R2_GATEWAY_URL),
       tenantId: normalizeOptional(process.env.R2_TENANT_ID),
       appUsername: normalizeOptional(process.env.R2_APP_USERNAME),
-      appPassword: normalizeOptional(process.env.R2_APP_PASSWORD),
+      appPassword: normalizeOptional(process.env.EDITOR_PASSWORD),
       accountId: normalizeOptional(process.env.R2_ACCOUNT_ID),
       bucketName: normalizeOptional(process.env.R2_BUCKET_NAME),
       statePath: resolveFrom(projectRoot, process.env.R2_STATE_PATH),

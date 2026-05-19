@@ -200,13 +200,16 @@ function buildChildEnv(args) {
   const openai = decryptSecret(settings.keys.openai, { safeStorage: args.safeStorage });
   const anthropic = decryptSecret(settings.keys.anthropic, { safeStorage: args.safeStorage });
   const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
-  // Fall back to build-time-baked R2 creds (emitted by
-  // scripts/emit-r2-defaults.cjs from .env) so a fresh packaged install
-  // can sync before the user signs in via the onboarding gate. Stored
-  // settings still win if present.
+  // EDITOR_PASSWORD is the canonical R2 Worker Basic-auth password (mirrors
+  // the GitHub secret of the same name and the editor-login gate; see
+  // docs/RUNBOOK_WORKER_ROTATION.md). Precedence: process.env wins so a
+  // rotated secret in .env / shell / CI is picked up immediately. Persisted
+  // settings (from the onboarding gate) and build-time-baked defaults
+  // (scripts/emit-r2-defaults.cjs) are fallbacks for the packaged app where
+  // no env var is present at runtime.
   const r2AppPassword =
+    process.env.EDITOR_PASSWORD ||
     decryptSecret(settings.keys.r2AppPassword, { safeStorage: args.safeStorage }) ||
-    process.env.R2_APP_PASSWORD ||
     R2_DEFAULTS.password ||
     null;
 
@@ -298,7 +301,7 @@ function buildChildEnv(args) {
     env.R2_TENANT_ID = r2.tenantId;
     env.R2_STATE_PATH = path.join(getUserDataDir(), "r2-sync-state.json");
     if (r2.appUsername) env.R2_APP_USERNAME = r2.appUsername;
-    if (r2AppPassword) env.R2_APP_PASSWORD = r2AppPassword;
+    if (r2AppPassword) env.EDITOR_PASSWORD = r2AppPassword;
     if (r2.bucketName) env.R2_BUCKET_NAME = r2.bucketName;
   }
 

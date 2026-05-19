@@ -30,7 +30,7 @@ const ENV_KEYS = [
   "R2_GATEWAY_URL",
   "R2_TENANT_ID",
   "R2_APP_USERNAME",
-  "R2_APP_PASSWORD",
+  "EDITOR_PASSWORD",
   "R2_STATE_PATH",
 ] as const;
 
@@ -280,7 +280,7 @@ describe("electron config R2 settings", () => {
     expect(env.R2_TENANT_ID).toBe("default");
     expect(env.R2_BUCKET_NAME).toBe("weatherv1-media");
     expect(env.R2_APP_USERNAME).toBe("v1editor");
-    expect(env.R2_APP_PASSWORD).toBe("pw");
+    expect(env.EDITOR_PASSWORD).toBe("pw");
   });
 
   it("persists R2 settings and injects username/password env without leaking the password to renderer settings", () => {
@@ -319,7 +319,7 @@ describe("electron config R2 settings", () => {
     expect(env.R2_GATEWAY_URL).toBe("https://r2.example.workers.dev");
     expect(env.R2_TENANT_ID).toBe("tenant-1");
     expect(env.R2_APP_USERNAME).toBe("weatherv1");
-    expect(env.R2_APP_PASSWORD).toBe("super-secret-pw");
+    expect(env.EDITOR_PASSWORD).toBe("super-secret-pw");
     expect(env.R2_BUCKET_NAME).toBe("weatherv1-media");
     expect(env.R2_STATE_PATH).toBe(path.join(userData, "r2-sync-state.json"));
     // Sanity: legacy single-token env must not be set.

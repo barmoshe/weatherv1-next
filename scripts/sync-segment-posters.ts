@@ -13,7 +13,7 @@
  *   R2_TENANT_ID=default
  *   R2_BUCKET_NAME=weatherv1-media
  *   R2_APP_USERNAME=<worker basic-auth user>
- *   R2_APP_PASSWORD=<worker basic-auth password>
+ *   EDITOR_PASSWORD=<worker basic-auth password — unified with editor login>
  *
  * Optional flags:
  *   --force            Re-generate posters and re-upload even if cached / present in R2
@@ -113,7 +113,7 @@ async function main(): Promise<void> {
     console.error("  R2_GATEWAY_URL");
     console.error("  R2_TENANT_ID");
     console.error("  R2_APP_USERNAME");
-    console.error("  R2_APP_PASSWORD");
+    console.error("  EDITOR_PASSWORD");
     console.error("Got:", {
       enabled: cfg.enabled,
       gatewayUrl: cfg.gatewayUrl,
