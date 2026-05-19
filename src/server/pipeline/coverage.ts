@@ -1,5 +1,5 @@
 /**
- * V2 mechanical coverage — split & residual.
+ * Ver2 mechanical coverage — split & residual.
  *
  * If an LLM-picked segment is shorter than the audio range it was assigned to,
  * keep the original at the head of the scene and insert a residual segment
@@ -7,7 +7,7 @@
  * already placed in this scene) to cover the tail. Pure video-editing math;
  * no editorial judgement, no LLM calls.
  *
- * Extracted from the v1 validator's `enforceCoverage` Strategy 2 (split +
+ * Extracted from the ver1 validator's `enforceCoverage` Strategy 2 (split +
  * residual) so we can keep that mechanic when the editorial validator goes
  * away.
  */

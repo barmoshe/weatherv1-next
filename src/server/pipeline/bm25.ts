@@ -1,8 +1,8 @@
 /**
  * Generic BM25 over a small candidate set (~hundreds of docs).
  *
- * Extracted from the v1 validator's BM25 (length-normalized so junk-tag
- * clips don't win by tag count alone) so the v2 retrieval pipeline can
+ * Extracted from the ver1 validator's BM25 (length-normalized so junk-tag
+ * clips don't win by tag count alone) so the ver2 retrieval pipeline can
  * rank candidates without dragging in the rest of the validator. Same
  * defaults — Elastic-standard k1=1.2, b=0.75.
  */

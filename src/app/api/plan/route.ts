@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   planScenes,
-  planScenesV2,
+  planScenesVer2,
   fallbackSingleScene,
 } from "@/server/pipeline/scene-planner";
 import {
@@ -34,8 +34,8 @@ function pickerFailureResponse(pickerStatus: PickerRunStatus, status = 502) {
   );
 }
 
-function isV2Enabled(): boolean {
-  return process.env.PLAN_PIPELINE_V2 === "1";
+function isVer2Enabled(): boolean {
+  return process.env.PLAN_PIPELINE_Ver2 === "1";
 }
 
 function generateRenderSeed(): number {
@@ -63,8 +63,8 @@ export async function POST(req: NextRequest) {
   if (!transcript) return NextResponse.json({ success: false, error: "Missing transcript" }, { status: 400 });
   if (!jobId) return NextResponse.json({ success: false, error: "Missing job_id" }, { status: 400 });
 
-  if (isV2Enabled()) {
-    return handleV2({
+  if (isVer2Enabled()) {
+    return handleVer2({
       jobId,
       transcript,
       duration,
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // V1 — original pipeline
+  // Ver1 — original pipeline
   try {
     const catalog = readCatalog();
     const videos = parseCatalog(catalog);
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-interface V2Args {
+interface Ver2Args {
   jobId: string;
   transcript: string;
   duration: number;
@@ -178,7 +178,7 @@ interface V2Args {
   systemPromptForBundle?: string;
 }
 
-async function handleV2(args: V2Args): Promise<NextResponse> {
+async function handleVer2(args: Ver2Args): Promise<NextResponse> {
   const {
     jobId,
     transcript,
@@ -199,13 +199,13 @@ async function handleV2(args: V2Args): Promise<NextResponse> {
     let scenePlannerUsage: LlmCallUsage | undefined;
     if (!skipScenes) {
       try {
-        const planned = await planScenesV2(transcript, transcriptSegments, duration, customScenePrompt);
+        const planned = await planScenesVer2(transcript, transcriptSegments, duration, customScenePrompt);
         scenes = planned.scenes;
         scenePlannerUsage = planned.usage;
       } catch (e) {
         const handled = mapProviderError(e);
         if (handled) throw e;
-        console.warn("[plan v2] scene_planner failed, falling back:", e);
+        console.warn("[plan ver2] scene_planner failed, falling back:", e);
         scenes = [];
       }
     }
@@ -248,7 +248,7 @@ async function handleV2(args: V2Args): Promise<NextResponse> {
     const persistedUsages: UsageCallRecord[] = pickerResult.picker_usages ?? [];
 
     await updatePlanBundle(jobId, {
-      pipeline: "v2",
+      pipeline: "ver2",
       render_seed: renderSeed,
       scenes,
       timeline,
@@ -264,7 +264,7 @@ async function handleV2(args: V2Args): Promise<NextResponse> {
 
     return NextResponse.json({
       success: true,
-      pipeline: "v2",
+      pipeline: "ver2",
       render_seed: renderSeed,
       scenes,
       timeline,
@@ -276,7 +276,7 @@ async function handleV2(args: V2Args): Promise<NextResponse> {
     if (err instanceof PickerFailureError) return pickerFailureResponse(err.picker_status);
     const handled = mapProviderError(err);
     if (handled) return NextResponse.json(handled.body, { status: handled.status });
-    console.error("[plan v2]", err);
+    console.error("[plan ver2]", err);
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
   }
 }

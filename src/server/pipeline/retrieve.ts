@@ -1,5 +1,5 @@
 /**
- * V2 retrieval — shortlist N=12 catalog candidates per scene.
+ * Ver2 retrieval — shortlist N=12 catalog candidates per scene.
  *
  * Replaces "dump the full catalog to the picker" with a small, tier-shuffled
  * slate keyed off the scene's narration + planner-emitted `desired_concepts`.
@@ -26,7 +26,7 @@ const SHORTLIST_K_DEFAULT = 15;
 const MIN_CLIP_DURATION = 3.0;
 const THIN_SHORTLIST_CLIP_THRESHOLD = 4;
 
-// Mirror of the v1 validator's MOOD_INCOMPATIBLE map — kept narrow on purpose.
+// Mirror of the ver1 validator's MOOD_INCOMPATIBLE map — kept narrow on purpose.
 const MOOD_INCOMPATIBLE: Record<string, ReadonlyArray<string>> = {
   calm: ["סופה", "ברד", "שיטפון", "דרמטי", "שטף", "דרמה", "אסון"],
   cheerful: ["סופה", "ברד", "שיטפון", "קודר", "אבל"],
@@ -175,7 +175,7 @@ export function retrieveCandidates(
   const all = allCandidates(videos);
 
   // Mechanical gates (mood / clothing / min-duration). These are not editorial
-  // judgement — they're the same gates the v1 validator applied after the fact.
+  // judgement — they're the same gates the ver1 validator applied after the fact.
   const gated = all.filter(
     (c) =>
       passesMoodGate(scene.mood, c.segment) &&

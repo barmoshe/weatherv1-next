@@ -307,17 +307,17 @@ const ScenePlanResponseSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// V2 — concept-forecasting planner (no prescriptive scene-count table, no seed)
+// Ver2 — concept-forecasting planner (no prescriptive scene-count table, no seed)
 // ---------------------------------------------------------------------------
 
 /**
- * V2 prompt: editorial intent only — no duration→scene-count table, no
+ * Ver2 prompt: editorial intent only — no duration→scene-count table, no
  * multi-region forced-split rule. The model decides the count from the
  * narration's natural beats and emits `desired_concepts` (weather /
  * season_mood / visual_role / scene_fit / avoid_for) per scene so the
  * downstream retrieval step can build a relevant shortlist for the picker.
  */
-export const DEFAULT_SCENE_PROMPT_V2 = `You are a narrative editor for short Hebrew weather-forecast videos. Given a transcript and Whisper sentence segments, split the narration into ordered SCENES — editorial beats the picker will illustrate — and for each scene, emit the catalog-concept query that should retrieve relevant clips.
+export const DEFAULT_SCENE_PROMPT_Ver2 = `You are a narrative editor for short Hebrew weather-forecast videos. Given a transcript and Whisper sentence segments, split the narration into ordered SCENES — editorial beats the picker will illustrate — and for each scene, emit the catalog-concept query that should retrieve relevant clips.
 
 A scene is one visual moment. Scene boundaries MUST come from the provided Whisper segment boundaries (never invent mid-sentence cuts).
 
@@ -343,7 +343,7 @@ Per scene return:
 
 OUTPUT: a single JSON object with key \`scenes\` containing an ordered array. Scenes cover the full duration with no gaps and no overlap.`;
 
-const ScenePlanResponseV2Schema = z.object({
+const ScenePlanResponseVer2Schema = z.object({
   scenes: z.array(z.record(z.unknown())).default([]),
 });
 
@@ -375,7 +375,7 @@ function coercePickCountHint(value: unknown): 1 | 2 | undefined {
   return undefined;
 }
 
-function applyV2Fields(scene: Scene, raw: Record<string, unknown>): Scene {
+function applyVer2Fields(scene: Scene, raw: Record<string, unknown>): Scene {
   const desired = coerceDesiredConcepts(raw.desired_concepts);
   if (desired) scene.desired_concepts = desired;
   const keywords = coerceStringList(raw.desired_keywords, 6);
@@ -387,7 +387,7 @@ function applyV2Fields(scene: Scene, raw: Record<string, unknown>): Scene {
   return scene;
 }
 
-export async function planScenesV2(
+export async function planScenesVer2(
   transcriptText: string,
   whisperSegments: WhisperSegment[],
   durationSec: number,
@@ -396,7 +396,7 @@ export async function planScenesV2(
   if (!transcriptText?.trim() || !durationSec) return { scenes: [] };
 
   const provider = getLlmProvider();
-  const systemPrompt = customPrompt?.trim() ? customPrompt.trim() : DEFAULT_SCENE_PROMPT_V2;
+  const systemPrompt = customPrompt?.trim() ? customPrompt.trim() : DEFAULT_SCENE_PROMPT_Ver2;
 
   const indexedSegments = whisperSegments.map((seg, i) => {
     const text = String(seg.text ?? "").trim();
@@ -425,8 +425,8 @@ export async function planScenesV2(
     const { data, usage } = await provider.completeJson({
       systemPrompt,
       userPayload: JSON.stringify(payload, null, 2),
-      schema: ScenePlanResponseV2Schema,
-      schemaName: "scene_plan_response_v2",
+      schema: ScenePlanResponseVer2Schema,
+      schemaName: "scene_plan_response_ver2",
       schemaDescription:
         "Hebrew weather narration → ordered scenes with retrieval keys (desired_concepts, desired_keywords) for the downstream catalog-shortlist step.",
       options: {
@@ -438,28 +438,28 @@ export async function planScenesV2(
 
     const rawScenes = data.scenes ?? [];
     const validated = validateScenes(rawScenes, whisperSegments, durationSec);
-    // Re-attach V2 fields by matching idx in the raw response back onto validated scenes.
+    // Re-attach Ver2 fields by matching idx in the raw response back onto validated scenes.
     for (const scene of validated) {
       const raw = rawScenes.find(
         (r) => parseInt(String((r as Record<string, unknown>).idx ?? -1), 10) === scene.idx,
       ) as Record<string, unknown> | undefined;
-      if (raw) applyV2Fields(scene, raw);
+      if (raw) applyVer2Fields(scene, raw);
     }
     return { scenes: validated, usage };
   } catch (err) {
     if (err instanceof LlmProviderError) {
       if (err.code === "llm_invalid_key" || err.code === "llm_quota_exceeded") throw err;
-      console.warn(`planScenesV2: LLM call failed: ${err.message}`);
+      console.warn(`planScenesVer2: LLM call failed: ${err.message}`);
       return { scenes: [] };
     }
     const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`planScenesV2: LLM call failed: ${msg}`);
+    console.warn(`planScenesVer2: LLM call failed: ${msg}`);
     return { scenes: [] };
   }
 }
 
 // ---------------------------------------------------------------------------
-// V1 — original planner
+// Ver1 — original planner
 // ---------------------------------------------------------------------------
 
 export async function planScenes(

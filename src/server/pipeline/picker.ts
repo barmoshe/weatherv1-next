@@ -679,11 +679,11 @@ export async function pickSegmentsDetailed(
 }
 
 // ---------------------------------------------------------------------------
-// V2 — shortlist-driven picker (single LLM call, full timeline in view)
+// Ver2 — shortlist-driven picker (single LLM call, full timeline in view)
 // ---------------------------------------------------------------------------
 
 /**
- * V2 system prompt — assumes the picker sees a per-scene shortlist (≤12
+ * Ver2 system prompt — assumes the picker sees a per-scene shortlist (≤12
  * candidates, tier-annotated) instead of the full catalog. Editorial
  * judgement (weather > geography, polarity, parent-file diversity, sub-range
  * picking) stays here; structural gates (mood, clothing, min duration) are
@@ -693,7 +693,7 @@ export async function pickSegmentsDetailed(
  * `self_audit.concerns` so any tradeoffs it made (e.g. reusing a clip from a
  * thin shortlist) surface to the UI without forcing a re-pick loop.
  */
-export const SCENE_AWARE_SYSTEM_PROMPT_V2 = `You are a video editor for short Hebrew weather forecasts. Each scene already has a relevance-scored shortlist of catalog candidates (top-K=15). Your job: pick 1–2 segments per scene from its shortlist (\`pick_count_hint\` is the planner's suggestion).
+export const SCENE_AWARE_SYSTEM_PROMPT_Ver2 = `You are a video editor for short Hebrew weather forecasts. Each scene already has a relevance-scored shortlist of catalog candidates (top-K=15). Your job: pick 1–2 segments per scene from its shortlist (\`pick_count_hint\` is the planner's suggestion).
 
 DECIDE TIMELINE-WIDE, NOT SCENE-BY-SCENE. Read every scene and every shortlist before committing any pick. Anti-repeat, parent-file diversity, mood arc, and weather coherence are global properties of THIS timeline — not per-scene rules.
 
@@ -723,7 +723,7 @@ OUTPUT — return a JSON object with:
 
 Every \`segment_id\` MUST come from that scene's shortlist; segments not in the shortlist are not in the catalog as far as this turn is concerned.`;
 
-const TIMELINE_PICK_V2_SCHEMA_DESCRIPTION =
+const TIMELINE_PICK_Ver2_SCHEMA_DESCRIPTION =
   "Hebrew weather edit: ordered timeline picks chosen from per-scene shortlists, with timeline-wide diversity decided by the model. No downstream validator — the model owns editorial judgment, surfacing tradeoffs in self_audit.concerns.";
 
 function buildShortlistPickResponseSchema(shortlistSegmentIds: readonly string[]) {
@@ -751,7 +751,7 @@ function buildShortlistPickResponseSchema(shortlistSegmentIds: readonly string[]
   });
 }
 
-export interface PickV2Options {
+export interface PickVer2Options {
   customPrompt?: string;
   renderSeed: number;
   shortlistsByScene: Record<number, ShortlistEntry[]>;
@@ -759,7 +759,7 @@ export interface PickV2Options {
   usageAttemptPrefix?: string;
 }
 
-export interface PickV2Result {
+export interface PickVer2Result {
   timeline: TimelinePick[];
   picker_status: PickerRunStatus;
   picker_usages: UsageCallRecord[];
@@ -769,12 +769,12 @@ export interface PickV2Result {
 export async function pickWithShortlists(
   scenes: Scene[],
   durationSec: number,
-  opts: PickV2Options,
-): Promise<PickV2Result> {
+  opts: PickVer2Options,
+): Promise<PickVer2Result> {
   const provider = getLlmProvider();
   const systemPrompt = opts.customPrompt?.trim()
     ? opts.customPrompt.trim()
-    : SCENE_AWARE_SYSTEM_PROMPT_V2;
+    : SCENE_AWARE_SYSTEM_PROMPT_Ver2;
 
   // Slim shortlists for the payload — keep the fields the picker reasons over,
   // drop server-side metadata.
@@ -827,7 +827,7 @@ export async function pickWithShortlists(
     2,
   );
 
-  const prefix = opts.usageAttemptPrefix ?? "picker_v2";
+  const prefix = opts.usageAttemptPrefix ?? "picker_ver2";
   const usageStep = `${prefix}_1`;
   const baseStatus = (): Omit<PickerRunStatus, "state" | "usable_picks"> => ({
     provider: provider.id,
@@ -844,8 +844,8 @@ export async function pickWithShortlists(
       systemPrompt,
       userPayload,
       schema,
-      schemaName: "timeline_pick_v2_response",
-      schemaDescription: TIMELINE_PICK_V2_SCHEMA_DESCRIPTION,
+      schemaName: "timeline_pick_ver2_response",
+      schemaDescription: TIMELINE_PICK_Ver2_SCHEMA_DESCRIPTION,
       options: {
         temperature: 0.8,
         cacheSystemPrompt: !opts.customPrompt,
@@ -869,7 +869,7 @@ export async function pickWithShortlists(
           state: "empty",
           usable_picks: 0,
           error_code: "picker_empty",
-          error: "The v2 picker returned an empty timeline.",
+          error: "The ver2 picker returned an empty timeline.",
           llm_attempts_used: 1,
         },
       };
@@ -897,7 +897,7 @@ export async function pickWithShortlists(
         error: sanitizePickerError(err.message),
         llm_attempts_used: 1,
       };
-      throw new PickerFailureError("Picker v2 LLM call failed", status, err);
+      throw new PickerFailureError("Picker ver2 LLM call failed", status, err);
     }
     const msg = err instanceof Error ? err.message : String(err);
     const status: PickerRunStatus = {
@@ -908,7 +908,7 @@ export async function pickWithShortlists(
       error: sanitizePickerError(msg),
       llm_attempts_used: 1,
     };
-    throw new PickerFailureError("Picker v2 LLM call failed", status, err);
+    throw new PickerFailureError("Picker ver2 LLM call failed", status, err);
   }
 }
 

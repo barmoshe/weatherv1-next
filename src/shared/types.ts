@@ -139,7 +139,7 @@ export const SceneSchema = z.object({
   kind: SceneKindSchema.default("prose"),
   heterogeneous: z.boolean().default(false),
   whisper_beat_indices: z.array(z.number()).default([]),
-  // V2 retrieve-then-pick fields (optional, populated only by planScenesV2)
+  // Ver2 retrieve-then-pick fields (optional, populated only by planScenesVer2)
   desired_concepts: SegmentConceptsSchema.partial().optional(),
   desired_keywords: z.array(z.string()).optional(),
   pick_count_hint: z.union([z.literal(1), z.literal(2)]).optional(),
@@ -147,7 +147,7 @@ export const SceneSchema = z.object({
 });
 export type Scene = z.infer<typeof SceneSchema>;
 
-// V2 shortlist (catalog candidates returned per scene by `retrieveCandidates`)
+// Ver2 shortlist (catalog candidates returned per scene by `retrieveCandidates`)
 export const ShortlistEntrySchema = z.object({
   segment_id: z.string(),
   clip_id: z.string(),
