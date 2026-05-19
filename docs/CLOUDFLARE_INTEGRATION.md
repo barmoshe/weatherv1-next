@@ -7,7 +7,7 @@ file to orient before reading deeper R2, Worker, Pulumi, or MCP docs.
 | --- | --- |
 | Understand R2 sync architecture and live status | [R2_PULUMI_HANDOFF.md](R2_PULUMI_HANDOFF.md) |
 | Run `pulumi up` / manage stacks / Worker secrets | [../infra/cloudflare/README.md](../infra/cloudflare/README.md) |
-| Plan future Cloudflare/Pulumi/MCP work | [future/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](future/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md) |
+| Plan future Cloudflare/Pulumi/MCP work | [archive/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](archive/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md) |
 | Add a new MCP server to Claude Code / Cursor | [§ MCP integration](#mcp-integration) below |
 | Wire up the R2 client in code | [`src/server/sync/r2/`](../src/server/sync/r2/) |
 | Trace the catalog tagging + R2 push CLI (historical) | [archive/CATALOG_TAGGING_HANDOFF.md](archive/CATALOG_TAGGING_HANDOFF.md) |
@@ -48,14 +48,14 @@ block works in `~/.cursor/mcp.json` (user scope). The Claude Code
 ### Producer (deferred) — `weatherv1-mcp` Worker
 
 A read-only MCP server exposing catalog/R2 tools to agents is scoped in
-[future/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md §4](future/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md#4-mcp--producer-side-weatherv1-mcp-worker).
+[archive/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md §4](archive/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md#4-mcp--producer-side-weatherv1-mcp-worker).
 It is **not** built yet. v1 tools planned: `catalog.search`,
 `catalog.get_video`, `catalog.list_segments`, `r2.head_object`. Built on
 `@cloudflare/agents` `McpAgent` + `workers-oauth-provider` (PKCE).
 
 ## Improvement roadmap
 
-Live tracker: [future/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](future/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md).
+Live tracker: [archive/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](archive/CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md).
 Short pointers:
 
 - **§1 — Worker hardening** — structured JSON logs, Workers Logs head

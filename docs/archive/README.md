@@ -5,6 +5,7 @@ Historical / completed docs kept for reference. **Not** authoritative for curren
 | Doc | What it covers | Status |
 | --- | --- | --- |
 | [CATALOG_TAGGING_HANDOFF.md](CATALOG_TAGGING_HANDOFF.md) | Segment poster + Hebrew description bulk-tag pipeline | Full reference — re-read if re-segmenting (408/408 tagged) |
+| [CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md](CLOUDFLARE_MCP_IMPROVEMENT_PLAN.md) | Worker hardening (logs, rate limit, version stamp), Pulumi cleanup, MCP consumer + producer Worker | Plan-shaped reference — see [`../CLOUDFLARE_INTEGRATION.md`](../CLOUDFLARE_INTEGRATION.md) for live state |
 | [CLOUDFLARE_R2_ELECTRON_STORAGE_PLAN.md](CLOUDFLARE_R2_ELECTRON_STORAGE_PLAN.md) | Pre-implementation R2 storage design | Stub — see [`../R2_PULUMI_HANDOFF.md`](../R2_PULUMI_HANDOFF.md) |
 | [EDITOR_AND_ADMIN_GATES.md](EDITOR_AND_ADMIN_GATES.md) | Editor login + Settings Editor/Admin tabs + Argon2id | Full reference — all phases shipped |
 | [ELECTRON_AGENT_GUIDE.md](ELECTRON_AGENT_GUIDE.md) | Original Electron mental model | Stub — merged into [`../ELECTRON.md`](../ELECTRON.md) |
