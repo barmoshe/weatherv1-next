@@ -11,17 +11,29 @@ app via HTTP Basic. The username + password pair lives in two places:
 
 ## Rotate
 
-1. Update the GitHub secret:
+1. Update the GitHub secret. Two safe forms — both keep the value out of
+   shell history:
    ```bash
+   # Pass via quoted literal:
    gh secret set EDITOR_PASSWORD --body 'NEW-PASSWORD'
+   # Or pipe from stdin (omit --body entirely):
+   printf '%s' 'NEW-PASSWORD' | gh secret set EDITOR_PASSWORD
    ```
+   ⚠️ **Do not write `--body -`** thinking `-` is a stdin sentinel. It is
+   not — `gh secret set` only reads stdin when `--body` is omitted. Writing
+   `--body -` stores the literal one-character value `-`, silently breaking
+   the secret. We've been bitten by this on `EDITOR_PASSWORD` and
+   `R2_APP_USERNAME`; symptom is 401 from every consumer.
 2. Push the new value to the Worker:
    ```bash
    gh workflow run rotate-worker-secrets.yml
    gh run watch  # wait for the dispatched run to finish
    ```
-   The workflow uses `wrangler secret bulk` and then curls
-   `/v1/catalog` with the new password to confirm.
+   The workflow runs `wrangler secret bulk` and then probes `/v1/catalog`
+   with the new credential to confirm. 200 (catalog present) and 404
+   (tenant has no catalog) are both treated as "auth passed"; 401 fails
+   the run. A second probe with a bogus password must return 401 — that's
+   how the workflow proves the gate is live.
 3. Tag and ship a new desktop release so installers ship the matching
    build (`/weatherv1-release` or the manual flow at
    [docs/RELEASE_CONVENTION.md](RELEASE_CONVENTION.md)). Existing
@@ -36,7 +48,8 @@ USER=v1editor
 curl -sS -o /dev/null -w '%{http_code}\n' \
   -u "$USER:$PASS" \
   https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev/v1/catalog?tenantId=default
-# expect 200
+# 200 or 404 = auth passed (404 just means the tenant has no catalog yet).
+# 401 = new secret didn't take. 403 = username mismatch.
 ```
 
 ## Deploy the Worker code

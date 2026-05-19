@@ -192,6 +192,13 @@ to pick it up. Do not paste a `# comment` after the command — interactive
 zsh treats `#` as a literal argument unless `setopt interactive_comments`
 is set, and `gh secret set` will reject the extra words.
 
+⚠️ `gh secret set` only reads stdin when `--body` is **omitted**. Writing
+`--body -` stores the literal one-character value `-`, silently breaking
+the secret (every consumer then 401s). Use the prompt form above, the
+quoted literal `--body 'value'`, or pipe via stdin without `--body`:
+`printf '%s' "$value" | gh secret set <NAME>`. We've hit this twice on
+this repo (`EDITOR_PASSWORD`, `R2_APP_USERNAME`).
+
 **`EDITOR_PASSWORD` / `ADMIN_PASSWORD`:** rotation is `gh secret set <NAME>` followed by a fresh tag build. The Argon2id hash is re-minted on every build; nothing to clean up in the source tree.
 
 **Apple signing secrets (operator-local):** rotate the app-specific password at <https://appleid.apple.com> → Sign-In and Security → App-Specific Passwords. Update the operator's local `.env` and re-run `npm run electron:make` on the Mac. `APPLE_TEAM_ID` and `APPLE_ID` rarely change. Not in GitHub Secrets — macOS builds happen locally only.
