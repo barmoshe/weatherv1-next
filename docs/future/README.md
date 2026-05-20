@@ -11,6 +11,7 @@ Planned but un-shipped docs. Each is self-contained (Goal / Plan / Verification)
 | [after-effects-graphics/](after-effects-graphics/) | _(Discovery)_ Bring V1's existing After Effects graphic layer (overlays, lower-thirds, intro/outro cards, animated weather icons) into this app. |
 | [temporal/](temporal/) | _(Research)_ Integrate Temporal.io for durability, observability, and scale. Architecture, pipeline mapping, embedded-in-Electron research, idempotency convention, versioning tradeoffs, UI integration, and a Phase 1 proposal to replace the R2 mirror queue. |
 | [CATALOG_TAGGING_REDESIGN.md](CATALOG_TAGGING_REDESIGN.md) | _(Research)_ Catalog tagging redesign. Failure-mode evidence, root causes (Hebrew/English split, missing subject/polarity axes), four candidate approaches, success criteria. |
+| desktop-size-[research](desktop-size-research.md) / [report](desktop-size-report.md) / [tasks](desktop-size-tasks.md) | _(Research)_ Why the desktop package is large. Measured: macOS 1.2 GB; Windows ~5 GB ≈ Squirrel multi-copy. Plus ~400 MB removable asar dead weight (root `next`/`@next`/server libs). Ranked fixes + checklist. |
 
 ### V1 AI Portal vision set — separation of concerns
 
