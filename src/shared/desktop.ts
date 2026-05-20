@@ -44,10 +44,10 @@ export interface DesktopSettingsUpdate {
   ffprobePath?: string;
   llmProvider?: LlmProviderPreference;
   /**
-   * Plan-pipeline selection. `false` (default) uses the original
-   * validator-based pipeline; `true` enables the retrieve-then-pick ver2
-   * pipeline. Persisted in `settings.json` and injected as
-   * `PLAN_PIPELINE_VER2=1` for the Next child on save.
+   * Plan-pipeline selection. `true` (default since v0.4.0) uses the
+   * retrieve-then-pick ver2 pipeline; `false` falls back to the original
+   * validator-based ver1. Persisted in `settings.json` and injected as
+   * `PLAN_PIPELINE_VER2={1,0}` for the Next child on save.
    */
   planPipelineVer2?: boolean;
   r2Enabled?: boolean;

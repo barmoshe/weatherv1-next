@@ -36,7 +36,9 @@ function pickerFailureResponse(pickerStatus: PickerRunStatus, status = 502) {
 }
 
 function isVer2Enabled(): boolean {
-  return process.env.PLAN_PIPELINE_VER2 === "1";
+  // Ver2 is the default since v0.4.0. Set PLAN_PIPELINE_VER2=0 (or any value
+  // other than "1"/"true") via the admin settings toggle or env to opt out.
+  return process.env.PLAN_PIPELINE_VER2 !== "0" && process.env.PLAN_PIPELINE_VER2 !== "false";
 }
 
 function generateRenderSeed(): number {

@@ -63,7 +63,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [r2AppPassword, setR2AppPassword] = useState("");
   const [showR2Password, setShowR2Password] = useState(false);
   const [llmProvider, setLlmProvider] = useState<LlmProviderPreference>("auto");
-  const [planPipeline, setPlanPipeline] = useState<"ver1" | "ver2">("ver1");
+  const [planPipeline, setPlanPipeline] = useState<"ver1" | "ver2">("ver2");
   const [saving, setSaving] = useState(false);
   const [syncingR2, setSyncingR2] = useState(false);
   const [exportR2JobsLoading, setExportR2JobsLoading] = useState(false);
