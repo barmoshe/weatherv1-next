@@ -49,7 +49,9 @@ afterEach(() => {
     if (v === undefined) delete process.env[k];
     else process.env[k] = v;
   }
-  fs.rmSync(tempDir, { recursive: true, force: true });
+  // maxRetries: a fire-and-forget mutateAndPersist lock write may still be in
+  // flight; on Windows that makes rmdir fail ENOTEMPTY until the lock releases.
+  fs.rmSync(tempDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("sweepOrphanRuntimeFiles (via crashRecoverySweep)", () => {
