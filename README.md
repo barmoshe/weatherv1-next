@@ -78,7 +78,7 @@ Long-lived **Node**, **ffmpeg subprocesses**, **disk**, **multi-minute encodes**
 
 ### Local dev (web)
 
-**Needs:** Node **20+**, **ffmpeg** + **ffprobe** on `PATH`, and a `v1Drive/` media tree.
+**Needs:** Node **22 LTS** (see `.nvmrc`), **ffmpeg** + **ffprobe** on `PATH`, and a `v1Drive/` media tree.
 
 ```bash
 npm install

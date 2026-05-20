@@ -5,6 +5,9 @@
   "author": "Barmoshe",
   "private": true,
   "main": "electron/main.cjs",
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "dev": "next dev",
     "download-page:build": "node scripts/build-download-page.mjs",
@@ -56,7 +59,7 @@
     "@testing-library/jest-dom": "^6",
     "@testing-library/react": "^16",
     "@types/formidable": "^3",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/proper-lockfile": "^4",
     "@types/react": "^19",
     "@types/react-dom": "^19",

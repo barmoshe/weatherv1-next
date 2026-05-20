@@ -24,7 +24,7 @@ This repo runs **Next.js 16** with React 19. APIs, conventions, and file structu
 
 ```bash
 # Setup
-nvm use 20                       # Node 20+ required
+nvm use 22                       # Node 22 LTS — see .nvmrc (next target: Node 24 before Node 22 EOL, April 2027)
 npm install                      # do not switch to pnpm/yarn (lockfile mismatch)
 cp .env.example .env             # fill in OPENAI_API_KEY (required)
 

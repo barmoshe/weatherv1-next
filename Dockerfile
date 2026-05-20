@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1.7
 
 # ---- deps: install all node_modules (including dev, needed to build Next) ----
-FROM --platform=$BUILDPLATFORM node:20-bookworm-slim AS deps
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS deps
 WORKDIR /app/weatherV1-next
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 # ---- builder: compile Next.js, then prune to production deps ----
-FROM --platform=$BUILDPLATFORM node:20-bookworm-slim AS builder
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS builder
 WORKDIR /app/weatherV1-next
 ENV NEXT_TELEMETRY_DISABLED=1
 # Plaintext gate passwords consumed only by the prebuild hash-emit step.
@@ -22,7 +22,7 @@ RUN EDITOR_PASSWORD="$EDITOR_PASSWORD" ADMIN_PASSWORD="$ADMIN_PASSWORD" R2_APP_U
 RUN npm prune --omit=dev
 
 # ---- runner: minimal runtime with ffmpeg + the built app ----
-FROM node:20-bookworm-slim AS runner
+FROM node:22-bookworm-slim AS runner
 WORKDIR /app/weatherV1-next
 
 ENV NODE_ENV=production \
