@@ -42,6 +42,51 @@ function copyDir(src, dest) {
   }
 }
 
+// Full transitive dependency closure of a top-level package, read from the
+// project's (hoisted) node_modules.
+function packageClosure(rootName) {
+  const nm = path.join(PROJECT_ROOT, "node_modules");
+  const seen = new Set();
+  const stack = [rootName];
+  while (stack.length) {
+    const name = stack.pop();
+    if (seen.has(name)) continue;
+    seen.add(name);
+    let pj;
+    try {
+      pj = JSON.parse(fs.readFileSync(path.join(nm, name, "package.json"), "utf8"));
+    } catch {
+      continue; // not hoisted at top level / not installed — skip
+    }
+    for (const dep of Object.keys(pj.dependencies || {})) {
+      if (!seen.has(dep)) stack.push(dep);
+    }
+  }
+  return [...seen];
+}
+
+// `serverExternalPackages` keeps a CommonJS lib out of the Turbopack bundle, but
+// the Turbopack build does NOT trace its transitive deps into the standalone
+// node_modules (e.g. archiver → is-stream/teex/bare-* go missing → the export
+// route 500s with MODULE_NOT_FOUND). Copy the whole closure in here so the
+// runtime `require()` resolves. Bundler-agnostic and idempotent.
+function ensureBundledDeps(rootName) {
+  const srcNM = path.join(PROJECT_ROOT, "node_modules");
+  const dstNM = path.join(STANDALONE_DIR, "node_modules");
+  let copied = 0;
+  const closure = packageClosure(rootName);
+  for (const name of closure) {
+    const src = path.join(srcNM, name);
+    const dst = path.join(dstNM, name);
+    if (!fs.existsSync(src) || fs.existsSync(dst)) continue;
+    copyDir(src, dst);
+    copied++;
+  }
+  console.log(
+    `[prepare-standalone] ensured ${rootName} deps in standalone (${copied} copied / ${closure.length} in closure)`,
+  );
+}
+
 function main() {
   if (!fs.existsSync(STANDALONE_DIR)) {
     console.error(
@@ -59,6 +104,10 @@ function main() {
   const staticDst = path.join(STANDALONE_DIR, ".next", "static");
   console.log(`[prepare-standalone] copy ${staticSrc} -> ${staticDst}`);
   copyDir(staticSrc, staticDst);
+
+  // Externalized server-only CJS packages whose transitive deps Turbopack
+  // doesn't trace into the standalone tree (see ensureBundledDeps).
+  ensureBundledDeps("archiver");
 
   console.log("[prepare-standalone] done");
 }

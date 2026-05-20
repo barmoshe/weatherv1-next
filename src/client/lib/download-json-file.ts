@@ -1,6 +1,5 @@
-/** Trigger a browser download of `data` as a pretty-printed JSON file. */
-export function downloadJsonFile(filename: string, data: unknown): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+/** Trigger a browser download of an in-memory Blob. */
+export function downloadBlob(filename: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -10,4 +9,9 @@ export function downloadJsonFile(filename: string, data: unknown): void {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+/** Trigger a browser download of `data` as a pretty-printed JSON file. */
+export function downloadJsonFile(filename: string, data: unknown): void {
+  downloadBlob(filename, new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
 }

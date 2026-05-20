@@ -13,6 +13,8 @@ interface RenderCardProps {
   tileState: TileState;
   planData: PlanData | null;
   onRenderStart: () => void;
+  onExportPremiere: () => void;
+  isExporting: boolean;
 }
 
 function RenderGlyph() {
@@ -36,7 +38,17 @@ function RerenderGlyph() {
   );
 }
 
-export function RenderCard({ phase, tileState, planData, onRenderStart }: RenderCardProps) {
+function ExportGlyph() {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3v12" />
+      <path d="M8 11l4 4 4-4" />
+      <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+    </svg>
+  );
+}
+
+export function RenderCard({ phase, tileState, planData, onRenderStart, onExportPremiere, isExporting }: RenderCardProps) {
   const isRendering = phase === "rendering";
   const isDone = phase === "done";
   const canRender = (phase === "planned" || phase === "done") && !!planData;
@@ -80,28 +92,40 @@ export function RenderCard({ phase, tileState, planData, onRenderStart }: Render
             </div>
           )}
           {canRender && !isRendering && (
-            <button
-              className="btn btn--primary render-btn"
-              type="button"
-              onClick={onRenderStart}
-              data-variant={isDone ? "rerender" : "render"}
-            >
-              <span className="render-btn__shine" aria-hidden="true" />
-              <span className="render-btn__sparkle render-btn__sparkle--a" aria-hidden="true" />
-              <span className="render-btn__sparkle render-btn__sparkle--b" aria-hidden="true" />
-              <span className="render-btn__sparkle render-btn__sparkle--c" aria-hidden="true" />
-              {isDone ? (
-                <>
-                  <RerenderGlyph />
-                  <span className="render-btn__label">רנדר מחדש</span>
-                </>
-              ) : (
-                <>
-                  <RenderGlyph />
-                  <span className="render-btn__label">רנדר</span>
-                </>
-              )}
-            </button>
+            <div className="render-actions">
+              <button
+                className="btn btn--primary render-btn"
+                type="button"
+                onClick={onRenderStart}
+                data-variant={isDone ? "rerender" : "render"}
+              >
+                <span className="render-btn__shine" aria-hidden="true" />
+                <span className="render-btn__sparkle render-btn__sparkle--a" aria-hidden="true" />
+                <span className="render-btn__sparkle render-btn__sparkle--b" aria-hidden="true" />
+                <span className="render-btn__sparkle render-btn__sparkle--c" aria-hidden="true" />
+                {isDone ? (
+                  <>
+                    <RerenderGlyph />
+                    <span className="render-btn__label">רנדר מחדש</span>
+                  </>
+                ) : (
+                  <>
+                    <RenderGlyph />
+                    <span className="render-btn__label">רנדר</span>
+                  </>
+                )}
+              </button>
+              <button
+                className="btn btn--secondary export-premiere-btn"
+                type="button"
+                onClick={onExportPremiere}
+                disabled={isExporting}
+                title="ייצוא חבילה ל-Adobe Premiere Pro (XML + כתוביות)"
+              >
+                <ExportGlyph />
+                <span>{isExporting ? "מייצא…" : "ייצוא לפרימייר"}</span>
+              </button>
+            </div>
           )}
           {tileState === "is-skeleton" && (
             <div className="skeleton-block" aria-hidden="true" />

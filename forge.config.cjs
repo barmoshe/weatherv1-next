@@ -71,9 +71,19 @@ module.exports = {
     ignore: [
       /^\/\.git(\/|$)/,
       /^\/\.github(\/|$)/,
+      // Forge's own output dir — never pack prior packaged apps / make zips
+      // back into the app (a multi-GB make zip blows asar's 2 GiB file limit).
+      /^\/out(\/|$)/,
       /^\/\.next\/cache(\/|$)/,
       /^\/docs(\/|$)/,
       /^\/runtime(\/|$)/,
+      // Dev runtime data that Next's whole-project file-trace sweeps into the
+      // standalone tree (~770MB of jobs/outputs/cache). The packaged app reads
+      // its runtime from userData (WEATHER_RUNTIME_DIR), never this copy, so it
+      // is pure dead weight. Targeted at the data dir only — NOT the code dirs
+      // `.next/standalone/src/server/runtime` etc. (outputFileTracingExcludes
+      // is the intended fix but the Turbopack build ignores it.)
+      /^\/\.next\/standalone\/runtime(\/|$)/,
       /^\/src\/test(\/|$)/,
       /^\/coverage(\/|$)/,
       /\.test\.[jt]sx?$/,

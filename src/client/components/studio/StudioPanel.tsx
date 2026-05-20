@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useJobStatus } from "@/client/hooks/useJobStatus";
+import { downloadBlob } from "@/client/lib/download-json-file";
 import { UploadCard } from "./UploadCard";
 import { ReviewCard } from "./ReviewCard";
 import { PlanCard } from "./PlanCard";
@@ -74,6 +75,7 @@ export function StudioPanel({ hidden, restoreJobId, jobs, onJobStarted, onJobCom
   const [error, setError] = useState<UiError | null>(null);
   const [transcriptData, setTranscriptData] = useState<TranscriptData | null>(null);
   const [planData, setPlanData] = useState<PlanData | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const qc = useQueryClient();
 
   const jobId = transcriptData?.job_id ?? null;
@@ -266,6 +268,31 @@ export function StudioPanel({ hidden, restoreJobId, jobs, onJobStarted, onJobCom
     }
   }, [transcriptData, planData, qc]);
 
+  const handleExportPremiere = useCallback(async () => {
+    if (!transcriptData) return;
+    setIsExporting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/export/premiere/${transcriptData.job_id}`);
+      if (!res.ok) {
+        let payload: Record<string, unknown> = {};
+        try {
+          payload = (await res.json()) as Record<string, unknown>;
+        } catch {
+          /* non-JSON error body */
+        }
+        setError(toUiError({ ...payload, failed_step: "export" }, "ייצוא לפרימייר נכשל"));
+        return;
+      }
+      const blob = await res.blob();
+      downloadBlob(`forecast_${transcriptData.job_id}_premiere.zip`, blob);
+    } catch (err) {
+      setError(toUiError(err, "ייצוא לפרימייר נכשל"));
+    } finally {
+      setIsExporting(false);
+    }
+  }, [transcriptData]);
+
   const handleReplan = useCallback((data: PlanData) => {
     setPlanData(data);
     setError(null);
@@ -367,6 +394,8 @@ export function StudioPanel({ hidden, restoreJobId, jobs, onJobStarted, onJobCom
             tileState={tileStates.render}
             planData={planData}
             onRenderStart={handleRenderStart}
+            onExportPremiere={handleExportPremiere}
+            isExporting={isExporting}
           />
 
           <OutputCard

@@ -99,7 +99,13 @@ export function SceneCard({ scene, picks, jobId, fullTimeline, fullScenes, valid
         ) : (
           picks.map((p, i) => {
             const id = String(p.segment_id ?? p.video_id ?? "?");
-            const pickRange = `${formatTime(Number(p.video_start ?? 0), 1)}–${formatTime(Number(p.video_end ?? 0), 1)}`;
+            // video_start/video_end are usually unset (the range lives on the
+            // catalog segment). Show the window the renderer actually plays —
+            // [seekStart, seekStart + narration] — matching clipSourceWindow,
+            // not a misleading 0:00–0:00.
+            const seekStart = Number.isFinite(Number(p.video_start)) ? Math.max(0, Number(p.video_start)) : 0;
+            const audioDur = Math.max(0, Number(p.audio_end ?? 0) - Number(p.audio_start ?? 0));
+            const pickRange = `${formatTime(seekStart, 1)}–${formatTime(seekStart + audioDur, 1)}`;
             const poster = segmentPosterUrl(p as { segment_id?: unknown; video_id?: unknown });
             const why = pickDisplayReason(p);
             return (

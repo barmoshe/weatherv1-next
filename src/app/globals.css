@@ -993,6 +993,28 @@
             outline: 3px solid var(--v1-ink);
             outline-offset: 3px;
         }
+        [data-area="render"] .render-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            width: 100%;
+        }
+        [data-area="render"] .export-premiere-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            width: 100%;
+            max-width: 260px;
+            min-height: 40px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+        [data-area="render"] .export-premiere-btn .icon {
+            width: 18px;
+            height: 18px;
+        }
         [data-area="render"] .render-btn__shine {
             position: absolute;
             inset: 0;

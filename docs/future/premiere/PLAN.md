@@ -15,6 +15,18 @@ WeatherV1's render pipeline persists a complete editorial plan to disk before ff
 
 The proposed export does not modify the render pipeline; it adds a parallel "export" path that consumes the same plan bundle and writes a Premiere-importable project alongside the existing MP4 output.
 
+## Status — implemented 2026-05-20
+
+Shipped as a download-link export on **web + desktop**. Files:
+- `src/server/export/fcp7-xml.ts` — pure FCP7 (XMEML v5) serializer (`buildFcp7Xml`).
+- `src/server/export/srt.ts` — `WhisperSegment[]` → SRT (UTF-8 BOM).
+- `src/app/api/export/premiere/[jobId]/route.ts` — `GET`, `assertDesktopAuth`, streams an `archiver` zip of `{ .xml, .srt, README.txt, media/* }`.
+- `src/server/export/media-bundle.ts` — for each pick, materializes the source (local copy or R2 download), probes dimensions, then ffmpeg-trims the clip's cut **+ a 1 s handle on each side** into a per-pick `media/<name>` segment.
+- UI: a sibling "ייצוא לפרימייר" button in `src/client/components/studio/RenderCard.tsx`, wired through `StudioPanel.tsx` (`handleExportPremiere`).
+- Deps added: `xmlbuilder2`, `archiver`. Tests: `src/test/export-srt.test.ts`, `src/test/export-fcp7-xml.test.ts`, `src/test/export-clip-window.test.ts`.
+
+**Self-contained bundle:** all media is embedded under `media/` (trimmed clips + voiceover + bg-music asset), so nothing goes offline. The XML uses **relative co-located paths** (`media/<name>`); on import Premiere relinks by filename from the extracted folder. Each clip is bundled **trimmed to its cut plus a ~1 s handle on each side** (`clipTrimWindow`, libx264/yuv420p re-encode), so the zip stays small while the editor keeps a second of slack to nudge either edge; FCP7 in/out are rebased onto the trimmed file's clock. Background music is a looped **-16 dB** track; captions ship as a **sidecar** `.srt`. The zip is **streamed** (archiver, STORE) so total media size doesn't bound memory. Remaining: manual Premiere import verification on Windows + macOS; `premiere-fps-detect` still deferred (30 fps hard-coded).
+
 ## Integration Shapes Compared
 
 | Shape | What it is | Pros | Cons |
@@ -39,7 +51,17 @@ Re-examined the four shapes against the runtime and re-confirmed FCP7 XML for v1
 
 ### Runtime scope
 
-**Desktop-only in v1.** Web returns `501 Not Implemented` and the UI button is hidden on web. Clip files have no public HTTP route (perimeter at `src/proxy.ts:28-49` covers `/outputs` and `/videos`, not source clips), so `file://` paths emitted on web would be unresolvable. Bundling source clips into a zip would mean shipping multi-GB media on demand — redundant for desktop users who already have them locally and a heavy footgun for web. Gate the export route with both `assertDesktopAuth()` and `isDesktopMode()` (`src/server/runtime/auth.ts:18-25`).
+**Web and desktop, via a download link.** *Updated 2026-05-20 — supersedes the earlier desktop-only resolution.* The export route mirrors `/api/render`'s auth: `assertDesktopAuth()` passes on web (where `isDesktopRequestAuthorized()` returns `true` immediately) and the proxy middleware enforces the `weather_editor_session` cookie; desktop still requires the `x-weather-desktop-token` header. No `isDesktopMode()` gate, no 501 — the button shows wherever Render does. Delivery is a browser download of `forecast_<jobId>_premiere.zip` (fetch → blob → `<a download>`), identical on both runtimes. The emitted `file://` paths are absolute: they resolve for a local-first web user (the server has the media locally); a remote web user relinks media in Premiere (the bundle README explains this).
+
+## Web-research refresh (2026-05-20)
+
+A fresh web pass re-validated the four shapes against the current Premiere Pro line (26.x, build 26.3). The v1 recommendation holds; three points updated:
+
+- **FCP7 XML is alive and maintained, not deprecated.** Premiere 26.x still imports legacy FCP7 XMEML `.xml` via File > Import, and Adobe *expanded* XML interchange this cycle (selective per-sequence export to XML/AAF; a UNC-vs-mapped-drive path-mapping bug was fixed). No deprecation notice surfaced. This strengthens the v1 bet. ([Adobe — Import FCP XML](https://helpx.adobe.com/premiere-pro/using/importing-xml-project-files-final.html), [What's new](https://helpx.adobe.com/premiere-pro/using/whats-new.html))
+- **OTIO is STILL beta-only.** Despite 2+ years in Premiere Beta, OTIO import/export had not crossed into the stable channel as of 2026-05 (Larry Jordan, 2026-05-03, labels Premiere OTIO "(beta)"; Adobe, Feb 2025: "We're not there yet"). The OTIO-successor path in [Forward path (v2)](#forward-path-v2--not-v1) remains premature — keep FCP7 XML as the file-handoff bet. ([Larry Jordan](https://larryjordan.com/articles/opentimelineio-now-supported-on-final-cut-premiere-and-resolve/))
+- **SRT Hebrew/RTL requirements unchanged.** UTF-8 **BOM** is still required for Premiere to decode non-Latin SRT, and the Track Settings → Text Engine → *South Asian and Middle Eastern* toggle is still needed for RTL rendering. The milestone-2 BOM decision and the bundled-README note both stand. ([Adobe community](https://community.adobe.com/t5/premiere-pro-discussions/srt-import-with-right-to-left-language-e-g-hebrew-arabic-text-is-reversed/m-p/11909031))
+
+**MCP servers — not needed for this feature.** The export is a deterministic server-side serializer (plan bundle → `.xml` / `.srt`) with no external side-effects, so an MCP tool surface adds nothing. The MCP registry has no NLE / FCPXML / OTIO / ffmpeg connectors as of 2026-05. The "live in-Premiere" integration is the CEP/UXP panel ([PLUGIN.md](PLUGIN.md)), which is an Adobe extension, not an MCP. No MCP config change is warranted.
 
 ## Data Mapping (FCP7 XML)
 
@@ -49,22 +71,23 @@ Re-examined the four shapes against the runtime and re-confirmed FCP7 XML for v1
 | 1080 × 1920, 9:16, 30 fps | `<rate>`, `<format>` | Hard-coded v1; `Math.round(sec * 30)` for all timeline math. Catalog has no per-clip fps (`ParsedVideo` / `ProbeResult`), and the renderer doesn't pass `-r`. Leave `TODO(premiere-fps-detect)` for a later ffprobe-based detection. |
 | `timeline: ResolvedPick[]` | Ordered `<clipitem>` entries inside a video `<track>` of `<media><video>` | One clipitem per pick. |
 | `ResolvedPick.audio_start` / `audio_end` | `<start>` / `<end>` on the sequence timeline | Convert seconds → frames at sequence fps. |
-| `ResolvedPick.video_start` / `video_end` | `<in>` / `<out>` on the source `<file>` reference | Same fps conversion. |
-| Resolved absolute source path | `<file>` + `<pathurl>file://...</pathurl>` with a stable `id` | Re-use the `id` across clipitems that point at the same source so Premiere collapses them in the Project panel. |
-| Voiceover MP3 (`audio_filename`, full duration) | Second `<track>` in `<media><audio>` | Spans `0` → `duration_sec`. |
-| Generated SRT (see below) | Third `<track>` carrying a subtitle clipitem | Optional; toggleable in Premiere. |
-| `scenes[].title_he` + `start_sec` | Sequence `<marker>` entries | Visible in Premiere's timeline ruler. |
-| `picker_reason` / `validator` notes | Per-clipitem `<comment>` | Surfaces editorial rationale in the Notes column. |
+| `ResolvedPick.video_start` / `video_end` | `<in>` / `<out>` into the trimmed clip | The AI-planned cut, **rebased** onto the trimmed segment's clock (sits ~1 s in from the head). |
+| Bundled clip file | `<file>` + `<pathurl>media/<name></pathurl>` with a per-pick `id` | **Relative, co-located** path (not `file://`); media embedded under `media/`. One trimmed segment per timeline pick (cut + 1 s handles), so each gets its own `id`. |
+| Voiceover MP3 (`audio_filename`, full duration) | First audio `<track>` in `<media><audio>` | Spans `0` → `duration_sec`. |
+| Background music (bundled default, `getDefaultBgMusicPath()`) | Second audio `<track>` of looped `<clipitem>`s at **-16 dB** via an `audiolevels` filter | Looped to fill `duration_sec` (last loop trimmed) — mirrors the renderer's `-stream_loop -1` + amix level. **Implemented.** |
+| Generated SRT | **Sidecar** `forecast_<jobId>.srt` in the zip (UTF-8 BOM), not an embedded subtitle track | FCP7 subtitle-track import is unreliable; editor drags the `.srt` onto a caption track (README explains the RTL Text Engine toggle). |
+| `scenes[].title_he` + `narration` + `start_sec` | Sequence `<marker>` (`name` + `comment`) | Visible in Premiere's timeline ruler. |
+| `picker_reason` ?? `fallback_reason` ?? `reason` | Per-clipitem `<comments><mastercomment1>` | Surfaces editorial rationale in the Notes column. |
 
 ## Captions / SRT
 
-The current renderer burns no captions. As part of this export, emit `forecast_<jobId>.srt` derived from `plan_bundle.transcript_segments` — one cue per Whisper segment, timestamps formatted as `HH:MM:SS,mmm`. The FCP7 XML references the SRT as a subtitle clip on a third track so the editor can toggle it on/off in Premiere.
+The renderer burns no captions, so the export emits `forecast_<jobId>.srt` from `plan_bundle.transcript_segments` — one cue per Whisper segment, timestamps `HH:MM:SS,mmm`, **UTF-8 with BOM** (Premiere mis-decodes non-Latin SRT without it). Shipped as a **sidecar** in the zip (not an embedded subtitle track — FCP7 subtitle-track import is unreliable); the editor drags it onto a caption track and sets Text Engine → South Asian and Middle Eastern for RTL.
 
-A small utility (`src/server/export/srt.ts` in the future implementation) converts `WhisperSegment[]` to an SRT string. No new dependency required.
+`src/server/export/srt.ts` converts `WhisperSegment[]` → SRT (no new dependency).
 
 ## Clip Path Strategy
 
-**Resolved:** v1 ships absolute `file://` paths in the XML. Matches current `videoMap` behaviour, zero surprises on the producing machine, no guesswork about a media root. The serializer stamps `WEATHER_WORKSPACE_DIR` as an XML comment (`<!-- workspaceDir=… -->`) so a future "relativise" or "bundle media folder" mode can opt in without breaking earlier exports. Relativising later is trivial — `path.relative(workspaceDir, filePath)` over the same `videoMap` already used by the renderer (`src/server/catalog/parser.ts:104`).
+**Resolved (2026-05-20): self-contained bundle.** The zip embeds all media under `media/` (full source clips + voiceover + bg music) and the XML references it with **relative, co-located** paths (`media/<name>`, unique ASCII names). Per web research, Premiere doesn't reliably resolve relative `pathurl`s directly, but it **relinks by filename** from the folder the `.xml` is opened in — so an extracted bundle resolves (some builds need a one-time "Locate → Relink others automatically"). This supersedes the earlier absolute-`file://` plan, which produced "media offline" whenever the clips weren't already on the importing machine. Alternatives rejected: FCPXML needs a converter Premiere can't run; embedded-media AAF is audio-only / 2 GB-capped / has no Node writer; OTIO `.otioz` bundles aren't imported by Premiere. Clips are bundled **trimmed to their cut plus a ~1 s handle each side** (re-encoded segments), keeping the zip small while leaving the editor a second of slack to adjust either edge.
 
 ## FCP7 XML Skeleton
 

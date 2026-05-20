@@ -26,6 +26,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.2",
     "@tanstack/react-query": "^5",
+    "@types/archiver": "^7.0.0",
+    "archiver": "^7.0.1",
     "argon2": "^0.44.0",
     "electron-squirrel-startup": "^1",
     "ffmpeg-static": "^5",
@@ -38,6 +40,7 @@
     "react-dom": "19.2.4",
     "update-electron-app": "^3",
     "uuid": "^9",
+    "xmlbuilder2": "^4.0.3",
     "zod": "^3",
     "zod-to-json-schema": "^3.25.2"
   },

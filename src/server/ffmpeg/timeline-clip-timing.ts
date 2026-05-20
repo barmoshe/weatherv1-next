@@ -28,3 +28,57 @@ export function narrativeDecodeFromPick(clip: ResolvedPick): NarrativeVsSourceTr
   const padDur = Math.max(0, audioDur - decodeDur);
   return { audioDur, seekStart, decodeDur, padDur };
 }
+
+/**
+ * Source in/out window (seconds) for a pick when bundling/exporting the clip.
+ * Mirrors the renderer: with no explicit `video_start`/`video_end` (the common
+ * case — the range lives on the catalog segment) it reads `[0, audioDur]`.
+ * Clamped to the real file duration so an FCP7 `<out>` never exceeds the media.
+ */
+export function clipSourceWindow(
+  clip: ResolvedPick,
+  fileDurationSec: number,
+): { inSec: number; outSec: number } {
+  const { seekStart, audioDur } = narrativeDecodeFromPick(clip);
+  const wantedOut = seekStart + audioDur;
+  const outSec = fileDurationSec > 0 ? Math.min(wantedOut, fileDurationSec) : wantedOut;
+  return { inSec: seekStart, outSec };
+}
+
+export interface ClipTrimWindow {
+  /** ffmpeg extract bounds in ORIGINAL source coordinates. */
+  trimStartSec: number;
+  trimEndSec: number;
+  /** Planned cut in/out RELATIVE to the trimmed file — what the FCP7 in/out point at. */
+  inSec: number;
+  outSec: number;
+  /** Duration of the trimmed file (`trimEndSec - trimStartSec`). */
+  fileDurationSec: number;
+}
+
+/**
+ * Trim window for a pick when the export bundles a *clipped* segment instead of
+ * the whole source: the planned cut (`clipSourceWindow`) padded by `handleSec`
+ * on each side so the editor keeps a second of slack to nudge either edge.
+ * Handles are clamped to the real media bounds, so a cut at the very start/end
+ * simply gets a shorter handle on that side. The returned in/out are rebased to
+ * the trimmed file's clock (the planned cut sits ~`handleSec` in from the head).
+ */
+export function clipTrimWindow(
+  clip: ResolvedPick,
+  fileDurationSec: number,
+  handleSec = 1,
+): ClipTrimWindow {
+  const { inSec: cutIn, outSec: cutOut } = clipSourceWindow(clip, fileDurationSec);
+  const handle = Math.max(0, Number.isFinite(handleSec) ? handleSec : 0);
+  const trimStartSec = Math.max(0, cutIn - handle);
+  const wantedEnd = cutOut + handle;
+  const trimEndSec = fileDurationSec > 0 ? Math.min(wantedEnd, fileDurationSec) : wantedEnd;
+  return {
+    trimStartSec,
+    trimEndSec,
+    inSec: cutIn - trimStartSec,
+    outSec: cutOut - trimStartSec,
+    fileDurationSec: Math.max(0, trimEndSec - trimStartSec),
+  };
+}
