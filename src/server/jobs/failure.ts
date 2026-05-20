@@ -11,6 +11,28 @@
 import { getJob, updateJob } from "@/server/jobs/store";
 import type { MappedErrorResponse } from "@/server/providers/errors";
 
+/** Every failure/progress field, nulled. Spread into terminal transitions so a
+ * new field added to the record is cleared everywhere by default. */
+const CLEARED: {
+  error: null;
+  error_code: null;
+  error_provider: null;
+  error_console_url: null;
+  failed_step: null;
+  failed_at: null;
+  progress: null;
+  eta_sec: null;
+} = {
+  error: null,
+  error_code: null,
+  error_provider: null,
+  error_console_url: null,
+  failed_step: null,
+  failed_at: null,
+  progress: null,
+  eta_sec: null,
+};
+
 export function recordJobFailure(
   jobId: string,
   step: string,
@@ -66,29 +88,25 @@ export function markRenderFailed(
     error_provider: provider,
     failed_step: "render",
     failed_at: new Date().toISOString(),
+    progress: null,
+    eta_sec: null,
   });
 }
 
 export function markJobCompleted(jobId: string, outputUrl: string): void {
-  updateJob(jobId, {
-    status: "completed",
-    output_url: outputUrl,
-    error: null,
-    error_code: null,
-    error_provider: null,
-    error_console_url: null,
-    failed_step: null,
-    failed_at: null,
-  });
+  updateJob(jobId, { ...CLEARED, status: "completed", output_url: outputUrl });
+}
+
+/** User stopped the render. Not an error — no failure metadata, retryable. */
+export function markCancelled(jobId: string): void {
+  updateJob(jobId, { ...CLEARED, status: "cancelled" });
+}
+
+/** Render died with the process (app restart). Not an error — auto-requeued on boot. */
+export function markInterrupted(jobId: string): void {
+  updateJob(jobId, { ...CLEARED, status: "interrupted" });
 }
 
 export function clearJobFailure(jobId: string): void {
-  updateJob(jobId, {
-    error: null,
-    error_code: null,
-    error_provider: null,
-    error_console_url: null,
-    failed_step: null,
-    failed_at: null,
-  });
+  updateJob(jobId, { ...CLEARED });
 }

@@ -68,4 +68,14 @@ describe("jobs store locking", () => {
     const store = await importFresh();
     expect(store.getAllJobs()).toEqual([]);
   });
+
+  it("upsertJobAwait resolves only after the record is durable on disk", async () => {
+    const store = await importFresh();
+    await store.upsertJobAwait({ job_id: "j1", status: "queued", created_at: new Date().toISOString() });
+
+    // No timer wait: the await must guarantee the write already landed.
+    const jobsPath = path.join(tempDir, "jobs.json");
+    const raw = JSON.parse(fs.readFileSync(jobsPath, "utf8")) as Record<string, { status: string }>;
+    expect(raw.j1?.status).toBe("queued");
+  });
 });

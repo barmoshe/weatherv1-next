@@ -183,6 +183,39 @@ describe("markJobCompleted", () => {
   });
 });
 
+describe("markCancelled", () => {
+  it("sets status cancelled with no failure metadata", async () => {
+    const { store, failure } = await importFresh();
+    seedJob(store, "j1");
+    failure.markRenderFailed("j1", "render_ffmpeg_failed", "old", "ffmpeg");
+
+    failure.markCancelled("j1");
+
+    const job = store.getJob("j1");
+    expect(job?.status).toBe("cancelled");
+    expect(job?.error).toBeNull();
+    expect(job?.error_code).toBeNull();
+    expect(job?.failed_step).toBeNull();
+    expect(job?.failed_at).toBeNull();
+    expect(job?.progress).toBeNull();
+  });
+});
+
+describe("markInterrupted", () => {
+  it("sets status interrupted with no failure metadata", async () => {
+    const { store, failure } = await importFresh();
+    seedJob(store, "j1");
+
+    failure.markInterrupted("j1");
+
+    const job = store.getJob("j1");
+    expect(job?.status).toBe("interrupted");
+    expect(job?.error).toBeNull();
+    expect(job?.failed_at).toBeNull();
+    expect(job?.progress).toBeNull();
+  });
+});
+
 describe("clearJobFailure", () => {
   it("nulls every error_* field without touching status", async () => {
     const { store, failure } = await importFresh();

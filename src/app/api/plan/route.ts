@@ -13,13 +13,13 @@ import {
 import { validateAndSwap, type MutablePick, type ValidatorBundle } from "@/server/pipeline/validator";
 import { readCatalog } from "@/server/catalog/storage";
 import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/parser";
-import { updatePlanBundle } from "@/server/jobs/plan-bundle";
+import { updatePlanBundle, readPlanBundle } from "@/server/jobs/plan-bundle";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
 import { recordJobFailure, recordPickerFailure } from "@/server/jobs/failure";
 import type { Scene, ShortlistEntry } from "@/shared/types";
 import type { LlmCallUsage, UsageCallRecord } from "@/shared/usage";
-import { persistPlanUsage } from "@/server/jobs/usage-persist";
+import { persistPlanUsage, persistReplanPickerUsage } from "@/server/jobs/usage-persist";
 import { retrieveCandidates } from "@/server/pipeline/retrieve";
 import { applyCoverageSplit, type CoveragePick } from "@/server/pipeline/coverage";
 
@@ -44,6 +44,62 @@ function isVer2Enabled(): boolean {
 function generateRenderSeed(): number {
   // 16-bit seed is plenty — large enough for variety, small enough to be human-readable in logs.
   return (Math.floor(Math.random() * 0xffff) + 1) & 0xffff;
+}
+
+type TranscriptSegment = { idx: number; start: number; end: number; text: string };
+type ScenePlanner = (
+  transcript: string,
+  segments: TranscriptSegment[],
+  duration: number,
+  customPrompt?: string,
+) => Promise<{ scenes: Scene[]; usage?: LlmCallUsage }>;
+
+/**
+ * Resolve the scene list for a job and checkpoint it before the picker runs.
+ *
+ * Reuses scenes checkpointed by a prior (crashed/retried) attempt so we don't
+ * re-bill the scene planner. Otherwise plans fresh, falls back to a single
+ * scene, then writes the checkpoint and bills the scene_planner line item only
+ * — the picker is billed separately at the end via `persistReplanPickerUsage`,
+ * so a crash mid-picker keeps the (billed) scene output.
+ */
+async function resolveScenes(
+  jobId: string,
+  planner: ScenePlanner,
+  args: {
+    transcript: string;
+    transcriptSegments: TranscriptSegment[];
+    duration: number;
+    skipScenes: boolean;
+    customScenePrompt?: string;
+    logLabel: string;
+  },
+): Promise<Scene[]> {
+  const prior = readPlanBundle(jobId);
+  if (prior.scene_planner_done === true && Array.isArray(prior.scenes) && prior.scenes.length > 0) {
+    return prior.scenes as Scene[];
+  }
+
+  let scenes: Scene[] = [];
+  let scenePlannerUsage: LlmCallUsage | undefined;
+  if (!args.skipScenes) {
+    try {
+      const planned = await planner(args.transcript, args.transcriptSegments, args.duration, args.customScenePrompt);
+      scenes = planned.scenes;
+      scenePlannerUsage = planned.usage;
+    } catch (e) {
+      const handled = mapProviderError(e);
+      if (handled) throw e;
+      console.warn(`${args.logLabel} scene_planner failed, falling back:`, e);
+      scenes = [];
+    }
+  }
+  if (!scenes.length) {
+    scenes = fallbackSingleScene(args.transcript, args.transcriptSegments, args.duration);
+  }
+  await updatePlanBundle(jobId, { scenes, scene_planner_done: true });
+  persistPlanUsage(jobId, scenePlannerUsage, []);
+  return scenes;
 }
 
 export async function POST(req: NextRequest) {
@@ -87,23 +143,14 @@ export async function POST(req: NextRequest) {
     const segmentMap = buildSegmentMap(videos);
     const videoMap = buildVideoMap(videos);
 
-    let scenes: Scene[] = [];
-    let scenePlannerUsage: LlmCallUsage | undefined;
-    if (!skipScenes) {
-      try {
-        const planned = await planScenes(transcript, transcriptSegments, duration, customScenePrompt);
-        scenes = planned.scenes;
-        scenePlannerUsage = planned.usage;
-      } catch (e) {
-        const handled = mapProviderError(e);
-        if (handled) throw e;
-        console.warn("[plan] scene_planner failed, falling back:", e);
-        scenes = [];
-      }
-    }
-    if (!scenes.length) {
-      scenes = fallbackSingleScene(transcript, transcriptSegments, duration);
-    }
+    const scenes = await resolveScenes(jobId, planScenes, {
+      transcript,
+      transcriptSegments,
+      duration,
+      skipScenes,
+      customScenePrompt,
+      logLabel: "[plan]",
+    });
 
     const pickerResult = await pickSegmentsDetailed(transcript, videos, duration, {
       customPrompt: customPickerPrompt,
@@ -158,7 +205,8 @@ export async function POST(req: NextRequest) {
       system_prompt: data.system_prompt,
     });
 
-    persistPlanUsage(jobId, scenePlannerUsage, pickerResult.picker_usages ?? []);
+    // Scene usage was billed at the checkpoint; bill the picker only here.
+    persistReplanPickerUsage(jobId, pickerResult.picker_usages ?? []);
 
     return NextResponse.json({ success: true, scenes, timeline, validator: validatorResult, picker_status: pickerResult.picker_status });
   } catch (err) {
@@ -203,23 +251,14 @@ async function handleVer2(args: Ver2Args): Promise<NextResponse> {
     const catalog = readCatalog();
     const videos = parseCatalog(catalog);
 
-    let scenes: Scene[] = [];
-    let scenePlannerUsage: LlmCallUsage | undefined;
-    if (!skipScenes) {
-      try {
-        const planned = await planScenesVer2(transcript, transcriptSegments, duration, customScenePrompt);
-        scenes = planned.scenes;
-        scenePlannerUsage = planned.usage;
-      } catch (e) {
-        const handled = mapProviderError(e);
-        if (handled) throw e;
-        console.warn("[plan ver2] scene_planner failed, falling back:", e);
-        scenes = [];
-      }
-    }
-    if (!scenes.length) {
-      scenes = fallbackSingleScene(transcript, transcriptSegments, duration);
-    }
+    const scenes = await resolveScenes(jobId, planScenesVer2, {
+      transcript,
+      transcriptSegments,
+      duration,
+      skipScenes,
+      customScenePrompt,
+      logLabel: "[plan ver2]",
+    });
 
     // Retrieve shortlists per scene
     const shortlistsByScene: Record<number, ShortlistEntry[]> = {};
@@ -277,7 +316,8 @@ async function handleVer2(args: Ver2Args): Promise<NextResponse> {
       system_prompt: systemPromptForBundle,
     });
 
-    persistPlanUsage(jobId, scenePlannerUsage, persistedUsages);
+    // Scene usage was billed at the checkpoint; bill the picker only here.
+    persistReplanPickerUsage(jobId, persistedUsages);
 
     return NextResponse.json({
       success: true,

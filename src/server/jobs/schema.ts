@@ -6,6 +6,8 @@ export const JobStatusSchema = z.enum([
   "processing",
   "completed",
   "failed",
+  "cancelled",
+  "interrupted",
 ]);
 
 /**
@@ -26,6 +28,12 @@ export const JobRecordSchema = z.object({
   audio_filename: z.string().optional(),
   usage_summary: z.unknown().optional(),
   usage_calls: z.array(z.unknown()).optional(),
+  /** Render progress 0..1, set during ffmpeg, nulled on terminal state. */
+  progress: z.number().nullable().optional(),
+  /** Estimated seconds remaining for the active render. */
+  eta_sec: z.number().nullable().optional(),
+  /** How many times this job was auto-requeued after an interrupted render. */
+  interrupt_count: z.number().optional(),
 });
 
 /** `jobs.json` is a flat map of `jobId -> JobRecord`. */

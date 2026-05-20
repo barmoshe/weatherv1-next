@@ -6,9 +6,11 @@ const mockPickWithShortlists = vi.fn();
 const mockRetrieveCandidates = vi.fn();
 const mockValidateAndSwap = vi.fn();
 const mockUpdatePlanBundle = vi.fn();
+const mockReadPlanBundle = vi.fn();
 const mockRecordJobFailure = vi.fn();
 const mockRecordPickerFailure = vi.fn();
 const mockPersistPlanUsage = vi.fn();
+const mockPersistReplanPickerUsage = vi.fn();
 const mockApplyCoverageSplit = vi.fn();
 
 const SCENE = {
@@ -30,7 +32,10 @@ vi.mock("@/server/catalog/parser", () => ({
   buildSegmentMap: vi.fn(() => ({})),
   buildVideoMap: vi.fn(() => ({})),
 }));
-vi.mock("@/server/jobs/plan-bundle", () => ({ updatePlanBundle: mockUpdatePlanBundle }));
+vi.mock("@/server/jobs/plan-bundle", () => ({
+  updatePlanBundle: mockUpdatePlanBundle,
+  readPlanBundle: (...a: unknown[]) => mockReadPlanBundle(...a),
+}));
 vi.mock("@/server/providers/errors", () => ({ mapProviderError: vi.fn(() => null) }));
 vi.mock("@/server/jobs/failure", () => ({
   recordJobFailure: (...a: unknown[]) => mockRecordJobFailure(...a),
@@ -38,6 +43,7 @@ vi.mock("@/server/jobs/failure", () => ({
 }));
 vi.mock("@/server/jobs/usage-persist", () => ({
   persistPlanUsage: (...a: unknown[]) => mockPersistPlanUsage(...a),
+  persistReplanPickerUsage: (...a: unknown[]) => mockPersistReplanPickerUsage(...a),
 }));
 vi.mock("@/server/pipeline/retrieve", () => ({
   retrieveCandidates: (...a: unknown[]) => mockRetrieveCandidates(...a),
@@ -99,9 +105,12 @@ beforeEach(() => {
   mockRetrieveCandidates.mockReset();
   mockValidateAndSwap.mockReset();
   mockUpdatePlanBundle.mockReset();
+  mockReadPlanBundle.mockReset();
+  mockReadPlanBundle.mockReturnValue({}); // no checkpointed scenes by default
   mockRecordJobFailure.mockReset();
   mockRecordPickerFailure.mockReset();
   mockPersistPlanUsage.mockReset();
+  mockPersistReplanPickerUsage.mockReset();
   mockApplyCoverageSplit.mockReset();
   delete process.env.PLAN_PIPELINE_VER2;
 });
@@ -128,7 +137,34 @@ describe("/api/plan ver1 (opt-out)", () => {
       picker_status: { state: "empty", usable_picks: 0 },
     });
     expect(mockValidateAndSwap).not.toHaveBeenCalled();
-    expect(mockUpdatePlanBundle).not.toHaveBeenCalled();
+    // Scenes are checkpointed before the picker, but the misleading (empty)
+    // timeline is never persisted.
+    expect(mockUpdatePlanBundle).toHaveBeenCalledWith(
+      "job-1",
+      expect.objectContaining({ scene_planner_done: true }),
+    );
+    expect(mockUpdatePlanBundle).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ timeline: expect.anything() }),
+    );
+  });
+
+  it("reuses checkpointed scenes on replan without re-running the scene planner", async () => {
+    const planner = await import("@/server/pipeline/scene-planner");
+    vi.mocked(planner.planScenes).mockClear(); // shared mock accumulates across tests
+    mockReadPlanBundle.mockReturnValue({ scene_planner_done: true, scenes: [SCENE] });
+    mockPickSegmentsDetailed.mockResolvedValueOnce({
+      timeline: [{ video_id: "v1", segment_id: "s1" }],
+      picker_status: { state: "ok" },
+    });
+    mockValidateAndSwap.mockReturnValue(undefined);
+    const { POST } = await import("@/app/api/plan/route");
+
+    await POST(request() as never);
+
+    expect(planner.planScenes).not.toHaveBeenCalled();
+    // Picker-only billing on a resume; scene usage was billed on the first run.
+    expect(mockPersistReplanPickerUsage).toHaveBeenCalled();
   });
 });
 
@@ -169,7 +205,28 @@ describe("/api/plan ver2 (default since v0.4.0)", () => {
       EMPTY_PICKER_STATUS,
       "בחירת הקליפים נכשלה.",
     );
-    expect(mockUpdatePlanBundle).not.toHaveBeenCalled();
+    // Scenes checkpointed before the picker; the empty timeline is not persisted.
+    expect(mockUpdatePlanBundle).toHaveBeenCalledWith(
+      "job-1",
+      expect.objectContaining({ scene_planner_done: true }),
+    );
+    expect(mockUpdatePlanBundle).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ timeline: expect.anything() }),
+    );
+  });
+
+  it("checkpoints scenes before the picker runs (survives a picker throw)", async () => {
+    mockRetrieveCandidates.mockReturnValue({ shortlist: [], shortlist_thin: false });
+    mockPickWithShortlists.mockRejectedValueOnce(new Error("picker boom"));
+    const { POST } = await import("@/app/api/plan/route");
+
+    await POST(request() as never);
+
+    expect(mockUpdatePlanBundle).toHaveBeenCalledWith(
+      "job-1",
+      expect.objectContaining({ scene_planner_done: true }),
+    );
   });
 
   it("falls back to ver1 when PLAN_PIPELINE_VER2=0", async () => {

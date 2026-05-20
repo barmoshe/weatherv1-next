@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/server/jobs/store";
+import { queuePosition } from "@/server/jobs/worker";
 
 export async function GET(
   _req: NextRequest,
@@ -19,5 +20,8 @@ export async function GET(
     error_console_url: job.error_console_url ?? null,
     failed_step: job.failed_step ?? null,
     failed_at: job.failed_at ?? null,
+    progress: job.progress ?? null,
+    eta_sec: job.eta_sec ?? null,
+    queue_position: job.status === "queued" ? queuePosition(jobId) : null,
   });
 }

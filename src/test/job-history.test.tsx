@@ -4,8 +4,7 @@ import { fireEvent, render, renderHook, screen, waitFor } from "@testing-library
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useJobStatus } from "@/client/hooks/useJobStatus";
 import { mergeHistoryEntries, type HistoryEntry } from "@/client/hooks/useLocalHistory";
-import { ActivePanel } from "@/client/components/jobs/ActivePanel";
-import { HistoryPanel } from "@/client/components/jobs/HistoryPanel";
+import { JobsPanel } from "@/client/components/jobs/JobsPanel";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -39,22 +38,18 @@ describe("lost jobs", () => {
     expect(result.current.data?.error).toBe("Job not found");
   });
 
-  it("moves lost jobs out of Active and into History", () => {
-    render(
-      <>
-        <ActivePanel jobs={[lostJob]} />
-        <HistoryPanel jobs={[lostJob]} />
-      </>,
-    );
+  it("shows a lost job in the history section (no active section)", () => {
+    render(<JobsPanel jobs={[lostJob]} />);
 
-    expect(screen.getByText("אין רינדורים פעילים.")).toBeInTheDocument();
+    // No active jobs → the Active section header is absent.
+    expect(screen.queryByText("פעילים")).not.toBeInTheDocument();
     expect(screen.getByText("missing forecast")).toBeInTheDocument();
     expect(screen.getByText("לא נמצא")).toBeInTheDocument();
   });
 
   it("shows delete controls for active jobs", () => {
     const onRemove = vi.fn();
-    render(<ActivePanel jobs={[{ ...lostJob, status: "draft" }]} onRemove={onRemove} />);
+    render(<JobsPanel jobs={[{ ...lostJob, status: "draft" }]} onRemove={onRemove} />);
 
     fireEvent.click(screen.getByRole("button", { name: "מחק" }));
 
@@ -133,5 +128,66 @@ describe("lost jobs", () => {
       transcript_preview: "keep me",
       duration_sec: 8,
     });
+  });
+});
+
+describe("JobRow controls", () => {
+  const base: HistoryEntry = {
+    job_id: "j1",
+    created_at: "2026-05-12T10:00:00.000Z",
+    transcript_preview: "forecast",
+    status: "processing",
+  };
+
+  it("shows a progress bar only while processing", () => {
+    const { rerender } = render(
+      <JobsPanel jobs={[{ ...base, status: "processing", progress: 0.42, eta_sec: 30 }]} />,
+    );
+    const bar = screen.getByRole("progressbar");
+    expect(bar).toHaveAttribute("aria-valuenow", "42");
+
+    rerender(<JobsPanel jobs={[{ ...base, status: "queued", progress: 0.42 }]} />);
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
+
+  it("shows a cancel button only for queued/processing jobs", () => {
+    const onCancel = vi.fn();
+    const { rerender } = render(
+      <JobsPanel jobs={[{ ...base, status: "processing" }]} onCancel={onCancel} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "בטל" }));
+    expect(onCancel).toHaveBeenCalledWith("j1");
+
+    rerender(<JobsPanel jobs={[{ ...base, status: "completed" }]} />);
+    expect(screen.queryByRole("button", { name: "בטל" })).not.toBeInTheDocument();
+  });
+
+  it("renders a cancelled job with no error banner", () => {
+    render(<JobsPanel jobs={[{ ...base, status: "cancelled" }]} />);
+    expect(screen.getByText("בוטל")).toBeInTheDocument();
+    expect(screen.queryByText("פרטי שגיאה")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "נסה שוב" })).not.toBeInTheDocument();
+  });
+
+  it("surfaces a failed render inline with Retry, without opening the details", () => {
+    const onRetryRender = vi.fn();
+    render(
+      <JobsPanel
+        jobs={[
+          {
+            ...base,
+            status: "failed",
+            failed_step: "render",
+            error: "ffmpeg crashed",
+            error_code: "render_ffmpeg_failed",
+          },
+        ]}
+        onRetryRender={onRetryRender}
+      />,
+    );
+    // Inline cause is visible without expanding the <details>.
+    expect(screen.getAllByText(/ffmpeg crashed/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "נסה שוב" }));
+    expect(onRetryRender).toHaveBeenCalledWith("j1");
   });
 });

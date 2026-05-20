@@ -17,12 +17,20 @@ export async function POST(
   if (!job) {
     return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
   }
-  if (job.status !== "failed") {
+  if (job.status !== "failed" && job.status !== "cancelled") {
     return NextResponse.json(
       { success: false, error: `Cannot retry a job in status '${job.status}'` },
       { status: 409 },
     );
   }
+
+  // Failures before the timeline existed (scene planner / picker) can't be
+  // re-queued for render — the client must re-run /api/plan with the transcript
+  // from the bundle. The worker only ever handles the render step.
+  if (job.failed_step === "scene_planner" || job.failed_step === "picker") {
+    return NextResponse.json({ success: true, job_id: jobId, resume: "plan" });
+  }
+
   if (!job.audio_filename) {
     return NextResponse.json(
       { success: false, error: "Job has no audio file on record; cannot retry render." },
@@ -44,5 +52,5 @@ export async function POST(
 
   enqueueJob(jobId);
 
-  return NextResponse.json({ success: true, job_id: jobId });
+  return NextResponse.json({ success: true, job_id: jobId, resume: "render" });
 }

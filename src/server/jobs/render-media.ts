@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { downloadR2File } from "@/server/sync/r2/client";
-import { getRuntimePaths } from "@/server/runtime/paths";
+import { getRuntimePaths, safeId } from "@/server/runtime/paths";
 import { spawnFFmpeg } from "@/server/ffmpeg/spawn";
 import { getFFmpegPath } from "@/server/ffmpeg/binaries";
 import type { ParsedVideo, ResolvedPick } from "@/shared/types";
@@ -34,10 +34,6 @@ interface PrepareRenderMediaOptions {
     padDur: number;
     jobId?: string;
   }) => Promise<void>;
-}
-
-function safeId(value: string): string {
-  return value.replace(/[^A-Za-z0-9_-]/g, "-");
 }
 
 function pickKey(pick: ResolvedPick): string {

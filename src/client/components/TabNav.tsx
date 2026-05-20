@@ -4,23 +4,20 @@ import type { Tab } from "@/client/hooks/useTabFromUrl";
 interface TabNavProps {
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
-  activeBadge?: number;
-  historyBadge?: number;
+  jobsBadge?: number;
   catalogBadge?: number;
 }
 
 const TABS: { id: Tab; label: string; badgeId: string }[] = [
   { id: "studio", label: "סטודיו", badgeId: "" },
-  { id: "active", label: "פעילים", badgeId: "badge-active" },
-  { id: "history", label: "היסטוריה", badgeId: "badge-history" },
+  { id: "jobs", label: "רינדורים", badgeId: "badge-jobs" },
   { id: "catalog", label: "קטלוג", badgeId: "badge-catalog" },
   { id: "analytics", label: "אנליטיקה", badgeId: "" },
 ];
 
-export function TabNav({ activeTab, onTabChange, activeBadge, historyBadge, catalogBadge }: TabNavProps) {
+export function TabNav({ activeTab, onTabChange, jobsBadge, catalogBadge }: TabNavProps) {
   const badgeMap: Record<string, number | undefined> = {
-    active: activeBadge,
-    history: historyBadge,
+    jobs: jobsBadge,
     catalog: catalogBadge,
   };
 

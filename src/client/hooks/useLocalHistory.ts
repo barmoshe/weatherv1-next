@@ -18,12 +18,16 @@ export interface HistoryEntry {
   error_console_url?: string;
   failed_step?: string;
   failed_at?: string;
+  progress?: number | null;
+  eta_sec?: number | null;
+  queue_position?: number | null;
 }
 
 const KEY = "weatherv1.history";
 const MAX_ENTRIES = 50;
-export const ACTIVE_JOB_STATUSES = new Set(["draft", "queued", "processing"]);
-export const HISTORY_JOB_STATUSES = new Set(["completed", "failed", "lost"]);
+// "interrupted" is active — it auto-requeues and is about to run again.
+export const ACTIVE_JOB_STATUSES = new Set(["draft", "queued", "processing", "interrupted"]);
+export const HISTORY_JOB_STATUSES = new Set(["completed", "failed", "cancelled", "lost"]);
 
 /** Cross-component cue (catalog pull, R2 bootstrap, settings actions) to refresh /api/jobs. */
 export const REFETCH_JOBS_EVENT = "weatherv1-refetch-jobs";
@@ -171,5 +175,26 @@ export function useLocalHistory() {
     [syncFromServer],
   );
 
-  return { history, addEntry, updateEntry, removeEntry, syncFromServer };
+  // Cancel stops the active render but keeps the job (retryable, no error).
+  const cancelJob = useCallback(
+    (jobId: string) => {
+      setHistory((prev) => {
+        const next = prev.map((e) =>
+          e.job_id === jobId ? { ...e, status: "cancelled", progress: null, eta_sec: null } : e,
+        );
+        save(next);
+        return next;
+      });
+      void fetch(`/api/render/${encodeURIComponent(jobId)}`, { method: "DELETE" })
+        .then((res) => {
+          if (res.ok) return syncFromServer();
+        })
+        .catch(() => {
+          // Local row updated; ambient poll will heal any drift.
+        });
+    },
+    [syncFromServer],
+  );
+
+  return { history, addEntry, updateEntry, removeEntry, cancelJob, syncFromServer };
 }

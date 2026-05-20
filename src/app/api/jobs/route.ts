@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readPlanBundle } from "@/server/jobs/plan-bundle";
 import { getAllJobs } from "@/server/jobs/store";
+import { queuePosition } from "@/server/jobs/worker";
 import { pullJobsFromR2 } from "@/server/sync/r2/service";
 
 function transcriptPreview(jobId: string): string | undefined {
@@ -33,6 +34,9 @@ export async function GET() {
       error_console_url: job.error_console_url ?? undefined,
       failed_step: job.failed_step ?? undefined,
       failed_at: job.failed_at ?? undefined,
+      progress: job.progress ?? undefined,
+      eta_sec: job.eta_sec ?? undefined,
+      queue_position: job.status === "queued" ? queuePosition(job.job_id) ?? undefined : undefined,
     }))
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 

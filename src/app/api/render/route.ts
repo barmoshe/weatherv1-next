@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
-import { upsertJob, getJob } from "@/server/jobs/store";
+import { upsertJobAwait, getJob } from "@/server/jobs/store";
 import { enqueueJob } from "@/server/jobs/worker";
 import { lastHealth } from "@/server/catalog/parser";
 import { assertDesktopAuth } from "@/server/runtime/auth";
@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
   });
 
   const existing = getJob(jobId);
-  upsertJob({
+  // Await durability: a 200 must guarantee the queued flip is on disk, so a
+  // crash right after still recovers via boot re-enqueue.
+  await upsertJobAwait({
     job_id: jobId,
     status: "queued",
     output_url: existing?.output_url ?? null,

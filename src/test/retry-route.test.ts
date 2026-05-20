@@ -84,9 +84,40 @@ describe("POST /api/jobs/:jobId/retry", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body).toEqual({ success: true, job_id: "j1" });
+    expect(body).toEqual({ success: true, job_id: "j1", resume: "render" });
     expect(mockUpdateJob).toHaveBeenCalledWith("j1", { status: "queued" });
     expect(mockClearJobFailure).toHaveBeenCalledWith("j1");
     expect(mockEnqueueJob).toHaveBeenCalledWith("j1");
+  });
+
+  it("allows retry of a cancelled job", async () => {
+    mockGetJob.mockReturnValue({ job_id: "j1", status: "cancelled", audio_filename: "a.mp3" });
+    mockReadPlanBundle.mockReturnValue({ timeline: [{ video_id: "v1", segment_id: "s1" }] });
+    const res = await callRoute();
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.resume).toBe("render");
+    expect(mockEnqueueJob).toHaveBeenCalledWith("j1");
+  });
+
+  it("returns resume:plan for a picker-step failure (no render re-queue)", async () => {
+    mockGetJob.mockReturnValue({ job_id: "j1", status: "failed", failed_step: "picker" });
+    const res = await callRoute();
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ success: true, job_id: "j1", resume: "plan" });
+    expect(mockEnqueueJob).not.toHaveBeenCalled();
+    expect(mockUpdateJob).not.toHaveBeenCalled();
+  });
+
+  it("returns resume:plan for a scene_planner-step failure", async () => {
+    mockGetJob.mockReturnValue({ job_id: "j1", status: "failed", failed_step: "scene_planner" });
+    const res = await callRoute();
+    const body = await res.json();
+
+    expect(body.resume).toBe("plan");
+    expect(mockEnqueueJob).not.toHaveBeenCalled();
   });
 });

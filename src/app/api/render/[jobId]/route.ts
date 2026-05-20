@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJob, updateJob } from "@/server/jobs/store";
+import { getJob } from "@/server/jobs/store";
+import { markCancelled } from "@/server/jobs/failure";
 import { killProcess } from "@/server/ffmpeg/spawn";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 
@@ -17,6 +18,7 @@ export async function DELETE(
   // Kill any running ffmpeg process for this job
   killProcess(jobId);
 
-  updateJob(jobId, { status: "failed", error: "Cancelled by user" });
+  // Cancellation is not a failure — keep the job retryable, no error banner.
+  markCancelled(jobId);
   return NextResponse.json({ success: true, job_id: jobId });
 }

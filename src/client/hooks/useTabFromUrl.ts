@@ -2,8 +2,11 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
-export type Tab = "studio" | "active" | "history" | "catalog" | "analytics";
-const VALID_TABS: Tab[] = ["studio", "active", "history", "catalog", "analytics"];
+export type Tab = "studio" | "jobs" | "catalog" | "analytics";
+const VALID_TABS: Tab[] = ["studio", "jobs", "catalog", "analytics"];
+
+/** Legacy tab ids (the old split Active/History tabs) → the merged Jobs tab. */
+const LEGACY_TAB_ALIASES: Record<string, Tab> = { active: "jobs", history: "jobs" };
 
 function buildQueryString(params: URLSearchParams): string {
   const qs = params.toString();
@@ -14,7 +17,8 @@ export function useTabFromUrl(): [Tab, (tab: Tab) => void] {
   const searchParams = useSearchParams();
   const router = useRouter();
   const raw = searchParams.get("tab");
-  const tab: Tab = VALID_TABS.includes(raw as Tab) ? (raw as Tab) : "studio";
+  const aliased = raw ? LEGACY_TAB_ALIASES[raw] : undefined;
+  const tab: Tab = aliased ?? (VALID_TABS.includes(raw as Tab) ? (raw as Tab) : "studio");
 
   const setTab = useCallback(
     (next: Tab) => {

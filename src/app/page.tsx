@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { useTabFromUrl, useJobFromUrl, useUrlParams } from "@/client/hooks/useTabFromUrl";
 import {
   ACTIVE_JOB_STATUSES,
-  HISTORY_JOB_STATUSES,
   useLocalHistory,
   type HistoryEntry,
 } from "@/client/hooks/useLocalHistory";
@@ -16,8 +15,7 @@ import { SettingsModal } from "@/client/components/studio/SettingsModal";
 import { StorageOnboardingGate } from "@/client/components/storage/StorageOnboardingGate";
 import { EditorLoginGate } from "@/client/components/auth/EditorLoginGate";
 import { DesktopR2BootstrapOverlay } from "@/client/components/storage/DesktopR2BootstrapOverlay";
-import { ActivePanel } from "@/client/components/jobs/ActivePanel";
-import { HistoryPanel } from "@/client/components/jobs/HistoryPanel";
+import { JobsPanel } from "@/client/components/jobs/JobsPanel";
 import { AnalyticsPanel } from "@/client/components/jobs/AnalyticsPanel";
 
 const qc = new QueryClient();
@@ -27,7 +25,7 @@ function AppInner() {
   const [urlJobId, setUrlJobId] = useJobFromUrl();
   const updateUrl = useUrlParams();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { history, addEntry, updateEntry, removeEntry, syncFromServer } = useLocalHistory();
+  const { history, addEntry, updateEntry, removeEntry, cancelJob, syncFromServer } = useLocalHistory();
   const queryClient = useQueryClient();
 
   const handleRetryRender = useCallback(
@@ -39,10 +37,16 @@ function AppInner() {
       if (!data.success) {
         throw new Error((data.error as string) ?? `HTTP ${res.status}`);
       }
+      // Planning-step failures can't be re-queued for render — the route tells
+      // us to re-run planning, so send the user back to the studio for the job.
+      if (data.resume === "plan") {
+        updateUrl({ tab: "studio", job: jobId });
+        return;
+      }
       updateEntry(jobId, { status: "queued", error: undefined, failed_step: undefined });
       queryClient.invalidateQueries({ queryKey: ["job-status", jobId] });
     },
-    [queryClient, updateEntry],
+    [queryClient, updateEntry, updateUrl],
   );
 
   const handleRestore = useCallback(
@@ -103,8 +107,28 @@ function AppInner() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [settingsOpen, handleNewJob]);
 
+  // Completion toast: fire when a job we were tracking flips to "completed".
+  const [toast, setToast] = useState<string | null>(null);
+  const prevStatuses = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    const prev = prevStatuses.current;
+    const next = new Map<string, string>();
+    for (const j of history) {
+      const before = prev.get(j.job_id);
+      if (before && before !== "completed" && j.status === "completed") {
+        setToast(`הרינדור הושלם · ${j.transcript_preview || j.job_id}`);
+      }
+      next.set(j.job_id, j.status);
+    }
+    prevStatuses.current = next; // rebuild so departed jobs don't accumulate
+  }, [history]);
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 5000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
   const activeCount = history.filter((j) => ACTIVE_JOB_STATUSES.has(j.status)).length;
-  const historyCount = history.filter((j) => HISTORY_JOB_STATUSES.has(j.status)).length;
 
   return (
     <>
@@ -112,8 +136,7 @@ function AppInner() {
       <TabNav
         activeTab={tab}
         onTabChange={setTab}
-        activeBadge={activeCount}
-        historyBadge={historyCount}
+        jobsBadge={activeCount}
       />
       <main className="container">
         <DesktopR2BootstrapOverlay />
@@ -128,8 +151,7 @@ function AppInner() {
           onJobStatusChange={handleJobStatusChange}
           onRetryRender={handleRetryRender}
         />
-        <ActivePanel hidden={tab !== "active"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} onRetryRender={handleRetryRender} />
-        <HistoryPanel hidden={tab !== "history"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} onRetryRender={handleRetryRender} />
+        <JobsPanel hidden={tab !== "jobs"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} onCancel={cancelJob} onRetryRender={handleRetryRender} />
         <AnalyticsPanel hidden={tab !== "analytics"} jobs={history} />
         {tab === "catalog" ? (
           <Suspense fallback={<div className="loading">טוען קטלוג…</div>}>
@@ -143,6 +165,11 @@ function AppInner() {
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
+      {toast && (
+        <div className="job-toast" role="status" onClick={() => setToast(null)}>
+          {toast}
+        </div>
+      )}
     </>
   );
 }

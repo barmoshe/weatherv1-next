@@ -13,6 +13,11 @@ export interface RuntimePaths {
   segmentPostersDir: string;
 }
 
+/** Sanitize an id for use as a filesystem path segment (e.g. a render temp dir). */
+export function safeId(value: string): string {
+  return value.replace(/[^A-Za-z0-9_-]/g, "-");
+}
+
 export function getRuntimePaths(): RuntimePaths {
   const { runtimeDir } = getRuntimeConfig();
   const cacheDir = path.join(runtimeDir, "cache");
