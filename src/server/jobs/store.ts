@@ -123,6 +123,11 @@ async function mutateAndPersist(
   if (opts.mirror !== false) scheduleMirror();
 }
 
+// In-flight fire-and-forget writes, tracked so callers (and tests) can await
+// quiescence — e.g. before tearing down a temp runtime dir, which otherwise
+// races the lock-release and fails ENOTEMPTY on Windows.
+const pendingPersists = new Set<Promise<unknown>>();
+
 function mutateAndPersistSync(
   mutate: (current: JobsFile) => JobsFile | void,
   opts: PersistOpts = {},
@@ -132,7 +137,14 @@ function mutateAndPersistSync(
   // don't block — the in-memory store still reflects the change immediately
   // (these callers mutate the live record before invoking save), and the
   // disk write is consistent because everyone goes through `updateJson`.
-  void mutateAndPersist(mutate, opts).catch((e) => console.warn("[jobs] persist failed:", e));
+  const p = mutateAndPersist(mutate, opts).catch((e) => console.warn("[jobs] persist failed:", e));
+  pendingPersists.add(p);
+  void p.finally(() => pendingPersists.delete(p));
+}
+
+/** Resolve once every in-flight fire-and-forget persist has settled. */
+export async function flushPendingPersists(): Promise<void> {
+  await Promise.all([...pendingPersists]);
 }
 
 function ensureDir(): void {

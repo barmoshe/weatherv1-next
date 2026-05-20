@@ -47,7 +47,13 @@ beforeEach(() => {
   process.env.WEATHER_RUNTIME_DIR = tempDir;
 });
 
-afterEach(() => {
+afterEach(async () => {
+  // Await in-flight fire-and-forget persists so teardown doesn't race the
+  // lock-release (ENOTEMPTY on Windows).
+  try {
+    const s = await import("@/server/jobs/store");
+    await s.flushPendingPersists();
+  } catch { /* store not loaded in this test */ }
   for (const k of ENV_KEYS) {
     const v = originalEnv[k];
     if (v === undefined) delete process.env[k];
