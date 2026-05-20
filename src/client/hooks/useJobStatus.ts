@@ -5,6 +5,11 @@ export interface JobStatus {
   status: "draft" | "queued" | "processing" | "completed" | "failed" | "lost";
   output_url?: string | null;
   error?: string | null;
+  error_code?: string | null;
+  error_provider?: string | null;
+  error_console_url?: string | null;
+  failed_step?: string | null;
+  failed_at?: string | null;
 }
 
 export function useJobStatus(jobId: string | null, enabled = true) {
@@ -13,11 +18,11 @@ export function useJobStatus(jobId: string | null, enabled = true) {
     queryFn: async () => {
       const res = await fetch(`/api/status/${jobId}`);
       if (res.status === 404) {
-        return { status: "lost", output_url: null, error: "Job not found" };
+        return { status: "lost", output_url: null, error: "Job not found", error_code: "job_lost" };
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json() as { status: string; output_url?: string | null; error?: string | null };
-      return data as JobStatus;
+      const data = (await res.json()) as JobStatus;
+      return data;
     },
     enabled: !!jobId && enabled,
     refetchInterval: (query) => {

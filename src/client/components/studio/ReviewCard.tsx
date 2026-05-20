@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { StudioPhase, TileState } from "./StudioPanel";
 import { formatTime } from "@/client/lib/format-time";
+import { toUiError, type UiError } from "@/shared/errors";
 
 interface Segment {
   start: number;
@@ -24,7 +25,7 @@ interface ReviewCardProps {
   phase: StudioPhase;
   onTranscriptChange: (next: string) => void;
   onConfirm: () => void;
-  onError: (msg: string) => void;
+  onError: (err: UiError) => void;
 }
 
 const STATUS_LABELS: Record<TileState, string> = {
@@ -190,7 +191,7 @@ export function ReviewCard({
       }
       onConfirm();
     } catch (err) {
-      onError(String(err));
+      onError(toUiError(err, "שמירת התמלול נכשלה"));
     } finally {
       setSaving(false);
     }

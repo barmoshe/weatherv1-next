@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { desktop } from "@/client/lib/desktop";
+import { ErrorBanner } from "@/client/components/common/ErrorBanner";
+import type { UiError } from "@/shared/errors";
 
 // Fallback used only until /api/auth/me responds with the canonical
 // build-time username. The disabled username field is informational; the
@@ -21,7 +23,7 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<UiError | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +63,11 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
         error?: string;
       };
       if (!data.success || !data.token) {
-        setError(data.error || "סיסמה שגויה");
+        setError({
+          message: data.error || "סיסמה שגויה",
+          code: res.status === 401 ? "invalid_password" : `http_${res.status}`,
+          step: "login",
+        });
         setSubmitting(false);
         return;
       }
@@ -95,7 +101,7 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
       setPhase("authenticated");
       setPassword("");
     } catch {
-      setError("שגיאת רשת");
+      setError({ message: "שגיאת רשת", code: "network", step: "login" });
       setSubmitting(false);
     }
   }, [username, password, submitting]);
@@ -181,9 +187,9 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
           </label>
 
           {error && (
-            <p className="login-card__error" role="alert">
-              {error}
-            </p>
+            <div className="login-card__error-host">
+              <ErrorBanner error={error} compact onDismiss={() => setError(null)} />
+            </div>
           )}
 
           <button

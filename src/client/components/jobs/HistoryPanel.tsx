@@ -7,9 +7,10 @@ interface HistoryPanelProps {
   jobs: HistoryEntry[];
   onRestore?: (entry: HistoryEntry) => void;
   onRemove?: (jobId: string) => void;
+  onRetryRender?: (jobId: string) => void;
 }
 
-export function HistoryPanel({ hidden, jobs, onRestore, onRemove }: HistoryPanelProps) {
+export function HistoryPanel({ hidden, jobs, onRestore, onRemove, onRetryRender }: HistoryPanelProps) {
   const done = jobs.filter((j) => HISTORY_JOB_STATUSES.has(j.status));
   const handleClearAll = () => {
     if (!onRemove) return;
@@ -36,6 +37,7 @@ export function HistoryPanel({ hidden, jobs, onRestore, onRemove }: HistoryPanel
               lane="history"
               onRestore={onRestore}
               onDelete={onRemove}
+              onRetryRender={onRetryRender}
             />
           ))
         )}

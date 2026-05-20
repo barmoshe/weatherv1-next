@@ -6,6 +6,8 @@ import { useCatalog } from "@/client/hooks/useCatalog";
 import { segmentTimeRange } from "@/client/lib/catalog-display";
 import { labelFor } from "@/client/lib/tag-labels";
 import { formatTime } from "@/client/lib/format-time";
+import { ErrorBanner } from "@/client/components/common/ErrorBanner";
+import { toUiError, type UiError } from "@/shared/errors";
 
 interface FlatSegment {
   video: ParsedVideo;
@@ -111,7 +113,7 @@ export function CatalogPickerModal({
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
   const [selected, setSelected] = useState<FlatSegment | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<UiError | null>(null);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -183,14 +185,13 @@ export function CatalogPickerModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json() as {
-        success: boolean;
-        error?: string;
+      const data = (await res.json()) as Record<string, unknown> & {
+        success?: boolean;
         timeline?: TimelinePick[];
         validator?: Record<string, unknown>;
       };
       if (!data.success || !data.timeline) {
-        setError(data.error ?? "שגיאה בשמירה");
+        setError(toUiError({ ...data, failed_step: "picker" }, "שגיאה בשמירה"));
         return;
       }
       onCommitted({ timeline: data.timeline, validator: data.validator ?? {} });
@@ -201,7 +202,7 @@ export function CatalogPickerModal({
         setSelected(null);
       }
     } catch (err) {
-      setError(String(err));
+      setError(toUiError(err, "שגיאה בשמירה"));
     } finally {
       setSaving(false);
     }
@@ -232,7 +233,7 @@ export function CatalogPickerModal({
         </header>
 
         <div className="modal-body catalog-picker">
-          {error && <div className="error-banner" role="alert">{error}</div>}
+          {error && <ErrorBanner compact error={error} onDismiss={() => setError(null)} />}
 
           <div className="catalog-picker__toolbar">
             <div className="catalog-picker__toggle" role="group" aria-label="מסנן ראשי">

@@ -3,6 +3,7 @@
 import type { CatalogHealth } from "./settingsTypes";
 import type { DotVariant } from "./settingsTypes";
 import { StatusDot } from "./settingsShared";
+import { ErrorBanner } from "@/client/components/common/ErrorBanner";
 
 interface SettingsCatalogPanelProps {
   onRefreshHealth: () => void;
@@ -59,15 +60,16 @@ export function SettingsCatalogPanel({
           </div>
         )}
         {!healthLoading && healthError && (
-          <div className="catalog-card">
-            <span className="dot is-missing" />
-            <span>
-              שגיאה בטעינת מצב הקטלוג:{' '}
-              <span dir="ltr" lang="en" className="settings-ltr-snippet">
-                {healthError}
-              </span>
-            </span>
-          </div>
+          <ErrorBanner
+            compact
+            error={{
+              message: "שגיאה בטעינת מצב הקטלוג",
+              details: healthError,
+              step: "catalog",
+              code: "catalog_health",
+            }}
+            onRetry={onRefreshHealth}
+          />
         )}
         {!healthLoading && !healthError && health && (
           <>

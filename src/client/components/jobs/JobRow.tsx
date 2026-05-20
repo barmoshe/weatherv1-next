@@ -2,12 +2,15 @@
 import type { HistoryEntry } from "@/client/hooks/useLocalHistory";
 import type { JobUsageSummary } from "@/shared/usage";
 import { formatRelativeTime, formatDuration } from "@/client/lib/format-time";
+import { ErrorBanner } from "@/client/components/common/ErrorBanner";
+import { stepLabelHe } from "@/client/lib/step-labels";
 
 interface JobRowProps {
   entry: HistoryEntry;
   lane: "active" | "history";
   onRestore?: (entry: HistoryEntry) => void;
   onDelete?: (jobId: string) => void;
+  onRetryRender?: (jobId: string) => void;
 }
 
 const STATUS_TAG_HE: Record<string, string> = {
@@ -26,18 +29,30 @@ function usageShort(s: JobUsageSummary): string {
   return `~$${total.toFixed(3)} · ${inT}/${outT} tok`;
 }
 
-export function JobRow({ entry, lane, onRestore, onDelete }: JobRowProps) {
+export function JobRow({ entry, lane, onRestore, onDelete, onRetryRender }: JobRowProps) {
   const dotClass = `is-${entry.status || "queued"}`;
   const tag = STATUS_TAG_HE[entry.status];
   const relTime = formatRelativeTime(entry.created_at);
   const dur = entry.duration_sec ? formatDuration(entry.duration_sec) : "";
+  const isFailure = entry.status === "failed" || entry.status === "lost";
+  const canRetryRender =
+    !!onRetryRender && entry.status === "failed" && entry.failed_step === "render";
+  const stepLabel = stepLabelHe(entry.failed_step);
+  const failureSummary = isFailure && (entry.error || entry.error_code)
+    ? `${stepLabel ? `${stepLabel}: ` : ""}${entry.error ?? entry.error_code ?? ""}`
+    : undefined;
 
-  const handleActivate = () => onRestore?.(entry);
+  const handleActivate = (e: React.MouseEvent) => {
+    // Don't restore when the click landed inside the failure details disclosure.
+    if ((e.target as HTMLElement | null)?.closest(".job-row__failure")) return;
+    onRestore?.(entry);
+  };
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onRestore?.(entry);
-    }
+    if (e.key !== "Enter" && e.key !== " ") return;
+    // Same bail-out for keyboard activations.
+    if ((e.target as HTMLElement | null)?.closest(".job-row__failure")) return;
+    e.preventDefault();
+    onRestore?.(entry);
   };
 
   return (
@@ -49,8 +64,12 @@ export function JobRow({ entry, lane, onRestore, onDelete }: JobRowProps) {
       onClick={handleActivate}
       onKeyDown={handleKeyDown}
     >
-      <span className={`job-status-dot ${dotClass}`} aria-hidden="true" />
-      <span className="job-preview">
+      <span
+        className={`job-status-dot ${dotClass}`}
+        aria-hidden="true"
+        title={failureSummary}
+      />
+      <span className="job-preview" title={failureSummary}>
         {entry.transcript_preview || entry.job_id}
       </span>
       <span className="job-meta">
@@ -91,6 +110,28 @@ export function JobRow({ entry, lane, onRestore, onDelete }: JobRowProps) {
         </button>
       ) : (
         <span aria-hidden="true" />
+      )}
+      {isFailure && (entry.error || entry.error_code) && (
+        <details
+          className="job-row__failure"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <summary className="job-row__failure-summary">
+            הצג פרטי שגיאה
+          </summary>
+          <ErrorBanner
+            compact
+            error={{
+              message: entry.error ?? entry.error_code ?? "שגיאה",
+              code: entry.error_code,
+              provider: entry.error_provider,
+              consoleUrl: entry.error_console_url,
+              step: entry.failed_step,
+              at: entry.failed_at,
+            }}
+            onRetry={canRetryRender ? () => onRetryRender!(entry.job_id) : undefined}
+          />
+        </details>
       )}
     </li>
   );

@@ -16,6 +16,7 @@ import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/p
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
+import { recordJobFailure, recordPickerFailure } from "@/server/jobs/failure";
 import type { Scene, ShortlistEntry } from "@/shared/types";
 import type { LlmCallUsage, UsageCallRecord } from "@/shared/usage";
 import { persistPlanUsage } from "@/server/jobs/usage-persist";
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
     });
     const rawTimeline = pickerResult.timeline;
     if (scenes.length && rawTimeline.length === 0) {
+      recordPickerFailure(jobId, pickerResult.picker_status, "בחירת הקליפים נכשלה.");
       return pickerFailureResponse(pickerResult.picker_status, 422);
     }
 
@@ -158,8 +160,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, scenes, timeline, validator: validatorResult, picker_status: pickerResult.picker_status });
   } catch (err) {
-    if (err instanceof PickerFailureError) return pickerFailureResponse(err.picker_status);
+    if (err instanceof PickerFailureError) {
+      recordPickerFailure(jobId, err.picker_status, "בחירת הקליפים נכשלה.");
+      return pickerFailureResponse(err.picker_status);
+    }
     const handled = mapProviderError(err);
+    recordJobFailure(jobId, "scene_planner", err, handled);
     if (handled) return NextResponse.json(handled.body, { status: handled.status });
     console.error("[plan]", err);
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
@@ -232,14 +238,23 @@ async function handleVer2(args: Ver2Args): Promise<NextResponse> {
     });
 
     if (scenes.length && pickerResult.timeline.length === 0) {
+      recordPickerFailure(jobId, pickerResult.picker_status, "בחירת הקליפים נכשלה.");
       return pickerFailureResponse(pickerResult.picker_status, 422);
     }
 
-    // Stamp picker_reason from picker output, then run mechanical coverage split.
+    // Ver2 skips the validator, which is where ver1 enriched picks with their
+    // parent clip_id. Recover it from the shortlists so the render has video_id.
+    const segmentToClipId = new Map<string, string>();
+    for (const list of Object.values(shortlistsByScene)) {
+      for (const s of list) segmentToClipId.set(s.segment_id, s.clip_id);
+    }
+
     const timeline: CoveragePick[] = pickerResult.timeline.map((p) => {
       const m: CoveragePick = { ...p };
       const trimmed = (p.reason ?? "").trim();
       if (trimmed) m.picker_reason = trimmed;
+      const clipId = segmentToClipId.get(p.segment_id);
+      if (clipId) m.video_id = clipId;
       return m;
     });
 
@@ -273,8 +288,12 @@ async function handleVer2(args: Ver2Args): Promise<NextResponse> {
       picker_status: pickerResult.picker_status,
     });
   } catch (err) {
-    if (err instanceof PickerFailureError) return pickerFailureResponse(err.picker_status);
+    if (err instanceof PickerFailureError) {
+      recordPickerFailure(jobId, err.picker_status, "בחירת הקליפים נכשלה.");
+      return pickerFailureResponse(err.picker_status);
+    }
     const handled = mapProviderError(err);
+    recordJobFailure(jobId, "scene_planner", err, handled);
     if (handled) return NextResponse.json(handled.body, { status: handled.status });
     console.error("[plan ver2]", err);
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });

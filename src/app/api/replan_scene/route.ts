@@ -8,6 +8,7 @@ import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { persistReplanPickerUsage } from "@/server/jobs/usage-persist";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
+import { recordJobFailure, recordPickerFailure } from "@/server/jobs/failure";
 
 function pickerFailureResponse(pickerStatus: PickerRunStatus, status = 502) {
   return NextResponse.json(
@@ -200,8 +201,12 @@ export async function POST(req: NextRequest) {
       picker_status: pickerResult.picker_status,
     });
   } catch (err) {
-    if (err instanceof PickerFailureError) return pickerFailureResponse(err.picker_status);
+    if (err instanceof PickerFailureError) {
+      recordPickerFailure(jobId, err.picker_status, "בחירת הקליפ לסצינה נכשלה.");
+      return pickerFailureResponse(err.picker_status);
+    }
     const handled = mapProviderError(err);
+    recordJobFailure(jobId, "picker", err, handled);
     if (handled) return NextResponse.json(handled.body, { status: handled.status });
     console.error("[replan_scene]", err);
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });

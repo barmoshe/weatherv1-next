@@ -27,6 +27,12 @@ export async function GET() {
       transcript_preview: transcriptPreview(job.job_id),
       usage_summary: job.usage_summary,
       usage_calls: job.usage_calls,
+      error: job.error ?? undefined,
+      error_code: job.error_code ?? undefined,
+      error_provider: job.error_provider ?? undefined,
+      error_console_url: job.error_console_url ?? undefined,
+      failed_step: job.failed_step ?? undefined,
+      failed_at: job.failed_at ?? undefined,
     }))
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 

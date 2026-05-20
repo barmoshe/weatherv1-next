@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState, useCallback } from "react";
 import { desktop } from "@/client/lib/desktop";
+import { toUiError, type UiError } from "@/shared/errors";
 import type { StudioPhase } from "./StudioPanel";
 
 interface UploadCardProps {
@@ -11,7 +12,7 @@ interface UploadCardProps {
     filename: string;
     segments: Array<{ start: number; end: number; text: string }>;
   }) => void;
-  onError: (msg: string) => void;
+  onError: (err: UiError) => void;
   onPhaseChange: (phase: StudioPhase) => void;
 }
 
@@ -21,10 +22,9 @@ export function UploadCard({ onSuccess, onError, onPhaseChange }: UploadCardProp
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleTranscribeResponse = useCallback(
-    async (res: Response, fallbackName: string) => {
-      const data = await res.json() as {
-        success: boolean;
-        error?: string;
+    async (res: Response, fallbackName: string): Promise<void | UiError> => {
+      const data = (await res.json()) as Record<string, unknown> & {
+        success?: boolean;
         job_id?: string;
         transcript?: string;
         duration?: number;
@@ -32,7 +32,7 @@ export function UploadCard({ onSuccess, onError, onPhaseChange }: UploadCardProp
         segments?: Array<{ start: number; end: number; text: string }>;
       };
       if (!data.success || !data.job_id) {
-        throw new Error(data.error ?? "Transcription failed");
+        return toUiError({ ...data, failed_step: "transcribe" }, "התמלול נכשל");
       }
       onSuccess({
         job_id: data.job_id,
@@ -54,9 +54,13 @@ export function UploadCard({ onSuccess, onError, onPhaseChange }: UploadCardProp
         const fd = new FormData();
         fd.append("audio", file);
         const res = await fetch("/api/transcribe", { method: "POST", body: fd });
-        await handleTranscribeResponse(res, file.name);
+        const failure = await handleTranscribeResponse(res, file.name);
+        if (failure) {
+          onError(failure);
+          onPhaseChange("upload");
+        }
       } catch (err) {
-        onError(String(err));
+        onError(toUiError(err, "התמלול נכשל"));
         onPhaseChange("upload");
       } finally {
         setLoading(false);
@@ -82,9 +86,13 @@ export function UploadCard({ onSuccess, onError, onPhaseChange }: UploadCardProp
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ desktop_file_path: picked.path }),
       });
-      await handleTranscribeResponse(res, picked.name);
+      const failure = await handleTranscribeResponse(res, picked.name);
+      if (failure) {
+        onError(failure);
+        onPhaseChange("upload");
+      }
     } catch (err) {
-      onError(String(err));
+      onError(toUiError(err, "התמלול נכשל"));
       onPhaseChange("upload");
     } finally {
       setLoading(false);

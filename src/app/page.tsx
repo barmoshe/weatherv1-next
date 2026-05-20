@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, Suspense } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { useTabFromUrl, useJobFromUrl, useUrlParams } from "@/client/hooks/useTabFromUrl";
 import {
   ACTIVE_JOB_STATUSES,
@@ -28,6 +28,22 @@ function AppInner() {
   const updateUrl = useUrlParams();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { history, addEntry, updateEntry, removeEntry, syncFromServer } = useLocalHistory();
+  const queryClient = useQueryClient();
+
+  const handleRetryRender = useCallback(
+    async (jobId: string) => {
+      const res = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/retry`, {
+        method: "POST",
+      });
+      const data = (await res.json()) as Record<string, unknown>;
+      if (!data.success) {
+        throw new Error((data.error as string) ?? `HTTP ${res.status}`);
+      }
+      updateEntry(jobId, { status: "queued", error: undefined, failed_step: undefined });
+      queryClient.invalidateQueries({ queryKey: ["job-status", jobId] });
+    },
+    [queryClient, updateEntry],
+  );
 
   const handleRestore = useCallback(
     (entry: HistoryEntry) => {
@@ -105,13 +121,15 @@ function AppInner() {
         <StudioPanel
           hidden={tab !== "studio"}
           restoreJobId={urlJobId}
+          jobs={history}
           onJobStarted={handleJobStarted}
           onJobCompleted={handleJobCompleted}
           onJobIdChange={setUrlJobId}
           onJobStatusChange={handleJobStatusChange}
+          onRetryRender={handleRetryRender}
         />
-        <ActivePanel hidden={tab !== "active"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} />
-        <HistoryPanel hidden={tab !== "history"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} />
+        <ActivePanel hidden={tab !== "active"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} onRetryRender={handleRetryRender} />
+        <HistoryPanel hidden={tab !== "history"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} onRetryRender={handleRetryRender} />
         <AnalyticsPanel hidden={tab !== "analytics"} jobs={history} />
         {tab === "catalog" ? (
           <Suspense fallback={<div className="loading">טוען קטלוג…</div>}>

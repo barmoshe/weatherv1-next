@@ -1214,15 +1214,49 @@
             margin-inline-start: auto;
             font-variant-numeric: tabular-nums;
         }
+        .diag-summary .is-good { color: var(--v1-success); font-weight: 700; }
+        .diag-summary .is-warn { color: var(--v1-warning); font-weight: 700; }
+        .diag-summary .is-bad  { color: var(--v1-danger);  font-weight: 800; }
         .tile--diag .status-pill { margin-inline-start: 0; }
         .diag-chevron { transition: transform 0.25s ease; color: var(--v1-ink-muted); }
         .tile--diag .diag-body { display: none; margin-block-start: 0.6rem; }
-        .tile--diag[data-expanded="true"] .diag-body  { display: block; }
+        .tile--diag[data-expanded="true"] .diag-body  {
+            display: block;
+            max-height: 60dvh;
+            overflow-y: auto;
+        }
         .tile--diag[data-expanded="true"] .diag-chevron { transform: rotate(180deg); }
         .tile--diag[data-expanded="true"] {
             grid-column: 1 / -1;
             box-shadow: 0 8px 24px rgb(0 0 0 / .12);
         }
+
+        /* Catalog-health chip row inside the drawer */
+        #catalog-health {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem 0.55rem;
+            align-items: center;
+            margin-block-end: 0.7rem;
+        }
+        .why-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.18rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1.4;
+            background: var(--v1-coral-soft);
+            color: var(--v1-ink);
+            font-variant-numeric: tabular-nums;
+        }
+        .why-badge--warn  { background: var(--v1-warning); color: var(--v1-ink); }
+        .why-badge--error { background: var(--v1-danger);  color: #fff; }
+        .why-badge--note  { background: var(--v1-cream);   color: var(--v1-ink-muted); }
+        .why-badge--score.is-good { background: rgba(31, 168, 113, 0.18); color: var(--v1-success); }
+        .why-badge--score.is-warn { background: rgba(245, 166, 35, 0.22); color: #8a5c00; }
+        .why-badge--score.is-bad  { background: rgba(200, 32, 43, 0.15);  color: var(--v1-danger); }
 
         /* ── Phone frame around the video preview ─────────── */
         #video-container {
@@ -1415,19 +1449,42 @@
             background: var(--v1-paper);
             border-radius: var(--radius-sm);
             overflow: hidden;
+            table-layout: fixed;
         }
         #why-table thead {
             background: var(--v1-coral-soft);
             color: var(--v1-ink);
         }
+        #why-table thead th {
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: var(--v1-coral-soft);
+        }
+        #why-table th:nth-child(1) { width: 2.5rem; }
+        #why-table th:nth-child(2) { width: 30%; }
+        #why-table th:nth-child(3) { width: 5.5rem; }
+        #why-table th:nth-child(4) { width: 9rem; }
         #why-table th, #why-table td {
             padding: 0.55rem 0.7rem;
             text-align: start;
             vertical-align: middle;
+            word-break: break-word;
         }
         #why-table tbody tr { border-block-start: 1px solid var(--v1-cream); }
         #why-table tbody tr:hover { background: var(--v1-cream); }
-        #why-table .reason-cell { color: var(--v1-ink-muted); }
+        #why-table .reason-cell {
+            color: var(--v1-ink-muted);
+            line-height: 1.45;
+        }
+        #why-table tbody tr:hover .reason-cell { color: var(--v1-ink); }
+        #why-table .why-empty {
+            text-align: center;
+            color: var(--v1-ink-muted);
+            padding: 1.1rem 0.5rem;
+            font-style: italic;
+        }
         .flag-chip {
             display: inline-block;
             background: var(--v1-red);
@@ -2583,10 +2640,17 @@
             .phone-frame { max-width: 280px; }
             #why-table { font-size: 0.82rem; }
             #why-table th, #why-table td { padding: 0.4rem 0.5rem; }
+            #why-table th:nth-child(2) { width: auto; }
             .tab-nav { gap: 1rem; padding: 0.5rem 0.875rem 0; top: 56px; }
             .tab-nav button { font-size: 0.95rem; }
             .job-row { grid-template-columns: auto 1fr auto; padding: 0.7rem 0.85rem; }
             .job-meta { display: none; }
+        }
+        @media (max-width: 520px) {
+            #why-table th:nth-child(3),
+            #why-table td:nth-child(3),
+            #why-table th:nth-child(4),
+            #why-table td:nth-child(4) { display: none; }
         }
 
         /* Phone — collapse text labels on action buttons; keep glyphs */
@@ -4368,6 +4432,178 @@
             font-size: 0.88rem;
             margin-block-end: 0.75rem;
         }
+        .error-banner--compact {
+            padding: 0.4rem 0.55rem;
+            font-size: 0.82rem;
+            margin-block-end: 0.4rem;
+        }
+        .error-banner__row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.55rem;
+        }
+        .error-banner__icon {
+            flex: 0 0 auto;
+            margin-block-start: 0.1rem;
+            color: var(--v1-danger, #d23f3f);
+        }
+        .error-banner__body {
+            flex: 1 1 auto;
+            min-inline-size: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .error-banner__message {
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--v1-danger, #d23f3f);
+            overflow-wrap: anywhere;
+        }
+        .error-banner__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+        .error-banner__chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.05rem 0.4rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            background: rgba(210, 63, 63, 0.14);
+            color: var(--v1-danger, #d23f3f);
+            border: 1px solid rgba(210, 63, 63, 0.28);
+        }
+        .error-banner__chip--code {
+            font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+            font-size: 0.7rem;
+        }
+        .error-banner__details {
+            margin-block-start: 0.35rem;
+            font-size: 0.78rem;
+            color: var(--v1-danger, #d23f3f);
+        }
+        .error-banner__details summary {
+            cursor: pointer;
+            opacity: 0.8;
+        }
+        .error-banner__details pre {
+            margin: 0.35rem 0 0;
+            padding: 0.45rem 0.55rem;
+            background: rgba(210, 63, 63, 0.08);
+            border-radius: 6px;
+            font-size: 0.72rem;
+            max-block-size: 11rem;
+            overflow: auto;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+        .error-banner__actions {
+            flex: 0 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            align-items: center;
+        }
+        .error-banner__action {
+            font: inherit;
+            font-size: 0.78rem;
+            background: transparent;
+            color: var(--v1-danger, #d23f3f);
+            border: 1px solid rgba(210, 63, 63, 0.45);
+            border-radius: 6px;
+            padding: 0.18rem 0.5rem;
+            cursor: pointer;
+            text-decoration: none;
+            line-height: 1.2;
+        }
+        .error-banner__action:hover {
+            background: rgba(210, 63, 63, 0.12);
+        }
+        .error-banner__action--link {
+            font-weight: 600;
+        }
+        .error-banner__dismiss {
+            border: none;
+            padding: 0 0.35rem;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+        .error-banner__dismiss:hover {
+            background: transparent;
+            opacity: 0.7;
+        }
+        /* ── JobTimeline diagnostic block ─────────────────────────────── */
+        .job-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-block-start: 0.6rem;
+            padding-block-start: 0.6rem;
+            border-block-start: 1px dashed rgba(0, 0, 0, 0.12);
+        }
+        .job-timeline__title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            opacity: 0.7;
+            margin-block-end: 0.2rem;
+        }
+        .job-timeline__row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.4rem 0.55rem;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 6px;
+            font-size: 0.82rem;
+        }
+        .job-timeline__row.is-failed {
+            background: rgba(210, 63, 63, 0.1);
+            outline: 1px solid rgba(210, 63, 63, 0.4);
+        }
+        .job-timeline__step {
+            font-weight: 600;
+        }
+        .job-timeline__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            justify-content: flex-end;
+            font-size: 0.74rem;
+            opacity: 0.85;
+        }
+        .job-timeline__chip {
+            display: inline-flex;
+            padding: 0.05rem 0.4rem;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.06);
+        }
+        .job-timeline__chip[dir="ltr"] {
+            font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+        }
+        .job-timeline__cost {
+            font-variant-numeric: tabular-nums;
+        }
+        /* ── JobRow failure expansion ─────────────────────────────────── */
+        .job-row__failure {
+            grid-column: 1 / -1;
+            margin-block-start: 0.45rem;
+        }
+        .job-row__failure-summary {
+            cursor: pointer;
+            font-size: 0.78rem;
+            color: var(--v1-danger, #d23f3f);
+            opacity: 0.85;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .job-row__failure-summary::-webkit-details-marker { display: none; }
+        .job-row__failure[open] .job-row__failure-summary { opacity: 1; }
         .modal-footer.detail-footer {
             display: flex;
             align-items: center;

@@ -14,5 +14,10 @@ export async function GET(
     status: job.status,
     output_url: job.output_url ?? null,
     error: job.error ?? null,
+    error_code: job.error_code ?? null,
+    error_provider: job.error_provider ?? null,
+    error_console_url: job.error_console_url ?? null,
+    failed_step: job.failed_step ?? null,
+    failed_at: job.failed_at ?? null,
   });
 }

@@ -12,6 +12,12 @@ export interface HistoryEntry {
   status: string;
   usage_summary?: JobUsageSummary;
   usage_calls?: UsageCallRecord[];
+  error?: string;
+  error_code?: string;
+  error_provider?: string;
+  error_console_url?: string;
+  failed_step?: string;
+  failed_at?: string;
 }
 
 const KEY = "weatherv1.history";

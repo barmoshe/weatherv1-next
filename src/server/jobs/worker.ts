@@ -11,6 +11,7 @@
 
 import path from "node:path";
 import { getJob, updateJob, crashRecoverySweep, getAllJobs } from "./store";
+import { markJobCompleted, markRenderFailed } from "./failure";
 import { updatePlanBundle } from "./plan-bundle";
 import { renderVideo } from "@/server/ffmpeg/renderer";
 import { readCatalog } from "@/server/catalog/storage";
@@ -67,7 +68,7 @@ async function runJob(jobId: string, audioFilename: string): Promise<void> {
     sortTimelineForRender(timeline);
 
     if (!timeline.length) {
-      updateJob(jobId, { status: "failed", error: "No timeline in plan bundle" });
+      markRenderFailed(jobId, "no_timeline", "No timeline in plan bundle");
       return;
     }
 
@@ -85,18 +86,15 @@ async function runJob(jobId: string, audioFilename: string): Promise<void> {
     }
 
     if (success) {
-      updateJob(jobId, {
-        status: "completed",
-        output_url: path.basename(outputPath),
-      });
+      markJobCompleted(jobId, path.basename(outputPath));
       await updatePlanBundle(jobId, { output_url: path.basename(outputPath) });
     } else {
-      updateJob(jobId, { status: "failed", error: "Renderer returned failure" });
+      markRenderFailed(jobId, "render_ffmpeg_failed", "Renderer returned failure", "ffmpeg");
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`[worker] job ${jobId} failed:`, msg);
-    updateJob(jobId, { status: "failed", error: msg });
+    markRenderFailed(jobId, "worker_unknown", msg);
   }
 }
 

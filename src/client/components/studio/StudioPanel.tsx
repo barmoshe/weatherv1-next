@@ -10,7 +10,10 @@ import { RenderCard } from "./RenderCard";
 import { OutputCard } from "./OutputCard";
 import { WhyPanel } from "./WhyPanel";
 import { HeroStrip } from "./HeroStrip";
+import { ErrorBanner } from "@/client/components/common/ErrorBanner";
+import { toUiError, type UiError } from "@/shared/errors";
 import type { Scene } from "@/shared/types";
+import type { HistoryEntry } from "@/client/hooks/useLocalHistory";
 
 export type StudioPhase = "upload" | "transcribing" | "transcribed" | "reviewing" | "planning" | "planned" | "rendering" | "done" | "failed";
 
@@ -56,15 +59,19 @@ function deriveTileStates(phase: StudioPhase): Record<string, TileState> {
 interface StudioPanelProps {
   hidden?: boolean;
   restoreJobId?: string | null;
+  /** Live history snapshot (already polled by the parent) so the WhyPanel timeline
+   * can show usage data for the current job without duplicating the poll. */
+  jobs?: HistoryEntry[];
   onJobStarted?: (jobId: string, audioFilename: string, duration: number, createdAt: string, transcriptPreview: string) => void;
   onJobCompleted?: (jobId: string, outputUrl: string) => void;
   onJobIdChange?: (jobId: string | null) => void;
   onJobStatusChange?: (jobId: string, status: string, outputUrl?: string | null) => void;
+  onRetryRender?: (jobId: string) => Promise<void> | void;
 }
 
-export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted, onJobIdChange, onJobStatusChange }: StudioPanelProps) {
+export function StudioPanel({ hidden, restoreJobId, jobs, onJobStarted, onJobCompleted, onJobIdChange, onJobStatusChange, onRetryRender }: StudioPanelProps) {
   const [phase, setPhase] = useState<StudioPhase>("upload");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<UiError | null>(null);
   const [transcriptData, setTranscriptData] = useState<TranscriptData | null>(null);
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const qc = useQueryClient();
@@ -93,20 +100,28 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
         if (!planRes.ok) {
           if (planRes.status === 404) {
             setPhase("failed");
-            let detail = `Job ${restoreJobId.slice(0, 8)} not found`;
+            let message = `Job ${restoreJobId.slice(0, 8)} not found`;
+            let code = "job_lost";
+            let details: string | undefined;
             try {
               const body = (await planRes.json()) as { error?: string };
               if (body.error === "Plan not found") {
-                detail =
-                  `Plan bundle missing for job ${restoreJobId.slice(0, 8)} — metadata synced but plan file was never uploaded to R2. From the Mac that still has outputs/, run scripts/backfill-r2-plan-bundles.ts (or touch/save the job once after updating).`;
+                message = `חבילת התכנית חסרה עבור משימה ${restoreJobId.slice(0, 8)} — המטא-דאטה סונכרנה אך קובץ התכנית לא הועלה ל-R2.`;
+                code = "plan_missing";
+                details =
+                  "From the Mac that still has outputs/, run scripts/backfill-r2-plan-bundles.ts (or touch/save the job once after updating).";
               }
             } catch {
               /* ignore malformed JSON */
             }
-            setError(detail);
+            setError({ message, code, step: "restore", details });
             return;
           }
-          setError(`Could not restore job ${restoreJobId.slice(0, 8)}`);
+          setError({
+            message: `לא ניתן לטעון את משימה ${restoreJobId.slice(0, 8)}`,
+            code: "restore_failed",
+            step: "restore",
+          });
           return;
         }
         const planPayload = await planRes.json() as {
@@ -147,7 +162,13 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
           setPhase("done");
           if (outputUrl) onJobCompleted?.(restoreJobId, outputUrl);
         } else if (liveStatus === "failed" || liveStatus === "lost") {
-          if (liveStatus === "lost") setError(`Job ${restoreJobId.slice(0, 8)} not found`);
+          if (liveStatus === "lost") {
+            setError({
+              message: `משימה ${restoreJobId.slice(0, 8)} לא נמצאה`,
+              code: "job_lost",
+              step: "restore",
+            });
+          }
           setPhase("failed");
         } else if (liveStatus === "processing" || liveStatus === "queued") {
           setPhase("rendering");
@@ -157,7 +178,7 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
           setPhase("reviewing");
         }
       } catch (err) {
-        if (!cancelled) setError(String(err));
+        if (!cancelled) setError(toUiError(err, "טעינת המשימה נכשלה"));
       }
     })();
 
@@ -180,7 +201,12 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
       setPhase("done");
       onJobCompleted?.(jobId, jobStatus.output_url);
     } else if (jobStatus.status === "failed" || jobStatus.status === "lost") {
-      setError(jobStatus.error ?? "Render failed");
+      setError(
+        toUiError(
+          { ...jobStatus, failed_step: jobStatus.failed_step ?? "render" },
+          "הרינדור נכשל",
+        ),
+      );
       setPhase("failed");
     } else if (jobStatus.status === "processing" && phase !== "rendering") {
       setPhase("rendering");
@@ -227,15 +253,15 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
           validator: planData.validator,
         }),
       });
-      const data = await res.json() as { success: boolean; error?: string };
+      const data = (await res.json()) as Record<string, unknown>;
       if (!data.success) {
-        setError(data.error ?? "Render failed");
+        setError(toUiError({ ...data, failed_step: "render" }, "הרינדור נכשל"));
         setPhase("planned");
       } else {
         qc.invalidateQueries({ queryKey: ["job-status", transcriptData.job_id] });
       }
     } catch (err) {
-      setError(String(err));
+      setError(toUiError(err, "הרינדור נכשל"));
       setPhase("planned");
     }
   }, [transcriptData, planData, qc]);
@@ -245,6 +271,19 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
     setError(null);
     if (phase !== "done") setPhase("planned");
   }, [phase]);
+
+  const handleRetryRender = useCallback(async () => {
+    if (!jobId || !onRetryRender) return;
+    setError(null);
+    setPhase("rendering");
+    try {
+      await onRetryRender(jobId);
+      qc.invalidateQueries({ queryKey: ["job-status", jobId] });
+    } catch (err) {
+      setError(toUiError(err, "ניסיון חוזר נכשל"));
+      setPhase("failed");
+    }
+  }, [jobId, onRetryRender, qc]);
 
   const handleNewJob = useCallback(() => {
     setPhase("upload");
@@ -256,6 +295,7 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
 
   const tileStates = deriveTileStates(phase);
   const showUploadBanner = phase === "upload";
+  const currentJobEntry = jobId ? jobs?.find((j) => j.job_id === jobId) : undefined;
 
   const phaseIndex = {
     upload: 0, transcribing: 1, transcribed: 2, reviewing: 2, planning: 3, planned: 3, rendering: 4, done: 5, failed: 4,
@@ -270,8 +310,14 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
       data-tab-panel="studio"
       hidden={hidden}
     >
-      <div id="error-banner" hidden={!error}>
-        {error}
+      <div id="error-banner-host" hidden={!error}>
+        {error && (
+          <ErrorBanner
+            error={error}
+            onDismiss={() => setError(null)}
+            onRetry={error.step === "render" && jobId ? handleRetryRender : undefined}
+          />
+        )}
       </div>
 
       <div className={`studio-topbar${showUploadBanner ? " has-upload" : ""}`}>
@@ -337,6 +383,10 @@ export function StudioPanel({ hidden, restoreJobId, onJobStarted, onJobCompleted
           timeline={planData?.timeline ?? []}
           validator={planData?.validator ?? {}}
           scenes={planData?.scenes ?? []}
+          usage_calls={currentJobEntry?.usage_calls}
+          usage_summary={currentJobEntry?.usage_summary}
+          failed_step={currentJobEntry?.failed_step ?? jobStatus?.failed_step ?? null}
+          job_status={currentJobEntry?.status ?? jobStatus?.status}
         />
       </div>
     </section>

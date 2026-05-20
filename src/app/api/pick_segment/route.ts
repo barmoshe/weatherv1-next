@@ -6,6 +6,7 @@ import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/p
 import { updatePlanBundle } from "@/server/jobs/plan-bundle";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
+import { recordJobFailure } from "@/server/jobs/failure";
 
 export async function POST(req: NextRequest) {
   const denied = assertDesktopAuth(req);
@@ -150,6 +151,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     const handled = mapProviderError(err);
+    if (jobId) recordJobFailure(jobId, "picker", err, handled);
     if (handled) return NextResponse.json(handled.body, { status: handled.status });
     console.error("[pick_segment]", err);
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });

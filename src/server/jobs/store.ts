@@ -27,6 +27,16 @@ export interface JobRecord {
   status: JobStatus;
   output_url?: string | null;
   error?: string | null;
+  /** Stable identifier so the UI can branch (e.g. show a billing CTA). */
+  error_code?: string | null;
+  /** Which integration/runtime produced the error: openai, anthropic, ffmpeg, worker. */
+  error_provider?: string | null;
+  /** Deep link the UI can offer when the failure is fixable in a provider console. */
+  error_console_url?: string | null;
+  /** Pipeline step where the failure happened: transcribe, scene_planner, picker, render. */
+  failed_step?: string | null;
+  /** ISO timestamp of the failure — distinct from created_at. */
+  failed_at?: string | null;
   created_at?: string;
   audio_filename?: string;
   /** LLM + transcription usage rollup (see `@/shared/usage` JobUsageSummary). */
@@ -208,6 +218,10 @@ export function crashRecoverySweep(): void {
     if (job.status === "processing") {
       job.status = "failed";
       job.error = "Server restarted while job was running";
+      job.error_code = "worker_restarted";
+      job.error_provider = "worker";
+      job.failed_step = "render";
+      job.failed_at = new Date().toISOString();
       changed = true;
     }
   }

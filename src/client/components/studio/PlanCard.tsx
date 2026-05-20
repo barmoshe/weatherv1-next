@@ -5,6 +5,7 @@ import { SceneCard } from "./SceneCard";
 import type { Scene } from "@/shared/types";
 import { formatTime } from "@/client/lib/format-time";
 import { pickDisplayReason } from "@/client/lib/plan-pick-display";
+import { toUiError, type UiError } from "@/shared/errors";
 import { STATUS_LABELS } from "./status-labels";
 
 interface TranscriptData {
@@ -30,7 +31,7 @@ interface PlanCardProps {
   onPlanSuccess: (data: PlanData) => void;
   onReplan: (data: PlanData) => void;
   onPhaseChange: (phase: StudioPhase) => void;
-  onError: (msg: string) => void;
+  onError: (err: UiError) => void;
 }
 
 export function PlanCard({
@@ -68,21 +69,24 @@ export function PlanCard({
           })),
         }),
       });
-      const data = await res.json() as {
-        success: boolean;
-        error?: string;
+      const data = (await res.json()) as Record<string, unknown> & {
+        success?: boolean;
         scenes?: Scene[];
         timeline?: Record<string, unknown>[];
         validator?: Record<string, unknown>;
       };
-      if (!data.success) throw new Error(data.error ?? "Planning failed");
+      if (!data.success) {
+        onError(toUiError({ ...data, failed_step: data.failed_step ?? "scene_planner" }, "התכנון נכשל"));
+        onPhaseChange("reviewing");
+        return;
+      }
       onPlanSuccess({
         scenes: data.scenes ?? [],
         timeline: data.timeline ?? [],
         validator: data.validator ?? {},
       });
     } catch (err) {
-      onError(String(err));
+      onError(toUiError(err, "התכנון נכשל"));
       onPhaseChange("reviewing");
     } finally {
       setLoading(false);
