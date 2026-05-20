@@ -36,6 +36,47 @@ const haveMacSigning = Boolean(
     (process.env.MAC_CERTIFICATE_IMPORTED === "1" || !process.env.GITHUB_ACTIONS)
 );
 
+// Escape a literal package/scope name for use inside a RegExp.
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// `ffprobe-static` ships EVERY OS's binaries under bin/{darwin,linux,win32}
+// (~335MB total); only the host platform's can ever execute, so strip the
+// foreign ones. Windows is built on a Windows runner and macOS locally on a
+// Mac, so process.platform === target — this does NOT support cross-building
+// for another OS. (`ffmpeg-static` installs a single per-platform binary, so
+// it needs no stripping.)
+const FFPROBE_FOREIGN_OS =
+  { darwin: ["win32", "linux"], win32: ["darwin", "linux"], linux: ["darwin", "win32"] }[
+    process.platform
+  ] || [];
+
+// Server-only npm packages the Next standalone server bundles (or carries in
+// its OWN `.next/standalone/node_modules`) and that the Electron MAIN process
+// never require()s. Forge packs the project-root node_modules into app.asar by
+// default, so these root copies are pure dead weight. The main process needs
+// only electron-squirrel-startup, update-electron-app, ffmpeg-static,
+// ffprobe-static (see electron/main.cjs + electron/ffmpeg-verify.cjs).
+// IMPORTANT: these regexes are root-anchored (`^/node_modules/…`) so they do
+// NOT match `/.next/standalone/node_modules/…` — the server's tree is untouched.
+// Native-binding packages (@img/sharp, argon2) are intentionally NOT listed.
+// After editing this list, verify with a packaged render smoke-test.
+const ROOT_DEAD_WEIGHT = [
+  "next",
+  "@next",
+  "react",
+  "react-dom",
+  "scheduler",
+  "openai",
+  "@anthropic-ai",
+  "@tanstack",
+  "zod",
+  "zod-to-json-schema",
+  "lodash",
+  "caniuse-lite",
+  "@pulumi",
+  "@electron-forge",
+];
+
 /** @type {import('@electron-forge/shared-types').ForgeConfig} */
 module.exports = {
   packagerConfig: {
@@ -87,6 +128,13 @@ module.exports = {
       /^\/src\/test(\/|$)/,
       /^\/coverage(\/|$)/,
       /\.test\.[jt]sx?$/,
+      // Root-only server deps the main process never loads (the standalone tree
+      // keeps its own). Root-anchored so the standalone copies survive.
+      ...ROOT_DEAD_WEIGHT.map((p) => new RegExp(`^/node_modules/${esc(p)}(/|$)`)),
+      // Foreign-OS ffprobe binaries that can't run on the target platform.
+      ...FFPROBE_FOREIGN_OS.map(
+        (os) => new RegExp(`^/node_modules/ffprobe-static/bin/${esc(os)}(/|$)`),
+      ),
     ],
     osxSign: haveMacSigning
       ? {
