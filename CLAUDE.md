@@ -76,6 +76,7 @@ Code map and per-folder roles: [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md). Elect
 - Do **not** trust `instrumentation.ts` as the packaged desktop ffmpeg gate.
 - Do **not** use ephemeral ports for the Electron child server; keep the `3765` + fallbacks contract.
 - Do **not** move `ffmpeg-static`/`ffprobe-static` back inside `app.asar`.
+- Do **not** blanket-pack root `node_modules` into the asar. `forge.config.cjs`'s `ignore` list deliberately drops root-only server deps and foreign-OS `ffprobe-static` binaries to keep the package small (the standalone server carries its own copies). See `docs/future/desktop-size-report.md`.
 - Do **not** store API keys in renderer `localStorage` — use main-process `safeStorage`.
 - Do **not** substitute `localhost` for `127.0.0.1` in child-server config (macOS may resolve to `::1`).
 - Do **not** call `shell.openExternal(url)` on renderer-provided URLs without `https:` + host allowlist.

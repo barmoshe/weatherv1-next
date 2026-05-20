@@ -24,7 +24,7 @@ Loopback host is **`127.0.0.1`** (not `localhost` — macOS may resolve to `::1`
 | `electron/server-manager.cjs` | Port pick, dev/prod child spawn via the `fork()` wrapper (Electron Helper as Node — no second dock tile on macOS), health poll, `restart(env)`. |
 | `electron/config.cjs` | `userData`-backed `settings.json`; `safeStorage` for API keys with plaintext fallback; env builder; session-token gen. Pure Node. |
 | `electron/ffmpeg-verify.cjs` | env → bundled (`ffmpeg-static`/`ffprobe-static`) → PATH resolution; `app.asar` → `app.asar.unpacked` path rewrite. Returns structured `{ ok, errors, warnings, ... }`; never throws. |
-| `forge.config.cjs` | Packager + `asarUnpack` for ffmpeg packages + `.next/standalone/**`, osxSign (`signatureFlags: "library"`), osxNotarize from env, macOS ZIP + Windows Squirrel makers, `@electron-forge/plugin-auto-unpack-natives`. |
+| `forge.config.cjs` | Packager + `asarUnpack` for ffmpeg packages + `.next/standalone/**`, osxSign (`signatureFlags: "library"`), osxNotarize from env, macOS ZIP + Windows Squirrel makers, `@electron-forge/plugin-auto-unpack-natives`. The `ignore` list trims `runtime/`, root-only server deps (`next`, `@next`, `openai`, …) the main process never loads, and foreign-OS `ffprobe-static` binaries — see [`future/desktop-size-report.md`](future/desktop-size-report.md). |
 | `build/entitlements.mac.plist` | Hardened-runtime entitlements: `allow-jit`, `disable-library-validation`, `allow-dyld-environment-variables`. Deliberately **not** `allow-unsigned-executable-memory`. |
 | `scripts/prepare-standalone.cjs` | Copies `public/` + `.next/static/` into `.next/standalone/` after `next build` (Next omits both by design). |
 | `scripts/run-electron.cjs` | Dev launcher; clears inherited `ELECTRON_RUN_AS_NODE` before spawning Electron. |
@@ -53,6 +53,7 @@ Loopback host is **`127.0.0.1`** (not `localhost` — macOS may resolve to `::1`
 6. **`child_process.fork` instead of the existing `fork()` wrapper.** `server-manager.cjs` chooses between Electron-Helper-as-Node and plain `spawn(node)`. Going direct produces a duplicate macOS dock tile.
 7. **Moving `ffmpeg-static` back inside `app.asar`.** Binaries can't be `exec`'d from inside the asar — they must be in `asarUnpack`. The `app.asar → app.asar.unpacked` path rewrite in `ffmpeg-verify.cjs` only works if the unpacked file exists.
 8. **Storing API keys in renderer `localStorage`.** Use main-process `safeStorage`-backed config; the renderer saves keys via the `desktop:saveSettings` IPC channel.
+9. **Re-bloating the asar.** `forge.config.cjs`'s `ignore` list deliberately drops root-only server deps and foreign-OS `ffprobe-static` binaries (the standalone server carries its own copies; the main process needs only `electron-squirrel-startup`, `update-electron-app`, `ffmpeg-static`, `ffprobe-static`). Don't blanket-ignore `/node_modules` — that deletes the asar-unpacked ffmpeg/ffprobe. Verify any change with a packaged boot smoke-test.
 
 ## Token + perimeter model
 

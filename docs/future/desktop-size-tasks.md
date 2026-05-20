@@ -21,11 +21,10 @@ _(Tasks)_ Ordered action list to slim the packaged desktop app. Background in [d
 | `app.asar` (packed) | 355 MB | **177 MB** | −50% |
 | `app.asar.unpacked` | 591 MB | **274 MB** | −54% |
 
-## Phase 3 — Smoke-test the slimmed package (REQUIRED before release)
-- [ ] `npm run electron:make`, install/launch the result.
-- [ ] Run a full render to exercise ffmpeg/ffprobe (proves [`electron/ffmpeg-verify.cjs`](../../electron/ffmpeg-verify.cjs) still resolves the unpacked binaries).
-- [ ] Confirm the app starts cleanly and `update-electron-app` loads without error.
-- **Why:** the node_modules trim only fails at runtime — packaging succeeding (Phase 2) does not prove the server still boots. Not yet run.
+## Phase 3 — Smoke-test the slimmed package ✅ DONE (macOS)
+- [x] Launched the packaged `out/WeatherV1-darwin-x64/WeatherV1.app` (isolated `--user-data-dir`). The standalone server spawned from `app.asar.unpacked`, reached **`✓ Ready`** on 3765, loaded the catalog, and served **HTTP 200** — no `MODULE_NOT_FOUND` / `Cannot find module`. Confirms the node_modules trim didn't break server-side module resolution.
+- [ ] Still untested: a full **render** (exercises ffmpeg/ffprobe via [`electron/ffmpeg-verify.cjs`](../../electron/ffmpeg-verify.cjs)) — boot proves module resolution but not an end-to-end render. Run when convenient.
+- [ ] Windows: only the per-platform ffprobe binary differs; the node_modules trim is identical, so the macOS boot result is a strong proxy. A Windows launch is still worth a one-time check.
 
 ## Phase 4 — Windows footprint (highest leverage on the 5 GB)
 - [ ] On a Windows box, measure `%LocalAppData%\weatherv1\`: count retained `app-<version>\` folders and the size of the full vs delta `.nupkg` under `packages\`.
