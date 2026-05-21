@@ -56,7 +56,7 @@ npm run notebooklm:export:chunks
 
 ## Architecture (one paragraph)
 
-WeatherV1 is a **local-first pipeline**: audio MP3 → OpenAI Whisper → scene planner → pick clips from a local catalog → ffmpeg renders a 9:16 MP4. The same Next.js app runs in two runtimes — **web/server** (long-lived Node + native ffmpeg) and **desktop** (Electron shell supervising a `fork()`-spawned Next standalone child on `127.0.0.1:3765`, bundled ffmpeg, per-launch session-token auth on `/api/*`). Switching is driven by runtime detection in `src/server/runtime/`; most code under `src/server/**` and `src/app/**` is runtime-agnostic.
+WeatherV1 is a **local-first pipeline**: audio MP3 → OpenAI Whisper transcript → LLM scene planner → pick clips from a local catalog → ffmpeg renders a 9:16 MP4. The LLM step is provider-pluggable (Anthropic Claude or OpenAI GPT, user-pickable in Settings — see `src/server/providers/` and `docs/PROVIDERS.md`); transcription is OpenAI Whisper cloud only. The same Next.js app runs in two runtimes — **web/server** (long-lived Node + native ffmpeg) and **desktop** (Electron shell supervising a `fork()`-spawned Next standalone child on `127.0.0.1:3765`, bundled ffmpeg, per-launch session-token auth on `/api/*`). Switching is driven by runtime detection in `src/server/runtime/`; most code under `src/server/**` and `src/app/**` is runtime-agnostic.
 
 Code map and per-folder roles: [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md). Electron process model + sharp edges: [`docs/ELECTRON.md`](docs/ELECTRON.md). R2 sidecar: [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md).
 
@@ -87,7 +87,7 @@ Code map and per-folder roles: [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md). Elect
 
 ## Environment variables
 
-Required: `OPENAI_API_KEY` (Whisper + GPT picker). Optional: `GEMINI_API_KEY` (vision; falls back to GPT-4o-mini), `FFMPEG_PATH`/`FFPROBE_PATH`, `PORT`/`HOSTNAME`, `WEATHER_WORKSPACE_DIR`, and the `R2_*` family (`R2_SYNC_ENABLED`, `R2_GATEWAY_URL`, `R2_TENANT_ID`, `R2_BUCKET_NAME`, `R2_APP_USERNAME`, `R2_APP_PASSWORD`). Full reference: `.env.example` and `src/server/runtime/config.ts`.
+Required: `OPENAI_API_KEY` (Whisper transcription — the only transcription backend — and the OpenAI LLM path). LLM provider selection (`src/server/providers/llm/index.ts`): `LLM_PROVIDER` (`anthropic`|`openai`) pins explicitly; auto-mode prefers Anthropic when `ANTHROPIC_API_KEY` is set, else falls back to OpenAI. Model overrides: `CLAUDE_MODEL` (default `claude-sonnet-4-6`), `OPENAI_MODEL` (default `gpt-4o`). Optional: `ANTHROPIC_API_KEY` (preferred LLM when present), `GEMINI_API_KEY` (vision; falls back to GPT-4o-mini), `FFMPEG_PATH`/`FFPROBE_PATH`, `PORT`/`HOSTNAME`, `WEATHER_WORKSPACE_DIR`, and the `R2_*` family (`R2_SYNC_ENABLED`, `R2_GATEWAY_URL`, `R2_TENANT_ID`, `R2_BUCKET_NAME`, `R2_APP_USERNAME`, `R2_APP_PASSWORD`). Full reference: `.env.example` and `src/server/runtime/config.ts`.
 
 ## CI / release workflows
 
