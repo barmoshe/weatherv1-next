@@ -48,7 +48,7 @@ export function Masthead({ onNewJob, onOpenSettings }: MastheadProps) {
       <a
         className="builder-credit"
         dir="ltr"
-        href="https://barmoshe.github.io/bar-portfolio/"
+        href="https://barmoshe.github.io/bar-portfolio/business"
         target="_blank"
         rel="noreferrer"
         aria-label="Builder: Bar Moshe"
