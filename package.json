@@ -3,6 +3,10 @@
   "version": "0.4.5",
   "description": "WeatherV1 local desktop video production app",
   "author": "Barmoshe",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/barmoshe/weatherv1-next.git"
+  },
   "private": true,
   "main": "electron/main.cjs",
   "engines": {
