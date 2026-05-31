@@ -5,6 +5,7 @@ import { getFFmpegPath } from "./binaries";
 import type { ResolvedPick, ParsedVideo } from "@/shared/types";
 import { getAssetSource } from "@/server/assets/source";
 import { narrativeDecodeFromPick } from "@/server/ffmpeg/timeline-clip-timing";
+import { VERTICAL_SCALE_CROP_FILTER } from "@/server/ffmpeg/vertical-frame";
 
 const PAD_THRESHOLD_SEC = 0.04;
 
@@ -106,10 +107,10 @@ export async function buildRendererArgs(
   // Filter complex
   const filterParts: string[] = [];
 
-  // Per-clip: trim decoded window → scale/crop → optional freeze to match narration length
-  const scaleCrop =
-    "scale=1080:1920:force_original_aspect_ratio=increase," +
-    "crop=1080:1920,setsar=1";
+  // Per-clip: trim decoded window → scale/crop → optional freeze to match narration length.
+  // Filter string is the shared 9:16 contract — see `vertical-frame.ts` (the export
+  // bundle uses the same one so bundled Premiere clips are frame-identical).
+  const scaleCrop = VERTICAL_SCALE_CROP_FILTER;
   for (let i = 0; i < resolved.length; i++) {
     const { decodeDur, padDur } = resolved[i];
     const MIN_PAD_RENDER = 1e-6;

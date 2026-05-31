@@ -20,6 +20,11 @@ import { spawnFFmpeg } from "@/server/ffmpeg/spawn";
 import { getAssetSource } from "@/server/assets/source";
 import { hydrateVoiceoverFromR2 } from "@/server/sync/r2/hydrate-voiceover";
 import { clipTrimWindow } from "@/server/ffmpeg/timeline-clip-timing";
+import {
+  VERTICAL_FRAME_HEIGHT,
+  VERTICAL_FRAME_WIDTH,
+  VERTICAL_SCALE_CROP_FILTER,
+} from "@/server/ffmpeg/vertical-frame";
 import type { ParsedVideo, ResolvedPick } from "@/shared/types";
 import type { Fcp7AudioSource, Fcp7ClipPlacement } from "./fcp7-xml";
 
@@ -53,25 +58,39 @@ async function ensureOriginalLocal(pv: ParsedVideo, sourcesDir: string): Promise
 }
 
 /**
- * Re-encode `[startSec, startSec+durSec)` of `input` into `out`, frame-accurate.
- * `-ss` before `-i` seeks fast and (because we re-encode) lands on the exact
- * frame with output timestamps reset to 0. Audio is dropped — the timeline's
- * audio comes from the voiceover + bg-music tracks, mirroring the renderer.
- * Codec matches the renderer (libx264 / yuv420p) so Premiere imports cleanly.
+ * Pure argv builder for `extractSegment` — split out so it's testable without
+ * spawning ffmpeg. `-ss` before `-i` seeks fast and (because we re-encode)
+ * lands on the exact frame with output timestamps reset to 0. The `-vf` chain
+ * is the shared 9:16 cover-crop the renderer uses, so bundled Premiere clips
+ * are frame-identical to the rendered MP4 (fix 2026-05-29 — previously the
+ * export skipped scale/crop and clips imported as a small letterboxed band).
+ * Audio is dropped: the timeline's audio comes from the voiceover + bg-music
+ * tracks, mirroring the renderer. Codec matches the renderer (libx264 /
+ * yuv420p) so Premiere imports cleanly.
  */
+export function buildExtractSegmentArgs(
+  input: string,
+  out: string,
+  startSec: number,
+  durSec: number,
+): string[] {
+  return [
+    "-ss", startSec.toFixed(3),
+    "-i", input,
+    "-t", durSec.toFixed(3),
+    "-an",
+    "-vf", VERTICAL_SCALE_CROP_FILTER,
+    "-vcodec", "libx264",
+    "-preset", "veryfast",
+    "-pix_fmt", "yuv420p",
+    "-y", out,
+  ];
+}
+
 async function extractSegment(input: string, out: string, startSec: number, durSec: number): Promise<void> {
   const { code, stderrTail } = await spawnFFmpeg(
     getFFmpegPath(),
-    [
-      "-ss", startSec.toFixed(3),
-      "-i", input,
-      "-t", durSec.toFixed(3),
-      "-an",
-      "-vcodec", "libx264",
-      "-preset", "veryfast",
-      "-pix_fmt", "yuv420p",
-      "-y", out,
-    ],
+    buildExtractSegmentArgs(input, out, startSec, durSec),
     { timeoutMs: 120_000 },
   );
   if (code !== 0) {
@@ -139,12 +158,16 @@ export async function prepareExportMedia(args: {
       await extractSegment(src.localPath, localPath, win.trimStartSec, win.fileDurationSec);
       files.push({ localPath, zipName: `media/${name}` });
 
+      // Bundled file is cover-cropped to the shared 9:16 frame, so FCP7 reports
+      // the actual on-disk dims, not the source's. Without this, a landscape
+      // 1920×1080 source leaked into the XML and Premiere dropped it into a
+      // 1080×1920 sequence with no motion transform → small letterboxed band.
       clips.push({
         fileId: `file-clip-${i}`,
         name,
         pathUrl: `media/${name}`,
-        width: src.width,
-        height: src.height,
+        width: VERTICAL_FRAME_WIDTH,
+        height: VERTICAL_FRAME_HEIGHT,
         fileDurationSec: win.fileDurationSec,
         seqStartSec: pick.audio_start,
         seqEndSec: pick.audio_end,
