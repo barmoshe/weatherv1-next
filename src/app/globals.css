@@ -2786,8 +2786,10 @@
             border-radius: 12px;
             padding: 0.75rem;
             position: sticky;
-            top: calc(var(--masthead-height, 5rem) + 0.75rem);
-            max-height: calc(100vh - var(--masthead-height, 5rem) - 1.5rem);
+            /* Offsets are relative to the catalog panel's own scrollport
+               (which already starts below the masthead), not the viewport. */
+            top: 0.75rem;
+            max-height: calc(100dvh - var(--masthead-height, 5rem) - 4.5rem);
             overflow: auto;
             display: flex;
             flex-direction: column;
@@ -4818,10 +4820,16 @@
         }
 
         /* ── Minimal Hebrew RTL catalog refresh ─────────────────────── */
-        [data-tab-panel="catalog"] {
+        [data-tab-panel="catalog"]:not([hidden]) {
             max-width: 100%;
             min-width: 0;
             overflow-x: clip;
+            /* The root viewport is locked (874d904), so without an inner
+               scroll context a tall catalog is simply clipped. Same
+               per-panel pattern as the studio tab. */
+            height: calc(100dvh - var(--masthead-height, 5rem) - 1.5rem);
+            overflow-y: auto;
+            padding-bottom: 2.5rem;
         }
         [data-tab-panel="catalog"] .technical-inline,
         [data-tab-panel="catalog"] [dir="ltr"] {
