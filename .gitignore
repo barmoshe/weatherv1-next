@@ -54,6 +54,10 @@ next-env.d.ts
 /runtime/uploads/
 /runtime/outputs/
 /runtime/tmp/
+# Audit manifests + dated state backups: operator working data, never source.
+/runtime/archive/
+/runtime/jobs.json.*
+/runtime/r2-sync-state.json.*
 
 # Build-time-generated auth hashes (emitted by scripts/emit-auth-hashes.cjs).
 # Plaintext lives in .env / GitHub Secrets; the runtime .ts file is never
