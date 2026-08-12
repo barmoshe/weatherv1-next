@@ -8,7 +8,7 @@ import { resetAssetSourceForTests } from "@/server/assets/source";
 import { LocalCatalogStore } from "@/server/catalog/stores";
 import { parseCatalog } from "@/server/catalog/parser";
 
-const ENV_KEYS = ["WEATHER_WORKSPACE_DIR", "WEATHER_RUNTIME_DIR"] as const;
+const ENV_KEYS = ["WEATHER_WORKSPACE_DIR", "WEATHER_RUNTIME_DIR", "R2_SYNC_ENABLED"] as const;
 
 let originalEnv: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>>;
 let tempDirs: string[] = [];
@@ -74,6 +74,7 @@ describe("catalog stores", () => {
   it("keeps remote-only catalog rows visible for R2 materialization", async () => {
     const workspace = makeTempDir("remote-only-catalog");
     process.env.WEATHER_WORKSPACE_DIR = workspace;
+    process.env.R2_SYNC_ENABLED = "1";
     resetRuntimeState();
 
     const store = new LocalCatalogStore();
@@ -93,5 +94,11 @@ describe("catalog stores", () => {
     const parsed = parseCatalog(store.read(), path.join(workspace, "videos"));
     expect(parsed).toHaveLength(1);
     expect(parsed[0]).toMatchObject({ id: "vid_001", availability: "cloud_only" });
+
+    // With sync off the same row is a local problem, not a fetchable clip.
+    delete process.env.R2_SYNC_ENABLED;
+    resetRuntimeState();
+    const parsedLocal = parseCatalog(store.read(), path.join(workspace, "videos"));
+    expect(parsedLocal[0]).toMatchObject({ id: "vid_001", availability: "error" });
   });
 });

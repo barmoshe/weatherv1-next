@@ -10,6 +10,7 @@ import type {
 } from "@/shared/types";
 import { getVideosDir, readCatalog } from "./storage";
 import { getCatalogStore } from "./stores";
+import { getRuntimeConfig } from "@/server/runtime/config";
 
 // Module-level health state (mirrors Python's LAST_HEALTH)
 export let lastHealth: CatalogFileHealth = {
@@ -119,8 +120,12 @@ export function parseCatalog(
     const segments = normaliseSegments(entry, rawSegs);
 
     const remoteStatus = entry.remote?.status;
+    // `remote` fields are inert history once sync is off: a missing file is
+    // then a local problem, not a "cloud_only" clip the UI offers to fetch.
+    const syncEnabled = getRuntimeConfig().r2.enabled;
     const availability =
       existsLocally ? "local" :
+      !syncEnabled ? "error" :
       remoteStatus === "syncing" || remoteStatus === "uploading" || remoteStatus === "downloading" ? "syncing" :
       remoteStatus === "error" ? "error" :
       entry.remote?.key ? "cloud_only" :
