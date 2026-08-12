@@ -38,6 +38,11 @@ export function readEditorSessionToken(req: Pick<NextRequest, "cookies">): strin
 }
 
 export function isEditorSessionAuthorized(req: Pick<NextRequest, "cookies">): boolean {
+  // Pure-local desktop mode trusts the shell: the editor login exists to
+  // capture the cloud credential, which local mode never needs. Cloud mode
+  // and web/Docker deployments keep the gate.
+  const { desktopMode, r2 } = getRuntimeConfig();
+  if (desktopMode && !r2.enabled) return true;
   return isValidToken(readEditorSessionToken(req));
 }
 
