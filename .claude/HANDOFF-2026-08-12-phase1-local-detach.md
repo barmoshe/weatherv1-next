@@ -53,7 +53,7 @@ history. 5. Bucket never deleted/emptied. 6. OpenAI/Anthropic stay cloud.
 - `52b4249` feat(onboarding): **local-library setup wizard** — in local mode,
   a workspace that is not a real library (no catalog, or catalog with no files
   on disk) gets a wizard to pick the permanent local drive
-  (`~/weatherV1/v1Drive/weather`); names Keshet AWS sync as the future phase.
+  (`~/v1Drive/weather`); names Keshet AWS sync as the future phase.
   `desktop/status` gained `localCache.presentCount` (rows with the video file
   on disk) to tell an empty cache from a real library.
 - `d2a5ce5` chore(release): v0.5.0 (minor bump: storage-model feature release).
@@ -67,12 +67,17 @@ history. 5. Bucket never deleted/emptied. 6. OpenAI/Anthropic stay cloud.
 - Bar's Electron settings (`~/Library/Application Support/weatherv1-next/
   settings.json`): `r2.enabled` set to `false` this session; `workspaceDir`
   still points at the empty `local-cache`, so the wizard fires on launch.
+- **The media drive moved (Bar, 2026-08-12):** `~/weatherV1/v1Drive` →
+  `~/v1Drive`, i.e. a sibling of this repo — which is exactly the server's
+  production default (`<repo>/../v1Drive/weather`, config.ts). The old
+  `~/weatherV1` folder is the legacy Python project and may hold stale
+  relative references to the drive; it no longer contains it.
 - CI (Desktop + publish to R2) was in progress at handoff time for tag v0.5.0.
 
 ## Next steps
 
 **Immediately**
-1. Bar walks the wizard: pick `/Users/barmoshe/weatherV1/v1Drive/weather` →
+1. Bar walks the wizard: pick `/Users/barmoshe/v1Drive/weather` →
    app restarts → catalog should show 212/212 local; then render a job
    end-to-end and confirm posters show `X-Poster-Source: ffmpeg-local`.
 2. Watch CI for the tag: `gh run list --limit 5` in this repo; then verify the

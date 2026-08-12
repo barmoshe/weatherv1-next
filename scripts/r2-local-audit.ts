@@ -19,7 +19,7 @@
  *
  * Usage:
  *   # Dry run (default) — HEAD-sweeps R2, writes a manifest, downloads nothing
- *   WEATHER_WORKSPACE_DIR="$HOME/weatherV1/v1Drive/weather" \
+ *   WEATHER_WORKSPACE_DIR="$HOME/v1Drive/weather" \
  *     ./node_modules/.bin/vite-node --config vitest.config.ts scripts/r2-local-audit.ts
  *
  *   # With an authoritative bucket listing (catches orphan keys):
@@ -112,7 +112,7 @@ function fail(msg: string): never {
 
 if (!process.env.WEATHER_WORKSPACE_DIR) {
   fail(
-    "WEATHER_WORKSPACE_DIR is required (e.g. $HOME/weatherV1/v1Drive/weather).\n" +
+    "WEATHER_WORKSPACE_DIR is required (e.g. $HOME/v1Drive/weather).\n" +
       "Refusing to run against the implicit dev workspace — under vite-node the\n" +
       "default would resolve to runtime/workspace and everything would read as missing.",
   );
