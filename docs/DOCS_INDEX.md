@@ -9,7 +9,7 @@ A local-first weather-video production app: narration → Whisper transcript →
 - **Web/server** — long-lived Node host or Docker VM with native ffmpeg.
 - **Desktop** — Electron shell around a managed local Next child server, user-chosen workspace, bundled ffmpeg.
 
-**Optional Cloudflare R2** mirrors catalog JSON, videos, posters, and voiceovers through a Worker gateway. ffmpeg and the hot catalog path stay local; R2 is a sidecar. Rendered forecast MP4s are intentionally **not** mirrored — they are regenerable from the plan bundle and `uploadR2File` rejects any `outputs/` key.
+**Storage is fully local since v0.6.0** (phase 1 of the storage plan; Keshet AWS is the planned future phase). The Cloudflare R2 sync layer is dormant opt-in code — its tenant data was deleted 2026-08-12 after a verified local backup — and the R2/Cloudflare docs below are partly historical. The live Cloudflare surface is only the installer download channel. Rendered forecast MP4s were never mirrored — `uploadR2File` rejects any `outputs/` key.
 
 ## Read this first
 

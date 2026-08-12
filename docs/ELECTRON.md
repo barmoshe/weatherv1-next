@@ -129,6 +129,14 @@ Flag-only (separate tasks if you want to fix):
 - **`shell.openExternal` in `main.cjs`** is called on the URL argument from `setWindowOpenHandler` without scheme/host validation. Tighten to `https:` only with a host allowlist.
 - **`@electron/fuses` is not configured** in `forge.config.cjs`. Consider for production hardening: `OnlyLoadAppFromAsar`, `EnableEmbeddedAsarIntegrityValidation`, `RunAsNode` disable in packaged builds.
 
-## R2 integration
+## R2 integration (dormant since v0.6.0)
 
-The Electron app is where most users enter R2 gateway URL, tenant, bucket, and HTTP Basic Auth credentials. Flows live in `SettingsModal`, `StorageOnboardingGate`, and the desktop bridge types in `src/shared/desktop.ts`. For R2 architecture, conflict semantics, object-key layout (`tenantKey`), and Pulumi steps, see [`R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) and [`CLOUDFLARE_INTEGRATION.md`](CLOUDFLARE_INTEGRATION.md).
+Storage is fully local: sync defaults off in every mode, no editor login in
+local desktop mode, and no credentials are baked into builds. The R2 flows
+remain as opt-in code — `SettingsModal`, `StorageOnboardingGate` (whose
+`local-setup` phase is now the primary onboarding: pick the local library
+folder), and the desktop bridge types in `src/shared/desktop.ts`. Note the R2
+tenant data was deleted from the bucket on 2026-08-12 (verified local backup),
+so enabling sync against the current bucket finds no data. R2 history:
+[`R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) and
+[`CLOUDFLARE_INTEGRATION.md`](CLOUDFLARE_INTEGRATION.md).

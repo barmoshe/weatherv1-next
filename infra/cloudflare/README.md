@@ -1,5 +1,12 @@
 # WeatherV1 Cloudflare Infrastructure
 
+> **Status (2026-08-12, v0.6.0):** the app is fully local; the R2 tenant data
+> was deleted after a verified local backup. This infrastructure now exists
+> solely to serve the installer download channel (`downloads/` keys + Worker
+> `/downloads/*` route + the Pages download site). The publish workflow's S3
+> credentials (GH secrets) were refreshed 2026-08-12. Pulumi still nominally
+> owns the bucket + Pages project; wrangler owns the Worker.
+
 Pulumi TypeScript project for the WeatherV1 R2 asset layer.
 
 **Related project docs:** [`docs/R2_PULUMI_HANDOFF.md`](../../docs/R2_PULUMI_HANDOFF.md) (object keys, decisions, risks) · [`docs/CLOUDFLARE_INTEGRATION.md`](../../docs/CLOUDFLARE_INTEGRATION.md) (Cloudflare entry-point + MCP).

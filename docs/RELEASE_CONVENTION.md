@@ -149,7 +149,9 @@ Fix:
 ### Worker `/downloads/...` Returns 401
 
 Cause: the Worker isn't deployed yet, or the `/downloads/*` route was deployed
-behind Basic Auth by mistake. Run `pulumi -C infra/cloudflare up` and verify
+behind Basic Auth by mistake. Redeploy the Worker via
+`.github/workflows/worker-deploy.yml` (wrangler owns the Worker since the
+Pulumi cutover — see `docs/RUNBOOK_WORKER_ROTATION.md`) and verify
 `infra/cloudflare/worker/r2-gateway.js` contains the public `/downloads/*`
 branch *before* `checkBasicAuth(...)`.
 

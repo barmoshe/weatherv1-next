@@ -1,5 +1,12 @@
 # Cloudflare Integration
 
+> **Status (2026-08-12, v0.6.0): largely historical.** Phase 1 of the storage
+> plan detached the app from Cloudflare: storage is fully local, sync is a
+> dormant opt-in, and the R2 **tenant data was deleted** after a verified
+> local backup (`~/weatherv1-r2-backup-2026-08-12`). The only live Cloudflare
+> surface is the installer download channel (`downloads/` + Worker + Pages).
+> Record: `.claude/HANDOFF-2026-08-12-phase1-wrapup-and-r2-evacuation.md`.
+
 Single entry-point for everything Cloudflare in `weatherv1-next`. Use this
 file to orient before reading deeper R2, Worker, Pulumi, or MCP docs.
 

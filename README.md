@@ -70,7 +70,7 @@ flowchart LR
 
 Long-lived **Node**, **ffmpeg subprocesses**, **disk**, **multi-minute encodes**, and **large uploads** push against typical FaaS limits. Run it on a **real VM/container with ffmpeg**, or on the **desktop** via Electron. Full rationale: [`docs/DESIGN_DEPLOYMENT.md`](docs/DESIGN_DEPLOYMENT.md).
 
-**Optional Cloudflare R2:** catalog and media can mirror to R2 via a Worker gateway (short-lived credentials; local-first ffmpeg). See [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md).
+**Storage is fully local** (since v0.6.0, 2026-08-12): the app runs entirely from the local media library; there is no editor login in local desktop mode. The Cloudflare R2 sync layer remains in the codebase as a dormant opt-in (Settings → Cloud), but the R2 tenant data was evacuated to a verified local backup and the only live Cloudflare surface is the installer download channel. History: [`docs/R2_PULUMI_HANDOFF.md`](docs/R2_PULUMI_HANDOFF.md).
 
 **Docs router + code map:** [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md). Agent guide: [`AGENTS.md`](AGENTS.md). Goal-driven sessions: `/weatherv1-goal`.
 

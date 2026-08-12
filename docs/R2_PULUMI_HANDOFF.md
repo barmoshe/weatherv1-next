@@ -1,6 +1,14 @@
 # R2 + Pulumi Reference
 
-Current-state reference for the R2 sidecar. Operator commands and secrets inventory live in [`../infra/cloudflare/README.md`](../infra/cloudflare/README.md). Migration history: [`archive/R2_MIGRATION_HISTORY.md`](archive/R2_MIGRATION_HISTORY.md).
+> **Status (2026-08-12, v0.6.0): historical.** The R2 sidecar is dormant and
+> its tenant data was deleted after a verified local backup; the bucket now
+> serves only the installer `downloads/` channel. This file describes how the
+> sidecar worked while it was live. Also note two long-standing inaccuracies:
+> credential minting was removed in the proxy migration (auth is HTTP Basic
+> via the Worker), and `downloads/` keys are un-prefixed (not under
+> `tenantKey()`).
+
+Operator commands and secrets inventory live in [`../infra/cloudflare/README.md`](../infra/cloudflare/README.md). Migration history: [`archive/R2_MIGRATION_HISTORY.md`](archive/R2_MIGRATION_HISTORY.md).
 
 ## Goal
 

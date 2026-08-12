@@ -5,9 +5,15 @@ Read it before large changes, release work, or any task where the desired end st
 
 ## Current Product Goal
 
-WeatherV1 is a local-first weather video production app. It turns recorded narration into a transcribed, scene-planned, ffmpeg-rendered 9:16 forecast video using a local media catalog, with optional Cloudflare R2 sync for catalog/media assets.
+WeatherV1 is a **fully local** weather video production app (since v0.6.0,
+phase 1 of the storage plan). It turns recorded narration into a transcribed,
+scene-planned, ffmpeg-rendered 9:16 forecast video using the local media
+library on this machine; there is no editor login in local desktop mode. The
+storage plan's future phase is an interface to the client's (Keshet) AWS
+storage; the old Cloudflare R2 sync remains only as dormant opt-in code, and
+its tenant data was evacuated to a verified local backup on 2026-08-12.
 
-R2 is documented in [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) (object keys, decisions, risks) and [`infra/cloudflare/README.md`](../infra/cloudflare/README.md) (Pulumi operator runbook + secrets). Docs router: [`docs/DOCS_INDEX.md`](DOCS_INDEX.md).
+R2 history is documented in [`docs/R2_PULUMI_HANDOFF.md`](R2_PULUMI_HANDOFF.md) and [`infra/cloudflare/README.md`](../infra/cloudflare/README.md) (both partly historical). Docs router: [`docs/DOCS_INDEX.md`](DOCS_INDEX.md).
 
 The project must stay useful in two runtimes:
 
@@ -27,7 +33,8 @@ Ship a reliable desktop alpha that a non-developer can install, open, point at a
 - Packaged child-server failures include useful diagnostics from `next-child.log`.
 - A `v*` tag builds `WeatherV1-Setup.exe` in GitHub Actions (Windows-only).
 - The publish workflow uploads it to R2; `https://<worker-host>/downloads/windows/{latest,<tag>}/WeatherV1-Setup.exe` returns 200.
-- Optional R2 sync can reach the deployed Worker gateway, mint short-lived credentials, push/pull the catalog, and materialize cloud-only videos back to local disk.
+- The app runs fully local: catalog, posters, render, and job history all work
+  with no cloud reachable and no login in local desktop mode.
 - Docs explain the current goal, release procedure, and known smoke-test gaps.
 
 ## Non-Goals For Now
@@ -42,8 +49,8 @@ Ship a reliable desktop alpha that a non-developer can install, open, point at a
 
 - Keep the existing `/api/*` renderer contract unless a task explicitly changes it.
 - Keep local media access behind the runtime config and asset-source boundary.
-- Keep R2 sync as a sidecar around the local catalog; do not make ffmpeg depend on remote URLs.
-- Do not ship permanent R2 credentials in Electron. Use the Worker gateway to mint short-lived, tenant-scoped credentials.
+- Keep any future cloud sync (Keshet AWS, or the dormant R2 code) a sidecar around the local catalog; do not make ffmpeg depend on remote URLs.
+- Do not ship any storage credentials inside builds (the R2 cred-baking was removed in v0.6.0; keep it that way).
 - Keep desktop session-token auth in both `src/proxy.ts` and mutating handlers.
 - Keep Electron renderer security settings locked down: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`.
 - Keep the desktop child server on deterministic loopback ports: `3765`, then `3766`, `3767`, `3768`.
