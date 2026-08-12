@@ -4,4 +4,6 @@
 // in a fresh checkout before the prebuild step has run.
 export declare const EDITOR_HASH: string;
 export declare const ADMIN_HASH: string;
+export declare const EDITOR_USERNAME: string;
+// Legacy alias, kept while the emit script still writes it.
 export declare const R2_APP_USERNAME: string;
