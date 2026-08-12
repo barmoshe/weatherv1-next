@@ -119,12 +119,44 @@ describe("render media preparation", () => {
     );
   });
 
-  it("fails clearly when a catalog clip has no R2 object key", async () => {
+  it("cuts directly from the local library file without downloading", async () => {
+    const tempRoot = makeTempDir();
+    tempDirs.push(tempRoot);
+    const libraryDir = makeTempDir();
+    tempDirs.push(libraryDir);
+    const libraryFile = path.join(libraryDir, "clip-1.mp4");
+    fs.writeFileSync(libraryFile, "library-source");
+
+    const downloadObject = vi.fn();
+    const cutSegment = vi.fn(async ({ outputPath }: { outputPath: string }) => {
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      fs.writeFileSync(outputPath, "segment");
+    });
+
+    const prepared = await prepareRenderMedia(
+      [pick()],
+      { "clip-1": video({ path: libraryFile, availability: "local" }) },
+      "job-local",
+      { tempRoot, downloadObject, cutSegment },
+    );
+
+    expect(downloadObject).not.toHaveBeenCalled();
+    expect(cutSegment).toHaveBeenCalledWith(expect.objectContaining({ sourcePath: libraryFile }));
+
+    await prepared.cleanup();
+    expect(fs.existsSync(libraryFile)).toBe(true);
+  });
+
+  it("fails clearly when a clip is neither on disk nor fetchable", async () => {
     const tempRoot = makeTempDir();
     tempDirs.push(tempRoot);
 
     await expect(
       prepareRenderMedia([pick()], { "clip-1": video({ remote: undefined }) }, "job-2", { tempRoot }),
-    ).rejects.toThrow("has no R2 video object");
+    ).rejects.toThrow("is not available locally");
+
+    await expect(
+      prepareRenderMedia([pick()], { "clip-1": video() }, "job-3", { tempRoot }),
+    ).rejects.toThrow("R2 sync is disabled");
   });
 });

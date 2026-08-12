@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { downloadR2File } from "@/server/sync/r2/client";
+import { downloadR2File, r2Configured } from "@/server/sync/r2/client";
 import { getRuntimePaths, safeId } from "@/server/runtime/paths";
 import { spawnFFmpeg } from "@/server/ffmpeg/spawn";
 import { getFFmpegPath } from "@/server/ffmpeg/binaries";
@@ -141,15 +141,26 @@ export async function prepareRenderMedia(
     if (!sourceVideo) {
       throw new Error(`Clip ${pick.video_id} was picked but is missing from the catalog`);
     }
-    const remoteKey = sourceVideo.remote?.key;
-    if (!remoteKey) {
-      throw new Error(`Clip ${pick.video_id} exists in the catalog but has no R2 video object`);
-    }
-
     if (!sourcePaths.has(pick.video_id)) {
-      const ext = path.extname(sourceVideo.filename || "") || ".mp4";
-      sourcePaths.set(pick.video_id, path.join(sourcesDir, `${safeId(pick.video_id)}${ext}`));
-      remoteKeys.set(pick.video_id, remoteKey);
+      const localPath = sourceVideo.path;
+      const remoteKey = sourceVideo.remote?.key;
+      // Cutting only reads the source, and cleanup() removes only tempDir,
+      // so the library file itself is never at risk.
+      if (localPath && fs.existsSync(localPath)) {
+        sourcePaths.set(pick.video_id, localPath);
+      } else if (remoteKey && (options.downloadObject || r2Configured())) {
+        const ext = path.extname(sourceVideo.filename || "") || ".mp4";
+        sourcePaths.set(pick.video_id, path.join(sourcesDir, `${safeId(pick.video_id)}${ext}`));
+        remoteKeys.set(pick.video_id, remoteKey);
+      } else if (remoteKey) {
+        throw new Error(
+          `Clip ${pick.video_id} is not available locally at ${localPath ?? "(no path)"} and R2 sync is disabled`,
+        );
+      } else {
+        throw new Error(
+          `Clip ${pick.video_id} is not available locally at ${localPath ?? "(no path)"} and has no R2 video object`,
+        );
+      }
     }
 
     const key = pickKey(pick);
@@ -169,9 +180,9 @@ export async function prepareRenderMedia(
   }
 
   try {
-    // Pass 1: download distinct source videos in parallel.
-    const downloadJobs = Array.from(sourcePaths.entries()).map(([vid, sourcePath]) => ({
-      vid, sourcePath, remoteKey: remoteKeys.get(vid)!,
+    // Pass 1: download the distinct sources that are not on disk, in parallel.
+    const downloadJobs = Array.from(remoteKeys.entries()).map(([vid, remoteKey]) => ({
+      vid, sourcePath: sourcePaths.get(vid)!, remoteKey,
     }));
     await mapWithConcurrency(downloadJobs, DOWNLOAD_CONCURRENCY, (job) =>
       downloadObject(job.remoteKey, job.sourcePath),
