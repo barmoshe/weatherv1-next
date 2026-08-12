@@ -97,7 +97,14 @@ type Kind =
   | "voiceover"
   | "plan"
   | "orphan";
-type Verdict = "ok" | "size-mismatch" | "remote-only" | "local-only" | "missing-both" | "orphan-remote";
+type Verdict =
+  | "ok"
+  | "size-mismatch"
+  | "remote-only"
+  | "local-only"
+  | "missing-both"
+  | "remote-size-unknown"
+  | "orphan-remote";
 
 interface AuditRow {
   kind: Kind;
@@ -113,6 +120,9 @@ interface AuditRow {
 // are the actual data.
 const DATA_KINDS: Kind[] = ["video", "voiceover", "plan"];
 const DOWNLOADABLE: Kind[] = ["video", "clip-poster", "segment-poster", "voiceover", "plan"];
+// Only these are safe to measure by fetching as text: getR2Text decodes UTF-8,
+// which inflates binary bytes (U+FFFD) and would buffer a whole video.
+const TEXT_KINDS: Kind[] = ["catalog", "jobs-json", "plan"];
 
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter((a) => a.startsWith("--") && !a.includes("=")));
@@ -296,6 +306,8 @@ async function main(): Promise<void> {
   // --- Remote sizes: listing where available, HEAD otherwise ---------------
   const rows: AuditRow[] = await mapWithConcurrency(expected, CONCURRENCY, async (e) => {
     let remoteSize: number | null = null;
+    // Object exists remotely but its size could not be established.
+    let unmeasured = false;
     if (listing?.has(e.key)) {
       remoteSize = listing.get(e.key)!;
     } else if (!listing) {
@@ -304,12 +316,23 @@ async function main(): Promise<void> {
         remoteSize = head.size;
       } else if (head) {
         // The Worker's HEAD omits content-length for JSON PUTs; use the body
-        // already in memory, or measure the small text object via GET.
-        remoteSize = knownTextSizes.get(e.key) ?? Buffer.byteLength((await getR2Text(e.key)).text);
+        // already in memory, or measure the small text object via GET. Binary
+        // kinds are never fetched this way — report them as unmeasured.
+        const memo = knownTextSizes.get(e.key);
+        if (memo !== undefined) remoteSize = memo;
+        else if (TEXT_KINDS.includes(e.kind)) remoteSize = Buffer.byteLength((await getR2Text(e.key)).text);
+        else unmeasured = true;
       }
     }
     const localSize = await localSizeOf(e.localPath);
-    return { kind: e.kind, key: e.key, localPath: e.localPath, remoteSize, localSize, verdict: classify(remoteSize, localSize) };
+    return {
+      kind: e.kind,
+      key: e.key,
+      localPath: e.localPath,
+      remoteSize,
+      localSize,
+      verdict: unmeasured ? "remote-size-unknown" : classify(remoteSize, localSize),
+    };
   });
 
   if (listing) {
@@ -331,7 +354,7 @@ async function main(): Promise<void> {
   const fmtBytes = (n: number) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)}MiB` : `${n}B`);
 
   console.log("\n=== Summary ===");
-  for (const verdict of ["ok", "size-mismatch", "remote-only", "local-only", "missing-both", "orphan-remote"] as Verdict[]) {
+  for (const verdict of ["ok", "size-mismatch", "remote-only", "local-only", "missing-both", "remote-size-unknown", "orphan-remote"] as Verdict[]) {
     const list = byVerdict.get(verdict) ?? [];
     if (list.length === 0) continue;
     const bytes = list.reduce((s, r) => s + (r.remoteSize ?? 0), 0);

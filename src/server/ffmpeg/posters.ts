@@ -49,13 +49,19 @@ async function acquireGenerationSlot(): Promise<void> {
     activeGenerations += 1;
     return;
   }
+  // The releaser hands its slot over without decrementing, so the count
+  // already covers us when this resolves — incrementing here would let a
+  // caller arriving in the gap push the total past the cap.
   await new Promise<void>((resolve) => generationQueue.push(resolve));
-  activeGenerations += 1;
 }
 
 function releaseGenerationSlot(): void {
+  const next = generationQueue.shift();
+  if (next) {
+    next();
+    return;
+  }
   activeGenerations -= 1;
-  generationQueue.shift()?.();
 }
 
 // Concurrent requests can ask for the same poster (the clip route and the
@@ -63,6 +69,33 @@ function releaseGenerationSlot(): void {
 // generation instead of racing two ffmpeg writes into one target.
 const inFlight = new Map<string, Promise<string | null>>();
 let tmpSeq = 0;
+
+// A crash or quit mid-ffmpeg leaves a `<poster>.<pid>-<n>.tmp` behind — the
+// unlink below only runs on ffmpeg's own error path, and nothing else reclaims
+// these. Sweep once per directory per process, skipping anything recent enough
+// to still belong to a live generation in another process.
+const TMP_SUFFIX_RE = /\.\d+-\d+\.tmp$/;
+const TMP_STALE_MS = 60 * 60 * 1000;
+const sweptTmpDirs = new Set<string>();
+
+function sweepStaleTmp(dir: string): void {
+  if (sweptTmpDirs.has(dir)) return;
+  sweptTmpDirs.add(dir);
+  let names: string[];
+  try {
+    names = fs.readdirSync(dir);
+  } catch {
+    return;
+  }
+  const cutoff = Date.now() - TMP_STALE_MS;
+  for (const name of names) {
+    if (!TMP_SUFFIX_RE.test(name)) continue;
+    const p = path.join(dir, name);
+    try {
+      if (fs.statSync(p).mtimeMs < cutoff) fs.unlinkSync(p);
+    } catch { /* ignore */ }
+  }
+}
 
 export async function generateAt(
   videoPath: string,
@@ -112,6 +145,7 @@ async function generateAtExclusive(
   postersDir: string,
 ): Promise<string | null> {
   fs.mkdirSync(postersDir, { recursive: true });
+  sweepStaleTmp(postersDir);
   // Unique per attempt: a same-path .tmp would be truncated (-y) by any
   // concurrent writer that slipped past the in-flight map (multi-process).
   const tmpPath = `${outPath}.${process.pid}-${++tmpSeq}.tmp`;
@@ -153,5 +187,11 @@ export async function generatePoster(
     return posterPath(outId, postersDir);
   }
   const seek = await seekSeconds(videoPath, knownDurationSec);
-  return generateAt(videoPath, outId, seek, postersDir, force);
+  const out = await generateAt(videoPath, outId, seek, postersDir, force);
+  if (out || knownDurationSec === undefined) return out;
+  // The catalog duration can be stale (file replaced or truncated), which
+  // seeks past the end and yields no frame. Fall back to probing the file.
+  const probedSeek = await seekSeconds(videoPath);
+  if (probedSeek === seek) return out;
+  return generateAt(videoPath, outId, probedSeek, postersDir, true);
 }
