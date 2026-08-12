@@ -125,7 +125,9 @@ let autoBootstrapAttempted = false;
  */
 export async function pullCatalogFromR2IfLocalEmpty(): Promise<void> {
   if (!r2Configured()) return;
-  await pullJobsFromR2();
+  // No jobs hydration here: local jobs.json is the source of truth, and the
+  // remote snapshot wholesale-replaces it. Explicit pulls (/api/sync/r2/*)
+  // remain the only way jobs come down from R2.
   if (autoBootstrapAttempted) return;
 
   // Make sure the local cache is laid out before we try to read or write the

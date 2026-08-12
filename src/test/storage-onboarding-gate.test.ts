@@ -86,6 +86,24 @@ describe("StorageOnboardingGate derivePhase", () => {
     ).toBe("ready");
   });
 
+  it("stays in setup when the workspace has healthy counts but missing subdirs", () => {
+    // e.g. a picked library without music/ — the card must surface missing[].
+    expect(
+      derivePhase({
+        ...base,
+        appInfo: appInfo(true),
+        storage: storage({
+          localCache: {
+            catalogCount: 212,
+            presentCount: 212,
+            ready: false,
+            missing: ["music"],
+          },
+        }),
+      }),
+    ).toBe("local-setup");
+  });
+
   it("keeps the cloud phases unchanged in cloud mode", () => {
     expect(
       derivePhase({

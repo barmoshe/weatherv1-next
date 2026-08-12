@@ -71,7 +71,8 @@ export function SettingsCloudPanel({
       {appInfo?.packaged ? (
         <>
           <p className="settings-hint">
-            פרטי החיבור ל-R2 מוגדרים מראש בגרסת ההפצה. הסנכרון כבוי כברירת מחדל — האפליקציה עובדת מספרייה מקומית.
+            הסנכרון כבוי כברירת מחדל — האפליקציה עובדת מספרייה מקומית. להפעלה יש
+            להזין שם משתמש וסיסמה בשדות למטה.
           </p>
           <div className="settings-status-grid">
             <div className="settings-status-row">
@@ -151,48 +152,48 @@ export function SettingsCloudPanel({
               placeholder="weatherv1-media"
             />
           </label>
-          <label className="settings-field">
-            <span>שם משתמש</span>
-            <input
-              value={r2AppUsername}
-              onChange={(e) => onR2AppUsernameChange(e.target.value)}
-              placeholder="weatherv1"
-              autoComplete="username"
-              spellCheck={false}
-            />
-          </label>
-          <label className="settings-field">
-            <span>סיסמה</span>
-            <div className="settings-password">
-              <input
-                type={showR2Password ? "text" : "password"}
-                className="settings-password__input"
-                value={r2AppPassword}
-                onChange={(e) => onR2AppPasswordChange(e.target.value)}
-                placeholder={
-                  desktopStatus?.r2?.ready ? "מוגדר — הקלד כדי להחליף" : "סיסמה לעובד R2"
-                }
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                className="settings-password__toggle"
-                onClick={onShowR2PasswordToggle}
-                aria-pressed={showR2Password}
-                aria-label={showR2Password ? "הסתר סיסמה" : "הצג סיסמה"}
-                tabIndex={-1}
-              >
-                {showR2Password ? "הסתר" : "הצג"}
-              </button>
-              {desktopStatus?.r2?.ready ? (
-                <button type="button" className="btn btn--ghost" onClick={onClearR2Key} disabled={saving}>
-                  נקה
-                </button>
-              ) : null}
-            </div>
-          </label>
         </>
       )}
+      <label className="settings-field">
+        <span>שם משתמש</span>
+        <input
+          value={r2AppUsername}
+          onChange={(e) => onR2AppUsernameChange(e.target.value)}
+          placeholder="weatherv1"
+          autoComplete="username"
+          spellCheck={false}
+        />
+      </label>
+      <label className="settings-field">
+        <span>סיסמה</span>
+        <div className="settings-password">
+          <input
+            type={showR2Password ? "text" : "password"}
+            className="settings-password__input"
+            value={r2AppPassword}
+            onChange={(e) => onR2AppPasswordChange(e.target.value)}
+            placeholder={
+              desktopStatus?.r2?.ready ? "מוגדר — הקלד כדי להחליף" : "סיסמה לעובד R2"
+            }
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            className="settings-password__toggle"
+            onClick={onShowR2PasswordToggle}
+            aria-pressed={showR2Password}
+            aria-label={showR2Password ? "הסתר סיסמה" : "הצג סיסמה"}
+            tabIndex={-1}
+          >
+            {showR2Password ? "הסתר" : "הצג"}
+          </button>
+          {desktopStatus?.r2?.ready ? (
+            <button type="button" className="btn btn--ghost" onClick={onClearR2Key} disabled={saving}>
+              נקה
+            </button>
+          ) : null}
+        </div>
+      </label>
       <label className="settings-radio">
         <input
           type="checkbox"

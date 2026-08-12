@@ -4,8 +4,7 @@ import { getAssetSource } from "@/server/assets/source";
 import { getRuntimeConfig } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { assertDesktopAuth } from "@/server/runtime/auth";
-import { catalogStoreStatus, readCatalog } from "@/server/catalog/storage";
-import { parseCatalog } from "@/server/catalog/parser";
+import { catalogStoreStatus } from "@/server/catalog/storage";
 import { getR2SyncStatus, pullCatalogFromR2IfLocalEmpty } from "@/server/sync/r2/service";
 import type { R2SyncStatus } from "@/server/sync/r2/types";
 import type { WorkspaceValidation } from "@/server/assets/source";
@@ -94,16 +93,12 @@ export async function GET(req: NextRequest) {
 
   const r2 = await getR2SyncStatus();
 
-  let catalogVideoCount = 0;
-  let presentVideoCount = 0;
-  try {
-    const parsed = parseCatalog(readCatalog());
-    catalogVideoCount = parsed.length;
-    presentVideoCount = parsed.filter((v) => v.availability === "local").length;
-  } catch {
-    catalogVideoCount = 0;
-    presentVideoCount = 0;
-  }
+  // getR2SyncStatus() above already ran the full catalog parse (statusCounts
+  // is unconditional); availability is total over these four buckets, so the
+  // counts we need are pure arithmetic — no second parse on this polled route.
+  const catalogVideoCount =
+    r2.counts.local + r2.counts.cloudOnly + r2.counts.syncing + r2.counts.error;
+  const presentVideoCount = r2.counts.local;
 
   const storage = buildStorageBlock({
     workspace,

@@ -112,6 +112,10 @@ module.exports = {
     ignore: [
       /^\/\.git(\/|$)/,
       /^\/\.github(\/|$)/,
+      // Generated files under electron/ must never ship: a stale
+      // r2-defaults.generated.cjs from a pre-v0.6.0 build holds a plaintext
+      // credential, is gitignored (invisible), and nothing reads it anymore.
+      /^\/electron\/.*\.generated\.cjs$/,
       // Forge's own output dir — never pack prior packaged apps / make zips
       // back into the app (a multi-GB make zip blows asar's 2 GiB file limit).
       /^\/out(\/|$)/,

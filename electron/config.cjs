@@ -288,6 +288,16 @@ function buildChildEnv(args) {
     if (r2.appUsername) env.R2_APP_USERNAME = r2.appUsername;
     if (r2AppPassword) env.EDITOR_PASSWORD = r2AppPassword;
     if (r2.bucketName) env.R2_BUCKET_NAME = r2.bucketName;
+  } else {
+    // Settings are authoritative over inherited env: `env` starts as a copy
+    // of process.env, and a leftover R2_SYNC_ENABLED=1 from .env / the shell
+    // would silently force cloud mode while the Settings checkbox shows off.
+    delete env.R2_SYNC_ENABLED;
+    delete env.R2_GATEWAY_URL;
+    delete env.R2_TENANT_ID;
+    delete env.R2_STATE_PATH;
+    delete env.R2_BUCKET_NAME;
+    delete env.R2_APP_USERNAME;
   }
 
   // LLM provider preference. "auto" leaves the env var unset so the server-side

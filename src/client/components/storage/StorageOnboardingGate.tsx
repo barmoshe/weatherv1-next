@@ -190,6 +190,13 @@ export function StorageOnboardingGate() {
               {hasCatalog && (cache?.presentCount ?? 0) === 0 && (
                 <> · הקטלוג נטען אך קובצי הווידאו אינם בתיקייה</>
               )}
+              {(cache?.missing?.length ?? 0) > 0 && (
+                <>
+                  {" "}
+                  · חסרות תיקיות משנה:{" "}
+                  <span dir="ltr">{cache!.missing.join(", ")}</span>
+                </>
+              )}
             </p>
           )}
           {cacheError && (

@@ -298,6 +298,26 @@ describe("electron config R2 settings", () => {
     expect(env.R2_GATEWAY_URL).toBeUndefined();
   });
 
+  it("scrubs inherited R2 env when settings leave sync off", () => {
+    const userData = makeTempDir("electron-config-env-leak");
+    electronConfig.setUserDataDir(userData);
+
+    // Simulates a pre-detach .env leaking through run-electron.cjs into
+    // process.env, which buildChildEnv spreads into the child env.
+    process.env.R2_SYNC_ENABLED = "1";
+    process.env.R2_GATEWAY_URL = "https://leak.example.workers.dev";
+
+    const env = electronConfig.buildChildEnv({
+      port: 3765,
+      token: "desktop-token",
+      ffmpeg: { ffmpegPath: null, ffprobePath: null },
+      productionMode: false,
+    });
+
+    expect(env.R2_SYNC_ENABLED).toBeUndefined();
+    expect(env.R2_GATEWAY_URL).toBeUndefined();
+  });
+
   it("packaged builds opt in to R2 from settings with production fallbacks", () => {
     const userData = makeTempDir("electron-config-packaged-optin");
     electronConfig.setUserDataDir(userData);

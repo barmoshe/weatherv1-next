@@ -199,7 +199,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       update.r2GatewayUrl = r2GatewayUrl.trim();
       update.r2TenantId = r2TenantId.trim();
       update.r2BucketName = r2BucketName.trim();
-      update.r2AppUsername = r2AppUsername.trim();
+      // Only send the username when it holds a value: with sync off the state
+      // hydrates to "" (env is only exported in the enabled branch), and an
+      // unconditional send would null the persisted username on every
+      // unrelated save. Unlike gateway/tenant/bucket it has no fallback.
+      if (r2AppUsername.trim()) update.r2AppUsername = r2AppUsername.trim();
       if (r2AppPassword) update.r2AppPassword = r2AppPassword;
       update.llmProvider = llmProvider;
       update.planPipelineVer2 = planPipeline === "ver2";

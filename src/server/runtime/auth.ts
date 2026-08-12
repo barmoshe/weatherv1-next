@@ -38,11 +38,17 @@ export function readEditorSessionToken(req: Pick<NextRequest, "cookies">): strin
 }
 
 export function isEditorSessionAuthorized(req: Pick<NextRequest, "cookies">): boolean {
-  // Pure-local desktop mode trusts the shell: the editor login exists to
-  // capture the cloud credential, which local mode never needs. Cloud mode
-  // and web/Docker deployments keep the gate.
+  // Desktop mode trusts the shell until cloud sync is FULLY configured: the
+  // editor login exists to capture the cloud credential, so it only arms once
+  // that credential is in play. Keying on `enabled` alone would hard-lock a
+  // packaged user who ticks the sync checkbox without credentials — the gate
+  // wraps the Settings screen that could undo it. (Inlined instead of
+  // r2Configured() so the proxy middleware doesn't import the sync client.)
   const { desktopMode, r2 } = getRuntimeConfig();
-  if (desktopMode && !r2.enabled) return true;
+  const r2CredentialInPlay = Boolean(
+    r2.enabled && r2.gatewayUrl && r2.tenantId && r2.appUsername && r2.appPassword,
+  );
+  if (desktopMode && !r2CredentialInPlay) return true;
   return isValidToken(readEditorSessionToken(req));
 }
 

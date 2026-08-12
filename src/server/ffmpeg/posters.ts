@@ -34,6 +34,12 @@ async function seekSeconds(videoPath: string): Promise<number> {
   }
 }
 
+// Concurrent requests can ask for the same poster (the clip route and the
+// segment route's single-segment fallback share an outId): join the in-flight
+// generation instead of racing two ffmpeg writes into one target.
+const inFlight = new Map<string, Promise<string | null>>();
+let tmpSeq = 0;
+
 export async function generateAt(
   videoPath: string,
   outId: string,
@@ -56,8 +62,28 @@ export async function generateAt(
       }
     } catch { /* ignore */ }
   }
+  const existing = inFlight.get(outPath);
+  if (existing) return existing;
+  const job = generateAtExclusive(videoPath, outId, seekSec, outPath, postersDir);
+  inFlight.set(outPath, job);
+  try {
+    return await job;
+  } finally {
+    inFlight.delete(outPath);
+  }
+}
+
+async function generateAtExclusive(
+  videoPath: string,
+  outId: string,
+  seekSec: number,
+  outPath: string,
+  postersDir: string,
+): Promise<string | null> {
   fs.mkdirSync(postersDir, { recursive: true });
-  const tmpPath = `${outPath}.tmp`;
+  // Unique per attempt: a same-path .tmp would be truncated (-y) by any
+  // concurrent writer that slipped past the in-flight map (multi-process).
+  const tmpPath = `${outPath}.${process.pid}-${++tmpSeq}.tmp`;
   const seek = Math.max(0, seekSec);
   try {
     await execFileAsync(getFFmpegPath(), [
