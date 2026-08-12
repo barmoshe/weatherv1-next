@@ -1,9 +1,8 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
-  const { pullJobsFromR2 } = await import("@/server/sync/r2/service");
-  await pullJobsFromR2();
-
+  // Local jobs.json is the source of truth: boot never pulls (and never
+  // overwrites) job state from R2. Manual pulls stay on /api/sync/r2/*.
   const { startWorker } = await import("@/server/jobs/worker");
   startWorker();
 
