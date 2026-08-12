@@ -71,7 +71,7 @@ export function SettingsCloudPanel({
       {appInfo?.packaged ? (
         <>
           <p className="settings-hint">
-            החיבור ל-R2 מוגדר מראש בגרסת ההפצה. אם חסרים פרטי הכניסה, מסך התחברות יופיע בעת הפעלת האפליקציה.
+            פרטי החיבור ל-R2 מוגדרים מראש בגרסת ההפצה. הסנכרון כבוי כברירת מחדל — האפליקציה עובדת מספרייה מקומית.
           </p>
           <div className="settings-status-grid">
             <div className="settings-status-row">
@@ -191,16 +191,16 @@ export function SettingsCloudPanel({
               ) : null}
             </div>
           </label>
-          <label className="settings-radio">
-            <input
-              type="checkbox"
-              checked={r2Enabled}
-              onChange={(e) => onR2EnabledChange(e.target.checked)}
-            />
-            <span>הפעל סנכרון ל-R2</span>
-          </label>
         </>
       )}
+      <label className="settings-radio">
+        <input
+          type="checkbox"
+          checked={r2Enabled}
+          onChange={(e) => onR2EnabledChange(e.target.checked)}
+        />
+        <span>הפעל סנכרון ל-R2</span>
+      </label>
       {desktopStatus?.r2?.enabled ? (
         <p className="settings-hint">
           כפתור Export JSON מוריד את snapshot של המשימות מתוך R2 (<code dir="ltr">jobs/jobs.json</code>) —

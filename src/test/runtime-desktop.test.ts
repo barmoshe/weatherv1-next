@@ -283,6 +283,45 @@ describe("electron config R2 settings", () => {
     expect(env.EDITOR_PASSWORD).toBe("pw");
   });
 
+  it("defaults packaged builds to local storage with no R2 env", () => {
+    const userData = makeTempDir("electron-config-packaged-default");
+    electronConfig.setUserDataDir(userData);
+
+    const env = electronConfig.buildChildEnv({
+      port: 3765,
+      token: "desktop-token",
+      ffmpeg: { ffmpegPath: null, ffprobePath: null },
+      productionMode: true,
+    });
+
+    expect(env.R2_SYNC_ENABLED).toBeUndefined();
+    expect(env.R2_GATEWAY_URL).toBeUndefined();
+  });
+
+  it("packaged builds opt in to R2 from settings with production fallbacks", () => {
+    const userData = makeTempDir("electron-config-packaged-optin");
+    electronConfig.setUserDataDir(userData);
+
+    electronConfig.writeSettings({
+      r2: { enabled: true, appUsername: "v1editor" },
+      keys: {
+        r2AppPassword: electronConfig.encryptSecret("pw", {}),
+      },
+    });
+
+    const env = electronConfig.buildChildEnv({
+      port: 3765,
+      token: "desktop-token",
+      ffmpeg: { ffmpegPath: null, ffprobePath: null },
+      productionMode: true,
+    });
+
+    expect(env.R2_SYNC_ENABLED).toBe("1");
+    expect(env.R2_GATEWAY_URL).toBe(electronConfig.PRODUCTION_R2.gatewayUrl);
+    expect(env.R2_APP_USERNAME).toBe("v1editor");
+    expect(env.EDITOR_PASSWORD).toBe("pw");
+  });
+
   it("persists R2 settings and injects username/password env without leaking the password to renderer settings", () => {
     const userData = makeTempDir("electron-config");
     electronConfig.setUserDataDir(userData);

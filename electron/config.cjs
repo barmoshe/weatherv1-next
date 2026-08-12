@@ -285,16 +285,17 @@ function buildChildEnv(args) {
     fromSettings.appUsername =
       process.env.R2_APP_USERNAME || R2_DEFAULTS.username || null;
   }
-  const r2 = args.productionMode
-    ? { ...fromSettings, ...PRODUCTION_R2, enabled: true }
-    : {
-        ...PRODUCTION_R2,
-        ...fromSettings,
-        gatewayUrl: fromSettings.gatewayUrl || PRODUCTION_R2.gatewayUrl,
-        tenantId: fromSettings.tenantId || PRODUCTION_R2.tenantId,
-        bucketName: fromSettings.bucketName || PRODUCTION_R2.bucketName,
-        enabled: Boolean(fromSettings.enabled),
-      };
+  // Local storage is the default in every mode; R2 sync is an explicit
+  // opt-in from Settings. PRODUCTION_R2 only fills in gateway/tenant/bucket
+  // when the user enables sync without overriding them.
+  const r2 = {
+    ...PRODUCTION_R2,
+    ...fromSettings,
+    gatewayUrl: fromSettings.gatewayUrl || PRODUCTION_R2.gatewayUrl,
+    tenantId: fromSettings.tenantId || PRODUCTION_R2.tenantId,
+    bucketName: fromSettings.bucketName || PRODUCTION_R2.bucketName,
+    enabled: Boolean(fromSettings.enabled),
+  };
   if (r2.enabled && r2.gatewayUrl && r2.tenantId) {
     env.R2_SYNC_ENABLED = "1";
     env.R2_GATEWAY_URL = r2.gatewayUrl;
