@@ -57,7 +57,24 @@ export async function GET(
     }
   }
 
-  // R2-first browse path: fetch poster objects only, never source video.
+  // Local-first: regenerate from the library file whenever it is on disk.
+  // force=1 keeps working as the cache-busting maintenance path.
+  if (clip && clip.availability === "local") {
+    const posterFilePath = await generateSegmentPoster(segId, videoMap, force);
+    if (posterFilePath && fs.existsSync(posterFilePath)) {
+      const buf = fs.readFileSync(posterFilePath);
+      return new NextResponse(buf, {
+        headers: {
+          "Content-Type": "image/jpeg",
+          "Cache-Control": "public, max-age=3600",
+          "X-Poster-Source": "ffmpeg-local",
+        },
+      });
+    }
+  }
+
+  // Dormant R2 fallback for clips that only exist in the cloud: poster
+  // objects only, never source video.
   if (r2Configured()) {
     try {
       await downloadR2File(segmentPosterKey(segId), cachedSeg);
@@ -90,21 +107,6 @@ export async function GET(
       }
     } catch (err) {
       console.warn(`segment-poster: R2 poster fetch failed for ${segId}:`, err);
-    }
-  }
-
-  // Explicit force=1 local regeneration remains available for maintenance.
-  if (force && clip && clip.availability === "local") {
-    const posterFilePath = await generateSegmentPoster(segId, videoMap, force);
-    if (posterFilePath && fs.existsSync(posterFilePath)) {
-      const buf = fs.readFileSync(posterFilePath);
-      return new NextResponse(buf, {
-        headers: {
-          "Content-Type": "image/jpeg",
-          "Cache-Control": "public, max-age=3600",
-          "X-Poster-Source": "ffmpeg-local",
-        },
-      });
     }
   }
 
