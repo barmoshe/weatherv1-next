@@ -5,6 +5,7 @@ import { getRuntimeConfig } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { catalogStoreStatus, readCatalog } from "@/server/catalog/storage";
+import { parseCatalog } from "@/server/catalog/parser";
 import { getR2SyncStatus, pullCatalogFromR2IfLocalEmpty } from "@/server/sync/r2/service";
 import type { R2SyncStatus } from "@/server/sync/r2/types";
 import type { WorkspaceValidation } from "@/server/assets/source";
@@ -35,8 +36,9 @@ function buildStorageBlock(args: {
   r2: R2SyncStatus;
   userDataDir: string | null;
   catalogVideoCount: number;
+  presentVideoCount: number;
 }) {
-  const { workspace, r2, userDataDir, catalogVideoCount } = args;
+  const { workspace, r2, userDataDir, catalogVideoCount, presentVideoCount } = args;
 
   // The "default" local cache lives under the Electron userData dir. When the
   // workspace points there, treat the local folder as an app-managed cache.
@@ -71,6 +73,7 @@ function buildStorageBlock(args: {
       ready: workspace.ready,
       missing: workspace.missing,
       catalogCount: catalogVideoCount,
+      presentCount: presentVideoCount,
     },
   };
 }
@@ -92,10 +95,14 @@ export async function GET(req: NextRequest) {
   const r2 = await getR2SyncStatus();
 
   let catalogVideoCount = 0;
+  let presentVideoCount = 0;
   try {
-    catalogVideoCount = readCatalog().videos.length;
+    const parsed = parseCatalog(readCatalog());
+    catalogVideoCount = parsed.length;
+    presentVideoCount = parsed.filter((v) => v.availability === "local").length;
   } catch {
     catalogVideoCount = 0;
+    presentVideoCount = 0;
   }
 
   const storage = buildStorageBlock({
@@ -103,6 +110,7 @@ export async function GET(req: NextRequest) {
     r2,
     userDataDir: config.userDataDir,
     catalogVideoCount,
+    presentVideoCount,
   });
 
   return NextResponse.json({

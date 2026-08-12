@@ -27,6 +27,8 @@ export interface LocalCacheStatus {
   ready: boolean;
   missing: string[];
   catalogCount: number;
+  /** Catalog rows whose video file actually exists on disk. */
+  presentCount: number;
 }
 
 export interface StorageStatus {

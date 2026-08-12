@@ -13,7 +13,12 @@ import { dispatchRefetchJobs } from "@/client/hooks/useLocalHistory";
 // longer need a dedicated screen for it. If R2 stays unready after that
 // (e.g. Worker rejected the password), we surface a "reconnect" overlay
 // with a sign-out fallback instead of asking for the password twice.
-type Phase = "loading" | "cloud-reconnect" | "local-cache" | "ready" | "hidden";
+//
+// `local-setup` is the local-era onboarding: sync is off by default, and a
+// workspace that is not a real media library (no catalog, or a catalog whose
+// files are not on disk) gets a wizard that points the app at the permanent
+// local drive.
+type Phase = "loading" | "local-setup" | "cloud-reconnect" | "local-cache" | "ready" | "hidden";
 
 function RtlTechnicalLine({
   className,
@@ -43,6 +48,7 @@ export function StorageOnboardingGate() {
   const [signingOut, setSigningOut] = useState(false);
   const [pickingCache, setPickingCache] = useState(false);
   const [cacheError, setCacheError] = useState<string | null>(null);
+  const [setupDismissed, setSetupDismissed] = useState(false);
 
   useEffect(() => {
     if (!desktop) {
@@ -147,6 +153,82 @@ export function StorageOnboardingGate() {
   }
 
   if (phase === "hidden" || phase === "ready") return null;
+
+  if (phase === "local-setup") {
+    if (setupDismissed) return null;
+    const cache = storage?.localCache;
+    const versionLine = appInfo ? `WeatherV1 · גרסה ${appInfo.appVersion}` : "WeatherV1";
+    const hasCatalog = (cache?.catalogCount ?? 0) > 0;
+    return (
+      <div
+        className="login-screen"
+        dir="rtl"
+        lang="he"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="local-setup-title"
+      >
+        <div className="login-screen__backdrop" aria-hidden="true" />
+        <div className="login-card">
+          <div className="login-card__brand" aria-hidden="true">
+            <span className="login-card__brand-mark">WV1</span>
+          </div>
+          <h1 className="login-card__title" id="local-setup-title">
+            הגדרת ספריית המדיה המקומית
+          </h1>
+          <p className="login-card__subtitle">
+            האפליקציה עובדת מתיקייה מקומית קבועה במחשב הזה (כונן V1). בחרו את תיקיית
+            הספרייה — התיקייה שמכילה <code dir="ltr">notouch!/catalog.json</code> ואת
+            קובצי הווידאו. סנכרון לאחסון הענן של קשת (AWS) מתוכנן כשלב עתידי; סנכרון
+            הענן כבוי כעת.
+          </p>
+
+          {cache?.workspaceDir && (
+            <p className="login-card__subtitle">
+              התיקייה הנוכחית: <code dir="ltr">{cache.workspaceDir}</code>
+              {!hasCatalog && <> · לא נמצא בה קטלוג</>}
+              {hasCatalog && (cache?.presentCount ?? 0) === 0 && (
+                <> · הקטלוג נטען אך קובצי הווידאו אינם בתיקייה</>
+              )}
+            </p>
+          )}
+          {cacheError && (
+            <RtlTechnicalLine
+              className="login-card__error"
+              role="alert"
+              prefix="אירעה שגיאה:"
+              message={cacheError}
+            />
+          )}
+
+          <div className="login-card__form">
+            <button
+              type="button"
+              className="btn btn--primary login-card__submit"
+              onClick={() => void handlePickFolder()}
+              disabled={pickingCache}
+            >
+              {pickingCache ? "עובד…" : "בחר את תיקיית הספרייה…"}
+            </button>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => setSetupDismissed(true)}
+              disabled={pickingCache}
+            >
+              המשך בלי ספרייה
+            </button>
+          </div>
+
+          <footer className="login-card__footer">
+            <span>{versionLine}</span>
+            <span aria-hidden="true">·</span>
+            <span>אחסון מקומי</span>
+          </footer>
+        </div>
+      </div>
+    );
+  }
 
   if (phase === "cloud-reconnect") {
     const versionLine = appInfo
@@ -265,7 +347,7 @@ export function StorageOnboardingGate() {
   return null;
 }
 
-function derivePhase(args: {
+export function derivePhase(args: {
   desktopAvailable: boolean;
   appInfo: DesktopAppInfo | null;
   appInfoReady: boolean;
@@ -277,12 +359,19 @@ function derivePhase(args: {
   if (!desktopAvailable) return "hidden";
   if (!appInfoReady || !storage) return "loading";
 
+  // Local mode (the default since the Cloudflare detach): show the library
+  // setup wizard, in packaged AND dev shells, until the workspace holds a
+  // real media library — a catalog whose files are actually on disk.
+  if (storage.mode === "local") {
+    const cache = storage.localCache;
+    const isLibrary = cache.ready && cache.catalogCount > 0 && (cache.presentCount ?? 0) > 0;
+    return isLibrary ? "ready" : "local-setup";
+  }
+
   // Only the packaged production build defaults to cloud-first onboarding.
   // Dev / unpackaged users keep the local-only flow and Settings.
   const isProductionShell = Boolean(appInfo?.packaged);
   if (!isProductionShell) return "hidden";
-
-  if (storage.mode !== "cloud") return "hidden";
 
   // Cloud creds come from the editor login (same username/password); a
   // mismatch surfaces here as cloud.ready === false. Show the recovery
