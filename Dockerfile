@@ -15,10 +15,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # image carries the hashes (in .next/) but never the plaintext.
 ARG EDITOR_PASSWORD
 ARG ADMIN_PASSWORD
+ARG EDITOR_USERNAME
 ARG R2_APP_USERNAME
 COPY --from=deps /app/weatherV1-next/node_modules ./node_modules
 COPY . .
-RUN EDITOR_PASSWORD="$EDITOR_PASSWORD" ADMIN_PASSWORD="$ADMIN_PASSWORD" R2_APP_USERNAME="$R2_APP_USERNAME" npm run build
+RUN EDITOR_PASSWORD="$EDITOR_PASSWORD" ADMIN_PASSWORD="$ADMIN_PASSWORD" EDITOR_USERNAME="$EDITOR_USERNAME" R2_APP_USERNAME="$R2_APP_USERNAME" npm run build
 RUN npm prune --omit=dev
 
 # ---- runner: minimal runtime with ffmpeg + the built app ----

@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 /*
- * Reads EDITOR_PASSWORD / ADMIN_PASSWORD (plaintext) and R2_APP_USERNAME
+ * Reads EDITOR_PASSWORD / ADMIN_PASSWORD (plaintext) and the editor username
  * from process.env and emits src/server/runtime/auth-passwords.generated.ts
  * with Argon2id hashes plus the canonical username.
  *
- * The same R2_APP_USERNAME + EDITOR_PASSWORD pair is what packaged builds
- * present to the Cloudflare R2 Worker as HTTP Basic Auth. Keeping a single
- * source of truth (GH secrets) avoids the user being asked for cloud creds
- * after the editor login.
+ * EDITOR_USERNAME is the primary env; R2_APP_USERNAME is accepted as a
+ * fallback because existing .env files and CI secrets predate the local
+ * detach (the same pair used to double as the R2 Worker Basic Auth).
  *
- * Hard-fails (exit 1) if any required env var is missing or empty, in all
- * environments. Never logs the plaintext or the derived hash — GitHub
+ * Hard-fails (exit 1) if a password or the username is missing or empty, in
+ * all environments. Never logs the plaintext or the derived hash — GitHub
  * masks raw secrets but not values derived from them.
  */
 
@@ -53,7 +52,15 @@ function requireEnv(name) {
 async function main() {
   const editor = requireEnv("EDITOR_PASSWORD");
   const admin = requireEnv("ADMIN_PASSWORD");
-  const r2Username = requireEnv("R2_APP_USERNAME");
+  const username = process.env.EDITOR_USERNAME?.trim() || process.env.R2_APP_USERNAME?.trim();
+  if (!username) {
+    process.stderr.write(
+      "emit-auth-hashes: missing required env var EDITOR_USERNAME " +
+        "(or the legacy R2_APP_USERNAME fallback). " +
+        "Populate it in .env (local) or as a GitHub Secret (CI).\n",
+    );
+    process.exit(1);
+  }
 
   const editorHash = await argon2.hash(editor, ARGON2_OPTS);
   const adminHash = await argon2.hash(admin, ARGON2_OPTS);
@@ -64,7 +71,9 @@ async function main() {
     "// at build time and never committed.\n" +
     `export const EDITOR_HASH = ${JSON.stringify(editorHash)};\n` +
     `export const ADMIN_HASH = ${JSON.stringify(adminHash)};\n` +
-    `export const R2_APP_USERNAME = ${JSON.stringify(r2Username)};\n`;
+    `export const EDITOR_USERNAME = ${JSON.stringify(username)};\n` +
+    "// Legacy alias, kept for one release while callers migrate.\n" +
+    `export const R2_APP_USERNAME = ${JSON.stringify(username)};\n`;
 
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, body, "utf8");
