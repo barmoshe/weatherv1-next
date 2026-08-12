@@ -1,0 +1,258 @@
+{
+  "a56bbdaae14845d8a089f5c332310442": {
+    "job_id": "a56bbdaae14845d8a089f5c332310442",
+    "status": "completed",
+    "output_url": "forecast_a56bbdaae14845d8a089f5c332310442.mp4",
+    "error": null,
+    "created_at": "2026-05-17T12:21:55.157Z",
+    "audio_filename": "6d3cdd10d4df4e73b1db7d130db33c67.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 102091,
+      "output_tokens": 1022,
+      "llm_cost_usd_estimate": 0.2654475,
+      "transcription_billed_audio_sec": 27.280000686645508,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027280000686645506,
+      "total_cost_usd_estimate": 0.26817550006866453
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1581,
+        "output_tokens": 561
+      },
+      {
+        "step": "picker_attempt_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100510,
+        "output_tokens": 461
+      }
+    ]
+  },
+  "5da2cb6a5b2d42eb86bf06d452c2e11e": {
+    "job_id": "5da2cb6a5b2d42eb86bf06d452c2e11e",
+    "status": "failed",
+    "output_url": null,
+    "error": "Server restarted while job was running",
+    "error_code": "worker_restarted",
+    "error_provider": "worker",
+    "failed_step": "render",
+    "failed_at": "2026-05-19T23:23:01.083Z",
+    "created_at": "2026-05-17T13:05:07.039Z",
+    "audio_filename": "83bacc74c72f42c29d0cb1e8ae394ed0.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 453343,
+      "output_tokens": 3010,
+      "cached_input_tokens": 5120,
+      "llm_cost_usd_estimate": 1.1570575,
+      "transcription_billed_audio_sec": 73.4800033569336,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.00734800033569336,
+      "total_cost_usd_estimate": 1.1644055003356935
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 2074,
+        "output_tokens": 1007
+      },
+      {
+        "step": "picker_attempt_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 101002,
+        "output_tokens": 617
+      },
+      {
+        "step": "picker_attempt_2",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100819,
+        "output_tokens": 624
+      },
+      {
+        "step": "picker_attempt_3",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 99784,
+        "output_tokens": 592,
+        "cached_input_tokens": 3072
+      },
+      {
+        "step": "replan_picker_attempt_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 74832,
+        "output_tokens": 76
+      },
+      {
+        "step": "replan_picker_attempt_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 74832,
+        "output_tokens": 94,
+        "cached_input_tokens": 2048
+      }
+    ]
+  },
+  "7943c8d55adc405da015abf641f167fa": {
+    "job_id": "7943c8d55adc405da015abf641f167fa",
+    "status": "completed",
+    "output_url": "forecast_7943c8d55adc405da015abf641f167fa.mp4",
+    "error": null,
+    "created_at": "2026-05-17T16:20:02.688Z",
+    "audio_filename": "81f17e7eb8ea43aaba77d0db12bf140b.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 203251,
+      "output_tokens": 2038,
+      "cached_input_tokens": 72704,
+      "llm_cost_usd_estimate": 0.43762750000000006,
+      "transcription_billed_audio_sec": 27.040000915527344,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027040000915527344,
+      "total_cost_usd_estimate": 0.4403315000915528
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1913,
+        "output_tokens": 875
+      },
+      {
+        "step": "picker_attempt_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100725,
+        "output_tokens": 585
+      },
+      {
+        "step": "picker_attempt_2",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 100613,
+        "output_tokens": 578,
+        "cached_input_tokens": 72704
+      }
+    ]
+  },
+  "602094ca6bd54858b9f0539c6c040a2a": {
+    "job_id": "602094ca6bd54858b9f0539c6c040a2a",
+    "status": "completed",
+    "output_url": "forecast_602094ca6bd54858b9f0539c6c040a2a.mp4",
+    "error": null,
+    "error_code": null,
+    "error_provider": null,
+    "error_console_url": null,
+    "failed_step": null,
+    "failed_at": null,
+    "created_at": "2026-05-19T23:25:41.226Z",
+    "audio_filename": "660f8c9f438f4f4cbe074a66d80f4950.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 18536,
+      "output_tokens": 1512,
+      "llm_cost_usd_estimate": 0.06146,
+      "transcription_billed_audio_sec": 27.280000686645508,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027280000686645506,
+      "total_cost_usd_estimate": 0.06418800006866456
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1229,
+        "output_tokens": 960
+      },
+      {
+        "step": "picker_ver2_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 17307,
+        "output_tokens": 552
+      }
+    ]
+  },
+  "4acc12d196e84190aa6e067d4a1638d4": {
+    "job_id": "4acc12d196e84190aa6e067d4a1638d4",
+    "status": "completed",
+    "output_url": "forecast_4acc12d196e84190aa6e067d4a1638d4.mp4",
+    "error": null,
+    "error_code": null,
+    "error_provider": null,
+    "error_console_url": null,
+    "failed_step": null,
+    "failed_at": null,
+    "created_at": "2026-05-20T10:00:10.768Z",
+    "audio_filename": "a8c41b767eef41d28f0ca4b67a43a491.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 18253,
+      "output_tokens": 1378,
+      "llm_cost_usd_estimate": 0.0594125,
+      "transcription_billed_audio_sec": 27.280000686645508,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027280000686645506,
+      "total_cost_usd_estimate": 0.06214050006866455
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1229,
+        "output_tokens": 964
+      },
+      {
+        "step": "picker_ver2_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 17024,
+        "output_tokens": 414
+      }
+    ]
+  },
+  "84a8b033890d471c9f5ba0c6a9f378cd": {
+    "job_id": "84a8b033890d471c9f5ba0c6a9f378cd",
+    "status": "draft",
+    "created_at": "2026-05-20T13:24:49.023Z",
+    "audio_filename": "a5a552ac2d69458e9ce33a71f7d99719.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 17483,
+      "output_tokens": 1313,
+      "llm_cost_usd_estimate": 0.056837500000000006,
+      "transcription_billed_audio_sec": 27.280000686645508,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027280000686645506,
+      "total_cost_usd_estimate": 0.059565500068664554
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1229,
+        "output_tokens": 925
+      },
+      {
+        "step": "picker_ver2_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 16254,
+        "output_tokens": 388
+      }
+    ]
+  }
+}

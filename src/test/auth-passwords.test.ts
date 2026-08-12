@@ -26,7 +26,6 @@ vi.mock("@/server/runtime/auth-passwords.generated", () => ({
     return adminHash;
   },
   EDITOR_USERNAME: "v1editor",
-  R2_APP_USERNAME: "v1editor",
 }));
 
 describe("auth-passwords verify", () => {

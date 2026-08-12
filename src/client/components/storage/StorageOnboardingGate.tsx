@@ -6,6 +6,7 @@ import { desktop } from "@/client/lib/desktop";
 import { useStorageStatus } from "@/client/hooks/useStorageStatus";
 import type { DesktopAppInfo } from "@/shared/desktop";
 import { AppBootstrapShell } from "@/client/components/storage/AppBootstrapShell";
+import { LoginCardShell } from "@/client/components/common/LoginCardShell";
 import { dispatchRefetchJobs } from "@/client/hooks/useLocalHistory";
 
 // `cloud-connect` was a second-screen R2 sign-in form. Editor login now
@@ -142,6 +143,7 @@ export function StorageOnboardingGate() {
   }, [refreshEverything]);
 
   const phase = derivePhase({ desktopAvailable: Boolean(desktop), appInfo, appInfoReady, storage });
+  const versionLine = appInfo ? `WeatherV1 · גרסה ${appInfo.appVersion}` : "WeatherV1";
 
   if (phase === "loading") {
     return (
@@ -157,139 +159,111 @@ export function StorageOnboardingGate() {
   if (phase === "local-setup") {
     if (setupDismissed) return null;
     const cache = storage?.localCache;
-    const versionLine = appInfo ? `WeatherV1 · גרסה ${appInfo.appVersion}` : "WeatherV1";
     const hasCatalog = (cache?.catalogCount ?? 0) > 0;
     return (
-      <div
-        className="login-screen"
-        dir="rtl"
-        lang="he"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="local-setup-title"
-      >
-        <div className="login-screen__backdrop" aria-hidden="true" />
-        <div className="login-card">
-          <div className="login-card__brand" aria-hidden="true">
-            <span className="login-card__brand-mark">WV1</span>
-          </div>
-          <h1 className="login-card__title" id="local-setup-title">
-            הגדרת ספריית המדיה המקומית
-          </h1>
-          <p className="login-card__subtitle">
-            האפליקציה עובדת מתיקייה מקומית קבועה במחשב הזה (כונן V1). בחרו את תיקיית
-            הספרייה — התיקייה שמכילה <code dir="ltr">notouch!/catalog.json</code> ואת
-            קובצי הווידאו. סנכרון לאחסון הענן של קשת (AWS) מתוכנן כשלב עתידי; סנכרון
-            הענן כבוי כעת.
-          </p>
-
-          {cache?.workspaceDir && (
-            <p className="login-card__subtitle">
-              התיקייה הנוכחית: <code dir="ltr">{cache.workspaceDir}</code>
-              {!hasCatalog && <> · לא נמצא בה קטלוג</>}
-              {hasCatalog && (cache?.presentCount ?? 0) === 0 && (
-                <> · הקטלוג נטען אך קובצי הווידאו אינם בתיקייה</>
-              )}
-              {(cache?.missing?.length ?? 0) > 0 && (
-                <>
-                  {" "}
-                  · חסרות תיקיות משנה:{" "}
-                  <span dir="ltr">{cache!.missing.join(", ")}</span>
-                </>
-              )}
-            </p>
-          )}
-          {cacheError && (
-            <RtlTechnicalLine
-              className="login-card__error"
-              role="alert"
-              prefix="אירעה שגיאה:"
-              message={cacheError}
-            />
-          )}
-
-          <div className="login-card__form">
-            <button
-              type="button"
-              className="btn btn--primary login-card__submit"
-              onClick={() => void handlePickFolder()}
-              disabled={pickingCache}
-            >
-              {pickingCache ? "עובד…" : "בחר את תיקיית הספרייה…"}
-            </button>
-            <button
-              type="button"
-              className="btn btn--ghost"
-              onClick={() => setSetupDismissed(true)}
-              disabled={pickingCache}
-            >
-              המשך בלי ספרייה
-            </button>
-          </div>
-
-          <footer className="login-card__footer">
+      <LoginCardShell
+        titleId="local-setup-title"
+        title="הגדרת ספריית המדיה המקומית"
+        footer={
+          <>
             <span>{versionLine}</span>
             <span aria-hidden="true">·</span>
             <span>אחסון מקומי</span>
-          </footer>
+          </>
+        }
+      >
+        <p className="login-card__subtitle">
+          האפליקציה עובדת מתיקייה מקומית קבועה במחשב הזה (כונן V1). בחרו את תיקיית
+          הספרייה — התיקייה שמכילה <code dir="ltr">notouch!/catalog.json</code> ואת
+          קובצי הווידאו. סנכרון לאחסון הענן של קשת (AWS) מתוכנן כשלב עתידי; סנכרון
+          הענן כבוי כעת.
+        </p>
+
+        {cache?.workspaceDir && (
+          <p className="login-card__subtitle">
+            התיקייה הנוכחית: <code dir="ltr">{cache.workspaceDir}</code>
+            {!hasCatalog && <> · לא נמצא בה קטלוג</>}
+            {hasCatalog && (cache?.presentCount ?? 0) === 0 && (
+              <> · הקטלוג נטען אך קובצי הווידאו אינם בתיקייה</>
+            )}
+            {(cache?.missing?.length ?? 0) > 0 && (
+              <>
+                {" "}
+                · חסרות תיקיות משנה:{" "}
+                <span dir="ltr">{(cache?.missing ?? []).join(", ")}</span>
+              </>
+            )}
+          </p>
+        )}
+        {cacheError && (
+          <RtlTechnicalLine
+            className="login-card__error"
+            role="alert"
+            prefix="אירעה שגיאה:"
+            message={cacheError}
+          />
+        )}
+
+        <div className="login-card__form">
+          <button
+            type="button"
+            className="btn btn--primary login-card__submit"
+            onClick={() => void handlePickFolder()}
+            disabled={pickingCache}
+          >
+            {pickingCache ? "עובד…" : "בחר את תיקיית הספרייה…"}
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => setSetupDismissed(true)}
+            disabled={pickingCache}
+          >
+            המשך בלי ספרייה
+          </button>
         </div>
-      </div>
+      </LoginCardShell>
     );
   }
 
   if (phase === "cloud-reconnect") {
-    const versionLine = appInfo
-      ? `WeatherV1 · גרסה ${appInfo.appVersion}`
-      : "WeatherV1";
     return (
-      <div
-        className="login-screen"
-        dir="rtl"
-        lang="he"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cloud-reconnect-title"
-      >
-        <div className="login-screen__backdrop" aria-hidden="true" />
-        <div className="login-card">
-          <div className="login-card__brand" aria-hidden="true">
-            <span className="login-card__brand-mark">WV1</span>
-          </div>
-          <h1 className="login-card__title" id="cloud-reconnect-title">
-            לא ניתן להתחבר לענן
-          </h1>
-          <p className="login-card__subtitle">
-            פרטי החיבור ל־Cloudflare R2 נשמרו בעת הכניסה לעורך אך השרת דחה אותם. התנתקו והיכנסו
-            שוב כדי לנסות מחדש.
-          </p>
-
-          {storage?.cloud.error && (
-            <RtlTechnicalLine
-              className="login-card__error"
-              role="alert"
-              prefix="פרטים טכניים:"
-              message={storage.cloud.error}
-            />
-          )}
-
-          <div className="login-card__form">
-            <button
-              type="button"
-              className="btn btn--primary login-card__submit"
-              onClick={() => void handleSignOutToRetry()}
-              disabled={signingOut}
-            >
-              {signingOut ? "מתנתק…" : "התנתק והיכנס מחדש"}
-            </button>
-          </div>
-
-          <footer className="login-card__footer">
+      <LoginCardShell
+        titleId="cloud-reconnect-title"
+        title="לא ניתן להתחבר לענן"
+        footer={
+          <>
             <span>{versionLine}</span>
             <span aria-hidden="true">·</span>
             <span>Cloudflare R2</span>
-          </footer>
+          </>
+        }
+      >
+        <p className="login-card__subtitle">
+          פרטי החיבור ל־Cloudflare R2 נשמרו בעת הכניסה לעורך אך השרת דחה אותם. התנתקו והיכנסו
+          שוב כדי לנסות מחדש.
+        </p>
+
+        {storage?.cloud.error && (
+          <RtlTechnicalLine
+            className="login-card__error"
+            role="alert"
+            prefix="פרטים טכניים:"
+            message={storage.cloud.error}
+          />
+        )}
+
+        <div className="login-card__form">
+          <button
+            type="button"
+            className="btn btn--primary login-card__submit"
+            onClick={() => void handleSignOutToRetry()}
+            disabled={signingOut}
+          >
+            {signingOut ? "מתנתק…" : "התנתק והיכנס מחדש"}
+          </button>
         </div>
-      </div>
+      </LoginCardShell>
     );
   }
 
@@ -371,7 +345,7 @@ export function derivePhase(args: {
   // real media library — a catalog whose files are actually on disk.
   if (storage.mode === "local") {
     const cache = storage.localCache;
-    const isLibrary = cache.ready && cache.catalogCount > 0 && (cache.presentCount ?? 0) > 0;
+    const isLibrary = cache.ready && cache.catalogCount > 0 && cache.presentCount > 0;
     return isLibrary ? "ready" : "local-setup";
   }
 

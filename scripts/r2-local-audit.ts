@@ -59,10 +59,21 @@ process.env.R2_GATEWAY_URL ??= PROD.gatewayUrl;
 process.env.R2_TENANT_ID ??= PROD.tenantId;
 process.env.R2_BUCKET_NAME ??= PROD.bucketName;
 
-import { getR2Text, headR2Object, downloadR2File, tenantKey, r2Configured } from "@/server/sync/r2/client";
+import {
+  clipPosterKey,
+  downloadR2File,
+  getR2Text,
+  headR2Object,
+  r2Configured,
+  segmentPosterKey,
+  tenantKey,
+  videoRemoteKey,
+} from "@/server/sync/r2/client";
 import { getRuntimeConfig } from "@/server/runtime/config";
 import { getRuntimePaths } from "@/server/runtime/paths";
+import { mapWithConcurrency } from "@/server/runtime/concurrency";
 import { posterPath } from "@/server/ffmpeg/posters";
+import { planBundlePath } from "@/server/jobs/plan-bundle";
 
 interface CatalogEntryLite {
   id?: string;
@@ -77,7 +88,15 @@ interface JobRecordLite {
   audio_filename?: string;
 }
 
-type Kind = "catalog" | "jobs-json" | "video" | "clip-poster" | "segment-poster" | "voiceover" | "plan";
+type Kind =
+  | "catalog"
+  | "jobs-json"
+  | "video"
+  | "clip-poster"
+  | "segment-poster"
+  | "voiceover"
+  | "plan"
+  | "orphan";
 type Verdict = "ok" | "size-mismatch" | "remote-only" | "local-only" | "missing-both" | "orphan-remote";
 
 interface AuditRow {
@@ -138,36 +157,23 @@ const STAMP = new Date().toISOString().slice(0, 10);
 const AUDIT_DIR = path.join(repoRoot, "runtime", "archive", `r2-audit-${STAMP}`);
 fs.mkdirSync(AUDIT_DIR, { recursive: true });
 
-function localSizeOf(p: string | null): number | null {
+async function localSizeOf(p: string | null): Promise<number | null> {
   if (!p) return null;
   try {
-    const st = fs.statSync(p);
+    const st = await fs.promises.stat(p);
     return st.isFile() ? st.size : null;
   } catch {
     return null;
   }
 }
 
-function classify(kind: Kind, remoteSize: number | null, localSize: number | null): Verdict {
+function classify(remoteSize: number | null, localSize: number | null): Verdict {
   if (remoteSize !== null && localSize !== null) {
     return remoteSize === localSize ? "ok" : "size-mismatch";
   }
   if (remoteSize !== null) return "remote-only";
   if (localSize !== null) return "local-only";
   return "missing-both";
-}
-
-async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-  async function worker(): Promise<void> {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i]);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return results;
 }
 
 /** Accepts rclone `lsjson --recursive` output (array of {Path,Size,IsDir}) or
@@ -183,10 +189,12 @@ function parseListing(file: string): Map<string, number> {
         key: r.Key,
         size: r.Size,
       }));
-  const prefix = `tenants/${cfg.r2.tenantId}/`;
+  // tenantKey("") yields the `tenants/<tid>/` prefix; this filter also
+  // excludes downloads/ (installer CDN, out of scope).
+  const prefix = tenantKey("");
   for (const r of rows) {
     if (!r.key) continue;
-    if (!r.key.startsWith(prefix)) continue; // excludes downloads/ (installer CDN, out of scope)
+    if (!r.key.startsWith(prefix)) continue;
     map.set(r.key, r.size ?? -1);
   }
   return map;
@@ -210,10 +218,19 @@ async function main(): Promise<void> {
   // --- Remote state (also archived beside the manifest for reference) ------
   const catalogKey = tenantKey("catalog/catalog.json");
   const jobsKey = tenantKey("jobs/jobs.json");
-  const { text: remoteCatalogText } = await getR2Text(catalogKey);
-  const { text: remoteJobsText } = await getR2Text(jobsKey);
+  const [{ text: remoteCatalogText }, { text: remoteJobsText }] = await Promise.all([
+    getR2Text(catalogKey),
+    getR2Text(jobsKey),
+  ]);
   fs.writeFileSync(path.join(AUDIT_DIR, "remote-catalog.json"), remoteCatalogText);
   fs.writeFileSync(path.join(AUDIT_DIR, "remote-jobs.json"), remoteJobsText);
+
+  // Bodies fetched here (and plan bodies below) double as size sources for
+  // the sweep, since the Worker's HEAD omits content-length for JSON PUTs.
+  const knownTextSizes = new Map<string, number>([
+    [catalogKey, Buffer.byteLength(remoteCatalogText)],
+    [jobsKey, Buffer.byteLength(remoteJobsText)],
+  ]);
 
   const remoteCatalog = JSON.parse(remoteCatalogText) as { videos?: CatalogEntryLite[] };
   const remoteJobs = JSON.parse(remoteJobsText) as Record<string, JobRecordLite>;
@@ -229,42 +246,44 @@ async function main(): Promise<void> {
 
   for (const entry of videos) {
     if (!entry.id) continue;
-    const cleanName = path.basename(entry.filename || entry.original_filename || `${entry.id}.mp4`);
-    const key = entry.remote?.key || tenantKey(`videos/${entry.id}/${cleanName}`);
+    const key = entry.remote?.key || videoRemoteKey(entry);
     const localPath = entry.filename ? path.join(cfg.videosDir, entry.filename) : null;
     expected.push({ kind: "video", key, localPath });
     expected.push({
       kind: "clip-poster",
-      key: tenantKey(`posters/clips/${entry.id}.jpg`),
+      key: clipPosterKey(entry.id),
       localPath: posterPath(entry.id, paths.postersDir),
     });
     for (const seg of entry.segments ?? []) {
       if (!seg.id) continue;
       expected.push({
         kind: "segment-poster",
-        key: tenantKey(`posters/segments/${seg.id}.jpg`),
+        key: segmentPosterKey(seg.id),
         localPath: posterPath(seg.id, paths.segmentPostersDir),
       });
     }
   }
 
-  for (const jobId of jobIds) {
-    const job = remoteJobs[jobId] ?? {};
-    const planKey = tenantKey(`jobs/${jobId}/plan.json`);
-    expected.push({
-      kind: "plan",
-      key: planKey,
-      localPath: path.join(paths.outputsDir, `forecast_${jobId}.plan.json`),
-    });
-    let audioFilename = job.audio_filename;
-    if (!audioFilename) {
-      try {
-        const { text } = await getR2Text(planKey);
-        audioFilename = (JSON.parse(text) as { audio_filename?: string }).audio_filename;
-      } catch {
-        /* plan may not exist remotely; the plan row above will say so */
-      }
+  // Voiceover filenames may need the plan body; fetch those concurrently and
+  // keep the byte sizes for the sweep.
+  const planKeyFor = (jobId: string) => tenantKey(`jobs/${jobId}/plan.json`);
+  const audioNames = new Map<string, string | undefined>(
+    jobIds.map((jobId) => [jobId, remoteJobs[jobId]?.audio_filename]),
+  );
+  const needsPlanBody = jobIds.filter((jobId) => !audioNames.get(jobId));
+  await mapWithConcurrency(needsPlanBody, CONCURRENCY, async (jobId) => {
+    try {
+      const { text } = await getR2Text(planKeyFor(jobId));
+      knownTextSizes.set(planKeyFor(jobId), Buffer.byteLength(text));
+      audioNames.set(jobId, (JSON.parse(text) as { audio_filename?: string }).audio_filename);
+    } catch {
+      /* plan may not exist remotely; the plan row below will say so */
     }
+  });
+
+  for (const jobId of jobIds) {
+    expected.push({ kind: "plan", key: planKeyFor(jobId), localPath: planBundlePath(jobId) });
+    const audioFilename = audioNames.get(jobId);
     if (audioFilename) {
       expected.push({
         kind: "voiceover",
@@ -284,20 +303,20 @@ async function main(): Promise<void> {
       if (head?.size !== undefined) {
         remoteSize = head.size;
       } else if (head) {
-        // The Worker's HEAD omits content-length for JSON PUTs; measure the
-        // small text objects via GET instead of reporting a fake mismatch.
-        remoteSize = Buffer.byteLength((await getR2Text(e.key)).text);
+        // The Worker's HEAD omits content-length for JSON PUTs; use the body
+        // already in memory, or measure the small text object via GET.
+        remoteSize = knownTextSizes.get(e.key) ?? Buffer.byteLength((await getR2Text(e.key)).text);
       }
     }
-    const localSize = localSizeOf(e.localPath);
-    return { kind: e.kind, key: e.key, localPath: e.localPath, remoteSize, localSize, verdict: classify(e.kind, remoteSize, localSize) };
+    const localSize = await localSizeOf(e.localPath);
+    return { kind: e.kind, key: e.key, localPath: e.localPath, remoteSize, localSize, verdict: classify(remoteSize, localSize) };
   });
 
   if (listing) {
     const derived = new Set(expected.map((e) => e.key));
     for (const [key, size] of listing) {
       if (!derived.has(key)) {
-        rows.push({ kind: "video", key, localPath: null, remoteSize: size, localSize: null, verdict: "orphan-remote" });
+        rows.push({ kind: "orphan", key, localPath: null, remoteSize: size, localSize: null, verdict: "orphan-remote" });
       }
     }
   }
@@ -362,13 +381,16 @@ async function main(): Promise<void> {
     const ffprobePath = getFFprobePath();
     const run = promisify(execFile);
     console.log(`\nProbing ${probeTargets.length} video(s) with ffprobe…`);
-    for (const p of probeTargets) {
+    const results = await mapWithConcurrency(probeTargets, 4, async (p) => {
       try {
         await run(ffprobePath, ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p]);
-        console.log(`  ok ${p}`);
+        return { p, ok: true as const };
       } catch (err) {
-        console.log(`  FAIL ${p}: ${err instanceof Error ? err.message : String(err)}`);
+        return { p, ok: false as const, err: err instanceof Error ? err.message : String(err) };
       }
+    });
+    for (const r of results) {
+      console.log(r.ok ? `  ok ${r.p}` : `  FAIL ${r.p}: ${r.err}`);
     }
   }
 

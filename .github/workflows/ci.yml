@@ -16,7 +16,10 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
-      - run: npx tsc --noEmit
+      # The stub-first typecheck resolves the gitignored generated auth module
+      # on fresh checkouts (the committed .d.ts that used to cover this kept
+      # drifting from the emit script's exports).
+      - run: npm run typecheck
 
   test:
     runs-on: ubuntu-latest

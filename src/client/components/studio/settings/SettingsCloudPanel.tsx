@@ -115,13 +115,6 @@ export function SettingsCloudPanel({
               <span>{desktopStatus?.r2?.lastSyncAt ?? "טרם בוצע"}</span>
             </div>
           </div>
-          {desktopStatus?.r2?.ready ? (
-            <div className="settings-actions-row">
-              <button type="button" className="btn btn--ghost" onClick={onClearR2Key} disabled={saving}>
-                התנתק (נקה סיסמה)
-              </button>
-            </div>
-          ) : null}
         </>
       ) : (
         <>

@@ -117,7 +117,7 @@ release):
 
 ## Verification before claiming done
 
-- Server/runtime changes → `npx tsc --noEmit` + `npm test`.
+- Server/runtime changes → `npm run typecheck` + `npm test`.
 - Next route or build behavior → also `npm run build`.
 - Electron startup/package changes → also `npm run standalone:prep`
   and, when feasible, `npm run electron:build`.

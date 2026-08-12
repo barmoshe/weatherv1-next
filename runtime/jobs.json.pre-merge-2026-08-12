@@ -1,0 +1,155 @@
+{
+  "602094ca6bd54858b9f0539c6c040a2a": {
+    "job_id": "602094ca6bd54858b9f0539c6c040a2a",
+    "status": "completed",
+    "output_url": "forecast_602094ca6bd54858b9f0539c6c040a2a.mp4",
+    "error": null,
+    "error_code": null,
+    "error_provider": null,
+    "error_console_url": null,
+    "failed_step": null,
+    "failed_at": null,
+    "created_at": "2026-05-19T23:25:41.226Z",
+    "audio_filename": "660f8c9f438f4f4cbe074a66d80f4950.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 18536,
+      "output_tokens": 1512,
+      "llm_cost_usd_estimate": 0.06146,
+      "transcription_billed_audio_sec": 27.280000686645508,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027280000686645506,
+      "total_cost_usd_estimate": 0.06418800006866456
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1229,
+        "output_tokens": 960
+      },
+      {
+        "step": "picker_ver2_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 17307,
+        "output_tokens": 552
+      }
+    ]
+  },
+  "4acc12d196e84190aa6e067d4a1638d4": {
+    "job_id": "4acc12d196e84190aa6e067d4a1638d4",
+    "status": "completed",
+    "output_url": "forecast_4acc12d196e84190aa6e067d4a1638d4.mp4",
+    "error": null,
+    "error_code": null,
+    "error_provider": null,
+    "error_console_url": null,
+    "failed_step": null,
+    "failed_at": null,
+    "created_at": "2026-05-20T10:00:10.768Z",
+    "audio_filename": "a8c41b767eef41d28f0ca4b67a43a491.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 18253,
+      "output_tokens": 1378,
+      "llm_cost_usd_estimate": 0.0594125,
+      "transcription_billed_audio_sec": 27.280000686645508,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027280000686645506,
+      "total_cost_usd_estimate": 0.06214050006866455
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1229,
+        "output_tokens": 964
+      },
+      {
+        "step": "picker_ver2_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 17024,
+        "output_tokens": 414
+      }
+    ],
+    "progress": null,
+    "eta_sec": null
+  },
+  "84a8b033890d471c9f5ba0c6a9f378cd": {
+    "job_id": "84a8b033890d471c9f5ba0c6a9f378cd",
+    "status": "draft",
+    "created_at": "2026-05-20T13:24:49.023Z",
+    "audio_filename": "a5a552ac2d69458e9ce33a71f7d99719.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 17483,
+      "output_tokens": 1313,
+      "llm_cost_usd_estimate": 0.056837500000000006,
+      "transcription_billed_audio_sec": 27.280000686645508,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027280000686645506,
+      "total_cost_usd_estimate": 0.059565500068664554
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1229,
+        "output_tokens": 925
+      },
+      {
+        "step": "picker_ver2_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 16254,
+        "output_tokens": 388
+      }
+    ]
+  },
+  "2720dcef18d74ec99d7850c4abaf9a28": {
+    "job_id": "2720dcef18d74ec99d7850c4abaf9a28",
+    "status": "completed",
+    "output_url": "forecast_2720dcef18d74ec99d7850c4abaf9a28.mp4",
+    "error": null,
+    "error_code": null,
+    "error_provider": null,
+    "error_console_url": null,
+    "failed_step": null,
+    "failed_at": null,
+    "created_at": "2026-05-25T07:47:05.968Z",
+    "audio_filename": "e02305c1d4964c81b662e0d32e9b7d32.mp3",
+    "usage_summary": {
+      "pricing_revision": "weatherv1-2026-05-estimate-v2",
+      "input_tokens": 18012,
+      "output_tokens": 1484,
+      "llm_cost_usd_estimate": 0.05987000000000001,
+      "transcription_billed_audio_sec": 27.280000686645508,
+      "transcription_model": "whisper-1",
+      "transcription_cost_usd_estimate": 0.0027280000686645506,
+      "total_cost_usd_estimate": 0.06259800006866456
+    },
+    "usage_calls": [
+      {
+        "step": "scene_planner",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 1231,
+        "output_tokens": 1066
+      },
+      {
+        "step": "picker_ver2_1",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "input_tokens": 16781,
+        "output_tokens": 418
+      }
+    ],
+    "progress": null,
+    "eta_sec": null
+  }
+}

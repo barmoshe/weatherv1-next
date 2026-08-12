@@ -3,6 +3,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { downloadR2File, r2Configured } from "@/server/sync/r2/client";
 import { getRuntimePaths, safeId } from "@/server/runtime/paths";
+import { mapWithConcurrency } from "@/server/runtime/concurrency";
 import { spawnFFmpeg } from "@/server/ffmpeg/spawn";
 import { getFFmpegPath } from "@/server/ffmpeg/binaries";
 import type { ParsedVideo, ResolvedPick } from "@/shared/types";
@@ -81,25 +82,6 @@ const DOWNLOAD_CONCURRENCY = 4;
 // machines without thrashing; higher only helps on >=8-core hosts.
 const CUT_CONCURRENCY = 2;
 
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let nextIndex = 0;
-  const workerCount = Math.min(limit, items.length);
-  const workers = Array.from({ length: workerCount }, async () => {
-    while (true) {
-      const i = nextIndex++;
-      if (i >= items.length) return;
-      results[i] = await fn(items[i]);
-    }
-  });
-  await Promise.all(workers);
-  return results;
-}
-
 interface CutPlan {
   key: string;
   pick: ResolvedPick;
@@ -152,13 +134,10 @@ export async function prepareRenderMedia(
         const ext = path.extname(sourceVideo.filename || "") || ".mp4";
         sourcePaths.set(pick.video_id, path.join(sourcesDir, `${safeId(pick.video_id)}${ext}`));
         remoteKeys.set(pick.video_id, remoteKey);
-      } else if (remoteKey) {
-        throw new Error(
-          `Clip ${pick.video_id} is not available locally at ${localPath ?? "(no path)"} and R2 sync is disabled`,
-        );
       } else {
         throw new Error(
-          `Clip ${pick.video_id} is not available locally at ${localPath ?? "(no path)"} and has no R2 video object`,
+          `Clip ${pick.video_id} is not available locally at ${localPath ?? "(no path)"} and ` +
+            (remoteKey ? "R2 sync is disabled" : "has no R2 video object"),
         );
       }
     }

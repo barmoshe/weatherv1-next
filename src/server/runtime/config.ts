@@ -106,3 +106,13 @@ export function getRuntimeConfig(): WeatherRuntimeConfig {
 export function resetRuntimeConfigForTests(): void {
   cachedConfig = null;
 }
+
+/**
+ * The single "is cloud sync fully configured" rule. Lives here (not in the
+ * sync client) so the proxy middleware's auth check can share it without
+ * pulling node:fs/node:stream into its bundle.
+ */
+export function isR2CredentialConfigured(): boolean {
+  const r2 = getRuntimeConfig().r2;
+  return Boolean(r2.enabled && r2.gatewayUrl && r2.tenantId && r2.appUsername && r2.appPassword);
+}

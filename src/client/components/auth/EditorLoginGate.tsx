@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { desktop } from "@/client/lib/desktop";
 import { ErrorBanner } from "@/client/components/common/ErrorBanner";
+import { LoginCardShell } from "@/client/components/common/LoginCardShell";
 import type { UiError } from "@/shared/errors";
 
 // Fallback used only until /api/auth/me responds with the canonical
@@ -117,27 +118,12 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
   if (phase === "authenticated") return <>{children}</>;
 
   return (
-    <div
-      className="login-screen"
-      dir="rtl"
-      lang="he"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="editor-login-title"
-    >
-      <div className="login-screen__backdrop" aria-hidden="true" />
-      <div className="login-card">
-        <div className="login-card__brand" aria-hidden="true">
-          <span className="login-card__brand-mark">WV1</span>
-        </div>
-        <h1 className="login-card__title" id="editor-login-title">
-          כניסת עורך
-        </h1>
-        <p className="login-card__subtitle">
-          הזינו את סיסמת העורך כדי להיכנס לסטודיו של WeatherV1.
-        </p>
+    <LoginCardShell titleId="editor-login-title" title="כניסת עורך">
+      <p className="login-card__subtitle">
+        הזינו את סיסמת העורך כדי להיכנס לסטודיו של WeatherV1.
+      </p>
 
-        <form
+      <form
           className="login-card__form"
           onSubmit={(event) => {
             event.preventDefault();
@@ -200,7 +186,6 @@ export function EditorLoginGate({ children }: EditorLoginGateProps) {
             {submitting ? "מתחבר…" : "התחברות"}
           </button>
         </form>
-      </div>
-    </div>
+    </LoginCardShell>
   );
 }

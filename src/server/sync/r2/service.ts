@@ -10,13 +10,16 @@ import { getRuntimePaths } from "@/server/runtime/paths";
 import { catalogHash, catalogJson } from "@/server/catalog/stores";
 import { generateAt, generatePoster } from "@/server/ffmpeg/posters";
 import {
+  clipPosterKey,
   downloadR2File,
   getR2Text,
   headR2Object,
   putR2Text,
   r2Configured,
+  segmentPosterKey,
   tenantKey,
   uploadR2File,
+  videoRemoteKey,
 } from "./client";
 import { hydratePlanBundleFromR2 } from "@/server/jobs/plan-bundle";
 import { getAllJobs, writeJobsJsonFromHydration } from "@/server/jobs/store";
@@ -44,19 +47,6 @@ function mimeFor(filename: string): string {
   if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
   if (ext === ".png") return "image/png";
   return "application/octet-stream";
-}
-
-function videoRemoteKey(entry: CatalogEntry): string {
-  const cleanName = path.basename(entry.filename || entry.original_filename || `${entry.id}.mp4`);
-  return tenantKey(`videos/${entry.id}/${cleanName}`);
-}
-
-function clipPosterKey(videoId: string): string {
-  return tenantKey(`posters/clips/${videoId}.jpg`);
-}
-
-function segmentPosterKey(segmentId: string): string {
-  return tenantKey(`posters/segments/${segmentId}.jpg`);
 }
 
 function shaFile(filePath: string): string {

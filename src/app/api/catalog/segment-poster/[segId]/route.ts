@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "node:fs";
 import path from "node:path";
 import { parseCatalog, buildVideoMap } from "@/server/catalog/parser";
 import { getVideosDir } from "@/server/catalog/storage";
 import { generateSegmentPoster } from "@/server/ffmpeg/segment-posters";
 import { posterPath } from "@/server/ffmpeg/posters";
+import { posterResponse } from "@/server/ffmpeg/poster-response";
 import { getRuntimePaths } from "@/server/runtime/paths";
-import { downloadR2File, r2Configured, tenantKey } from "@/server/sync/r2/client";
-
-function segmentPosterKey(segId: string): string {
-  return tenantKey(`posters/segments/${segId}.jpg`);
-}
-
-function clipPosterKey(videoId: string): string {
-  return tenantKey(`posters/clips/${videoId}.jpg`);
-}
+import {
+  clipPosterKey,
+  downloadR2File,
+  r2Configured,
+  segmentPosterKey,
+} from "@/server/sync/r2/client";
 
 export async function GET(
   req: NextRequest,
@@ -32,28 +29,11 @@ export async function GET(
 
   // Local cache fast path: per-segment, then per-clip fallback.
   if (!force) {
-    if (fs.existsSync(cachedSeg)) {
-      const buf = fs.readFileSync(cachedSeg);
-      return new NextResponse(buf, {
-        headers: {
-          "Content-Type": "image/jpeg",
-          "Cache-Control": "public, max-age=3600",
-          "X-Poster-Source": "local-cache",
-        },
-      });
-    }
+    const seg = posterResponse(cachedSeg, "local-cache");
+    if (seg) return seg;
     if (clip && (clip.segments?.length ?? 0) <= 1) {
-      const cachedClip = posterPath(clipId, postersDir);
-      if (fs.existsSync(cachedClip)) {
-        const buf = fs.readFileSync(cachedClip);
-        return new NextResponse(buf, {
-          headers: {
-            "Content-Type": "image/jpeg",
-            "Cache-Control": "public, max-age=3600",
-            "X-Poster-Source": "local-cache",
-          },
-        });
-      }
+      const clipPoster = posterResponse(posterPath(clipId, postersDir), "local-cache");
+      if (clipPoster) return clipPoster;
     }
   }
 
@@ -61,15 +41,9 @@ export async function GET(
   // force=1 keeps working as the cache-busting maintenance path.
   if (clip && clip.availability === "local") {
     const posterFilePath = await generateSegmentPoster(segId, videoMap, force);
-    if (posterFilePath && fs.existsSync(posterFilePath)) {
-      const buf = fs.readFileSync(posterFilePath);
-      return new NextResponse(buf, {
-        headers: {
-          "Content-Type": "image/jpeg",
-          "Cache-Control": "public, max-age=3600",
-          "X-Poster-Source": "ffmpeg-local",
-        },
-      });
+    if (posterFilePath) {
+      const res = posterResponse(posterFilePath, "ffmpeg-local");
+      if (res) return res;
     }
   }
 
@@ -78,16 +52,8 @@ export async function GET(
   if (r2Configured()) {
     try {
       await downloadR2File(segmentPosterKey(segId), cachedSeg);
-      if (fs.existsSync(cachedSeg)) {
-        const buf = fs.readFileSync(cachedSeg);
-        return new NextResponse(buf, {
-          headers: {
-            "Content-Type": "image/jpeg",
-            "Cache-Control": "public, max-age=3600",
-            "X-Poster-Source": "r2-cache",
-          },
-        });
-      }
+      const seg = posterResponse(cachedSeg, "r2-cache");
+      if (seg) return seg;
     } catch {
       // Many single-segment clips only have a clip-level poster.
     }
@@ -95,16 +61,8 @@ export async function GET(
     try {
       const cachedClip = posterPath(clipId, postersDir);
       await downloadR2File(clipPosterKey(clipId), cachedClip);
-      if (fs.existsSync(cachedClip)) {
-        const buf = fs.readFileSync(cachedClip);
-        return new NextResponse(buf, {
-          headers: {
-            "Content-Type": "image/jpeg",
-            "Cache-Control": "public, max-age=3600",
-            "X-Poster-Source": "r2-cache",
-          },
-        });
-      }
+      const res = posterResponse(cachedClip, "r2-cache");
+      if (res) return res;
     } catch (err) {
       console.warn(`segment-poster: R2 poster fetch failed for ${segId}:`, err);
     }

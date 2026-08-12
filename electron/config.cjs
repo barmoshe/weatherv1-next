@@ -273,7 +273,6 @@ function buildChildEnv(args) {
   // opt-in from Settings. PRODUCTION_R2 only fills in gateway/tenant/bucket
   // when the user enables sync without overriding them.
   const r2 = {
-    ...PRODUCTION_R2,
     ...fromSettings,
     gatewayUrl: fromSettings.gatewayUrl || PRODUCTION_R2.gatewayUrl,
     tenantId: fromSettings.tenantId || PRODUCTION_R2.tenantId,

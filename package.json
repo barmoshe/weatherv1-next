@@ -17,6 +17,7 @@
     "download-page:build": "node scripts/build-download-page.mjs",
     "download-page:dev": "node scripts/download-page-dev.mjs",
     "prebuild": "node --env-file-if-exists=.env scripts/emit-auth-hashes.cjs",
+    "typecheck": "node scripts/ensure-auth-hashes-stub.cjs && tsc --noEmit",
     "build": "next build",
     "start": "next start",
     "pretest": "node scripts/ensure-auth-hashes-stub.cjs",

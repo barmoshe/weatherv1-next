@@ -26,6 +26,5 @@ fs.writeFileSync(
     '// Tests mock this module via vi.mock; these values are never read at runtime.\n' +
     'export const EDITOR_HASH = "";\n' +
     'export const ADMIN_HASH = "";\n' +
-    'export const EDITOR_USERNAME = "";\n' +
-    'export const R2_APP_USERNAME = "";\n',
+    'export const EDITOR_USERNAME = "";\n',
 );

@@ -22,16 +22,40 @@ function isCached(outId: string, videoPath: string, postersDir: string): boolean
   }
 }
 
-async function seekSeconds(videoPath: string): Promise<number> {
-  try {
-    const probe = await probeVideo(videoPath);
-    const dur = probe.durationSec;
-    if (dur <= 0) return 0;
-    if (dur < 2) return Math.max(0, dur / 2);
-    return 1;
-  } catch {
-    return 1;
+async function seekSeconds(videoPath: string, knownDurationSec?: number): Promise<number> {
+  // The catalog already knows most durations; a caller passing one saves an
+  // ffprobe spawn per cache-miss poster.
+  let dur = knownDurationSec ?? 0;
+  if (!(dur > 0)) {
+    try {
+      dur = (await probeVideo(videoPath)).durationSec;
+    } catch {
+      return 1;
+    }
   }
+  if (dur <= 0) return 0;
+  if (dur < 2) return Math.max(0, dur / 2);
+  return 1;
+}
+
+// ffmpeg spawns are CPU-heavy and a cold catalog grid requests many posters
+// at once; cap concurrent generations machine-wide.
+const MAX_CONCURRENT_GENERATIONS = 3;
+let activeGenerations = 0;
+const generationQueue: Array<() => void> = [];
+
+async function acquireGenerationSlot(): Promise<void> {
+  if (activeGenerations < MAX_CONCURRENT_GENERATIONS) {
+    activeGenerations += 1;
+    return;
+  }
+  await new Promise<void>((resolve) => generationQueue.push(resolve));
+  activeGenerations += 1;
+}
+
+function releaseGenerationSlot(): void {
+  activeGenerations -= 1;
+  generationQueue.shift()?.();
 }
 
 // Concurrent requests can ask for the same poster (the clip route and the
@@ -64,7 +88,14 @@ export async function generateAt(
   }
   const existing = inFlight.get(outPath);
   if (existing) return existing;
-  const job = generateAtExclusive(videoPath, outId, seekSec, outPath, postersDir);
+  const job = (async () => {
+    await acquireGenerationSlot();
+    try {
+      return await generateAtExclusive(videoPath, outId, seekSec, outPath, postersDir);
+    } finally {
+      releaseGenerationSlot();
+    }
+  })();
   inFlight.set(outPath, job);
   try {
     return await job;
@@ -115,11 +146,12 @@ export async function generatePoster(
   videoPath: string,
   outId: string,
   postersDir: string,
-  force = false
+  force = false,
+  knownDurationSec?: number
 ): Promise<string | null> {
   if (!force && isCached(outId, videoPath, postersDir)) {
     return posterPath(outId, postersDir);
   }
-  const seek = await seekSeconds(videoPath);
+  const seek = await seekSeconds(videoPath, knownDurationSec);
   return generateAt(videoPath, outId, seek, postersDir, force);
 }

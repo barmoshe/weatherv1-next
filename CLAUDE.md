@@ -33,7 +33,7 @@ npm run dev                      # web: http://localhost:3000
 npm run electron:dev             # Electron + managed Next child on http://127.0.0.1:3765
 
 # Verify
-npx tsc --noEmit                 # type check (project uses "noEmit": true, no separate tsc build)
+npm run typecheck               # stub-first tsc (works on fresh checkouts; no separate tsc build)
 npm test                         # vitest run (jsdom env, src/test/**)
 npm test -- src/test/picker.test.ts          # single test file
 npm test -- -t "matches a substring"         # single test by name
@@ -50,7 +50,7 @@ npm run notebooklm:export:chunks
 ```
 
 **Verification defaults:**
-- Server/runtime changes → `npx tsc --noEmit` + `npm test`.
+- Server/runtime changes → `npm run typecheck` + `npm test`.
 - Next route or build behavior → also `npm run build`.
 - Electron startup/package changes → also `npm run standalone:prep` and, when feasible, `npm run electron:build`.
 

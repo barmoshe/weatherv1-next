@@ -71,9 +71,7 @@ async function main() {
     "// at build time and never committed.\n" +
     `export const EDITOR_HASH = ${JSON.stringify(editorHash)};\n` +
     `export const ADMIN_HASH = ${JSON.stringify(adminHash)};\n` +
-    `export const EDITOR_USERNAME = ${JSON.stringify(username)};\n` +
-    "// Legacy alias, kept for one release while callers migrate.\n" +
-    `export const R2_APP_USERNAME = ${JSON.stringify(username)};\n`;
+    `export const EDITOR_USERNAME = ${JSON.stringify(username)};\n`;
 
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, body, "utf8");

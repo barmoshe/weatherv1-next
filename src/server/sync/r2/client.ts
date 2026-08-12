@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
 
-import { getRuntimeConfig } from "@/server/runtime/config";
+import { getRuntimeConfig, isR2CredentialConfigured } from "@/server/runtime/config";
 
 // Single-PUT cap. Workers Free/Pro accept up to 100 MB; we leave 10 MB of
 // headroom for Worker-side accounting before falling back to multipart.
@@ -38,11 +38,28 @@ export function tenantKey(relativeKey: string): string {
   return `${configuredTenantPrefix()}/${clean}`;
 }
 
+// Canonical object-key builders. Every reader and writer of these prefixes
+// (sync service, poster routes, audit script) must derive keys here, or an
+// audit can silently check keys the writers never used.
+export function videoRemoteKey(entry: {
+  id?: string;
+  filename?: string;
+  original_filename?: string;
+}): string {
+  const cleanName = path.basename(entry.filename || entry.original_filename || `${entry.id}.mp4`);
+  return tenantKey(`videos/${entry.id}/${cleanName}`);
+}
+
+export function clipPosterKey(videoId: string): string {
+  return tenantKey(`posters/clips/${videoId}.jpg`);
+}
+
+export function segmentPosterKey(segmentId: string): string {
+  return tenantKey(`posters/segments/${segmentId}.jpg`);
+}
+
 export function r2Configured(): boolean {
-  const cfg = getRuntimeConfig().r2;
-  return Boolean(
-    cfg.enabled && cfg.gatewayUrl && cfg.tenantId && cfg.appUsername && cfg.appPassword,
-  );
+  return isR2CredentialConfigured();
 }
 
 function basicAuthHeader(user: string, pass: string): string {
