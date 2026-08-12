@@ -15,18 +15,6 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 
-// Optional build-time-baked R2 worker creds. Emitted by
-// scripts/emit-r2-defaults.cjs at prebuild from .env / CI secrets.
-// Falls back to {username:null,password:null} if the generator hasn't run
-// (e.g. fresh checkout without an `npm run build`).
-let R2_DEFAULTS = { username: null, password: null };
-try {
-  // eslint-disable-next-line global-require
-  R2_DEFAULTS = require("./r2-defaults.generated.cjs");
-} catch (_e) {
-  /* file absent — use nulls */
-}
-
 const SETTINGS_FILE = "settings.json";
 /** Repo root (parent of `electron/`) — stable regardless of process cwd. */
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -34,8 +22,9 @@ const DEFAULT_PORT = 3765;
 const FALLBACK_PORTS = [3766, 3767, 3768];
 const SESSION_PARTITION = "persist:weatherv1";
 const FIXED_HOST = "127.0.0.1";
+// Non-secret connection fallbacks for the opt-in cloud sync. Credentials
+// are never baked into builds; they come from Settings → Cloud (or env).
 const PRODUCTION_R2 = {
-  enabled: true,
   gatewayUrl: "https://weatherv1-r2-gateway.barprojectsandbuilds.workers.dev",
   tenantId: "default",
   bucketName: "weatherv1-media",
@@ -200,17 +189,13 @@ function buildChildEnv(args) {
   const openai = decryptSecret(settings.keys.openai, { safeStorage: args.safeStorage });
   const anthropic = decryptSecret(settings.keys.anthropic, { safeStorage: args.safeStorage });
   const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
-  // EDITOR_PASSWORD is the canonical R2 Worker Basic-auth password (mirrors
-  // the GitHub secret of the same name and the editor-login gate; see
-  // docs/RUNBOOK_WORKER_ROTATION.md). Precedence: process.env wins so a
-  // rotated secret in .env / shell / CI is picked up immediately. Persisted
-  // settings (from the onboarding gate) and build-time-baked defaults
-  // (scripts/emit-r2-defaults.cjs) are fallbacks for the packaged app where
-  // no env var is present at runtime.
+  // R2 Worker Basic-auth password for the opt-in sync. Precedence:
+  // process.env wins so a rotated secret in .env / shell is picked up
+  // immediately; persisted settings are the packaged-app path. Never baked
+  // into builds.
   const r2AppPassword =
     process.env.EDITOR_PASSWORD ||
     decryptSecret(settings.keys.r2AppPassword, { safeStorage: args.safeStorage }) ||
-    R2_DEFAULTS.password ||
     null;
 
   const editorSessionToken = loadEditorSessionToken({ safeStorage: args.safeStorage });
@@ -279,11 +264,10 @@ function buildChildEnv(args) {
     env.WEATHER_RESOURCES_DIR = process.resourcesPath;
   }
   const fromSettings = { ...(settings.r2 || {}) };
-  // Same fall-back for the username so a fresh install matches the env-provided
+  // Same fall-back for the username so a dev shell matches the env-provided
   // password (otherwise the gateway sees user=null and 401s).
   if (!fromSettings.appUsername) {
-    fromSettings.appUsername =
-      process.env.R2_APP_USERNAME || R2_DEFAULTS.username || null;
+    fromSettings.appUsername = process.env.R2_APP_USERNAME || null;
   }
   // Local storage is the default in every mode; R2 sync is an explicit
   // opt-in from Settings. PRODUCTION_R2 only fills in gateway/tenant/bucket
