@@ -161,7 +161,12 @@ module.exports = {
         }
       : undefined,
   },
-  rebuildConfig: {},
+  // Skip the @electron/rebuild pass entirely: the only native dep (argon2)
+  // is N-API with bundled prebuilds for every target we ship, so rebuilding
+  // is redundant — and it drags a Visual Studio requirement into the Windows
+  // CI runner, whose node-gyp VS finder crashes on current runner images
+  // (ERR_CHILD_PROCESS_STDIO_MAXBUFFER; broke the v0.5.x tag builds).
+  rebuildConfig: { onlyModules: [] },
   makers: [
     {
       // macOS: ZIP. The plan picks ZIP over DMG because `update-electron-app`
