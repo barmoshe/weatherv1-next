@@ -1,4 +1,11 @@
-# HANDOFF 2026-08-12 — phase-1 wrap-up: R2 evacuation + v0.6.0 (PAUSED MID-N4)
+# [COMPLETED] HANDOFF 2026-08-12 — phase-1 wrap-up: R2 evacuation + v0.6.0
+
+> **Completion note (same day):** every remaining step below was executed.
+> Post-delete verified (bucket = 20 installer objects, zero tenants/);
+> v0.6.0 released with the Windows installer published (Bar refreshed the CI
+> R2 secrets after the stored ones proved dead — SignatureDoesNotMatch);
+> download page redeployed and verified. Phase 1 is closed. File left in
+> place because the fs-safe hook blocks agent-side moves into `.claude/archive/`.
 
 **Owner:** Bar. **Plan file:** `~/.claude/plans/lets-plan-to-do-agile-milner.md`
 (the "Phase 1 (continued)" plan with the N1-N6 steps + progress table).
