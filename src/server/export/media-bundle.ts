@@ -12,7 +12,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { downloadR2File } from "@/server/sync/r2/client";
+import { downloadR2File, r2Configured } from "@/server/sync/r2/client";
 import { getRuntimePaths, safeId } from "@/server/runtime/paths";
 import { probeVideo } from "@/server/ffmpeg/probe";
 import { getFFmpegPath } from "@/server/ffmpeg/binaries";
@@ -47,8 +47,8 @@ export interface PreparedExportMedia {
 async function ensureOriginalLocal(pv: ParsedVideo, sourcesDir: string): Promise<string> {
   if (pv.availability === "local" && fs.existsSync(pv.path)) return pv.path;
   const remoteKey = pv.remote?.key;
-  if (!remoteKey) {
-    throw new Error(`Clip ${pv.id} is not available locally and has no R2 object to download`);
+  if (!remoteKey || !r2Configured()) {
+    throw new Error(`Clip ${pv.id} is not available locally`);
   }
   await fs.promises.mkdir(sourcesDir, { recursive: true });
   const ext = path.extname(pv.filename || "") || ".mp4";
