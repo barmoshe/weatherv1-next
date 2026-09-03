@@ -12,6 +12,8 @@
 export const VERTICAL_FRAME_WIDTH = 1080;
 export const VERTICAL_FRAME_HEIGHT = 1920;
 
-export const VERTICAL_SCALE_CROP_FILTER =
-  `scale=${VERTICAL_FRAME_WIDTH}:${VERTICAL_FRAME_HEIGHT}:force_original_aspect_ratio=increase,` +
-  `crop=${VERTICAL_FRAME_WIDTH}:${VERTICAL_FRAME_HEIGHT},setsar=1`;
+export const VERTICAL_SCALE_CROP_FILTER = [
+  `scale=${VERTICAL_FRAME_WIDTH}:${VERTICAL_FRAME_HEIGHT}:force_original_aspect_ratio=increase`,
+  `crop=${VERTICAL_FRAME_WIDTH}:${VERTICAL_FRAME_HEIGHT}`,
+  "setsar=1",
+].join(",");
