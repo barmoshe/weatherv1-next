@@ -75,7 +75,9 @@
     "electron": "^33",
     "jsdom": "^25",
     "live-server": "^1.2.2",
+    "playwright": "^1.56.1",
     "repomix": "^1.14.0",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^2"
   }
