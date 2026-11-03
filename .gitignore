@@ -78,3 +78,6 @@ runtime/jobs.json
 
 # whisper.cpp binary, fetched/built by scripts/fetch-whisper.mjs
 /resources/whisper/
+
+# browser build output
+/web/dist/

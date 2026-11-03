@@ -1,0 +1,33 @@
+/* Browser-build-only screens (the folder gate). Everything else uses
+   src/app/globals.css unchanged. */
+
+.web-gate {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.web-gate__card {
+  max-width: 34rem;
+  display: grid;
+  gap: 1rem;
+  padding: 2rem;
+  background: #fff;
+  border-radius: var(--radius-lg, 20px);
+}
+
+.web-gate__title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.web-gate__actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.web-gate__error {
+  color: var(--v1-red, #f00);
+}
