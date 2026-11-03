@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { useTabFromUrl, useJobFromUrl, useUrlParams } from "@/client/hooks/useTabFromUrl";
 import {
@@ -212,12 +212,9 @@ function CatalogPanelPlaceholder() {
   );
 }
 
-function CatalogTab() {
-  const { CatalogPanel } = require("@/client/components/catalog/CatalogPanel") as {
-    CatalogPanel: React.ComponentType;
-  };
-  return <CatalogPanel />;
-}
+const CatalogTab = lazy(() =>
+  import("@/client/components/catalog/CatalogPanel").then((m) => ({ default: m.CatalogPanel })),
+);
 
 export default function Home() {
   return (
