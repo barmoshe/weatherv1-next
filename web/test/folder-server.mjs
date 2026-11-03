@@ -45,11 +45,14 @@ http
         return res.end(JSON.stringify({ files, sizes }));
       }
       const abs = safePath(url.pathname);
-      if (req.method === "GET") {
+      if (req.method === "GET" || req.method === "HEAD") {
         if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
           res.statusCode = 404;
           return res.end();
         }
+        res.setHeader("Content-Length", String(fs.statSync(abs).size));
+        res.setHeader("Access-Control-Expose-Headers", "Content-Length");
+        if (req.method === "HEAD") return res.end();
         return fs.createReadStream(abs).pipe(res);
       }
       if (req.method === "PUT") {

@@ -191,7 +191,9 @@ export function StudioPanel({ hidden, restoreJobId, jobs, onJobStarted, onJobCom
   }, [restoreJobId]);
 
   // Poll status while any non-terminal phase has an active job (rendering OR restored mid-flight).
-  const shouldPoll = !!jobId && (phase === "rendering" || phase === "planned" || phase === "transcribed" || phase === "reviewing" || phase === "planning" || phase === "transcribing");
+  // "done" too: a reopened finished job needs one status fetch for its output
+  // file (polling stops by itself on terminal states).
+  const shouldPoll = !!jobId && (phase === "rendering" || phase === "planned" || phase === "transcribed" || phase === "reviewing" || phase === "planning" || phase === "transcribing" || phase === "done");
   const { data: jobStatus } = useJobStatus(jobId, shouldPoll);
 
   useEffect(() => {

@@ -29,24 +29,68 @@ class HttpFile {
     if (!res.ok) throw new DOMException(`${this.path}: ${res.status}`, "NotFoundError");
     return new File([await res.blob()], this.name);
   }
-  async createWritable() {
-    const parts: BlobPart[] = [];
-    const base = this.base;
-    const path = this.path;
-    const manifest = this.manifest;
-    return {
-      async write(data: BlobPart) {
-        parts.push(data);
-      },
-      async close() {
-        const res = await fetch(base + encodePath(path), { method: "PUT", body: new Blob(parts) });
+  async createWritable(): Promise<HttpWritable> {
+    return new HttpWritable(this.base + encodePath(this.path), this.path, this.manifest);
+  }
+}
+
+type WriteChunk = BlobPart | { type: "write"; position?: number; data: BlobPart };
+
+/**
+ * A FileSystemWritableFileStream look-alike: a real WritableStream (pipeTo and
+ * Mediabunny's StreamTarget need one) that accepts positioned writes, keeps
+ * the bytes in memory and PUTs them on close.
+ */
+class HttpWritable extends WritableStream<WriteChunk> {
+  private buf = new Uint8Array(1 << 20);
+  private size = 0;
+  private cursor = 0;
+
+  constructor(url: string, path: string, manifest: Manifest) {
+    super({
+      write: async (chunk) => this.apply(chunk),
+      close: async () => {
+        const body = this.buf.slice(0, this.size);
+        const res = await fetch(url, { method: "PUT", body });
         if (!res.ok) throw new Error(`PUT ${path}: ${res.status}`);
-        manifest.sizes[path] = new Blob(parts).size;
+        manifest.sizes[path] = this.size;
       },
-      async abort() {
-        parts.length = 0;
-      },
-    };
+    });
+  }
+
+  private async apply(chunk: WriteChunk): Promise<void> {
+    let position = this.cursor;
+    let data: BlobPart = chunk as BlobPart;
+    if (typeof chunk === "object" && chunk !== null && "type" in chunk && (chunk as { type: string }).type === "write") {
+      const c = chunk as { position?: number; data: BlobPart };
+      if (typeof c.position === "number") position = c.position;
+      data = c.data;
+    }
+    const bytes = new Uint8Array(await new Blob([data]).arrayBuffer());
+    const end = position + bytes.length;
+    if (end > this.buf.length) {
+      const grown = new Uint8Array(Math.max(end, this.buf.length * 2));
+      grown.set(this.buf.subarray(0, this.size));
+      this.buf = grown;
+    }
+    this.buf.set(bytes, position);
+    this.size = Math.max(this.size, end);
+    this.cursor = end;
+  }
+
+  /** FileSystemWritableFileStream-style one-shot write. */
+  async write(data: WriteChunk): Promise<void> {
+    const w = this.getWriter();
+    try {
+      await w.write(data);
+    } finally {
+      w.releaseLock();
+    }
+  }
+
+  override async close(): Promise<void> {
+    const w = this.getWriter();
+    await w.close();
   }
 }
 
@@ -82,7 +126,12 @@ class HttpDir {
   async getFileHandle(name: string, opts?: { create?: boolean }): Promise<HttpFile> {
     const p = this.child(name);
     if (!this.manifest.files.includes(p)) {
-      if (!opts?.create) throw new DOMException(p, "NotFoundError");
+      if (!opts?.create) {
+        // A test may add files after the listing was taken: ask the server.
+        const head = await fetch(this.base + encodePath(p), { method: "HEAD", cache: "no-store" }).catch(() => null);
+        if (!head?.ok) throw new DOMException(p, "NotFoundError");
+        this.manifest.sizes[p] = Number(head.headers.get("content-length") ?? 0);
+      }
       this.manifest.files.push(p);
     }
     return new HttpFile(this.base, p, this.manifest);

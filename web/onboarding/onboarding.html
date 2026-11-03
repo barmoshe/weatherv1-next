@@ -29,7 +29,9 @@
   .card { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: #fffdf8; }
   .card h3 { margin: 6px 0; font-size: 18px; font-weight: 900; }
   .card p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
-  svg { display: block; width: 100%; height: auto; }
+  /* Diagrams are laid out in absolute coordinates: keep `text-anchor` literal
+     (an RTL page would flip "end" to the left). Hebrew text still shapes RTL. */
+  svg { display: block; width: 100%; height: auto; direction: ltr; }
   .note { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: #fff3d1; font-size: 15px; }
   .ok { color: var(--green); font-weight: 700; }
   code, .ltr { direction: ltr; unicode-bidi: isolate; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; background: #f1eee7; padding: 1px 6px; border-radius: 5px; }
@@ -111,7 +113,7 @@
     <div class="card">
       <svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" rx="12" fill="#e3ecff"/><path d="M30 40c0-14 10-24 24-24s24 10 24 24-8 16-14 22-10 6-14 2" stroke="#2459d6" stroke-width="6" fill="none" stroke-linecap="round"/><g stroke="#2459d6" stroke-width="4" stroke-linecap="round"><line x1="88" y1="30" x2="96" y2="26"/><line x1="90" y1="40" x2="100" y2="40"/><line x1="88" y1="50" x2="96" y2="54"/></g></svg>
       <h3>Whisper עברית (האוזניים)</h3>
-      <p>מודל של ivrit.ai שמבין עברית ומתמלל את הקריינות עם תזמונים. רץ על המחשב שלך, בתוך הדפדפן. בלי מפתח ובלי עלות. יורד פעם אחת, בערך 560MB.</p>
+      <p>מודל של ivrit.ai שמבין עברית ומתמלל את הקריינות עם תזמונים. רץ על המחשב שלך, בתוך הדפדפן. בלי מפתח ובלי עלות. יורד פעם אחת, בערך 760MB.</p>
     </div>
   </div>
 </section>
@@ -123,11 +125,11 @@
   <svg viewBox="0 0 960 230" role="img" aria-label="מה נשאר במחשב ומה יוצא">
     <g font-family="Heebo">
       <rect x="500" y="20" width="440" height="190" rx="18" fill="#e9f6ef" stroke="#1f8a5b" stroke-width="3"/>
-      <text x="920" y="58" text-anchor="end" font-weight="900" font-size="22" fill="#1f8a5b">נשאר על המחשב</text>
-      <g font-size="17" fill="#141414" text-anchor="end"><text x="920" y="96">• הקלטת הקריינות</text><text x="920" y="126">• 212 הקליפים בספרייה</text><text x="920" y="156">• הסרטון המוכן</text><text x="920" y="186">• מודל התמלול</text></g>
+      <text x="920" y="58" direction="rtl" text-anchor="start" font-weight="900" font-size="22" fill="#1f8a5b">נשאר על המחשב</text>
+      <g font-size="17" fill="#141414" direction="rtl" text-anchor="start"><text x="920" y="96">• הקלטת הקריינות</text><text x="920" y="126">• 212 הקליפים בספרייה</text><text x="920" y="156">• הסרטון המוכן</text><text x="920" y="186">• מודל התמלול</text></g>
       <rect x="20" y="20" width="440" height="190" rx="18" fill="#fff1ec" stroke="#f9543e" stroke-width="3"/>
-      <text x="440" y="58" text-anchor="end" font-weight="900" font-size="22" fill="#c43a22">נשלח ל-Claude</text>
-      <g font-size="17" fill="#141414" text-anchor="end"><text x="440" y="96">• טקסט התמלול</text><text x="440" y="126">• תיאורי הקליפים מהקטלוג</text><text x="440" y="156">• לא קבצי וידאו, לא קול</text></g>
+      <text x="440" y="58" direction="rtl" text-anchor="start" font-weight="900" font-size="22" fill="#c43a22">נשלח ל-Claude</text>
+      <g font-size="17" fill="#141414" direction="rtl" text-anchor="start"><text x="440" y="96">• טקסט התמלול</text><text x="440" y="126">• תיאורי הקליפים מהקטלוג</text><text x="440" y="156">• לא קבצי וידאו, לא קול</text></g>
       <path d="M500 115 H470" stroke="#141414" stroke-width="4" marker-end="url(#a2)"/>
     </g>
   </svg>
@@ -140,7 +142,8 @@
   <svg viewBox="0 0 960 220" role="img" aria-label="מבנה התיקייה weather">
     <g font-family="Heebo" font-size="18">
       <g transform="translate(700 30)"><path d="M0 18h70l14 -14h120v150H0z" fill="#f2c231" stroke="#141414" stroke-width="3"/><text x="102" y="90" text-anchor="middle" font-weight="900" font-size="26">weather</text></g>
-      <g text-anchor="end"><text x="560" y="50"><tspan class="ltr" font-family="Menlo, monospace">notouch!</tspan> · הקטלוג (לא לגעת ידנית)</text><text x="560" y="88"><tspan font-family="Menlo, monospace">videos</tspan> · 207 קליפים</text><text x="560" y="126"><tspan font-family="Menlo, monospace">music</tspan> · מוזיקת הרקע</text><text x="560" y="164"><tspan font-family="Menlo, monospace">outputs</tspan> · כאן יופיעו התחזיות</text></g>
+      <g text-anchor="end" font-family="Menlo, Consolas, monospace" font-weight="700"><text x="560" y="50">notouch!</text><text x="560" y="88">videos</text><text x="560" y="126">music</text><text x="560" y="164">outputs</text></g>
+      <g direction="rtl" text-anchor="start" fill="#6b6760"><text x="440" y="50">הקטלוג (לא לגעת ידנית)</text><text x="440" y="88">207 קליפים</text><text x="440" y="126">מוזיקת הרקע</text><text x="440" y="164">כאן יופיעו התחזיות</text></g>
       <g stroke="#141414" stroke-width="2" stroke-dasharray="4 4"><line x1="690" y1="45" x2="575" y2="45"/><line x1="690" y1="83" x2="575" y2="83"/><line x1="690" y1="121" x2="575" y2="121"/><line x1="690" y1="159" x2="575" y2="159"/></g>
     </g>
   </svg>
@@ -172,7 +175,7 @@
 <section class="flyer" id="ears">
   <span class="kicker">שלב 4</span>
   <h2>מודל העברית יורד פעם אחת.</h2>
-  <p class="lead">בהגדרות, בכרטיס <b>תמלול בעברית</b>, לוחצים <b>הורדת המודל</b>. בערך 560MB, נשמרים בתוך <span class="ltr">weather/.weatherv1/models</span>. אחרי זה התמלול עובד גם בלי אינטרנט.</p>
+  <p class="lead">בהגדרות, בכרטיס <b>תמלול בעברית</b>, לוחצים <b>הורדת המודל</b>. בערך 760MB, נשמרים בתוך <span class="ltr">weather/.weatherv1/models</span>. אחרי זה התמלול עובד גם בלי אינטרנט.</p>
   <svg viewBox="0 0 960 120" role="img" aria-label="פס התקדמות הורדה">
     <rect x="20" y="40" width="920" height="34" rx="17" fill="#f1eee7"/>
     <rect x="20" y="40" width="620" height="34" rx="17" fill="#f9543e"><animate attributeName="width" values="40;920;920" keyTimes="0;0.8;1" dur="6s" repeatCount="indefinite"/></rect>

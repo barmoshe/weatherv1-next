@@ -1,7 +1,7 @@
 // Browser build: local Hebrew transcription in the page (web/media/asr.ts).
 // Same contract as the whisper.cpp provider: segments with start/end in
 // seconds, `fixTranscript` applied, nothing billed. The first run downloads
-// the model (~560 MB) into the library folder.
+// the model (~760 MB) into the library folder.
 
 import { decodeTo16kMono, transcribeSamples, MODEL_ID, type AsrChunk } from "../../../../media/asr";
 import { readExternal } from "../../../../runtime/vfs";
