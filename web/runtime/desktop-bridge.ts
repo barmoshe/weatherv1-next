@@ -65,6 +65,11 @@ export const webDesktopBridge: DesktopBridge = {
       appVersion: __WEATHERV1_VERSION__,
       electronVersion: "web",
       nodeVersion: navigator.userAgent.match(/(Edg|Chrome)\/[\d.]+/)?.[0] ?? "browser",
+      desktopMode: true,
+      packaged: true,
+      // Rendering runs on WebCodecs; the start-up gate already refused
+      // browsers without H.264 encode, so the engine is always present here.
+      ffmpeg: { ok: true, ffmpegPath: "WebCodecs", ffprobePath: "WebCodecs" },
     };
   },
 

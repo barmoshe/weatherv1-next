@@ -37,9 +37,13 @@ jobs:
           # non-functional so a missing variable is obvious in the rendered
           # HTML.
           : "${WIN_INSTALLER_URL:=https://weatherv1-r2-gateway.invalid/downloads/windows/latest/WeatherV1-Setup.exe}"
+          # The browser build (v0.7.0+) replaces the installer: same Worker host,
+          # downloads/web/latest/ (published by web-release.yml).
+          WEB_ZIP_URL="${WIN_INSTALLER_URL%%/downloads/*}/downloads/web/latest/WeatherV1-Web.zip"
           sed \
             -e "s|__REPO__|${{ github.repository }}|g" \
             -e "s|__WIN_INSTALLER_URL__|${WIN_INSTALLER_URL}|g" \
+            -e "s|__WEB_ZIP_URL__|${WEB_ZIP_URL}|g" \
             docs/download-page/index.html.template > _site/index.html
           cp public/weather-v1-icon-512.png _site/public/weather-v1-icon-512.png
           if compgen -G "docs/download-page/assets/*" > /dev/null; then

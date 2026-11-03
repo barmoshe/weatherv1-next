@@ -40,7 +40,9 @@ export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProv
       "anthropic",
     );
   }
-  const client = new Anthropic({ apiKey });
+  // The browser build runs this in the editor's own page with the editor's
+  // own key (web/), which is the case the SDK's browser opt-in exists for.
+  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: typeof window !== "undefined" });
   const model = opts.model?.trim() || process.env.CLAUDE_MODEL?.trim() || DEFAULT_MODEL;
 
   return {

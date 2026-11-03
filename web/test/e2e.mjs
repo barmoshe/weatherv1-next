@@ -25,7 +25,8 @@ const port = 8800 + Math.floor(Math.random() * 100);
 const server = spawn(process.execPath, [path.join(here, "folder-server.mjs"), library, String(port)], { stdio: "inherit" });
 await new Promise((r) => setTimeout(r, 500));
 
-const page_url = `${pathToFileURL(path.join(here, "../dist/index.html")).href}?testFolder=${encodeURIComponent(`http://127.0.0.1:${port}/`)}`;
+const extra = process.env.E2E_QUERY ? `&${process.env.E2E_QUERY}` : "";
+const page_url = `${pathToFileURL(path.join(here, "../dist/index.html")).href}?testFolder=${encodeURIComponent(`http://127.0.0.1:${port}/`)}${extra}`;
 const browser = await chromium.launch({ channel: "chrome", headless: true, args: ["--enable-unsafe-webgpu"] });
 const page = await browser.newPage({ viewport: { width: 1470, height: 832 } });
 const errors = [];

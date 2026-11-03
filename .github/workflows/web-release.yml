@@ -1,0 +1,56 @@
+# Publishes the browser build (one HTML file + the setup prompt + onboarding,
+# zipped) to the same R2 download channel as the old Windows installer:
+#   downloads/web/<tag>/WeatherV1-Web.zip   (immutable)
+#   downloads/web/latest/WeatherV1-Web.zip  (+ version.json, read by the app's
+#                                            "newer version" check)
+# The download page (pitch-deck.yml) links the latest zip.
+name: Web release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      - name: Build and pack
+        run: npm run web:package
+
+      - name: Upload to R2 (S3 API)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          BASE="s3://weatherv1-media/downloads/web"
+          aws s3 cp out/web/WeatherV1-Web.zip "${BASE}/${TAG}/WeatherV1-Web.zip" \
+            --endpoint-url "$R2_ENDPOINT" --content-type application/zip
+          aws s3 cp "${BASE}/${TAG}/WeatherV1-Web.zip" "${BASE}/latest/WeatherV1-Web.zip" \
+            --endpoint-url "$R2_ENDPOINT" --content-type application/zip --metadata-directive REPLACE
+          aws s3 cp out/web/version.json "${BASE}/latest/version.json" \
+            --endpoint-url "$R2_ENDPOINT" --content-type application/json
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: weatherv1-web
+          path: out/web/
+          retention-days: 7
