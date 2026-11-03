@@ -8,23 +8,24 @@
 // reliable equivalent is tool_use with a forced tool_choice — the model fills
 // in the tool's `input` and we read it back. So the provider interface is
 // schema-first; the provider implementation is responsible for shaping the
-// underlying API call (Anthropic vs OpenAI) to honour the schema.
+// underlying API call to honour the schema. Anthropic is the only provider
+// since v0.7.0.
 
 import type { ZodSchema } from "zod";
 import type { CompleteJsonResult } from "@/shared/usage";
 
-export type LlmProviderId = "anthropic" | "openai";
+export type LlmProviderId = "anthropic";
 
 export interface LlmCompletionOptions {
   /** Provider-agnostic 0..1 randomness knob. Mapped per-provider. */
   temperature?: number;
-  /** Provider-agnostic determinism seed. Honoured by OpenAI; ignored by Anthropic (no seed parameter). */
+  /** Determinism seed. Anthropic has no seed parameter, so it is ignored; kept for call-site stability. */
   seed?: number;
-  /** Cap on output tokens. Both providers honour. */
+  /** Cap on output tokens. */
   maxTokens?: number;
   /**
    * If true, the system prompt is marked for prompt caching (Anthropic
-   * `cache_control: { type: "ephemeral" }`). No-op for OpenAI.
+   * `cache_control: { type: "ephemeral" }`).
    * Use for the big static prompts in scene-planner / picker.
    */
   cacheSystemPrompt?: boolean;

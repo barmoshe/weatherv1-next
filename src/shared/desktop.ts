@@ -28,21 +28,16 @@ export interface DesktopAppInfo {
   ffmpeg: DesktopFfmpegInfo;
 }
 
-export type LlmProviderPreference = "auto" | "anthropic" | "openai";
-
 export interface DesktopSettingsUpdate {
   workspaceDir?: string;
-  openaiKey?: string;
   anthropicKey?: string;
-  geminiKey?: string;
   /**
    * Wipes the matching stored credential. "r2" clears the R2 password only
    * (the username is non-secret and stays put until edited explicitly).
    */
-  clearKeys?: ("openai" | "anthropic" | "gemini" | "r2")[];
+  clearKeys?: ("anthropic" | "r2")[];
   ffmpegPath?: string;
   ffprobePath?: string;
-  llmProvider?: LlmProviderPreference;
   /**
    * Plan-pipeline selection. `true` (default since v0.4.0) uses the
    * retrieve-then-pick ver2 pipeline; `false` falls back to the original

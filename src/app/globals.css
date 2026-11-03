@@ -586,12 +586,7 @@
             border-color: #d6a85c;
             color: #6b4a14;
         }
-        .hero-model-pill.is-llm.is-openai {
-            background: #e6f3ee;
-            border-color: #4f9d7e;
-            color: #1f5a44;
-        }
-        .hero-model-pill.is-tx.is-openai-cloud {
+        .hero-model-pill.is-tx.is-local-whisper {
             background: #f4e9f7;
             border-color: #a86bbd;
             color: #5a2b6b;

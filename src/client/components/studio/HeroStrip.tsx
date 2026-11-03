@@ -78,16 +78,15 @@ function MicIcon() {
 
 const LLM_LABELS: Record<string, { name: string; tooltip: string }> = {
   anthropic: { name: "Claude", tooltip: "Anthropic Claude" },
-  openai: { name: "GPT", tooltip: "OpenAI GPT" },
 };
 
 const TRANSCRIPTION_LABELS: Record<string, { name: string; tooltip: string }> = {
-  "openai-cloud": { name: "Whisper ענן", tooltip: "OpenAI Whisper cloud" },
+  "local-whisper": { name: "תמלול מקומי", tooltip: "Whisper (ivrit-ai) on this computer" },
 };
 
 function shortModelName(model: string | null): string | null {
   if (!model) return null;
-  // claude-sonnet-4-6 → Sonnet 4.6 ; gpt-4o → 4o
+  // claude-sonnet-4-6 → Sonnet 4.6
   const m = model.toLowerCase();
   if (m.startsWith("claude-")) {
     const rest = m.slice("claude-".length);
@@ -96,7 +95,6 @@ function shortModelName(model: string | null): string | null {
     const ver = parts.slice(1).join(".");
     return ver ? `${family} ${ver}` : family;
   }
-  if (m.startsWith("gpt-")) return m.slice("gpt-".length);
   return model;
 }
 

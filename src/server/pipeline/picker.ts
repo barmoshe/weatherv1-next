@@ -443,8 +443,8 @@ async function invokePickerLlmOnce(args: {
   } =
     args;
 
-  // Keep the system prompt byte-identical across retries so OpenAI's automatic
-  // prefix cache (≥1024 tokens) and Anthropic's explicit cache_control both hit.
+  // Keep the system prompt byte-identical across retries so Anthropic's
+  // cache_control prefix cache hits.
   // Dynamic per-attempt content goes in the user payload tail, not here.
   const systemPrompt = customPrompt?.trim() ? customPrompt.trim() : SCENE_AWARE_SYSTEM_PROMPT;
 
@@ -583,7 +583,7 @@ export async function pickSegmentsDetailed(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     // Intentionally do NOT reshuffle between attempts: keeping catalog row
-    // order stable lets OpenAI's automatic prefix cache hit on attempts 2+
+    // order stable keeps the prompt prefix cacheable on attempts 2+
     // (the retry feedback at the payload tail is the new signal, not row order).
 
     const invokeResult = await invokePickerLlmOnce({
@@ -913,8 +913,8 @@ export async function pickWithShortlists(
 }
 
 // ---------------------------------------------------------------------------
-// Transcription (delegated to the active TranscriptionProvider — OpenAI
-// Whisper cloud today, see src/server/providers/transcription)
+// Transcription (delegated to the active TranscriptionProvider — local
+// whisper.cpp, see src/server/providers/transcription)
 // ---------------------------------------------------------------------------
 
 

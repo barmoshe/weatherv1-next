@@ -6,7 +6,7 @@
 import type { LlmCallUsage } from "@/shared/usage";
 
 /** Bump when table below changes; stamped on JobRecord.usage_summary. */
-export const PRICING_REVISION = "weatherv1-2026-05-estimate-v2";
+export const PRICING_REVISION = "weatherv1-2026-11-estimate-v3";
 
 const MTok = 1_000_000;
 
@@ -20,8 +20,13 @@ function envNum(name: string, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
-/** USD per minute of audio for transcription models. */
+/**
+ * USD per minute of audio for transcription models. Since v0.7.0 transcription
+ * is local and free; the OpenAI rows stay so jobs recorded before it still
+ * recompute to what they cost.
+ */
 const TRANSCRIPTION_RATE_PER_MINUTE: Record<string, number> = {
+  "ivrit-ai/whisper-large-v3-turbo": 0,
   "whisper-1": envNum("WHISPER_USD_PER_MINUTE", DEFAULT_WHISPER_USD_PER_MINUTE),
   "gpt-4o-transcribe": envNum("OPENAI_TRANSCRIBE_GPT4O_USD_PER_MINUTE", 0.006),
   "gpt-4o-mini-transcribe": envNum("OPENAI_TRANSCRIBE_GPT4O_MINI_USD_PER_MINUTE", 0.003),
@@ -29,6 +34,7 @@ const TRANSCRIPTION_RATE_PER_MINUTE: Record<string, number> = {
 
 type LlmRateRow = { inPerMtok: number; outPerMtok: number; cachedInPerMtok?: number };
 
+/** OpenAI list rates, kept only to recompute jobs recorded before v0.7.0. */
 function openAiRates(model: string): LlmRateRow {
   const m = model.toLowerCase();
   const gpt4oIn = envNum("OPENAI_GPT4O_INPUT_PER_MTOK_USD", 2.5);

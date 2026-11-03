@@ -75,3 +75,6 @@ runtime/jobs.json
 # Forecast agent: job folders hold catalog media and must never be committed (public repo)
 /agent/jobs/
 /v1-agent-jobs/
+
+# whisper.cpp binary, fetched/built by scripts/fetch-whisper.mjs
+/resources/whisper/
