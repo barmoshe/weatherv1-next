@@ -12,7 +12,8 @@ key), clips from Keshet V1's library folder (`weather`), and the video render in
 
 **The onboarding page is your slide deck.** `onboarding/onboarding.html` has one illustrated section
 per step. At each step below, open the matching section in their browser and explain it in a sentence
-or two, then do the step. Open it with the browser explicitly (paths below), e.g. on Windows:
+or two, then do the step. Open it with the browser explicitly, and always from the installed copy in
+`$app` (step 0), never from this folder, e.g. on Windows:
 
 ```powershell
 Start-Process $browser "file:///$($app -replace '\\','/')/onboarding/onboarding.html#how"
@@ -29,8 +30,11 @@ Sections, in order: `#welcome` `#how` `#ais` `#privacy` `#library` `#install` `#
 - Nothing here needs admin rights, an installer, Python or Node.
 - If a step fails, say what happened in plain Hebrew and try the fix listed; do not improvise
   changes to `WeatherV1.html`.
+- This folder may be a temporary place your app extracted the zip to, and Chrome may refuse to open
+  pages from there. That's why step 0 copies everything to `Documents\WeatherV1` before anything is
+  opened.
 
-## Step 0 · Welcome (`#welcome`, then `#how`, `#ais`, `#privacy`)
+## Step 0 · Copy in, then welcome (`#welcome`, then `#how`, `#ais`, `#privacy`)
 
 Find this folder's full path (call it `$src`) and the browser (call it `$browser`):
 
@@ -48,7 +52,22 @@ $browser = @(
 Chrome or Edge **version 120 or newer** is required. Firefox and Safari can't run it. If neither is
 installed, ask them to install Chrome from google.com/chrome and continue after.
 
-Open `#welcome`, then walk through `#how` (the five stages), `#ais` (who does what: you are the
+Copy the app and the onboarding pages to their permanent home (call it `$app`) before opening
+anything:
+
+```powershell
+$app = Join-Path ([Environment]::GetFolderPath("MyDocuments")) "WeatherV1"
+New-Item -ItemType Directory -Force $app | Out-Null
+Copy-Item (Join-Path $src "WeatherV1.html") $app -Force
+Copy-Item (Join-Path $src "onboarding") $app -Recurse -Force
+Start-Process $browser "file:///$($app -replace '\\','/')/onboarding/onboarding.html#welcome"
+```
+
+Ask them to say when they see the welcome page. If it doesn't open, check `$app` holds
+`onboarding\onboarding.html` and open it again from there; a blank page with no error usually means
+it was opened from somewhere else.
+
+Then walk through `#how` (the five stages), `#ais` (who does what: you are the
 helper, Claude inside the app is the planner, Whisper is the ears) and `#privacy` (video and voice
 never leave the computer; only the transcript text goes to Claude). One or two sentences each.
 
@@ -58,11 +77,9 @@ The library is a folder named `weather` with `notouch!\catalog.json`, `videos\`,
 sent it as five zips named `weather-catalog-part1-of-5.zip` … `part5-of-5.zip` (usually in Downloads,
 from WhatsApp).
 
-Set the home folder and look for an existing library first:
+Look for an existing library first:
 
 ```powershell
-$app = Join-Path ([Environment]::GetFolderPath("MyDocuments")) "WeatherV1"
-New-Item -ItemType Directory -Force $app | Out-Null
 Get-ChildItem -Path $env:USERPROFILE -Recurse -Depth 4 -Directory -Filter weather -ErrorAction SilentlyContinue |
   Where-Object { Test-Path (Join-Path $_.FullName "notouch!\catalog.json") } | Select-Object -ExpandProperty FullName
 Get-ChildItem -Path $env:USERPROFILE -Recurse -Depth 3 -Filter "weather-catalog-part*-of-5.zip" -ErrorAction SilentlyContinue |
@@ -78,18 +95,16 @@ Get-ChildItem -Path $env:USERPROFILE -Recurse -Depth 3 -Filter "weather-catalog-
   $lib = Join-Path $app "weather"
   ```
 - If parts are missing, tell them which and ask them to save the rest from the WhatsApp chat with
-  Bar, then continue.
+  Bar. You can do step 2 (the shortcut) while they do; come back here before choosing the folder.
 
 Check it: `notouch!\catalog.json` exists and `videos\` holds about 207 files
 (`(Get-ChildItem "$lib\videos").Count`). Tell them the count.
 
 ## Step 2 · Install the app (`#install`)
 
-Copy the app next to the library and make a desktop shortcut that opens it **in that browser**:
+The app is already in `$app` (step 0). Make a desktop shortcut that opens it **in that browser**:
 
 ```powershell
-Copy-Item (Join-Path $src "WeatherV1.html") $app -Force
-Copy-Item (Join-Path $src "onboarding") $app -Recurse -Force
 $page = "file:///" + ((Join-Path $app "WeatherV1.html") -replace '\\','/')
 $lnk = Join-Path ([Environment]::GetFolderPath("Desktop")) "מחולל תחזית V1.lnk"
 $sh = (New-Object -ComObject WScript.Shell).CreateShortcut($lnk)
@@ -106,6 +121,8 @@ folder (`$lib`) → in Chrome's prompt choose **אפשר / Allow** (edit access,
 **קטלוג** tab lists the clips.
 
 If the page says the browser is unsupported, they opened it in another browser: use the shortcut.
+If an older **WeatherV1** shortcut is on the desktop (the previous installer version), leave it and
+tell them to use **מחולל תחזית V1** from now on.
 
 ## Step 3 · Their Claude key (`#key`)
 
@@ -150,7 +167,8 @@ Finish by telling them the daily flow in one line: shortcut → **המשך** →
 
 ## If they're on a Mac
 
-Same steps. Library and app go in `~/Documents/WeatherV1`; open `WeatherV1.html` with Chrome
+Same steps. Copy `WeatherV1.html` and `onboarding/` to `~/Documents/WeatherV1` first and open the
+pages from there; the library goes there too. Open `WeatherV1.html` with Chrome
 (`open -a "Google Chrome" ~/Documents/WeatherV1/WeatherV1.html`); instead of a desktop shortcut,
 drag the file to the Dock or bookmark it in Chrome. Extract the zips with
 `ditto -x -k <zip> ~/Documents/WeatherV1` for each part.
