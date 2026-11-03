@@ -50,12 +50,34 @@ function liveProcessEnv(): Plugin {
   };
 }
 
+// ONNX Runtime references its ~28 MB .wasm with `new URL(file, import.meta.url)`;
+// inlined, it would be base64'd into the worker and again into the page. Load
+// it from jsDelivr instead (pinned to the installed version, CORS open), the
+// same place transformers.js fetches it from by default.
+function ortWasmFromCdn(): Plugin {
+  const ver = JSON.parse(
+    fs.readFileSync(path.resolve(WEB, "../node_modules/onnxruntime-web/package.json"), "utf8"),
+  ) as { version: string };
+  const cdn = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ver.version}/dist/`;
+  return {
+    name: "weatherv1-ort-wasm-cdn",
+    enforce: "pre",
+    transform(code, id) {
+      if (!id.includes("onnxruntime-web") || !code.includes("new URL(\"ort-wasm")) return null;
+      return {
+        code: code.replace(/new URL\("(ort-wasm[^"]+)",\s*import\.meta\.url\)/g, (_m, file) => `new URL("${cdn}${file}")`),
+        map: null,
+      };
+    },
+  };
+}
+
 const shim = (name: string) => path.join(SHIMS, name);
 
 export default defineConfig({
   root: WEB,
   base: "./",
-  plugins: [liveProcessEnv(), swapServerModules(), react(), viteSingleFile({ removeViteModuleLoader: true })],
+  plugins: [liveProcessEnv(), ortWasmFromCdn(), swapServerModules(), react(), viteSingleFile({ removeViteModuleLoader: true })],
   define: {
     __WEATHERV1_VERSION__: JSON.stringify(pkg.version),
   },
@@ -80,7 +102,9 @@ export default defineConfig({
       { find: "argon2", replacement: shim("empty.ts") },
     ],
   },
-  worker: { format: "es" },
+  // Classic (IIFE) workers: Chrome won't start a *module* worker from a blob URL
+  // on a file:// page (opaque origin), but runs classic ones fine.
+  worker: { format: "iife", plugins: () => [ortWasmFromCdn()] },
   build: {
     outDir: path.join(WEB, "dist"),
     emptyOutDir: true,

@@ -7,9 +7,11 @@ on:
       - "docs/**"
       - "**/*.md"
       - ".github/workflows/pitch-deck.yml"
+  # Tags no longer build installers: since v0.7.0 the release is the browser
+  # build (web-release.yml). The Electron package still builds on main and PRs
+  # so it doesn't rot; the last published installer stays on R2 as it was.
   push:
     branches: [main]
-    tags: ["v*"]
     paths-ignore:
       - "docs/**"
       - "**/*.md"

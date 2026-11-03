@@ -4,6 +4,8 @@
 
 declare const __WEATHERV1_VERSION__: string;
 
+declare module "readable-stream";
+
 interface FileSystemHandlePermissionDescriptor {
   mode?: "read" | "readwrite";
 }

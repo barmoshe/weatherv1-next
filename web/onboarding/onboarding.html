@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeatherV1 · היכרות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&display=swap">
+<style>
+  :root {
+    --red: #ff0000; --coral: #f9543e; --cream: #f4f3ef; --yellow: #f2c231; --ink: #141414;
+    --muted: #6b6760; --card: #ffffff; --line: #e4e0d8; --green: #1f8a5b; --blue: #2459d6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Heebo, system-ui, sans-serif; background: var(--cream); color: var(--ink); }
+  header.top { background: var(--coral); color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 14px; border-bottom: 2px solid var(--ink); }
+  .mark { background: var(--red); color: #fff; font-weight: 900; padding: 6px 10px; border-radius: 6px; box-shadow: 3px 3px 0 var(--ink); }
+  header.top h1 { margin: 0; font-size: 22px; font-weight: 900; }
+  nav.steps { display: flex; gap: 6px; padding: 12px 24px; flex-wrap: wrap; position: sticky; top: 0; background: var(--cream); border-bottom: 1px solid var(--line); z-index: 2; }
+  nav.steps a { text-decoration: none; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 14px; font-weight: 500; }
+  nav.steps a.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 80px; }
+  section.flyer { background: var(--card); border: 2px solid var(--ink); border-radius: 20px; box-shadow: 6px 6px 0 var(--ink); padding: 28px; margin: 0 0 36px; scroll-margin-top: 70px; }
+  .kicker { display: inline-block; background: var(--yellow); font-weight: 900; font-size: 13px; padding: 4px 10px; border-radius: 6px; }
+  section.flyer h2 { font-size: 34px; font-weight: 900; margin: 12px 0 6px; line-height: 1.15; }
+  section.flyer p.lead { font-size: 18px; color: var(--muted); margin: 0 0 20px; max-width: 46em; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: #fffdf8; }
+  .card h3 { margin: 6px 0; font-size: 18px; font-weight: 900; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+  svg { display: block; width: 100%; height: auto; }
+  .note { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: #fff3d1; font-size: 15px; }
+  .ok { color: var(--green); font-weight: 700; }
+  code, .ltr { direction: ltr; unicode-bidi: isolate; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; background: #f1eee7; padding: 1px 6px; border-radius: 5px; }
+  ol.do { margin: 0; padding-inline-start: 22px; font-size: 17px; line-height: 1.7; }
+  @media (max-width: 640px) { section.flyer { padding: 18px; } section.flyer h2 { font-size: 26px; } }
+</style>
+</head>
+<body>
+<header class="top"><span class="mark">V1</span><h1>מחולל תחזית · ההיכרות</h1></header>
+<nav class="steps" id="nav">
+  <a href="#welcome">ברוך הבא</a><a href="#how">איך זה עובד</a><a href="#ais">מי עושה מה</a><a href="#privacy">מה יוצא מהמחשב</a>
+  <a href="#library">הספרייה</a><a href="#install">התקנה</a><a href="#key">מפתח Claude</a><a href="#ears">מודל העברית</a><a href="#first">תחזית ראשונה</a><a href="#done">סיום</a>
+</nav>
+<main>
+
+<section class="flyer" id="welcome">
+  <span class="kicker">שלב 0</span>
+  <h2>קריינות נכנסת, סרטון תחזית יוצא.</h2>
+  <p class="lead">מקליטים את התחזית, והאפליקציה מתמללת, מתכננת סצנות, בוחרת קליפים מהספרייה של V1 ומרכיבה סרטון אנכי מוכן לרשתות. הכל בתוך דפדפן, בלי התקנה.</p>
+  <svg viewBox="0 0 960 300" role="img" aria-label="טלפון עם סרטון תחזית אנכי">
+    <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#cfe3ff"/></linearGradient></defs>
+    <rect x="0" y="0" width="960" height="300" rx="16" fill="#fff6ec"/>
+    <g transform="translate(400 20)">
+      <rect width="160" height="262" rx="24" fill="#141414"/>
+      <rect x="10" y="12" width="140" height="238" rx="16" fill="url(#sky)"/>
+      <circle cx="112" cy="70" r="26" fill="#f2c231"/>
+      <g fill="#fff"><ellipse cx="60" cy="110" rx="38" ry="16"/><ellipse cx="86" cy="102" rx="26" ry="18"/></g>
+      <rect x="10" y="190" width="140" height="60" fill="#2e7d4f"/>
+      <path d="M10 200 L60 160 L95 185 L130 150 L150 170 L150 250 L10 250Z" fill="#3c9a62"/>
+      <rect x="22" y="206" width="70" height="10" rx="5" fill="#fff" opacity=".9"/>
+      <rect x="22" y="222" width="46" height="8" rx="4" fill="#fff" opacity=".7"/>
+      <rect x="60" y="2" width="40" height="5" rx="2.5" fill="#333"/>
+    </g>
+    <g font-family="Heebo" font-weight="900" fill="#141414">
+      <g transform="translate(720 90)"><circle r="44" fill="#f9543e"/><path d="M-8 -22 h16 v26 a8 8 0 0 1 -16 0z M-18 2 a18 18 0 0 0 36 0 M0 20 v10 M-10 30 h20" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+      <text x="720" y="180" text-anchor="middle" font-size="22">קריינות</text>
+      <path d="M660 120 C610 120 600 150 575 150" stroke="#141414" stroke-width="4" fill="none" marker-end="url(#arr)"/>
+      <g transform="translate(240 90)"><rect x="-56" y="-40" width="112" height="80" rx="12" fill="#f2c231" stroke="#141414" stroke-width="3"/><path d="M-12 -14 L18 0 L-12 14Z" fill="#141414"/></g>
+      <text x="240" y="180" text-anchor="middle" font-size="22">MP4 9:16</text>
+      <path d="M395 150 C360 150 340 120 305 120" stroke="#141414" stroke-width="4" fill="none" marker-end="url(#arr)"/>
+    </g>
+    <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#141414"/></marker></defs>
+  </svg>
+</section>
+
+<section class="flyer" id="how">
+  <span class="kicker">איך זה עובד</span>
+  <h2>חמישה שלבים, דקות ספורות.</h2>
+  <p class="lead">כל שלב רץ במקום אחר. שני שלבים משתמשים בבינה מלאכותית, והשאר הם עבודת וידאו שהדפדפן עושה בעצמו.</p>
+  <svg viewBox="0 0 960 250" role="img" aria-label="תרשים חמשת השלבים">
+    <defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#141414"/></marker></defs>
+    <g font-family="Heebo" text-anchor="middle">
+      <g transform="translate(860 110)"><circle r="54" fill="#f9543e" stroke="#141414" stroke-width="3"/><text y="-2" font-weight="900" font-size="20" fill="#fff">קריינות</text><text y="22" font-size="14" fill="#fff">MP3</text></g>
+      <g transform="translate(670 110)"><circle r="54" fill="#2459d6" stroke="#141414" stroke-width="3"/><text y="-2" font-weight="900" font-size="20" fill="#fff">תמלול</text><text y="22" font-size="13" fill="#fff">Whisper עברית</text></g>
+      <g transform="translate(480 110)"><circle r="54" fill="#141414"/><text y="-2" font-weight="900" font-size="20" fill="#fff">תכנון</text><text y="22" font-size="13" fill="#fff">Claude</text></g>
+      <g transform="translate(290 110)"><circle r="54" fill="#f2c231" stroke="#141414" stroke-width="3"/><text y="-2" font-weight="900" font-size="20">קליפים</text><text y="22" font-size="13">מהספרייה</text></g>
+      <g transform="translate(100 110)"><circle r="54" fill="#1f8a5b" stroke="#141414" stroke-width="3"/><text y="-2" font-weight="900" font-size="20" fill="#fff">רינדור</text><text y="22" font-size="13" fill="#fff">MP4</text></g>
+      <g stroke="#141414" stroke-width="4" marker-end="url(#a2)"><line x1="800" y1="110" x2="732" y2="110"/><line x1="610" y1="110" x2="542" y2="110"/><line x1="420" y1="110" x2="352" y2="110"/><line x1="230" y1="110" x2="162" y2="110"/></g>
+      <g font-size="15" fill="#6b6760"><text x="670" y="200">על המחשב שלך</text><text x="480" y="200">בענן של Anthropic</text><text x="290" y="200">התיקייה weather</text><text x="100" y="200">על המחשב שלך</text><text x="860" y="200">אתה מקליט</text></g>
+    </g>
+  </svg>
+</section>
+
+<section class="flyer" id="ais">
+  <span class="kicker">מי עושה מה</span>
+  <h2>שלוש בינות מלאכותיות, שלושה תפקידים.</h2>
+  <p class="lead">כדאי להכיר אותן, כי כל אחת עונה על שאלה אחרת כשמשהו לא עובד.</p>
+  <div class="grid">
+    <div class="card">
+      <svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" rx="12" fill="#efe6ff"/><circle cx="60" cy="40" r="22" fill="#d97757"/><path d="M60 22v36M42 40h36M47 27l26 26M73 27L47 53" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>
+      <h3>ה-Claude שלך (העוזר)</h3>
+      <p>זה שמתקין עכשיו. הוא מסדר תיקיות, יוצר קיצור דרך ומסביר כל שלב. אחרי ההתקנה אפשר לשאול אותו כל שאלה על האפליקציה.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" rx="12" fill="#141414"/><g fill="#f2c231"><rect x="20" y="20" width="22" height="40" rx="4"/><rect x="49" y="12" width="22" height="48" rx="4" fill="#f9543e"/><rect x="78" y="28" width="22" height="32" rx="4" fill="#fff"/></g></svg>
+      <h3>Claude בתוך האפליקציה (המתכנן)</h3>
+      <p>מקבל את טקסט התחזית, מחלק אותו לסצנות ובוחר לכל סצנה קליפ מתאים מהקטלוג. עובד עם מפתח API שלך, ומשלמים לפי שימוש: בערך כמה סנטים לתחזית (הערכה).</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" rx="12" fill="#e3ecff"/><path d="M30 40c0-14 10-24 24-24s24 10 24 24-8 16-14 22-10 6-14 2" stroke="#2459d6" stroke-width="6" fill="none" stroke-linecap="round"/><g stroke="#2459d6" stroke-width="4" stroke-linecap="round"><line x1="88" y1="30" x2="96" y2="26"/><line x1="90" y1="40" x2="100" y2="40"/><line x1="88" y1="50" x2="96" y2="54"/></g></svg>
+      <h3>Whisper עברית (האוזניים)</h3>
+      <p>מודל של ivrit.ai שמבין עברית ומתמלל את הקריינות עם תזמונים. רץ על המחשב שלך, בתוך הדפדפן. בלי מפתח ובלי עלות. יורד פעם אחת, בערך 560MB.</p>
+    </div>
+  </div>
+</section>
+
+<section class="flyer" id="privacy">
+  <span class="kicker">פרטיות</span>
+  <h2>הווידאו והקול לא יוצאים מהמחשב.</h2>
+  <p class="lead">רק טקסט התמלול נשלח ל-Claude כדי לתכנן את הסצנות. הקליפים, הקריינות והסרטון המוכן נשארים בתיקייה שלך.</p>
+  <svg viewBox="0 0 960 230" role="img" aria-label="מה נשאר במחשב ומה יוצא">
+    <g font-family="Heebo">
+      <rect x="500" y="20" width="440" height="190" rx="18" fill="#e9f6ef" stroke="#1f8a5b" stroke-width="3"/>
+      <text x="920" y="58" text-anchor="end" font-weight="900" font-size="22" fill="#1f8a5b">נשאר על המחשב</text>
+      <g font-size="17" fill="#141414" text-anchor="end"><text x="920" y="96">• הקלטת הקריינות</text><text x="920" y="126">• 212 הקליפים בספרייה</text><text x="920" y="156">• הסרטון המוכן</text><text x="920" y="186">• מודל התמלול</text></g>
+      <rect x="20" y="20" width="440" height="190" rx="18" fill="#fff1ec" stroke="#f9543e" stroke-width="3"/>
+      <text x="440" y="58" text-anchor="end" font-weight="900" font-size="22" fill="#c43a22">נשלח ל-Claude</text>
+      <g font-size="17" fill="#141414" text-anchor="end"><text x="440" y="96">• טקסט התמלול</text><text x="440" y="126">• תיאורי הקליפים מהקטלוג</text><text x="440" y="156">• לא קבצי וידאו, לא קול</text></g>
+      <path d="M500 115 H470" stroke="#141414" stroke-width="4" marker-end="url(#a2)"/>
+    </g>
+  </svg>
+</section>
+
+<section class="flyer" id="library">
+  <span class="kicker">שלב 1</span>
+  <h2>הספרייה: התיקייה weather.</h2>
+  <p class="lead">בר שלח חמישה קבצי zip של הקטלוג. כולם נפתחים לאותה תיקייה, ובסוף יש תיקייה אחת בשם <span class="ltr">weather</span>.</p>
+  <svg viewBox="0 0 960 220" role="img" aria-label="מבנה התיקייה weather">
+    <g font-family="Heebo" font-size="18">
+      <g transform="translate(700 30)"><path d="M0 18h70l14 -14h120v150H0z" fill="#f2c231" stroke="#141414" stroke-width="3"/><text x="102" y="90" text-anchor="middle" font-weight="900" font-size="26">weather</text></g>
+      <g text-anchor="end"><text x="560" y="50"><tspan class="ltr" font-family="Menlo, monospace">notouch!</tspan> · הקטלוג (לא לגעת ידנית)</text><text x="560" y="88"><tspan font-family="Menlo, monospace">videos</tspan> · 207 קליפים</text><text x="560" y="126"><tspan font-family="Menlo, monospace">music</tspan> · מוזיקת הרקע</text><text x="560" y="164"><tspan font-family="Menlo, monospace">outputs</tspan> · כאן יופיעו התחזיות</text></g>
+      <g stroke="#141414" stroke-width="2" stroke-dasharray="4 4"><line x1="690" y1="45" x2="575" y2="45"/><line x1="690" y1="83" x2="575" y2="83"/><line x1="690" y1="121" x2="575" y2="121"/><line x1="690" y1="159" x2="575" y2="159"/></g>
+    </g>
+  </svg>
+</section>
+
+<section class="flyer" id="install">
+  <span class="kicker">שלב 2</span>
+  <h2>האפליקציה היא קובץ אחד.</h2>
+  <p class="lead"><span class="ltr">WeatherV1.html</span> נפתח ב-Chrome או ב-Edge. אין התקנה ואין מה להסיר: מעדכנים בהחלפת הקובץ. ה-Claude שלך ישים אותו בתיקייה קבועה ויצור קיצור דרך בשולחן העבודה.</p>
+  <div class="grid">
+    <div class="card"><h3>פותחים</h3><p>לחיצה כפולה על קיצור הדרך <b>מחולל תחזית V1</b>.</p></div>
+    <div class="card"><h3>בוחרים תיקייה</h3><p>בפעם הראשונה: <b>בחירת תיקייה</b> ← <span class="ltr">weather</span> ← <b>אפשר</b>. בפעמים הבאות: לחיצה על <b>המשך</b>.</p></div>
+    <div class="card"><h3>הדפדפן שואל</h3><p>Chrome מבקש אישור לערוך את התיקייה. זה כדי לשמור את התחזיות ב-<span class="ltr">outputs</span>.</p></div>
+  </div>
+</section>
+
+<section class="flyer" id="key">
+  <span class="kicker">שלב 3</span>
+  <h2>מפתח Claude, פעם אחת.</h2>
+  <p class="lead">המפתח הוא שלך ונשאר רק בדפדפן שלך. ה-Claude שמתקין לא צריך לראות אותו: אתה מדביק אותו בעצמך.</p>
+  <ol class="do">
+    <li>נכנסים ל-<span class="ltr">console.anthropic.com</span> ← <b>API Keys</b> ← <b>Create Key</b>.</li>
+    <li>מעתיקים את המפתח (מתחיל ב-<span class="ltr">sk-ant-</span>).</li>
+    <li>באפליקציה: <b>הגדרות</b> ← <b>מפתח Claude</b> ← מדביקים ← <b>שמירה</b>.</li>
+    <li>בחשבון Anthropic מוסיפים קרדיט קטן (Billing). תחזית עולה כמה סנטים.</li>
+  </ol>
+</section>
+
+<section class="flyer" id="ears">
+  <span class="kicker">שלב 4</span>
+  <h2>מודל העברית יורד פעם אחת.</h2>
+  <p class="lead">בהגדרות, בכרטיס <b>תמלול בעברית</b>, לוחצים <b>הורדת המודל</b>. בערך 560MB, נשמרים בתוך <span class="ltr">weather/.weatherv1/models</span>. אחרי זה התמלול עובד גם בלי אינטרנט.</p>
+  <svg viewBox="0 0 960 120" role="img" aria-label="פס התקדמות הורדה">
+    <rect x="20" y="40" width="920" height="34" rx="17" fill="#f1eee7"/>
+    <rect x="20" y="40" width="620" height="34" rx="17" fill="#f9543e"><animate attributeName="width" values="40;920;920" keyTimes="0;0.8;1" dur="6s" repeatCount="indefinite"/></rect>
+    <text x="930" y="105" font-family="Heebo" font-size="16" text-anchor="end" fill="#6b6760">ivrit-ai/whisper-large-v3-turbo · WebGPU</text>
+  </svg>
+</section>
+
+<section class="flyer" id="first">
+  <span class="kicker">שלב 5</span>
+  <h2>תחזית ראשונה.</h2>
+  <ol class="do">
+    <li>בלשונית <b>סטודיו</b>: <b>בחר קובץ</b> ← קובץ קריינות.</li>
+    <li>בודקים את התמלול ומתקנים מילה אם צריך ← <b>המשך לציר הזמן</b>.</li>
+    <li>Claude מתכנן סצנות ובוחר קליפים. אפשר להחליף קליף בלחיצה.</li>
+    <li><b>רינדור</b> ← הסרטון נשמר ב-<span class="ltr">weather/outputs</span> ומוצג באפליקציה.</li>
+  </ol>
+  <p class="note">הרינדור הראשון לוקח כמה דקות. משאירים את הלשונית פתוחה עד שמופיע הסרטון.</p>
+</section>
+
+<section class="flyer" id="done">
+  <span class="kicker">סיום</span>
+  <h2>מוכן. <span class="ok">✓</span></h2>
+  <p class="lead">מעכשיו: קיצור הדרך ← המשך ← קריינות ← סרטון. שאלות או תקלה? שואלים את ה-Claude שלך, או שולחים לבר צילום מסך.</p>
+</section>
+</main>
+<script>
+  // Highlight the current step in the nav (Claude opens this page at #step).
+  const links = [...document.querySelectorAll("nav.steps a")];
+  const mark = () => {
+    const id = location.hash.slice(1) || "welcome";
+    links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + id));
+  };
+  addEventListener("hashchange", mark);
+  mark();
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (e.isIntersecting) links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
+  }), { rootMargin: "-40% 0px -55% 0px" });
+  document.querySelectorAll("section.flyer").forEach((s) => io.observe(s));
+</script>
+</body>
+</html>

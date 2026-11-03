@@ -4,6 +4,8 @@
 import { installApiRouter } from "../api/router";
 import { webDesktopBridge } from "../runtime/desktop-bridge";
 import { SESSION_TOKEN } from "../runtime/settings";
+import { installMediaUrls } from "../runtime/media-urls";
 
 window.desktop = webDesktopBridge;
 installApiRouter(SESSION_TOKEN);
+installMediaUrls();

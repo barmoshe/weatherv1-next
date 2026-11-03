@@ -72,7 +72,7 @@ export async function readExternal(vpath: string): Promise<Blob> {
   const rel = toFolderPath(vpath);
   if (rel && (externalSizes.has(vpath) || !rawFs.existsSync(vpath))) return folder.readFile(rel);
   const buf = rawFs.readFileSync(vpath) as Uint8Array;
-  return new Blob([buf]);
+  return new Blob([buf as Uint8Array<ArrayBuffer>]);
 }
 
 function markDirty(p: unknown): void {
@@ -99,7 +99,7 @@ export function flush(): Promise<void> {
         isFile = false;
       }
       try {
-        if (isFile) await folder.writeFile(rel, rawFs.readFileSync(vpath) as Uint8Array);
+        if (isFile) await folder.writeFile(rel, rawFs.readFileSync(vpath) as Uint8Array<ArrayBuffer>);
         else if (!rawFs.existsSync(vpath)) await folder.removeFile(rel);
       } catch (err) {
         console.error(`[vfs] could not write ${rel} to the folder:`, err);
