@@ -119,7 +119,7 @@ The settings screen shows a green dot next to **מפתח Claude** when it's save
 
 ## Step 4 · The Hebrew model (`#ears`)
 
-In **הגדרות**, card **תמלול בעברית** → **הורדת המודל**. About 560 MB, saved inside
+In **הגדרות**, card **תמלול בעברית** → **הורדת המודל**. About 760 MB, saved inside
 `weather\.weatherv1\models\`; it downloads once and then works offline. Tell them it can take a few
 minutes and the bar shows progress. When the card says the model is installed, continue.
 

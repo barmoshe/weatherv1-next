@@ -35,6 +35,12 @@ page.on("console", (m) => {
   if (process.env.E2E_VERBOSE) console.log(`[page:${m.type()}] ${m.text()}`);
 });
 page.on("pageerror", (e) => errors.push(String(e)));
+// 404s from the test folder server are the app probing for files that don't
+// exist yet (a real folder answers those without a network error). Anything
+// else that fails is reported with its URL.
+page.on("response", (r) => {
+  if (r.status() >= 400 && !r.url().startsWith(`http://127.0.0.1:${port}/`)) errors.push(`HTTP ${r.status()} ${r.url()}`);
+});
 
 const shot = (name) => page.screenshot({ path: path.join(outDir, `${name}.png`) });
 const t0 = Date.now();
@@ -66,7 +72,8 @@ try {
   server.kill();
 }
 
-const relevant = errors.filter((e) => !/favicon|ERR_FILE_NOT_FOUND/.test(e));
+// plan-probe deliberately sends a fake key; Anthropic's 401 is the expected answer.
+const relevant = errors.filter((e) => !/favicon|ERR_FILE_NOT_FOUND|^Failed to load resource|^HTTP 401 https:\/\/api\.anthropic\.com\//.test(e));
 if (relevant.length) {
   console.error(`[e2e] ${relevant.length} error(s):\n${relevant.join("\n")}`);
   process.exit(1);

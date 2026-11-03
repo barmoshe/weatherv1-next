@@ -52,6 +52,8 @@ export function toVirtualPath(rel: string): string {
 }
 
 function isExternalRel(rel: string): boolean {
+  // JSON (plan bundles sit in outputs/ next to the renders) is state, not media.
+  if (rel.endsWith(".json")) return false;
   return EXTERNAL_DIRS.some((d) => rel === d || rel.startsWith(`${d}/`));
 }
 

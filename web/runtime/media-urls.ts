@@ -48,7 +48,51 @@ function scan(root: Element): void {
   root.querySelectorAll("img, source, video, audio, a").forEach(swap);
 }
 
+/**
+ * Catch the attribute write itself (React sets `src`/`href` with setAttribute):
+ * the element never sees the `/api/...` URL, so it never fires an `error` for
+ * a failed file:// load before the blob URL arrives (components treat that as
+ * "media missing").
+ */
+function interceptSetAttribute(): void {
+  const original = Element.prototype.setAttribute;
+  Element.prototype.setAttribute = function (this: Element, name: string, value: string) {
+    if (ATTRS[this.tagName] === name && typeof value === "string" && value.startsWith("/api/")) {
+      original.call(this, `data-api-${name}`, value);
+      if (this.hasAttribute(name)) this.removeAttribute(name);
+      const el = this;
+      void blobUrl(value)
+        .then((url) => {
+          if (el.getAttribute(`data-api-${name}`) !== value) return;
+          if (el.tagName === "A" && !el.hasAttribute("download")) original.call(el, "download", value.split("/").pop() ?? "download");
+          original.call(el, name, url);
+          if (el.tagName === "SOURCE") (el.parentElement as HTMLMediaElement | null)?.load();
+        })
+        .catch((err) => console.warn("[media]", err));
+      return;
+    }
+    original.call(this, name, value);
+  };
+}
+
+/** The same for the `src` property (some elements get it set directly). */
+function interceptSrcProperty(): void {
+  for (const proto of [HTMLImageElement.prototype, HTMLMediaElement.prototype, HTMLSourceElement.prototype]) {
+    const desc = Object.getOwnPropertyDescriptor(proto, "src");
+    if (!desc?.set || !desc.get) continue;
+    Object.defineProperty(proto, "src", {
+      ...desc,
+      set(this: Element, value: string) {
+        if (typeof value === "string" && value.startsWith("/api/")) this.setAttribute("src", value);
+        else desc.set!.call(this, value);
+      },
+    });
+  }
+}
+
 export function installMediaUrls(): void {
+  interceptSetAttribute();
+  interceptSrcProperty();
   const start = () => {
     scan(document.body);
     new MutationObserver((records) => {

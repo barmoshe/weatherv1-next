@@ -59,9 +59,17 @@ export async function handleApi(path: string, init: RequestInit, sessionToken: s
   const url = new URL(path, ORIGIN);
   const found = match(url.pathname);
   if (!found) return Response.json({ success: false, error: `No route for ${url.pathname}` }, { status: 404 });
-  const method = (init.method ?? "GET").toUpperCase() as keyof RouteModule;
+  const requested = (init.method ?? "GET").toUpperCase();
+  // Like Next: HEAD runs the GET handler and drops the body.
+  const method = (requested === "HEAD" ? "GET" : requested) as keyof RouteModule;
   const handler = found.route.module[method];
-  if (!handler) return Response.json({ success: false, error: `${method} not allowed` }, { status: 405 });
+  if (!handler) return Response.json({ success: false, error: `${requested} not allowed` }, { status: 405 });
+  if (requested === "HEAD") {
+    const res = await handler(new NextRequest(url, { headers: { "x-weather-desktop-token": sessionToken } }), {
+      params: Promise.resolve(found.params),
+    });
+    return new Response(null, { status: res.status, headers: res.headers });
+  }
 
   const headers = new Headers(init.headers);
   headers.set("x-weather-desktop-token", sessionToken);

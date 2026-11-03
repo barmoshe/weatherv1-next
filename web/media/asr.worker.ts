@@ -1,6 +1,6 @@
 // Hebrew speech recognition off the main thread: transformers.js running the
 // ivrit-ai Whisper large-v3-turbo ONNX export, on WebGPU when the machine has
-// it (q4f16 weights, ~560 MB) and on single-threaded WASM otherwise (q4).
+// it and on single-threaded WASM otherwise, q4 weights (~760 MB) either way.
 //
 // Model files are cached in the library folder, not the browser: the worker
 // has no folder access of its own, so its cache asks the page (`cache-get`,
@@ -46,7 +46,9 @@ type Dtypes = { encoder_model: string; decoder_model_merged: string };
 
 function load(device: "webgpu" | "wasm", override?: Dtypes, repo: string = MODEL_REPO) {
   if (!asr) {
-    const fallback = device === "webgpu" ? "q4f16" : "q4";
+    // q4 everywhere: q4f16 (fp16 math) produced garbage on a real WebGPU
+    // adapter in testing, and q4 also runs on GPUs without shader-f16.
+    const fallback = "q4";
     const dtypes = override ?? { encoder_model: fallback, decoder_model_merged: fallback };
     const dtype = `${dtypes.encoder_model}/${dtypes.decoder_model_merged}`;
     self.postMessage({ type: "log", text: `loading ${repo} on ${device} (${dtype})` });

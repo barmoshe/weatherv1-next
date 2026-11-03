@@ -11,7 +11,7 @@ import { createRoot } from "react-dom/client";
 import Home from "@/app/page";
 import { Gate } from "./boot/Gate";
 import { loadSettings } from "./runtime/settings";
-import { flush, hasPendingWrites, mountFolder } from "./runtime/vfs";
+import { flush, hasPendingWrites, mountFolder, registerExternal } from "./runtime/vfs";
 import { resetRuntimeConfigForTests } from "@/server/runtime/config";
 import { resetAssetSourceForTests } from "@/server/assets/source";
 import { startWorker } from "@/server/jobs/worker";
@@ -22,6 +22,10 @@ window.addEventListener("beforeunload", (e) => {
   void flush();
   e.preventDefault();
 });
+
+// Test hook (web/test/): tell the in-memory fs about a file a test placed in
+// the library after it was loaded. Harmless in normal use.
+(window as unknown as { __wv1Debug: unknown }).__wv1Debug = { registerExternal };
 
 async function mount(): Promise<void> {
   await loadSettings();

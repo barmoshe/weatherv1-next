@@ -8,8 +8,8 @@ import { webFs, RUNTIME_DIR } from "../runtime/vfs";
 
 export const MODEL_ID = "ivrit-ai/whisper-large-v3-turbo";
 const READY_MARKER = `${RUNTIME_DIR}/whisper-ready.json`;
-/** Download size of the weights per device (q4f16 on GPU, q4 on CPU). */
-const EXPECTED_BYTES = { webgpu: 563_000_000, wasm: 759_000_000 } as const;
+/** Download size of the q4 weights (encoder 425 MB + decoder 334 MB + configs). */
+const EXPECTED_BYTES = { webgpu: 762_000_000, wasm: 762_000_000 } as const;
 
 export type AsrDevice = "webgpu" | "wasm";
 
@@ -39,8 +39,13 @@ async function pickDevice(): Promise<AsrDevice> {
   if (forced === "wasm" || forced === "webgpu") return (device = forced);
   try {
     const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<{ features: Set<string> } | null> } }).gpu;
-    const adapter = await gpu?.requestAdapter();
-    device = adapter?.features.has("shader-f16") ? "webgpu" : "wasm";
+    const adapter = (await gpu?.requestAdapter()) as
+      | ({ features: Set<string>; info?: { vendor?: string; architecture?: string; description?: string } } | null)
+      | undefined;
+    device = adapter ? "webgpu" : "wasm";
+    console.info(
+      `[asr] device ${device}${adapter ? ` (${adapter.info?.vendor ?? "?"} ${adapter.info?.architecture ?? ""} ${adapter.info?.description ?? ""}, f16=${adapter.features.has("shader-f16")})` : ""}`,
+    );
   } catch {
     device = "wasm";
   }
@@ -176,5 +181,6 @@ export async function transcribeSamples(audio: Float32Array): Promise<{ text: st
   for (let i = 0; i < audio.length; i += 97) peak = Math.max(peak, Math.abs(audio[i]));
   console.info(`[asr] transcribing ${(audio.length / 16_000).toFixed(1)}s of audio, peak ${peak.toFixed(3)}`);
   const res = await call<{ text: string; chunks: AsrChunk[] }>({ type: "transcribe", device: dev, audio }, [audio.buffer]);
+  console.info(`[asr] text ${res.text.length} chars, ${res.chunks.length} chunks: ${JSON.stringify(res).slice(0, 600)}`);
   return { text: res.text, chunks: res.chunks, device: dev };
 }
