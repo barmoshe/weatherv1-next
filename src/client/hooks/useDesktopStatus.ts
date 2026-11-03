@@ -13,16 +13,24 @@ export interface DesktopStatusResponse {
   desktop_mode: boolean;
   r2?: DesktopR2Brief;
   keys: {
-    openai_configured: boolean;
     anthropic_configured: boolean;
-    gemini_configured: boolean;
   };
   providers: {
-    llm_pref: string;
-    llm_active: "anthropic" | "openai" | null;
+    llm_active: "anthropic" | null;
     llm_model: string | null;
-    transcription_active: "openai-cloud" | null;
+    transcription_active: "local-whisper" | null;
   };
+  whisper?: WhisperModelBrief;
+}
+
+/** Local transcription model state (`/api/desktop/status` and `/api/whisper`). */
+export interface WhisperModelBrief {
+  state: "missing" | "downloading" | "ready" | "error";
+  model_id: string;
+  bytes_done: number;
+  bytes_total: number;
+  error?: string;
+  binary_found: boolean;
 }
 
 export function useDesktopStatus(enabled = true) {

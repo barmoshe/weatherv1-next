@@ -1,4 +1,4 @@
-import type { LlmProviderPreference } from "@/shared/desktop";
+import type { WhisperModelBrief } from "@/client/hooks/useDesktopStatus";
 import type { StorageStatus } from "@/client/hooks/useStorageStatus";
 
 export interface CatalogHealth {
@@ -27,12 +27,10 @@ export interface DesktopStatus {
     cache_dir: string;
   };
   keys: {
-    openai_configured: boolean;
     anthropic_configured: boolean;
-    gemini_configured: boolean;
   };
+  whisper?: WhisperModelBrief;
   providers?: {
-    llm_pref: LlmProviderPreference;
     /** Effective /api/plan pipeline — controlled by PLAN_PIPELINE_VER2. */
     plan_pipeline?: "ver1" | "ver2";
   };

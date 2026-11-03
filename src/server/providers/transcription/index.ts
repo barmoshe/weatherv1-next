@@ -1,16 +1,11 @@
 // Transcription provider selection.
 //
-// Cloud-only path: we use OpenAI's hosted Whisper. A local ONNX-based
-// alternative landed briefly but added per-platform binary distribution
-// complexity that wasn't worth it. The provider interface is preserved
-// so a future local engine can slot back in without touching call sites.
+// Local-only since v0.7.0: whisper.cpp with the ivrit-ai Hebrew model, on the
+// editor's own machine. No key, no per-minute bill. The provider interface is
+// kept so call sites don't depend on the engine.
 
-import { createOpenAiTranscriptionProvider } from "./openai-cloud";
-import {
-  type TranscriptionProvider,
-  type TranscriptionProviderId,
-  TranscriptionProviderError,
-} from "./types";
+import { createLocalWhisperProvider } from "./whisper-local";
+import type { TranscriptionProvider } from "./types";
 
 export type {
   TranscriptionProvider,
@@ -20,26 +15,6 @@ export type {
 } from "./types";
 export { TranscriptionProviderError } from "./types";
 
-export interface TranscriptionProviderConfig {
-  openaiKey?: string;
-}
-
-export function getTranscriptionProvider(
-  config?: TranscriptionProviderConfig,
-): TranscriptionProvider {
-  const cfg: TranscriptionProviderConfig = config ?? configFromEnv();
-  if (!cfg.openaiKey) {
-    throw new TranscriptionProviderError(
-      "OPENAI_API_KEY is required for transcription. Open Settings and add the key.",
-      "transcription_invalid_key",
-      "openai-cloud",
-    );
-  }
-  return createOpenAiTranscriptionProvider({ apiKey: cfg.openaiKey });
-}
-
-function configFromEnv(): TranscriptionProviderConfig {
-  return {
-    openaiKey: process.env.OPENAI_API_KEY?.trim() || undefined,
-  };
+export function getTranscriptionProvider(): TranscriptionProvider {
+  return createLocalWhisperProvider();
 }

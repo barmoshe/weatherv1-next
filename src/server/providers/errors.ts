@@ -19,13 +19,11 @@ export interface MappedErrorResponse {
 const CONSOLE_URLS: Record<string, string> = {
   anthropic_billing: "https://console.anthropic.com/settings/billing",
   anthropic_keys: "https://console.anthropic.com/settings/keys",
-  openai_billing: "https://platform.openai.com/account/billing",
-  openai_keys: "https://platform.openai.com/api-keys",
 };
 
 export function mapProviderError(err: unknown): MappedErrorResponse | null {
   if (err instanceof LlmProviderError) {
-    const providerHe = err.provider === "anthropic" ? "Anthropic" : "OpenAI";
+    const providerHe = "Claude";
     if (err.code === "llm_quota_exceeded") {
       return {
         status: 402,
@@ -84,26 +82,24 @@ export function mapProviderError(err: unknown): MappedErrorResponse | null {
   }
 
   if (err instanceof TranscriptionProviderError) {
-    if (err.code === "transcription_quota_exceeded") {
+    if (err.code === "transcription_no_model") {
       return {
-        status: 402,
+        status: 409,
         body: {
           success: false,
-          error: "אזל מאגר ה-OpenAI tokens עבור תמלול. עבור לתמלול מקומי או הוסף קרדיט.",
-          error_code: "transcription_quota_exceeded",
-          console_url: CONSOLE_URLS.openai_billing,
+          error: "מודל התמלול בעברית עדיין לא הורד. פתח את ההגדרות והורד אותו (פעם אחת, כ-1.6GB).",
+          error_code: "transcription_no_model",
           provider: err.provider,
         },
       };
     }
-    if (err.code === "transcription_invalid_key") {
+    if (err.code === "transcription_binary_missing") {
       return {
-        status: 401,
+        status: 500,
         body: {
           success: false,
-          error: "מפתח OpenAI לא תקין. עבור לתמלול מקומי או עדכן את המפתח.",
-          error_code: "transcription_invalid_key",
-          console_url: CONSOLE_URLS.openai_keys,
+          error: "רכיב התמלול המקומי חסר בהתקנה. התקן מחדש את WeatherV1.",
+          error_code: "transcription_binary_missing",
           provider: err.provider,
         },
       };
@@ -112,43 +108,12 @@ export function mapProviderError(err: unknown): MappedErrorResponse | null {
       status: 500,
       body: {
         success: false,
-        error: err.message,
+        error: `התמלול המקומי נכשל: ${err.message}`,
         error_code: "transcription_failed",
         provider: err.provider,
       },
     };
   }
 
-  // Legacy string-matching fallback (preserves old behavior for unconverted
-  // call sites): map plaintext OpenAI errors to the new contract.
-  const msg = err instanceof Error ? err.message : String(err);
-  if (
-    msg.includes("insufficient_quota") ||
-    msg.includes("exceeded your current quota") ||
-    msg.includes("billing_hard_limit_reached")
-  ) {
-    return {
-      status: 402,
-      body: {
-        success: false,
-        error: "אזל מאגר ה-OpenAI tokens.",
-        error_code: "llm_quota_exceeded",
-        console_url: CONSOLE_URLS.openai_billing,
-        provider: "openai",
-      },
-    };
-  }
-  if (msg.includes("invalid_api_key") || msg.includes("Incorrect API key")) {
-    return {
-      status: 401,
-      body: {
-        success: false,
-        error: "מפתח OpenAI לא תקין.",
-        error_code: "llm_invalid_key",
-        console_url: CONSOLE_URLS.openai_keys,
-        provider: "openai",
-      },
-    };
-  }
   return null;
 }

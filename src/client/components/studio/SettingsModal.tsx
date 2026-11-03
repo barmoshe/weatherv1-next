@@ -6,7 +6,6 @@ import type {
   DesktopAppInfo,
   DesktopSettingsUpdate,
   DesktopUpdateState,
-  LlmProviderPreference,
 } from "@/shared/desktop";
 import { downloadJsonFile } from "@/client/lib/download-json-file";
 import { dispatchRefetchJobs } from "@/client/hooks/useLocalHistory";
@@ -33,9 +32,7 @@ const SETTINGS_TABS_BROWSER: { id: SettingsTabId; label: string }[] = [
 ];
 
 const EMPTY_KEYS: DesktopStatus["keys"] = {
-  openai_configured: false,
   anthropic_configured: false,
-  gemini_configured: false,
 };
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
@@ -52,9 +49,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [workspaceDir, setWorkspaceDir] = useState("");
   const [ffmpegPath, setFfmpegPath] = useState("");
   const [ffprobePath, setFfprobePath] = useState("");
-  const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
-  const [geminiKey, setGeminiKey] = useState("");
   const [r2Enabled, setR2Enabled] = useState(false);
   const [r2GatewayUrl, setR2GatewayUrl] = useState("");
   const [r2TenantId, setR2TenantId] = useState("");
@@ -62,7 +57,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [r2AppUsername, setR2AppUsername] = useState("");
   const [r2AppPassword, setR2AppPassword] = useState("");
   const [showR2Password, setShowR2Password] = useState(false);
-  const [llmProvider, setLlmProvider] = useState<LlmProviderPreference>("auto");
   const [planPipeline, setPlanPipeline] = useState<"ver1" | "ver2">("ver2");
   const [saving, setSaving] = useState(false);
   const [syncingR2, setSyncingR2] = useState(false);
@@ -106,11 +100,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setWorkspaceDir(status.workspace.workspaceDir);
       setFfmpegPath(status.ffmpeg.ffmpeg_path ?? "");
       setFfprobePath(status.ffmpeg.ffprobe_path ?? "");
-      if (status.providers) {
-        setLlmProvider(status.providers.llm_pref);
-        if (status.providers.plan_pipeline) {
-          setPlanPipeline(status.providers.plan_pipeline);
-        }
+      if (status.providers?.plan_pipeline) {
+        setPlanPipeline(status.providers.plan_pipeline);
       }
       setR2Enabled(Boolean(status.r2?.enabled));
       setR2GatewayUrl(status.r2?.gatewayUrl ?? "");
@@ -192,9 +183,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (workspaceDir.trim()) update.workspaceDir = workspaceDir.trim();
       if (ffmpegPath.trim()) update.ffmpegPath = ffmpegPath.trim();
       if (ffprobePath.trim()) update.ffprobePath = ffprobePath.trim();
-      if (openaiKey.trim()) update.openaiKey = openaiKey.trim();
       if (anthropicKey.trim()) update.anthropicKey = anthropicKey.trim();
-      if (geminiKey.trim()) update.geminiKey = geminiKey.trim();
       update.r2Enabled = r2Enabled;
       update.r2GatewayUrl = r2GatewayUrl.trim();
       update.r2TenantId = r2TenantId.trim();
@@ -205,13 +194,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       // unrelated save. Unlike gateway/tenant/bucket it has no fallback.
       if (r2AppUsername.trim()) update.r2AppUsername = r2AppUsername.trim();
       if (r2AppPassword) update.r2AppPassword = r2AppPassword;
-      update.llmProvider = llmProvider;
       update.planPipelineVer2 = planPipeline === "ver2";
 
       await desktop.saveSettings(update);
-      setOpenaiKey("");
       setAnthropicKey("");
-      setGeminiKey("");
       setR2AppPassword("");
       setShowR2Password(false);
       await loadDesktopStatus();
@@ -226,12 +212,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     anthropicKey,
     ffmpegPath,
     ffprobePath,
-    geminiKey,
-    llmProvider,
     planPipeline,
     loadDesktopStatus,
     loadHealth,
-    openaiKey,
     r2AppPassword,
     r2AppUsername,
     r2BucketName,
@@ -242,15 +225,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   ]);
 
   const clearKey = useCallback(
-    async (provider: "openai" | "anthropic" | "gemini" | "r2") => {
+    async (provider: "anthropic" | "r2") => {
       if (!desktop) return;
       setSaving(true);
       setDesktopError(null);
       try {
         await desktop.saveSettings({ clearKeys: [provider] });
-        if (provider === "openai") setOpenaiKey("");
         if (provider === "anthropic") setAnthropicKey("");
-        if (provider === "gemini") setGeminiKey("");
         if (provider === "r2") {
           setR2AppPassword("");
           setShowR2Password(false);
@@ -430,8 +411,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const catalogKnown = Boolean(health);
   const configuredKeysCount = [
     desktopStatus?.keys.anthropic_configured,
-    desktopStatus?.keys.openai_configured,
-    desktopStatus?.keys.gemini_configured,
   ].filter(Boolean).length;
   const r2Ready = Boolean(desktopStatus?.r2?.ready);
   const r2EnabledFlag = Boolean(desktopStatus?.r2?.enabled);
@@ -535,13 +514,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     catalogDotVariant={catalogDotVariant}
                     catalogStatHint={catalogStatHint}
                     desktopStatusKeys={desktopStatusKeys}
-                    openaiKey={openaiKey}
+                    whisper={desktopStatus?.whisper}
+                    anthropicKey={anthropicKey}
                     saving={saving}
-                    onOpenaiKeyChange={(v) => {
-                      setOpenaiKey(v);
+                    onAnthropicKeyChange={(v) => {
+                      setAnthropicKey(v);
                       setSaved(false);
                     }}
-                    onClearOpenai={() => void clearKey("openai")}
+                    onClearAnthropic={() => void clearKey("anthropic")}
                     workspaceDir={desktopStatus?.workspace.workspaceDir}
                     workspaceReady={workspaceReady}
                     appInfo={appInfo}
@@ -609,28 +589,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     }}
                     ai={{
                       desktopStatusKeys,
+                      whisper: desktopStatus?.whisper,
                       saving,
                       anthropicKey,
-                      openaiKey,
-                      geminiKey,
                       onAnthropicKeyChange: (v) => {
                         setAnthropicKey(v);
                         setSaved(false);
                       },
-                      onOpenaiKeyChange: (v) => {
-                        setOpenaiKey(v);
-                        setSaved(false);
-                      },
-                      onGeminiKeyChange: (v) => {
-                        setGeminiKey(v);
-                        setSaved(false);
-                      },
                       onClearKey: (provider) => void clearKey(provider),
-                      llmProvider,
-                      onLlmProviderChange: (pref) => {
-                        setLlmProvider(pref);
-                        setSaved(false);
-                      },
                     }}
                     pipeline={{
                       pipeline: planPipeline,

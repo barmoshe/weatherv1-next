@@ -70,9 +70,8 @@ function defaultSettings() {
     // for OS-keychain-encrypted values, "plaintext" otherwise.
     // `r2AppPassword` replaces the legacy `r2SessionToken`; the worker now
     // enforces HTTP Basic Auth with a username + password pair.
-    keys: { openai: null, anthropic: null, gemini: null, r2AppPassword: null },
-    // Plain-text user preference. "auto" lets the server pick from configured keys.
-    llmProvider: "auto", // "auto" | "anthropic" | "openai"
+    // Since v0.7.0 the app needs only the Claude key; transcription is local.
+    keys: { anthropic: null, r2AppPassword: null },
     // /api/plan pipeline selection. true = retrieve-then-pick ver2 (default
     // since v0.4.0). false = original validator-based ver1. The selection is
     // injected as PLAN_PIPELINE_VER2={1,0} for the Next child.
@@ -108,9 +107,15 @@ function readSettings() {
       keys: { ...defaultSettings().keys, ...(raw.keys || {}) },
       r2: { ...defaultSettings().r2, ...(raw.r2 || {}) },
     };
-    // Drop legacy fields from older releases (whisper.cpp / ONNX local transcription).
-    // We're cloud-only now; leaving them in env confuses the Next child.
+    // Drop legacy fields from older releases: the May transcription-provider
+    // pick, and (v0.7.0) the OpenAI/Gemini keys and the LLM provider pick, so
+    // an upgraded install keeps no secret it no longer uses.
     if ("transcriptionProvider" in _settings) delete _settings.transcriptionProvider;
+    if ("llmProvider" in _settings) delete _settings.llmProvider;
+    if (_settings.keys) {
+      delete _settings.keys.openai;
+      delete _settings.keys.gemini;
+    }
     // Drop the legacy single-token credential. The worker now enforces
     // username + password Basic Auth; a stale token would silently fail.
     if (_settings.keys && "r2SessionToken" in _settings.keys) {
@@ -186,9 +191,7 @@ function decryptSecret(stored, opts) {
  */
 function buildChildEnv(args) {
   const settings = readSettings();
-  const openai = decryptSecret(settings.keys.openai, { safeStorage: args.safeStorage });
   const anthropic = decryptSecret(settings.keys.anthropic, { safeStorage: args.safeStorage });
-  const gemini = decryptSecret(settings.keys.gemini, { safeStorage: args.safeStorage });
   // R2 Worker Basic-auth password for the opt-in sync. Precedence:
   // process.env wins so a rotated secret in .env / shell is picked up
   // immediately; persisted settings are the packaged-app path. Never baked
@@ -234,9 +237,7 @@ function buildChildEnv(args) {
   }
   if (args.ffmpeg.ffmpegPath) env.FFMPEG_PATH = args.ffmpeg.ffmpegPath;
   if (args.ffmpeg.ffprobePath) env.FFPROBE_PATH = args.ffmpeg.ffprobePath;
-  if (openai) env.OPENAI_API_KEY = openai;
   if (anthropic) env.ANTHROPIC_API_KEY = anthropic;
-  if (gemini) env.GEMINI_API_KEY = gemini;
 
   env.WEATHER_USER_DATA_DIR = getUserDataDir();
 
@@ -297,13 +298,6 @@ function buildChildEnv(args) {
     delete env.R2_STATE_PATH;
     delete env.R2_BUCKET_NAME;
     delete env.R2_APP_USERNAME;
-  }
-
-  // LLM provider preference. "auto" leaves the env var unset so the server-side
-  // selection falls through to the key-based default. Transcription is cloud-only
-  // and selected entirely by OPENAI_API_KEY presence.
-  if (settings.llmProvider && settings.llmProvider !== "auto") {
-    env.LLM_PROVIDER = settings.llmProvider;
   }
 
   // Plan-pipeline preference. Default is ver2 since v0.4.0 — always emit the

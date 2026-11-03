@@ -105,14 +105,9 @@ export function SettingsDesktopPanel({
               <span>{desktopStatus?.keys.anthropic_configured ? 'מוגדר' : 'לא מוגדר'}</span>
             </div>
             <div className="settings-status-row">
-              <StatusDot variant={Boolean(desktopStatus?.keys.openai_configured) ? 'ok' : 'danger'} />
-              <span>OpenAI</span>
-              <span>{desktopStatus?.keys.openai_configured ? 'מוגדר' : 'לא מוגדר'}</span>
-            </div>
-            <div className="settings-status-row">
-              <StatusDot variant={Boolean(desktopStatus?.keys.gemini_configured) ? 'ok' : 'danger'} />
-              <span>Gemini</span>
-              <span>{desktopStatus?.keys.gemini_configured ? 'מוגדר' : 'לא מוגדר'}</span>
+              <StatusDot variant={desktopStatus?.whisper?.state === 'ready' ? 'ok' : 'warn'} />
+              <span>תמלול מקומי</span>
+              <span>{desktopStatus?.whisper?.state === 'ready' ? 'מוכן' : 'המודל לא הורד'}</span>
             </div>
             <div className="settings-status-row">
               <span className="dot is-healthy" />

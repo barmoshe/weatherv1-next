@@ -1,20 +1,18 @@
-// Transcription provider abstraction. We currently ship one implementation —
-// OpenAI cloud Whisper — but keep the provider shape so the rest of the
-// pipeline (plan-bundle storage, scene planner) doesn't depend on the
-// concrete vendor. If we re-add a local engine later, drop a second
-// `TranscriptionProvider` impl behind a new id.
+// Transcription provider abstraction. One implementation ships: local
+// whisper.cpp with a Hebrew model (`whisper-local.ts`). The provider shape
+// keeps plan-bundle storage and the scene planner independent of the engine.
 
 import type { WhisperSegment } from "@/shared/types";
 
-export type TranscriptionProviderId = "openai-cloud";
+export type TranscriptionProviderId = "local-whisper";
 
 export interface TranscriptionResult {
   text: string;
   segments: WhisperSegment[];
   duration: number;
-  /** Model id billed by the transcription API (e.g. whisper-1). */
+  /** Model id that produced the transcript (recorded on the job). */
   transcription_model: string;
-  /** Audio duration used for per-minute metering (typically API `duration` in seconds). */
+  /** Audio seconds billed by a paid API; 0 for local transcription. */
   billed_audio_sec: number;
 }
 
@@ -28,8 +26,8 @@ export interface TranscriptionProvider {
 }
 
 export type TranscriptionErrorCode =
-  | "transcription_invalid_key"
-  | "transcription_quota_exceeded"
+  | "transcription_no_model"
+  | "transcription_binary_missing"
   | "transcription_failed";
 
 export class TranscriptionProviderError extends Error {

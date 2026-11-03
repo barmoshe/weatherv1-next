@@ -4,6 +4,7 @@ import type { DesktopAppInfo, DesktopUpdateState } from "@/shared/desktop";
 
 import { SecretField, StatusDot, shortPath } from "./settingsShared";
 import type { CatalogHealth, DesktopStatus, DotVariant } from "./settingsTypes";
+import { WhisperModelCard } from "./WhisperModelCard";
 
 interface EditorTabPanelProps {
   // Catalog health (prop-drilled from SettingsModal)
@@ -13,12 +14,13 @@ interface EditorTabPanelProps {
   missing: string[];
   catalogDotVariant: DotVariant;
   catalogStatHint: string;
-  // AI: only the OpenAI key surfaces here
+  // AI: the Claude key + the local transcription model
   desktopStatusKeys: DesktopStatus["keys"];
-  openaiKey: string;
+  whisper?: DesktopStatus["whisper"];
+  anthropicKey: string;
   saving: boolean;
-  onOpenaiKeyChange: (value: string) => void;
-  onClearOpenai: () => void;
+  onAnthropicKeyChange: (value: string) => void;
+  onClearAnthropic: () => void;
   // Workspace (read-only mirror)
   workspaceDir: string | null | undefined;
   workspaceReady: boolean;
@@ -60,10 +62,11 @@ export function EditorTabPanel({
   catalogDotVariant,
   catalogStatHint,
   desktopStatusKeys,
-  openaiKey,
+  whisper,
+  anthropicKey,
   saving,
-  onOpenaiKeyChange,
-  onClearOpenai,
+  onAnthropicKeyChange,
+  onClearAnthropic,
   workspaceDir,
   workspaceReady,
   appInfo,
@@ -81,7 +84,7 @@ export function EditorTabPanel({
     return `בעיה בקטלוג · ${missing.length} מקטעים חסרים`;
   })();
 
-  const openaiOk = desktopStatusKeys.openai_configured;
+  const claudeOk = desktopStatusKeys.anthropic_configured;
 
   return (
     <div className="settings-editor-tab" dir="rtl">
@@ -101,21 +104,21 @@ export function EditorTabPanel({
       <section className="settings-section">
         <header className="settings-section-header">
           <h3>חיבור AI</h3>
-          <StatusDot variant={openaiOk ? "ok" : "danger"} />
+          <StatusDot variant={claudeOk ? "ok" : "danger"} />
         </header>
         <p className="settings-hint" style={{ marginInlineStart: 0 }}>
-          מפתח OpenAI מפעיל את המערכת — תמלול, בחירת הקליפים וזיהוי תמונה.
-          שאר המפתחות והעדפות נמצאים בטאב הניהול.
+          מפתח Claude מפעיל את תכנון הסצנות ובחירת הקליפים. התמלול רץ על המחשב הזה.
         </p>
         <SecretField
-          label="מפתח OpenAI"
-          value={openaiKey}
-          configured={openaiOk}
-          placeholder={openaiOk ? "מפתח שמור במחסנית המפתחות" : "sk-…"}
+          label="מפתח Claude"
+          value={anthropicKey}
+          configured={claudeOk}
+          placeholder={claudeOk ? "מפתח שמור במחסנית המפתחות" : "sk-ant-…"}
           disabled={saving}
-          onValueChange={onOpenaiKeyChange}
-          onClear={onClearOpenai}
+          onValueChange={onAnthropicKeyChange}
+          onClear={onClearAnthropic}
         />
+        <WhisperModelCard initial={whisper} />
       </section>
 
       <section className="settings-section">

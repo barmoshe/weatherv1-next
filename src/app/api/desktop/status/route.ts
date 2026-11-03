@@ -8,26 +8,14 @@ import { catalogStoreStatus } from "@/server/catalog/storage";
 import { getR2SyncStatus, pullCatalogFromR2IfLocalEmpty } from "@/server/sync/r2/service";
 import type { R2SyncStatus } from "@/server/sync/r2/types";
 import type { WorkspaceValidation } from "@/server/assets/source";
+import { resolveWhisperBinary } from "@/server/whisper/binary";
+import { getModelStatus } from "@/server/whisper/models";
 
 const DEFAULT_CLAUDE_MODEL = "claude-sonnet-4-6";
-const DEFAULT_OPENAI_MODEL = "gpt-4o";
 
-function pickActiveLlm(): "anthropic" | "openai" | null {
-  const pref = process.env.LLM_PROVIDER?.trim().toLowerCase();
-  const haveAnthropic = Boolean(process.env.ANTHROPIC_API_KEY);
-  const haveOpenAi = Boolean(process.env.OPENAI_API_KEY);
-  if (pref === "anthropic") return haveAnthropic ? "anthropic" : null;
-  if (pref === "openai") return haveOpenAi ? "openai" : null;
-  if (haveAnthropic) return "anthropic";
-  if (haveOpenAi) return "openai";
-  return null;
-}
-
-function pickActiveLlmModel(): string | null {
-  const active = pickActiveLlm();
-  if (active === "anthropic") return process.env.CLAUDE_MODEL?.trim() || DEFAULT_CLAUDE_MODEL;
-  if (active === "openai") return process.env.OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL;
-  return null;
+function activeLlmModel(): string | null {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  return process.env.CLAUDE_MODEL?.trim() || DEFAULT_CLAUDE_MODEL;
 }
 
 function buildStorageBlock(args: {
@@ -108,6 +96,8 @@ export async function GET(req: NextRequest) {
     presentVideoCount,
   });
 
+  const whisper = getModelStatus();
+
   return NextResponse.json({
     success: true,
     desktop_mode: config.desktopMode,
@@ -119,21 +109,22 @@ export async function GET(req: NextRequest) {
       cache_dir: runtime.cacheDir,
     },
     keys: {
-      openai_configured: Boolean(process.env.OPENAI_API_KEY),
       anthropic_configured: Boolean(process.env.ANTHROPIC_API_KEY),
-      gemini_configured: Boolean(process.env.GEMINI_API_KEY),
     },
     providers: {
-      llm_pref: process.env.LLM_PROVIDER ?? "auto",
       plan_pipeline:
         process.env.PLAN_PIPELINE_VER2 === "0" || process.env.PLAN_PIPELINE_VER2 === "false"
           ? "ver1"
           : "ver2",
-      llm_active: pickActiveLlm(),
-      llm_model: pickActiveLlmModel(),
-      // Transcription is OpenAI cloud Whisper only. The active provider is
-      // "openai-cloud" when a key is configured, null otherwise.
-      transcription_active: process.env.OPENAI_API_KEY ? "openai-cloud" : null,
+      llm_active: process.env.ANTHROPIC_API_KEY ? "anthropic" : null,
+      llm_model: activeLlmModel(),
+      // Transcription is local whisper.cpp: active once the bundled binary
+      // and the downloaded Hebrew model are both present.
+      transcription_active: resolveWhisperBinary() && whisper.state === "ready" ? "local-whisper" : null,
+    },
+    whisper: {
+      ...whisper,
+      binary_found: resolveWhisperBinary() !== null,
     },
     ffmpeg: {
       ffmpeg_path: config.ffmpegPath ?? null,
