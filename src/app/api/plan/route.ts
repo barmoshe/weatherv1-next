@@ -23,6 +23,16 @@ import { persistPlanUsage, persistReplanPickerUsage } from "@/server/jobs/usage-
 import { retrieveCandidates } from "@/server/pipeline/retrieve";
 import { applyCoverageSplit, type CoveragePick } from "@/server/pipeline/coverage";
 
+/**
+ * Clips the planner may choose: the catalog minus clips that can't be
+ * rendered (file missing from videos/ with sync off: availability "error").
+ * A library can be short a few files; planning with them makes a plan whose
+ * render then fails on "not in the library's videos folder".
+ */
+function plannableVideos(): ReturnType<typeof parseCatalog> {
+  return parseCatalog(readCatalog()).filter((v) => v.availability !== "error");
+}
+
 function pickerFailureResponse(pickerStatus: PickerRunStatus, status = 502) {
   return NextResponse.json(
     {
@@ -138,8 +148,7 @@ export async function POST(req: NextRequest) {
 
   // Ver1 — original pipeline
   try {
-    const catalog = readCatalog();
-    const videos = parseCatalog(catalog);
+    const videos = plannableVideos();
     const segmentMap = buildSegmentMap(videos);
     const videoMap = buildVideoMap(videos);
 
@@ -248,8 +257,7 @@ async function handleVer2(args: Ver2Args): Promise<NextResponse> {
   } = args;
 
   try {
-    const catalog = readCatalog();
-    const videos = parseCatalog(catalog);
+    const videos = plannableVideos();
 
     const scenes = await resolveScenes(jobId, planScenesVer2, {
       transcript,
