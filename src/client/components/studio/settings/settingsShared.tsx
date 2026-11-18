@@ -62,8 +62,11 @@ export function SecretField({
           value={value}
           onChange={(e) => onValueChange(e.target.value)}
           placeholder={placeholder}
-          autoComplete="off"
+          // "off" is ignored on password fields: Chrome would offer (and can
+          // fill) a saved site password here. "new-password" keeps it out.
+          autoComplete="new-password"
           spellCheck={false}
+          dir="ltr"
         />
         {configured && (
           <button type="button" className="btn btn--ghost" onClick={onClear} disabled={disabled}>

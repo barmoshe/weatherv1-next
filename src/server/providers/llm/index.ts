@@ -5,6 +5,7 @@
 // as `ANTHROPIC_API_KEY` at child spawn time (see `electron/config.cjs`
 // `buildChildEnv`). On the Server/Web runtime it's a plain env var.
 
+import { cleanApiKey } from "@/shared/api-key";
 import { createAnthropicProvider } from "./anthropic";
 import { type LlmProvider, LlmProviderError } from "./types";
 
@@ -24,6 +25,8 @@ export function getLlmProvider(config?: LlmProviderConfig): LlmProvider {
       "ANTHROPIC_API_KEY is not configured. Add the Claude key in Settings.",
       "llm_invalid_key",
       "anthropic",
+      undefined,
+      { reason: "missing" },
     );
   }
   return createAnthropicProvider({ apiKey: cfg.anthropicKey, model: cfg.anthropicModel });
@@ -31,7 +34,7 @@ export function getLlmProvider(config?: LlmProviderConfig): LlmProvider {
 
 function configFromEnv(): LlmProviderConfig {
   return {
-    anthropicKey: trim(process.env.ANTHROPIC_API_KEY),
+    anthropicKey: cleanApiKey(process.env.ANTHROPIC_API_KEY) || undefined,
     anthropicModel: trim(process.env.CLAUDE_MODEL),
   };
 }

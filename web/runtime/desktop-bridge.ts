@@ -2,6 +2,7 @@
 // through this bridge (settings, pickers, app info); here each call is backed
 // by the File System Access API, IndexedDB and the in-memory fs.
 
+import { cleanApiKey } from "@/shared/api-key";
 import type { DesktopBridge, DesktopSettingsUpdate } from "@/shared/desktop";
 import { pickFolder } from "./folder";
 import { saveSettings } from "./settings";
@@ -80,9 +81,10 @@ export const webDesktopBridge: DesktopBridge = {
 
   async saveSettings(update: DesktopSettingsUpdate) {
     const patch: Parameters<typeof saveSettings>[0] = {};
-    if (typeof update.anthropicKey === "string" && update.anthropicKey.trim()) {
-      patch.anthropicKey = update.anthropicKey.trim();
-    }
+    // Pasted keys carry invisible characters (RTL marks, zero-width spaces,
+    // line breaks) that make Anthropic refuse them; store only the key itself.
+    const key = typeof update.anthropicKey === "string" ? cleanApiKey(update.anthropicKey) : "";
+    if (key) patch.anthropicKey = key;
     if (update.clearKeys?.includes("anthropic")) patch.anthropicKey = null;
     if (typeof update.planPipelineVer2 === "boolean") patch.planPipelineVer2 = update.planPipelineVer2;
     if (typeof update.workspaceDir === "string" && update.workspaceDir === "") {

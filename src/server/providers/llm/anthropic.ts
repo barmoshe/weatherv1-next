@@ -15,6 +15,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { apiKeyHint, cleanApiKey } from "@/shared/api-key";
 import { usageFromAnthropicMessage } from "@/shared/usage";
 import type { CompleteJsonResult } from "@/shared/usage";
 import {
@@ -31,19 +32,26 @@ export interface AnthropicProviderOptions {
   model?: string;
 }
 
-export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProvider {
-  const apiKey = opts.apiKey?.trim();
-  if (!apiKey) {
-    throw new LlmProviderError(
-      "ANTHROPIC_API_KEY is required",
-      "llm_invalid_key",
-      "anthropic",
-    );
-  }
+export function createAnthropicClient(apiKey: string): Anthropic {
   // The browser build runs this in the editor's own page with the editor's
   // own key (web/), which is the case the SDK's browser opt-in exists for.
-  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: typeof window !== "undefined" });
-  const model = opts.model?.trim() || process.env.CLAUDE_MODEL?.trim() || DEFAULT_MODEL;
+  return new Anthropic({ apiKey, dangerouslyAllowBrowser: typeof window !== "undefined" });
+}
+
+export function anthropicModel(override?: string): string {
+  return override?.trim() || process.env.CLAUDE_MODEL?.trim() || DEFAULT_MODEL;
+}
+
+export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProvider {
+  const apiKey = cleanApiKey(opts.apiKey);
+  if (!apiKey) {
+    throw new LlmProviderError("ANTHROPIC_API_KEY is required", "llm_invalid_key", "anthropic", undefined, {
+      reason: "missing",
+    });
+  }
+  const keyHint = apiKeyHint(apiKey);
+  const client = createAnthropicClient(apiKey);
+  const model = anthropicModel(opts.model);
 
   return {
     id: "anthropic",
@@ -90,7 +98,7 @@ export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProv
           ],
         });
       } catch (err) {
-        throw translateAnthropicError(err);
+        throw translateAnthropicError(err, keyHint);
       }
 
       const toolUse = response.content.find(
@@ -125,8 +133,9 @@ export function createAnthropicProvider(opts: AnthropicProviderOptions): LlmProv
   };
 }
 
-function translateAnthropicError(err: unknown): LlmProviderError {
+export function translateAnthropicError(err: unknown, keyHint?: string): LlmProviderError {
   const msg = err instanceof Error ? err.message : String(err);
+  const detail = msg.slice(0, 500);
 
   // The SDK exposes typed error classes; check by name to avoid coupling
   // to a specific minor version's class shape.
@@ -140,10 +149,18 @@ function translateAnthropicError(err: unknown): LlmProviderError {
       : null;
 
   if (status === 401 || errType === "authentication_error" || msg.includes("invalid x-api-key")) {
-    return new LlmProviderError("Anthropic API key is invalid", "llm_invalid_key", "anthropic", err);
+    return new LlmProviderError("Anthropic API key is invalid", "llm_invalid_key", "anthropic", err, {
+      reason: "rejected",
+      keyHint,
+      detail,
+    });
   }
   if (status === 403 || errType === "permission_error") {
-    return new LlmProviderError("Anthropic API key lacks permission", "llm_invalid_key", "anthropic", err);
+    return new LlmProviderError("Anthropic API key lacks permission", "llm_invalid_key", "anthropic", err, {
+      reason: "forbidden",
+      keyHint,
+      detail,
+    });
   }
   if (status === 429 || errType === "rate_limit_error") {
     return new LlmProviderError("Anthropic rate limit hit", "llm_rate_limited", "anthropic", err);
@@ -152,7 +169,7 @@ function translateAnthropicError(err: unknown): LlmProviderError {
     return new LlmProviderError("Anthropic API is overloaded", "llm_overloaded", "anthropic", err);
   }
   if (errType === "billing_error" || msg.includes("credit balance is too low")) {
-    return new LlmProviderError("Anthropic quota exceeded", "llm_quota_exceeded", "anthropic", err);
+    return new LlmProviderError("Anthropic quota exceeded", "llm_quota_exceeded", "anthropic", err, { keyHint, detail });
   }
-  return new LlmProviderError(`Anthropic call failed: ${msg}`, "llm_unknown", "anthropic", err);
+  return new LlmProviderError(`Anthropic call failed: ${msg}`, "llm_unknown", "anthropic", err, { keyHint, detail });
 }

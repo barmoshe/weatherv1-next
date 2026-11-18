@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { desktop } from "@/client/lib/desktop";
 import type {
   DesktopAppInfo,
   DesktopSettingsUpdate,
   DesktopUpdateState,
 } from "@/shared/desktop";
+import { apiKeyKind, cleanApiKey, type KeyCheckResult } from "@/shared/api-key";
 import { downloadJsonFile } from "@/client/lib/download-json-file";
 import { dispatchRefetchJobs } from "@/client/hooks/useLocalHistory";
 
@@ -115,6 +116,86 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, []);
 
+  // The saved Claude key, checked against Anthropic: Settings says "works",
+  // "rejected", "no credit" and so on instead of only "something is saved".
+  const [keyCheck, setKeyCheck] = useState<KeyCheckResult | null>(null);
+  const [keyChecking, setKeyChecking] = useState(false);
+  // Only the latest check may write its verdict: an open-time check of the old
+  // key must not overwrite the check of a key saved a moment later.
+  const keyCheckSeq = useRef(0);
+  const keyBusy = useRef(false);
+
+  const keyFailure = (message: string, e?: unknown): KeyCheckResult => ({
+    ok: false,
+    status: "unknown",
+    message,
+    detail: e === undefined ? undefined : e instanceof Error ? e.message : String(e),
+    checked_at: new Date().toISOString(),
+  });
+
+  const runKeyCheck = useCallback(async () => {
+    if (!desktop) return;
+    const seq = ++keyCheckSeq.current;
+    setKeyChecking(true);
+    try {
+      const res = await fetch("/api/llm/check", { method: "POST" });
+      const data = (await res.json().catch(() => ({}))) as Partial<KeyCheckResult>;
+      if (seq !== keyCheckSeq.current) return;
+      if (!res.ok || typeof data.status !== "string" || typeof data.message !== "string") {
+        setKeyCheck(keyFailure("הבדיקה לא הצליחה לרוץ. נסו שוב.", `HTTP ${res.status}`));
+        return;
+      }
+      setKeyCheck(data.status === "missing" ? null : (data as KeyCheckResult));
+    } catch (e) {
+      if (seq === keyCheckSeq.current) setKeyCheck(keyFailure("הבדיקה לא הצליחה לרוץ. נסו שוב.", e));
+    } finally {
+      if (seq === keyCheckSeq.current) setKeyChecking(false);
+    }
+  }, []);
+
+  const saveAndCheckKey = useCallback(async () => {
+    if (!desktop || keyBusy.current) return;
+    keyBusy.current = true;
+    setKeyChecking(true);
+    try {
+      if (anthropicKey.trim()) {
+        await desktop.saveSettings({ anthropicKey });
+        setAnthropicKey("");
+      }
+      await loadDesktopStatus();
+      await runKeyCheck();
+    } catch (e) {
+      keyCheckSeq.current++;
+      setKeyChecking(false);
+      setKeyCheck(keyFailure("שמירת המפתח נכשלה. נסו שוב.", e));
+    } finally {
+      keyBusy.current = false;
+    }
+  }, [anthropicKey, loadDesktopStatus, runKeyCheck]);
+
+  const handleClose = useCallback(() => {
+    // A real API key pasted and then closed with × or Escape is saved rather
+    // than dropped. Anything else in the field (a token, a stray password)
+    // is a cancel: it must never replace a key that works.
+    const typed = cleanApiKey(anthropicKey);
+    if (!desktop || !typed || apiKeyKind(typed) !== "api") {
+      onClose();
+      return;
+    }
+    if (keyBusy.current) return;
+    keyBusy.current = true;
+    desktop
+      .saveSettings({ anthropicKey: typed })
+      .then(() => {
+        setAnthropicKey("");
+        onClose();
+      })
+      .catch((e: unknown) => setKeyCheck(keyFailure("שמירת המפתח נכשלה, ההגדרות נשארו פתוחות.", e)))
+      .finally(() => {
+        keyBusy.current = false;
+      });
+  }, [anthropicKey, onClose]);
+
   const pickWorkspace = useCallback(async () => {
     if (!desktop) return;
     const picked = await desktop.pickWorkspace();
@@ -203,6 +284,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       await loadDesktopStatus();
       await loadHealth();
       setSaved(true);
+      if (update.anthropicKey) void runKeyCheck();
     } catch (e) {
       setDesktopError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -221,6 +303,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     r2Enabled,
     r2GatewayUrl,
     r2TenantId,
+    runKeyCheck,
     workspaceDir,
   ]);
 
@@ -231,7 +314,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setDesktopError(null);
       try {
         await desktop.saveSettings({ clearKeys: [provider] });
-        if (provider === "anthropic") setAnthropicKey("");
+        if (provider === "anthropic") {
+          setAnthropicKey("");
+          setKeyCheck(null);
+        }
         if (provider === "r2") {
           setR2AppPassword("");
           setShowR2Password(false);
@@ -375,17 +461,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
     void loadHealth();
     void loadDesktopStatus();
+    void runKeyCheck();
     setActiveTab(desktop ? "editor" : "catalog");
-  }, [isOpen, loadDesktopStatus, loadHealth]);
+  }, [isOpen, loadDesktopStatus, loadHealth, runKeyCheck]);
 
   useEffect(() => {
     if (!isOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") handleClose();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   const isDesktop = Boolean(desktop);
   const visibleTabs = isDesktop ? SETTINGS_TABS_DESKTOP : SETTINGS_TABS_BROWSER;
@@ -445,7 +532,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       aria-labelledby="settings-title"
       aria-describedby="settings-description"
     >
-      <div className="modal-backdrop" onClick={onClose} />
+      <div className="modal-backdrop" onClick={handleClose} />
       <div
         className="modal-dialog modal-dialog--settings"
         aria-busy={saving || desktopLoading || exportR2JobsLoading || clearCacheBusy}
@@ -459,7 +546,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <h2 className="modal-title" id="settings-title">
             הגדרות
           </h2>
-          <button className="modal-close" type="button" aria-label="סגור" onClick={onClose}>
+          <button className="modal-close" type="button" aria-label="סגור" onClick={handleClose}>
             ×
           </button>
         </header>
@@ -522,6 +609,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       setSaved(false);
                     }}
                     onClearAnthropic={() => void clearKey("anthropic")}
+                    keyCheck={keyCheck}
+                    keyChecking={keyChecking}
+                    onSaveAndCheckKey={() => void saveAndCheckKey()}
                     workspaceDir={desktopStatus?.workspace.workspaceDir}
                     workspaceReady={workspaceReady}
                     appInfo={appInfo}
