@@ -2,6 +2,7 @@
 // `/api/replan_scene`, and `/api/transcribe`. Centralises Hebrew error
 // strings and stable `error_code` values so the renderer can branch.
 
+import { ltr } from "@/shared/api-key";
 import { LlmProviderError } from "./llm";
 import { TranscriptionProviderError } from "./transcription";
 
@@ -10,8 +11,11 @@ export interface MappedErrorResponse {
     success: false;
     error: string;
     error_code: string;
+    /** For `llm_invalid_key`: missing | rejected | forbidden. */
+    error_reason?: string;
     console_url?: string;
     provider?: string;
+    details?: string;
   };
   status: number;
 }
@@ -21,6 +25,28 @@ const CONSOLE_URLS: Record<string, string> = {
   anthropic_keys: "https://console.anthropic.com/settings/keys",
 };
 
+/** The Hebrew line for a key that failed, by reason; shared with the Settings key check. */
+export function invalidKeyMessageHe(reason: string | undefined, keyHint?: string): string {
+  const which = keyHint ? ` (${ltr(keyHint)})` : "";
+  if (reason === "missing") {
+    return "לא שמור מפתח Claude. פותחים את ההגדרות, מדביקים את המפתח ולוחצים \"שמירה ובדיקה\".";
+  }
+  if (reason === "forbidden") {
+    return `למפתח Claude${which} אין הרשאה לשימוש הזה. בודקים בקונסול שהמפתח פעיל ושהארגון שלו פעיל, או יוצרים מפתח חדש.`;
+  }
+  if (reason === "rejected") {
+    return `Anthropic דחו את מפתח Claude ששמור באפליקציה${which}. כנראה הוא לא הועתק במלואו או נמחק. יוצרים מפתח חדש בקונסול, מעתיקים עם כפתור ההעתקה ומדביקים בהגדרות.`;
+  }
+  return "מפתח Claude לא תקין או לא הוגדר.";
+}
+
+function detailLine(err: LlmProviderError): string | undefined {
+  const parts: string[] = [];
+  if (err.extra.keyHint) parts.push(`key=${err.extra.keyHint}`);
+  if (err.extra.detail) parts.push(err.extra.detail);
+  return parts.length ? parts.join("\n") : undefined;
+}
+
 export function mapProviderError(err: unknown): MappedErrorResponse | null {
   if (err instanceof LlmProviderError) {
     const providerHe = "Claude";
@@ -29,10 +55,11 @@ export function mapProviderError(err: unknown): MappedErrorResponse | null {
         status: 402,
         body: {
           success: false,
-          error: `אזל מאגר ה-${providerHe} tokens. יש להוסיף קרדיט בחשבון.`,
+          error: `אין קרדיט בחשבון ה-${providerHe} של המפתח. מוסיפים קרדיט בקונסול (Billing), באותו ארגון שבו נוצר המפתח.`,
           error_code: "llm_quota_exceeded",
           console_url: CONSOLE_URLS[`${err.provider}_billing`],
           provider: err.provider,
+          details: detailLine(err),
         },
       };
     }
@@ -41,10 +68,12 @@ export function mapProviderError(err: unknown): MappedErrorResponse | null {
         status: 401,
         body: {
           success: false,
-          error: `מפתח ${providerHe} לא תקין או לא הוגדר.`,
+          error: invalidKeyMessageHe(err.extra.reason, err.extra.keyHint),
           error_code: "llm_invalid_key",
+          error_reason: err.extra.reason,
           console_url: CONSOLE_URLS[`${err.provider}_keys`],
           provider: err.provider,
+          details: detailLine(err),
         },
       };
     }

@@ -141,11 +141,20 @@ tell them to use **מחולל תחזית V1** from now on.
 
 Open `#key` and guide them (do not do it for them, do not look at the key):
 
-1. console.anthropic.com → sign in (or sign up) → **API Keys** → **Create Key** → copy it.
-2. **Billing**: add a small credit. One forecast costs a few cents of Claude usage (estimate).
-3. In the app: **הגדרות** → **מפתח Claude** → paste → save.
+1. console.anthropic.com → sign in (or sign up) → **API Keys** → **Create Key** → copy it with the
+   copy button right away (the list shows only part of a key later, and that part does not work).
+   It starts with `sk-ant-api03`. A Claude subscription (Claude.ai, Claude Code) is not an API key.
+2. **Billing**: add a small credit, in the same Console organization the key belongs to. One
+   forecast costs a few cents of Claude usage (estimate).
+3. In the app: **הגדרות** → **מפתח Claude** → paste → **שמירה ובדיקה**.
 
-The settings screen shows a green dot next to **מפתח Claude** when it's saved.
+The app checks the key with Anthropic and says what it found under the field: **המפתח עובד** with a
+green dot, or the reason in Hebrew (rejected, no credit, not an API key). Ask them to read you that
+line. If it is red, follow what it says (usually: a new key, copied with the copy button) and check
+again. Don't move on until it says **המפתח עובד**.
+
+If a forecast already failed on the key, the banner has **פתיחת הגדרות** and, once the key works,
+**נסה שוב** re-runs the planning.
 
 ## Step 4 · The Hebrew model (`#ears`)
 

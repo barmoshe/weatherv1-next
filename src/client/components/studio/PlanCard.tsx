@@ -76,6 +76,10 @@ export function PlanCard({
         validator?: Record<string, unknown>;
       };
       if (!data.success) {
+        // Forget this attempt: confirming again (or "try again" on the
+        // banner) must plan again. Keeping the job id here left the timeline
+        // on "processing" forever after a failure, e.g. a bad Claude key.
+        triggeredForJobRef.current = null;
         onError(toUiError({ ...data, failed_step: data.failed_step ?? "scene_planner" }, "התכנון נכשל"));
         onPhaseChange("reviewing");
         return;
@@ -86,6 +90,7 @@ export function PlanCard({
         validator: data.validator ?? {},
       });
     } catch (err) {
+      triggeredForJobRef.current = null;
       onError(toUiError(err, "התכנון נכשל"));
       onPhaseChange("reviewing");
     } finally {
