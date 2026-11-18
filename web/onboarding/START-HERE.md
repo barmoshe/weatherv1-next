@@ -74,28 +74,41 @@ never leave the computer; only the transcript text goes to Claude). One or two s
 ## Step 1 · The library (`#library`)
 
 The library is a folder named `weather` with `notouch!\catalog.json`, `videos\`, `music\` inside. Bar
-sent it as five zips named `weather-catalog-part1-of-5.zip` … `part5-of-5.zip` (usually in Downloads,
-from WhatsApp).
+sends it as one zip, `weather-catalog.zip` (about 9 GB, a Google Drive link on WhatsApp, usually
+saved to Downloads). Earlier it went out as five zips, `weather-catalog-part1-of-5.zip` …
+`part5-of-5.zip`. Every one of these zips holds the `weather\` folder itself.
 
-Look for an existing library first:
+Look for an existing library first, then for the zips:
 
 ```powershell
 Get-ChildItem -Path $env:USERPROFILE -Recurse -Depth 4 -Directory -Filter weather -ErrorAction SilentlyContinue |
   Where-Object { Test-Path (Join-Path $_.FullName "notouch!\catalog.json") } | Select-Object -ExpandProperty FullName
-Get-ChildItem -Path $env:USERPROFILE -Recurse -Depth 3 -Filter "weather-catalog-part*-of-5.zip" -ErrorAction SilentlyContinue |
-  Select-Object -ExpandProperty FullName
+Get-ChildItem -Path $env:USERPROFILE -Recurse -Depth 3 -Filter "weather-catalog*.zip*" -ErrorAction SilentlyContinue |
+  Select-Object FullName, Length
 ```
 
-- If a complete `weather` folder exists, use it where it is (call it `$lib`).
-- Else, if all five zips are found, extract each into `$app` (each zip already contains the
-  `weather\` folder, so they merge):
+- If a complete `weather` folder exists, use it where it is (call it `$lib`). They may have
+  extracted the zip themselves already.
+- Else, if `weather-catalog.zip` is found, extract it into `$app`. It should be about 9 GB; if it is
+  smaller, or a `weather-catalog.zip.crdownload` sits next to it, the download is still running: ask
+  them to wait for it. Extracting needs about 9 GB free on that drive. Windows' own `tar` is fast;
+  `Expand-Archive` is the slow fallback:
+  ```powershell
+  $zip = "<full path to weather-catalog.zip>"
+  tar -xf $zip -C $app
+  if ($LASTEXITCODE -ne 0) { Expand-Archive -Path $zip -DestinationPath $app -Force }
+  $lib = Join-Path $app "weather"
+  ```
+  If both fail, the file is probably cut short: ask them to download it again from Bar's link.
+- Else, if all five part zips are found, extract each into `$app` (they merge into one `weather\`):
   ```powershell
   Get-ChildItem <folder-with-zips> -Filter "weather-catalog-part*-of-5.zip" | Sort-Object Name |
     ForEach-Object { Expand-Archive -Path $_.FullName -DestinationPath $app -Force }
   $lib = Join-Path $app "weather"
   ```
-- If parts are missing, tell them which and ask them to save the rest from the WhatsApp chat with
-  Bar. You can do step 2 (the shortcut) while they do; come back here before choosing the folder.
+- If nothing is found, or only some of the five parts, ask them to download `weather-catalog.zip`
+  from the Google Drive link Bar sent on WhatsApp. You can do step 2 (the shortcut) while it
+  downloads; come back here before choosing the folder.
 
 Check it: `notouch!\catalog.json` exists and `videos\` holds about 207 files
 (`(Get-ChildItem "$lib\videos").Count`). Tell them the count.
@@ -170,5 +183,5 @@ Finish by telling them the daily flow in one line: shortcut → **המשך** →
 Same steps. Copy `WeatherV1.html` and `onboarding/` to `~/Documents/WeatherV1` first and open the
 pages from there; the library goes there too. Open `WeatherV1.html` with Chrome
 (`open -a "Google Chrome" ~/Documents/WeatherV1/WeatherV1.html`); instead of a desktop shortcut,
-drag the file to the Dock or bookmark it in Chrome. Extract the zips with
-`ditto -x -k <zip> ~/Documents/WeatherV1` for each part.
+drag the file to the Dock or bookmark it in Chrome. Extract the catalog with
+`ditto -x -k <zip> ~/Documents/WeatherV1` (the one `weather-catalog.zip`, or each of the five parts).
