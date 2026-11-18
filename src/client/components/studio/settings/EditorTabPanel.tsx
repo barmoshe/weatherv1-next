@@ -109,7 +109,7 @@ export function EditorTabPanel({
     ? keyCheck?.key_hint
       ? `שמור: ${keyCheck.key_hint}`
       : "מפתח שמור"
-    : "sk-ant-api03-…";
+    : "sk-ant-…";
 
   return (
     <div className="settings-editor-tab" dir="rtl">

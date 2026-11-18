@@ -23,6 +23,11 @@ describe("cleanApiKey", () => {
 describe("apiKeyKind", () => {
   it("tells an API key from a subscription token, an admin key and an OpenAI key", () => {
     expect(apiKeyKind(KEY)).toBe("api");
+    // Console keys that act as a user (the default format since Nov 2026).
+    const userKey = fake("sk", "ant", "usr", "1zzAbCdEfGhIjKlMnOpQrStUvWxYz0123", "zAAA");
+    expect(apiKeyKind(userKey)).toBe("api");
+    expect(apiKeyKindWarningHe(apiKeyKind(userKey))).toBeNull();
+    expect(apiKeyHint(userKey)).toBe("sk-ant-usr…zAAA");
     expect(apiKeyKind(fake("sk", "ant", "oat01", "x"))).toBe("oauth");
     expect(apiKeyKind(fake("sk", "ant", "admin01", "x"))).toBe("admin");
     expect(apiKeyKind(fake("sk", "proj", "x"))).toBe("openai");

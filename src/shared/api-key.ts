@@ -47,9 +47,13 @@ export function cleanApiKey(raw: string | null | undefined): string {
 
 export function apiKeyKind(key: string): ApiKeyKind {
   if (!key) return "empty";
-  if (key.startsWith("sk-ant-api")) return "api";
+  // The Console's key formats change (sk-ant-api03-… for older keys,
+  // sk-ant-usr-… for keys that act as a user since Nov 2026). Only the two
+  // known non-API tokens are named; any other sk-ant- key is an API key and
+  // Anthropic's own answer decides whether it works.
   if (key.startsWith("sk-ant-oat")) return "oauth";
   if (key.startsWith("sk-ant-admin")) return "admin";
+  if (key.startsWith("sk-ant-")) return "api";
   if (key.startsWith("sk-proj-") || key.startsWith("sk-svcacct-") || /^sk-[A-Za-z0-9]{20,}$/.test(key)) return "openai";
   return "unknown";
 }
@@ -76,13 +80,13 @@ export function ltr(text: string): string {
 export function apiKeyKindWarningHe(kind: ApiKeyKind): string | null {
   switch (kind) {
     case "oauth":
-      return `זה טוקן של מנוי Claude, לא מפתח API. צריך מפתח מ-${ltr("console.anthropic.com")} שמתחיל ב-${ltr("sk-ant-api03")}.`;
+      return `זה טוקן של מנוי Claude, לא מפתח API. יוצרים מפתח ב-${ltr("console.anthropic.com")} תחת API Keys.`;
     case "admin":
-      return `זה מפתח ניהול (Admin) של הקונסול, לא מפתח API רגיל. צריך מפתח שמתחיל ב-${ltr("sk-ant-api03")}.`;
+      return `זה מפתח ניהול (Admin) של הקונסול, לא מפתח API רגיל. יוצרים מפתח רגיל תחת API Keys.`;
     case "openai":
-      return `זה נראה כמו מפתח של OpenAI. האפליקציה עובדת עם Claude: צריך מפתח מ-${ltr("console.anthropic.com")} שמתחיל ב-${ltr("sk-ant-api03")}.`;
+      return `זה נראה כמו מפתח של OpenAI. האפליקציה עובדת עם Claude: יוצרים מפתח ב-${ltr("console.anthropic.com")} תחת API Keys.`;
     case "unknown":
-      return `זה לא נראה כמו מפתח של Claude. מפתח API מתחיל ב-${ltr("sk-ant-api03")} ומעתיקים אותו במלואו עם כפתור ההעתקה בקונסול.`;
+      return `זה לא נראה כמו מפתח של Claude. מפתח API מתחיל ב-${ltr("sk-ant-")} ומעתיקים אותו במלואו עם כפתור ההעתקה בקונסול.`;
     default:
       return null;
   }

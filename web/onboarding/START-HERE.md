@@ -143,7 +143,8 @@ Open `#key` and guide them (do not do it for them, do not look at the key):
 
 1. console.anthropic.com → sign in (or sign up) → **API Keys** → **Create Key** → copy it with the
    copy button right away (the list shows only part of a key later, and that part does not work).
-   It starts with `sk-ant-api03`. A Claude subscription (Claude.ai, Claude Code) is not an API key.
+   It starts with `sk-ant-` (today usually `sk-ant-usr-`). A Claude subscription (Claude.ai,
+   Claude Code) is not an API key. Pick the workspace meant for this app (it can carry a spend limit).
 2. **Billing**: add a small credit, in the same Console organization the key belongs to. One
    forecast costs a few cents of Claude usage (estimate).
 3. In the app: **הגדרות** → **מפתח Claude** → paste → **שמירה ובדיקה**.
