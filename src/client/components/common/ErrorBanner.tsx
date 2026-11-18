@@ -9,6 +9,8 @@ interface ErrorBannerProps {
   error: UiError;
   onDismiss?: () => void;
   onRetry?: () => void;
+  /** Shown for key and credit errors: the fix is in Settings. */
+  onOpenSettings?: () => void;
   /** Compact variant used inside collapsibles / rows. */
   compact?: boolean;
   /** Hide the metadata chip row (used for very tight contexts). */
@@ -19,6 +21,7 @@ export function ErrorBanner({
   error,
   onDismiss,
   onRetry,
+  onOpenSettings,
   compact = false,
   hideChips = false,
 }: ErrorBannerProps) {
@@ -94,6 +97,15 @@ export function ErrorBanner({
           )}
         </div>
         <div className="error-banner__actions">
+          {onOpenSettings && (
+            <button
+              type="button"
+              className="error-banner__action error-banner__action--primary"
+              onClick={onOpenSettings}
+            >
+              פתיחת הגדרות
+            </button>
+          )}
           {error.consoleUrl && (
             <a
               className="error-banner__action error-banner__action--link"

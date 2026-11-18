@@ -1,5 +1,6 @@
 "use client";
 
+import { apiKeyKind, apiKeyKindWarningHe, cleanApiKey, type KeyCheckResult } from "@/shared/api-key";
 import type { DesktopAppInfo, DesktopUpdateState } from "@/shared/desktop";
 
 import { SecretField, StatusDot, shortPath } from "./settingsShared";
@@ -21,6 +22,11 @@ interface EditorTabPanelProps {
   saving: boolean;
   onAnthropicKeyChange: (value: string) => void;
   onClearAnthropic: () => void;
+  /** Last answer from `/api/llm/check`, and whether one is running. */
+  keyCheck: KeyCheckResult | null;
+  keyChecking: boolean;
+  /** Saves a typed key (if any), then checks the saved key with Anthropic. */
+  onSaveAndCheckKey: () => void;
   // Workspace (read-only mirror)
   workspaceDir: string | null | undefined;
   workspaceReady: boolean;
@@ -67,6 +73,9 @@ export function EditorTabPanel({
   saving,
   onAnthropicKeyChange,
   onClearAnthropic,
+  keyCheck,
+  keyChecking,
+  onSaveAndCheckKey,
   workspaceDir,
   workspaceReady,
   appInfo,
@@ -85,6 +94,22 @@ export function EditorTabPanel({
   })();
 
   const claudeOk = desktopStatusKeys.anthropic_configured;
+  // Green only once Anthropic accepted the key; a saved but unchecked key is
+  // amber, a missing or refused one red.
+  const claudeDot: DotVariant = !claudeOk
+    ? "danger"
+    : keyCheck
+      ? keyCheck.ok
+        ? "ok"
+        : "danger"
+      : "warn";
+  const typedKey = cleanApiKey(anthropicKey);
+  const typedKeyWarning = typedKey ? apiKeyKindWarningHe(apiKeyKind(typedKey)) : null;
+  const keyPlaceholder = claudeOk
+    ? keyCheck?.key_hint
+      ? `שמור: ${keyCheck.key_hint}`
+      : "מפתח שמור"
+    : "sk-ant-api03-…";
 
   return (
     <div className="settings-editor-tab" dir="rtl">
@@ -104,7 +129,7 @@ export function EditorTabPanel({
       <section className="settings-section">
         <header className="settings-section-header">
           <h3>חיבור AI</h3>
-          <StatusDot variant={claudeOk ? "ok" : "danger"} />
+          <StatusDot variant={claudeDot} />
         </header>
         <p className="settings-hint" style={{ marginInlineStart: 0 }}>
           מפתח Claude מפעיל את תכנון הסצנות ובחירת הקליפים. התמלול רץ על המחשב הזה.
@@ -113,11 +138,53 @@ export function EditorTabPanel({
           label="מפתח Claude"
           value={anthropicKey}
           configured={claudeOk}
-          placeholder={claudeOk ? "מפתח שמור במחסנית המפתחות" : "sk-ant-…"}
+          placeholder={keyPlaceholder}
           disabled={saving}
           onValueChange={onAnthropicKeyChange}
           onClear={onClearAnthropic}
         />
+        {typedKeyWarning ? (
+          <p className="key-check key-check--bad" role="alert">
+            {typedKeyWarning}
+          </p>
+        ) : null}
+        <div className="key-check-row">
+          {typedKey || claudeOk ? (
+            <button
+              type="button"
+              className="btn btn--primary key-check-btn"
+              onClick={onSaveAndCheckKey}
+              disabled={saving || keyChecking}
+            >
+              {typedKey ? "שמירה ובדיקה" : "בדיקת מפתח"}
+            </button>
+          ) : null}
+          <p
+            className={`key-check ${keyChecking ? "" : keyCheck ? (keyCheck.ok ? "key-check--ok" : "key-check--bad") : ""}`}
+            role="status"
+            aria-live="polite"
+          >
+            {keyChecking
+              ? "בודק את המפתח מול Anthropic…"
+              : keyCheck
+                ? keyCheck.message
+                : claudeOk
+                  ? "המפתח שמור ועוד לא נבדק."
+                  : "מדביקים מפתח מ-console.anthropic.com ולוחצים \"שמירה ובדיקה\"."}
+            {!keyChecking && keyCheck?.key_hint ? (
+              <>
+                {" "}
+                <code dir="ltr">{keyCheck.key_hint}</code>
+              </>
+            ) : null}
+          </p>
+        </div>
+        {!keyChecking && keyCheck && !keyCheck.ok && keyCheck.detail ? (
+          <details className="key-check-detail">
+            <summary>פרטים</summary>
+            <pre dir="ltr">{keyCheck.detail}</pre>
+          </details>
+        ) : null}
         <WhisperModelCard initial={whisper} />
       </section>
 

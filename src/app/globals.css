@@ -1772,6 +1772,15 @@
             cursor: not-allowed;
             opacity: 0.55;
         }
+        /* The Claude key check under the key field (v0.7.4). */
+        .key-check-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin: 0.2rem 0 0.8rem; }
+        .key-check { margin: 0; font-size: 0.85rem; line-height: 1.5; color: var(--v1-ink-muted); text-align: start; flex: 1 1 16rem; }
+        .key-check code { font-size: 0.8rem; unicode-bidi: isolate; }
+        .key-check--ok { color: var(--v1-success); font-weight: 700; }
+        .key-check--bad { color: var(--v1-danger); font-weight: 600; }
+        .key-check-btn { flex: 0 0 auto; }
+        .key-check-detail { margin: -0.4rem 0 0.8rem; font-size: 0.78rem; color: var(--v1-ink-muted); }
+        .key-check-detail pre { white-space: pre-wrap; word-break: break-word; margin: 0.3rem 0 0; }
         .settings-hint {
             margin: 0 0 0.6rem; font-size: 0.85rem; color: var(--v1-ink-muted); line-height: 1.5;
             text-align: start;
@@ -4555,6 +4564,12 @@
         .error-banner__action--link {
             font-weight: 600;
         }
+        .error-banner__action--primary {
+            background: var(--v1-danger, #d23f3f);
+            color: #fff;
+            font-weight: 700;
+        }
+        .error-banner__action--primary:hover { background: #a91a24; }
         .error-banner__dismiss {
             border: none;
             padding: 0 0.35rem;

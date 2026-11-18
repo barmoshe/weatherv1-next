@@ -40,6 +40,7 @@ vi.mock("@/server/providers/errors", () => ({ mapProviderError: vi.fn(() => null
 vi.mock("@/server/jobs/failure", () => ({
   recordJobFailure: (...a: unknown[]) => mockRecordJobFailure(...a),
   recordPickerFailure: (...a: unknown[]) => mockRecordPickerFailure(...a),
+  clearPlanningFailure: () => {},
 }));
 vi.mock("@/server/jobs/usage-persist", () => ({
   persistPlanUsage: (...a: unknown[]) => mockPersistPlanUsage(...a),

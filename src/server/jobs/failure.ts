@@ -110,3 +110,15 @@ export function markInterrupted(jobId: string): void {
 export function clearJobFailure(jobId: string): void {
   updateJob(jobId, { ...CLEARED });
 }
+
+/**
+ * A new planning attempt wipes the previous planning failure, so a retry that
+ * works no longer shows the old error, and one that fails for a new reason
+ * (key fixed, now no credit) records the new one. Render failures are kept.
+ */
+export function clearPlanningFailure(jobId: string): void {
+  const existing = getJob(jobId);
+  if (!existing?.failed_at) return;
+  if (existing.failed_step !== "scene_planner" && existing.failed_step !== "picker") return;
+  updateJob(jobId, { ...CLEARED });
+}

@@ -57,6 +57,10 @@ function deriveTileStates(phase: StudioPhase): Record<string, TileState> {
   }
 }
 
+// Planning failures "try again" re-runs; key and credit errors are fixed in Settings.
+const PLAN_STEPS = new Set(["scene_planner", "picker", "plan"]);
+const SETTINGS_FIX_CODES = new Set(["llm_invalid_key", "llm_quota_exceeded"]);
+
 interface StudioPanelProps {
   hidden?: boolean;
   restoreJobId?: string | null;
@@ -68,9 +72,11 @@ interface StudioPanelProps {
   onJobIdChange?: (jobId: string | null) => void;
   onJobStatusChange?: (jobId: string, status: string, outputUrl?: string | null) => void;
   onRetryRender?: (jobId: string) => Promise<void> | void;
+  /** Opens Settings: the fix for a Claude key or credit error lives there. */
+  onOpenSettings?: () => void;
 }
 
-export function StudioPanel({ hidden, restoreJobId, jobs, onJobStarted, onJobCompleted, onJobIdChange, onJobStatusChange, onRetryRender }: StudioPanelProps) {
+export function StudioPanel({ hidden, restoreJobId, jobs, onJobStarted, onJobCompleted, onJobIdChange, onJobStatusChange, onRetryRender, onOpenSettings }: StudioPanelProps) {
   const [phase, setPhase] = useState<StudioPhase>("upload");
   const [error, setError] = useState<UiError | null>(null);
   const [transcriptData, setTranscriptData] = useState<TranscriptData | null>(null);
@@ -344,7 +350,16 @@ export function StudioPanel({ hidden, restoreJobId, jobs, onJobStarted, onJobCom
           <ErrorBanner
             error={error}
             onDismiss={() => setError(null)}
-            onRetry={error.step === "render" && jobId ? handleRetryRender : undefined}
+            onRetry={
+              error.step === "render" && jobId
+                ? handleRetryRender
+                : PLAN_STEPS.has(error.step ?? "") && transcriptData && !planData
+                  ? handleReviewConfirm
+                  : undefined
+            }
+            onOpenSettings={
+              onOpenSettings && SETTINGS_FIX_CODES.has(error.code ?? "") ? onOpenSettings : undefined
+            }
           />
         )}
       </div>

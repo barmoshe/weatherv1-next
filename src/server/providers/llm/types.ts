@@ -70,12 +70,27 @@ export type LlmErrorCode =
   | "llm_invalid_response"
   | "llm_unknown";
 
+/**
+ * Why a key failed, so the editor is told what to do: none saved, Anthropic
+ * answered 401 (wrong, incomplete or deleted key), or 403 (key without access).
+ */
+export type LlmKeyReason = "missing" | "rejected" | "forbidden";
+
+export interface LlmErrorExtra {
+  reason?: LlmKeyReason;
+  /** `sk-ant-api03…AbCd`: which saved key was used, comparable with the Console list. */
+  keyHint?: string;
+  /** The provider's own error text, for the banner's copy button. */
+  detail?: string;
+}
+
 export class LlmProviderError extends Error {
   constructor(
     message: string,
     public readonly code: LlmErrorCode,
     public readonly provider: LlmProviderId,
     public readonly cause?: unknown,
+    public readonly extra: LlmErrorExtra = {},
   ) {
     super(message);
     this.name = "LlmProviderError";

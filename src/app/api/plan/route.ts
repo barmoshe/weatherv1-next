@@ -16,7 +16,7 @@ import { parseCatalog, buildSegmentMap, buildVideoMap } from "@/server/catalog/p
 import { updatePlanBundle, readPlanBundle } from "@/server/jobs/plan-bundle";
 import { assertDesktopAuth } from "@/server/runtime/auth";
 import { mapProviderError } from "@/server/providers/errors";
-import { recordJobFailure, recordPickerFailure } from "@/server/jobs/failure";
+import { clearPlanningFailure, recordJobFailure, recordPickerFailure } from "@/server/jobs/failure";
 import type { Scene, ShortlistEntry } from "@/shared/types";
 import type { LlmCallUsage, UsageCallRecord } from "@/shared/usage";
 import { persistPlanUsage, persistReplanPickerUsage } from "@/server/jobs/usage-persist";
@@ -131,6 +131,8 @@ export async function POST(req: NextRequest) {
 
   if (!transcript) return NextResponse.json({ success: false, error: "Missing transcript" }, { status: 400 });
   if (!jobId) return NextResponse.json({ success: false, error: "Missing job_id" }, { status: 400 });
+
+  clearPlanningFailure(jobId);
 
   if (isVer2Enabled()) {
     return handleVer2({

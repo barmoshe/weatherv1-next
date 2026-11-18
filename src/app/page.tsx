@@ -150,6 +150,7 @@ function AppInner() {
           onJobIdChange={setUrlJobId}
           onJobStatusChange={handleJobStatusChange}
           onRetryRender={handleRetryRender}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
         <JobsPanel hidden={tab !== "jobs"} jobs={history} onRestore={handleRestore} onRemove={removeEntry} onCancel={cancelJob} onRetryRender={handleRetryRender} />
         <AnalyticsPanel hidden={tab !== "analytics"} jobs={history} />
